@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import 'screening_page.dart';
+import 'pengingat_kesehatan_page.dart';
+import 'screening_intro_page.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -21,7 +22,17 @@ class _HomePageState extends State<HomePage> {
       Navigator.push(
         context,
         MaterialPageRoute(
-          builder: (context) => const ScreeningPage(),
+          builder: (context) => const ScreeningIntroPage(),
+        ),
+      );
+    }
+
+    // Menu Riwayat / Pengingat
+    if (index == 3) {
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => const PengingatKesehatanPage(),
         ),
       );
     }
@@ -203,7 +214,7 @@ class _HomePageState extends State<HomePage> {
                                           context,
                                           MaterialPageRoute(
                                             builder: (context) =>
-                                                const ScreeningPage(),
+                                                const ScreeningIntroPage(),
                                           ),
                                         );
                                       },
@@ -289,6 +300,15 @@ class _HomePageState extends State<HomePage> {
                               description:
                                   'Pengingat agar tidak\n'
                                   'melewati kegiatan penting.',
+                              onTap: () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) =>
+                                        const PengingatKesehatanPage(),
+                                  ),
+                                );
+                              },
                             ),
                           ),
 
@@ -413,9 +433,13 @@ class _HomePageState extends State<HomePage> {
     required String description,
     Color iconColor = Colors.black,
     Color circleColor = const Color(0xFFF1F1F1),
+    VoidCallback? onTap,
   }) {
-    return Container(
-      height: 108,
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(4),
+      child: Container(
+        height: 108,
       padding: const EdgeInsets.fromLTRB(
         8,
         7,
@@ -475,6 +499,7 @@ class _HomePageState extends State<HomePage> {
           ),
         ],
       ),
+    ),
     );
   }
 

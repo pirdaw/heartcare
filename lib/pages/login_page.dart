@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'forgot_password_page.dart';
+import 'home_page.dart';
 import 'signup_page.dart';
 
 class LoginPage extends StatefulWidget {
@@ -290,15 +291,11 @@ class _LoginPageState extends State<LoginPage> {
                         height: 55,
                         child: ElevatedButton(
                           onPressed: () {
-                            // Data sementara ditampilkan
-                            // di console
-
-                            print(
-                              'Email: ${emailController.text}',
-                            );
-
-                            print(
-                              'Password: ${passwordController.text}',
+                            Navigator.pushReplacement(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => const HomePage(),
+                              ),
                             );
                           },
                           style: ElevatedButton.styleFrom(
