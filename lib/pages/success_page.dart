@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'login_page.dart';
+import 'home_page.dart';
 
 class SuccessPage extends StatelessWidget {
   const SuccessPage({super.key});
@@ -88,7 +88,7 @@ class SuccessPage extends StatelessWidget {
                       Navigator.pushAndRemoveUntil(
                         context,
                         MaterialPageRoute(
-                          builder: (context) => const LoginPage(),
+                          builder: (context) => const HomePage(),
                         ),
                         (route) => false,
                       );
