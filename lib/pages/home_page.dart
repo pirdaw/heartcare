@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'screening_intro_page.dart';
+import 'dokter_page.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -25,17 +26,25 @@ class _HomePageState extends State<HomePage> {
         ),
       );
     }
+
+    // Menu Dokter
+    if (index == 2) {
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => const PilihDokterPage(),
+        ),
+      );
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      // PINK DIHILANGKAN
       backgroundColor: Colors.white,
 
       body: SafeArea(
         child: Container(
-          // TIDAK ADA LAGI PINGGIR PINK
           margin: EdgeInsets.zero,
 
           decoration: const BoxDecoration(
@@ -47,10 +56,6 @@ class _HomePageState extends State<HomePage> {
 
           child: Column(
             children: [
-              // ==================================================
-              // ISI HOME
-              // ==================================================
-
               Expanded(
                 child: SingleChildScrollView(
                   padding: const EdgeInsets.fromLTRB(
@@ -70,7 +75,6 @@ class _HomePageState extends State<HomePage> {
                       Row(
                         crossAxisAlignment: CrossAxisAlignment.center,
                         children: [
-                          // FOTO / AVATAR
                           Container(
                             width: 58,
                             height: 58,
@@ -96,7 +100,6 @@ class _HomePageState extends State<HomePage> {
 
                           const SizedBox(width: 12),
 
-                          // TEKS SAPAAN
                           const Expanded(
                             child: Column(
                               crossAxisAlignment:
@@ -126,7 +129,6 @@ class _HomePageState extends State<HomePage> {
                             ),
                           ),
 
-                          // NOTIFIKASI
                           IconButton(
                             onPressed: () {},
                             padding: EdgeInsets.zero,
@@ -158,8 +160,7 @@ class _HomePageState extends State<HomePage> {
                           borderRadius: BorderRadius.circular(22),
                           boxShadow: [
                             BoxShadow(
-                              color:
-                                  Colors.black.withOpacity(0.10),
+                              color: Colors.black.withOpacity(0.10),
                               blurRadius: 5,
                               offset: const Offset(0, 3),
                             ),
@@ -168,10 +169,8 @@ class _HomePageState extends State<HomePage> {
 
                         child: Stack(
                           children: [
-                            // TEKS
                             Padding(
-                              padding:
-                                  const EdgeInsets.fromLTRB(
+                              padding: const EdgeInsets.fromLTRB(
                                 14,
                                 16,
                                 90,
@@ -229,16 +228,13 @@ class _HomePageState extends State<HomePage> {
                                             Colors.white,
                                         elevation: 0,
                                         padding:
-                                            const EdgeInsets
-                                                .symmetric(
+                                            const EdgeInsets.symmetric(
                                           horizontal: 14,
                                         ),
                                         shape:
                                             RoundedRectangleBorder(
                                           borderRadius:
-                                              BorderRadius.circular(
-                                            8,
-                                          ),
+                                              BorderRadius.circular(8),
                                         ),
                                       ),
 
@@ -246,8 +242,7 @@ class _HomePageState extends State<HomePage> {
                                         'Mulai Skrining',
                                         style: TextStyle(
                                           fontSize: 14,
-                                          fontWeight:
-                                              FontWeight.bold,
+                                          fontWeight: FontWeight.bold,
                                         ),
                                       ),
                                     ),
@@ -256,7 +251,6 @@ class _HomePageState extends State<HomePage> {
                               ),
                             ),
 
-                            // GAMBAR JANTUNG
                             Positioned(
                               right: 4,
                               bottom: 10,
@@ -311,10 +305,8 @@ class _HomePageState extends State<HomePage> {
                         children: [
                           Expanded(
                             child: _serviceCard(
-                              icon:
-                                  Icons.notifications_none,
-                              title:
-                                  'Pengingat Kesehatan',
+                              icon: Icons.notifications_none,
+                              title: 'Pengingat Kesehatan',
                               description:
                                   'Pengingat agar tidak melewati kegiatan penting.',
                             ),
@@ -324,14 +316,24 @@ class _HomePageState extends State<HomePage> {
 
                           Expanded(
                             child: _serviceCard(
-                              icon:
-                                  Icons.person_outline,
-                              title:
-                                  'Konsultasi Dokter',
+                              icon: Icons.person_outline,
+                              title: 'Konsultasi Dokter',
                               description:
                                   'Konsultasikan kondisi kesehatan Anda dengan dokter.',
-                              iconColor:
-                                  const Color(0xFF2680EB),
+                              iconColor: const Color(0xFF2680EB),
+
+                              // ==========================================
+                              // KLIK KONSULTASI DOKTER
+                              // ==========================================
+                              onTap: () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) =>
+                                        const PilihDokterPage(),
+                                  ),
+                                );
+                              },
                             ),
                           ),
                         ],
@@ -350,14 +352,11 @@ class _HomePageState extends State<HomePage> {
                           Expanded(
                             child: _serviceCard(
                               icon: Icons.favorite,
-                              title:
-                                  'Program Kesehatan Jantung',
+                              title: 'Program Kesehatan Jantung',
                               description:
                                   'Ikuti program untuk menjaga kesehatan jantung Anda.',
-                              iconColor:
-                                  const Color(0xFFFF6675),
-                              circleColor:
-                                  const Color(0xFFEAF7FA),
+                              iconColor: const Color(0xFFFF6675),
+                              circleColor: const Color(0xFFEAF7FA),
                             ),
                           ),
 
@@ -365,14 +364,11 @@ class _HomePageState extends State<HomePage> {
 
                           Expanded(
                             child: _serviceCard(
-                              icon:
-                                  Icons.menu_book_outlined,
-                              title:
-                                  'Edukasi Kesehatan',
+                              icon: Icons.menu_book_outlined,
+                              title: 'Edukasi Kesehatan',
                               description:
                                   'Dapatkan informasi dan tips menjaga kesehatan Anda.',
-                              iconColor:
-                                  const Color(0xFF237BEA),
+                              iconColor: const Color(0xFF237BEA),
                             ),
                           ),
                         ],
@@ -420,15 +416,13 @@ class _HomePageState extends State<HomePage> {
                     ),
 
                     _bottomItem(
-                      icon:
-                          Icons.medical_services_outlined,
+                      icon: Icons.medical_services_outlined,
                       label: 'Dokter',
                       index: 2,
                     ),
 
                     _bottomItem(
-                      icon:
-                          Icons.description_outlined,
+                      icon: Icons.description_outlined,
                       label: 'Riwayat',
                       index: 3,
                     ),
@@ -457,95 +451,87 @@ class _HomePageState extends State<HomePage> {
     required String title,
     required String description,
     Color iconColor = Colors.black,
-    Color circleColor =
-        const Color(0xFFF1F1F1),
+    Color circleColor = const Color(0xFFF1F1F1),
+
+    // Tambahan agar card bisa diklik
+    VoidCallback? onTap,
   }) {
-    return Container(
-      // DIBUAT LEBIH TINGGI SUPAYA TEKS TIDAK TERPOTONG
-      height: 170,
+    return GestureDetector(
+      onTap: onTap,
+      behavior: HitTestBehavior.opaque,
 
-      padding: const EdgeInsets.fromLTRB(
-        12,
-        11,
-        10,
-        10,
-      ),
+      child: Container(
+        height: 170,
 
-      decoration: BoxDecoration(
-        color: Colors.white,
-
-        borderRadius:
-            BorderRadius.circular(7),
-
-        border: Border.all(
-          color: const Color(0xFFDCDCDC),
-          width: 0.9,
+        padding: const EdgeInsets.fromLTRB(
+          12,
+          11,
+          10,
+          10,
         ),
-      ),
 
-      child: Column(
-        crossAxisAlignment:
-            CrossAxisAlignment.start,
-
-        children: [
-          // ICON
-          Container(
-            width: 58,
-            height: 58,
-
-            decoration: BoxDecoration(
-              color: circleColor,
-              borderRadius:
-                  BorderRadius.circular(16),
-            ),
-
-            child: Icon(
-              icon,
-              size: 35,
-              color: iconColor,
-            ),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(7),
+          border: Border.all(
+            color: const Color(0xFFDCDCDC),
+            width: 0.9,
           ),
+        ),
 
-          const SizedBox(height: 8),
+        child: Column(
+          crossAxisAlignment:
+              CrossAxisAlignment.start,
 
-          // JUDUL
-          Text(
-            title,
+          children: [
+            Container(
+              width: 58,
+              height: 58,
 
-            maxLines: 2,
+              decoration: BoxDecoration(
+                color: circleColor,
+                borderRadius: BorderRadius.circular(16),
+              ),
 
-            overflow:
-                TextOverflow.ellipsis,
-
-            style: const TextStyle(
-              fontSize: 13,
-              fontWeight:
-                  FontWeight.bold,
-              height: 1.15,
-              color: Colors.black,
-            ),
-          ),
-
-          const SizedBox(height: 5),
-
-          // DESKRIPSI
-          Expanded(
-            child: Text(
-              description,
-
-              maxLines: 4,
-
-              overflow:
-                  TextOverflow.ellipsis,
-
-              style: const TextStyle(
-                fontSize: 11,
-                height: 1.25,
-                color: Colors.black87,
+              child: Icon(
+                icon,
+                size: 35,
+                color: iconColor,
               ),
             ),
-          ),
-        ],
+
+            const SizedBox(height: 8),
+
+            Text(
+              title,
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+
+              style: const TextStyle(
+                fontSize: 13,
+                fontWeight: FontWeight.bold,
+                height: 1.15,
+                color: Colors.black,
+              ),
+            ),
+
+            const SizedBox(height: 5),
+
+            Expanded(
+              child: Text(
+                description,
+                maxLines: 4,
+                overflow: TextOverflow.ellipsis,
+
+                style: const TextStyle(
+                  fontSize: 11,
+                  height: 1.25,
+                  color: Colors.black87,
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -559,14 +545,11 @@ class _HomePageState extends State<HomePage> {
     required String label,
     required int index,
   }) {
-    final bool active =
-        _selectedIndex == index;
+    final bool active = _selectedIndex == index;
 
     return GestureDetector(
       onTap: () => _onItemTapped(index),
-
-      behavior:
-          HitTestBehavior.opaque,
+      behavior: HitTestBehavior.opaque,
 
       child: SizedBox(
         width: 55,
