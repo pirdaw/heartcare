@@ -1,9 +1,7 @@
 import 'package:flutter/material.dart';
-import 'Skrining/medical_clipboard_illustration.dart';
-import 'Skrining/custom_bottom_nav_bar.dart';
-import 'Skrining/screening_input_page.dart';
+import 'custom_bottom_nav_bar.dart';
 
-/// Halaman Pertama: Pengantar Skrining Risiko Penyakit Jantung
+/// Halaman Pengantar Skrining Risiko Penyakit Jantung
 class ScreeningIntroPage extends StatelessWidget {
   const ScreeningIntroPage({super.key});
 
@@ -74,11 +72,34 @@ class ScreeningIntroPage extends StatelessWidget {
 
             const Spacer(flex: 2),
 
-            // Ilustrasi Clipboard Medis dengan Jantung EKG
-            const Center(
-              child: MedicalClipboardIllustration(
-                width: 220,
-                height: 275,
+            // Ilustrasi Medis Clipboard
+            Center(
+              child: Container(
+                width: 200,
+                height: 250,
+                decoration: BoxDecoration(
+                  color: const Color(0xFFE8F7FB),
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                child: const Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(
+                      Icons.assignment_turned_in_rounded,
+                      size: 80,
+                      color: primaryTeal,
+                    ),
+                    SizedBox(height: 12),
+                    Text(
+                      'AI Health Screening',
+                      style: TextStyle(
+                        fontSize: 15,
+                        fontWeight: FontWeight.bold,
+                        color: primaryTeal,
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ),
 
@@ -92,10 +113,11 @@ class ScreeningIntroPage extends StatelessWidget {
                 height: 48,
                 child: ElevatedButton(
                   onPressed: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => const ScreeningInputPage(),
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text('Memulai proses Skrining...'),
+                        backgroundColor: primaryTeal,
+                        duration: Duration(seconds: 2),
                       ),
                     );
                   },
