@@ -3,6 +3,7 @@ import 'screening_intro_page.dart';
 import 'dokter_page.dart';
 import 'emergency_page.dart';
 import 'education_page.dart';
+import 'pengingat_kesehatan_page.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -301,13 +302,22 @@ class _HomePageState extends State<HomePage> {
                           CrossAxisAlignment.start,
                       children: [
                         Expanded(
-                          child: _serviceCard(
-                            icon: Icons.notifications_none,
-                            title: 'Pengingat Kesehatan',
-                            description:
-                                'Pengingat agar tidak melewati kegiatan penting.',
-                          ),
-                        ),
+  child: _serviceCard(
+    icon: Icons.notifications_none,
+    title: 'Pengingat Kesehatan',
+    description:
+        'Pengingat agar tidak melewati kegiatan penting.',
+    onTap: () {
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) =>
+              const PengingatKesehatanPage(),
+        ),
+      );
+    },
+  ),
+),
 
                         const SizedBox(width: 10),
 

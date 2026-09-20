@@ -1,0 +1,515 @@
+import 'package:flutter/material.dart';
+import 'konsultasi_dokter_page.dart';
+
+class PilihJadwalPage extends StatefulWidget {
+  const PilihJadwalPage({super.key});
+
+  @override
+  State<PilihJadwalPage> createState() => _PilihJadwalPageState();
+}
+
+class _PilihJadwalPageState extends State<PilihJadwalPage> {
+  int selectedDay = 2;
+  String? selectedTime;
+
+  final List<Map<String, String>> dates = [
+    {"day": "Sen", "date": "1"},
+    {"day": "Sel", "date": "2"},
+    {"day": "Rab", "date": "3"},
+    {"day": "Kam", "date": "4"},
+    {"day": "Jum", "date": "5"},
+    {"day": "Sab", "date": "6"},
+    {"day": "Min", "date": "7"},
+  ];
+
+  final List<String> morningTimes = [
+    "08.00",
+    "08.30",
+    "09.00",
+    "09.30",
+    "10.00",
+  ];
+
+  final List<String> afternoonTimes = [
+    "13.00",
+    "13.30",
+    "14.00",
+    "14.30",
+    "15.00",
+  ];
+
+  final List<String> eveningTimes = [
+    "16.00",
+    "17.00",
+    "17.30",
+  ];
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: Colors.white,
+
+      body: SafeArea(
+        child: Column(
+          children: [
+
+            // ==================================================
+            // HEADER
+            // ==================================================
+            Padding(
+              padding: const EdgeInsets.fromLTRB(
+                20,
+                18,
+                20,
+                10,
+              ),
+              child: Row(
+                children: [
+
+                  // TOMBOL KEMBALI
+                  Container(
+                    width: 36,
+                    height: 36,
+                    decoration: const BoxDecoration(
+                      color: Color(0xFFF1F1F1),
+                      shape: BoxShape.circle,
+                    ),
+                    child: IconButton(
+                      padding: EdgeInsets.zero,
+                      icon: const Icon(
+                        Icons.chevron_left,
+                        size: 27,
+                        color: Colors.black87,
+                      ),
+                      onPressed: () {
+                        Navigator.pop(context);
+                      },
+                    ),
+                  ),
+
+                  // JUDUL
+                  const Expanded(
+                    child: Center(
+                      child: Text(
+                        "Pilih Jadwal",
+                        style: TextStyle(
+                          fontSize: 20,
+                          fontWeight: FontWeight.w700,
+                          color: Colors.black,
+                        ),
+                      ),
+                    ),
+                  ),
+
+                  // PENYEIMBANG HEADER
+                  const SizedBox(width: 36),
+                ],
+              ),
+            ),
+
+            // ==================================================
+            // CONTENT
+            // ==================================================
+            Expanded(
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 28,
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+
+                    const SizedBox(height: 10),
+
+                    // ==================================================
+                    // BULAN
+                    // ==================================================
+                    const Text(
+                      "September 2026",
+                      style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w500,
+                        color: Color(0xFF555555),
+                      ),
+                    ),
+
+                    const SizedBox(height: 12),
+
+                    // ==================================================
+                    // TANGGAL
+                    // ==================================================
+                    Row(
+                      children: dates.map((item) {
+                        final int day =
+                            int.parse(item["date"]!);
+
+                        final bool isSelected =
+                            selectedDay == day;
+
+                        return Expanded(
+                          child: Padding(
+                            padding: const EdgeInsets.only(
+                              right: 5,
+                            ),
+                            child: GestureDetector(
+                              onTap: () {
+                                setState(() {
+                                  selectedDay = day;
+                                  selectedTime = null;
+                                });
+                              },
+                              child: Container(
+                                height: 42,
+                                decoration: BoxDecoration(
+                                  color: isSelected
+                                      ? const Color(0xFF079BC0)
+                                      : Colors.white,
+                                  borderRadius:
+                                      BorderRadius.circular(9),
+                                  border: Border.all(
+                                    color: isSelected
+                                        ? const Color(0xFF079BC0)
+                                        : const Color(0xFFD5D5D5),
+                                  ),
+                                ),
+                                child: Column(
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.center,
+                                  children: [
+
+                                    Text(
+                                      item["day"]!,
+                                      style: TextStyle(
+                                        fontSize: 9,
+                                        fontWeight:
+                                            FontWeight.w500,
+                                        color: isSelected
+                                            ? Colors.white
+                                            : const Color(
+                                                0xFF666666,
+                                              ),
+                                      ),
+                                    ),
+
+                                    const SizedBox(height: 1),
+
+                                    Text(
+                                      item["date"]!,
+                                      style: TextStyle(
+                                        fontSize: 15,
+                                        fontWeight:
+                                            FontWeight.w600,
+                                        color: isSelected
+                                            ? Colors.white
+                                            : const Color(
+                                                0xFF333333,
+                                              ),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          ),
+                        );
+                      }).toList(),
+                    ),
+
+                    const SizedBox(height: 32),
+
+                    // ==================================================
+                    // PAGI
+                    // ==================================================
+                    _timeSection(
+                      title: "Pagi",
+                      times: morningTimes,
+                    ),
+
+                    const SizedBox(height: 28),
+
+                    // ==================================================
+                    // SIANG
+                    // ==================================================
+                    _timeSection(
+                      title: "Siang",
+                      times: afternoonTimes,
+                    ),
+
+                    const SizedBox(height: 28),
+
+                    // ==================================================
+                    // SORE
+                    // ==================================================
+                    _timeSection(
+                      title: "Sore",
+                      times: eveningTimes,
+                    ),
+
+                    const SizedBox(height: 35),
+
+                    // ==================================================
+                    // KONFIRMASI
+                    // ==================================================
+                    SizedBox(
+                      width: double.infinity,
+                      height: 44,
+                      child: ElevatedButton(
+                        onPressed: selectedTime == null
+                            ? null
+                            : _confirmSchedule,
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor:
+                              const Color(0xFF079BC0),
+                          disabledBackgroundColor:
+                              const Color(0xFFB8DDE5),
+                          foregroundColor: Colors.white,
+                          elevation: 0,
+                          shape: RoundedRectangleBorder(
+                            borderRadius:
+                                BorderRadius.circular(7),
+                          ),
+                        ),
+                        child: const Text(
+                          "Konfirmasi Jadwal",
+                          style: TextStyle(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                      ),
+                    ),
+
+                    const SizedBox(height: 20),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+
+      // ==================================================
+      // BOTTOM NAVIGATION
+      // ==================================================
+      bottomNavigationBar: _buildBottomNavigation(),
+    );
+  }
+
+  // ==========================================================
+  // TIME SECTION
+  // ==========================================================
+
+  Widget _timeSection({
+    required String title,
+    required List<String> times,
+  }) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+
+        Text(
+          title,
+          style: const TextStyle(
+            fontSize: 12,
+            fontWeight: FontWeight.w500,
+            color: Color(0xFF555555),
+          ),
+        ),
+
+        const SizedBox(height: 10),
+
+        Wrap(
+          spacing: 7,
+          runSpacing: 8,
+          children: times.map((time) {
+            final bool isSelected =
+                selectedTime == time;
+
+            return GestureDetector(
+              onTap: () {
+                setState(() {
+                  selectedTime = time;
+                });
+              },
+              child: Container(
+                height: 28,
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 9,
+                ),
+                alignment: Alignment.center,
+                decoration: BoxDecoration(
+                  color: isSelected
+                      ? const Color(0xFF079BC0)
+                      : Colors.white,
+                  borderRadius: BorderRadius.circular(6),
+                  border: Border.all(
+                    color: isSelected
+                        ? const Color(0xFF079BC0)
+                        : const Color(0xFFE1E1E1),
+                  ),
+                ),
+                child: Text(
+                  time,
+                  style: TextStyle(
+                    fontSize: 10,
+                    fontWeight: FontWeight.w500,
+                    color: isSelected
+                        ? Colors.white
+                        : const Color(0xFF777777),
+                  ),
+                ),
+              ),
+            );
+          }).toList(),
+        ),
+      ],
+    );
+  }
+
+  // ==========================================================
+  // KONFIRMASI JADWAL
+  // ==========================================================
+
+  void _confirmSchedule() {
+    if (selectedTime == null) {
+      return;
+    }
+
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: const Text(
+            "Jadwal Berhasil Dipilih",
+            style: TextStyle(
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+          content: Text(
+            "Jadwal konsultasi:\n"
+            "2 September 2026\n"
+            "Pukul $selectedTime",
+          ),
+          actions: [
+            TextButton(
+  onPressed: () {
+    Navigator.pop(context);
+
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => KonsultasiDokterPage(),
+      ),
+    );
+  },
+  child: const Text(
+    "OK",
+                style: TextStyle(
+                  color: Color(0xFF079BC0),
+                ),
+              ),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  // ==========================================================
+  // BOTTOM NAVIGATION
+  // ==========================================================
+
+  Widget _buildBottomNavigation() {
+    return Container(
+      height: 72,
+      decoration: BoxDecoration(
+        color: Colors.white,
+        border: Border(
+          top: BorderSide(
+            color: Colors.grey.shade300,
+            width: 1,
+          ),
+        ),
+      ),
+      child: Row(
+        mainAxisAlignment:
+            MainAxisAlignment.spaceAround,
+        children: [
+
+          _bottomItem(
+            icon: Icons.home_outlined,
+            label: "Home",
+            selected: false,
+          ),
+
+          _bottomItem(
+            icon: Icons.favorite_border,
+            label: "Skrining",
+            selected: false,
+          ),
+
+          _bottomItem(
+            icon: Icons.person_outline,
+            label: "Dokter",
+            selected: true,
+          ),
+
+          _bottomItem(
+            icon: Icons.description_outlined,
+            label: "Riwayat",
+            selected: false,
+          ),
+
+          _bottomItem(
+            icon: Icons.person_outline,
+            label: "Profil",
+            selected: false,
+          ),
+        ],
+      ),
+    );
+  }
+
+  // ==========================================================
+  // BOTTOM NAV ITEM
+  // ==========================================================
+
+  Widget _bottomItem({
+    required IconData icon,
+    required String label,
+    required bool selected,
+  }) {
+    return SizedBox(
+      width: 55,
+      child: Column(
+        mainAxisAlignment:
+            MainAxisAlignment.center,
+        children: [
+
+          Icon(
+            icon,
+            size: 25,
+            color: selected
+                ? const Color(0xFF087EFF)
+                : Colors.black87,
+          ),
+
+          const SizedBox(height: 2),
+
+          Text(
+            label,
+            style: TextStyle(
+              fontSize: 8,
+              fontWeight: selected
+                  ? FontWeight.w600
+                  : FontWeight.w400,
+              color: selected
+                  ? const Color(0xFF087EFF)
+                  : Colors.black87,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}

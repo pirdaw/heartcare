@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'home_page.dart';
+import 'detail_dokter_page.dart';
 
 class PilihDokterPage extends StatefulWidget {
   const PilihDokterPage({super.key});
@@ -15,20 +16,20 @@ class _PilihDokterPageState extends State<PilihDokterPage> {
 
   final List<Map<String, String>> _dokter = [
     {
-      'nama': 'Dr. Andi Pratama',
+      'nama': 'dr. Andi Pratama',
       'spesialis': 'Spesialis Jantung',
     },
     {
       'nama': 'dr. Sinta Maharani',
-      'spesialis': 'Spesialis Penyakit Dalam',
-    },
-    {
-      'nama': 'Dr. Budi Santoso',
       'spesialis': 'Spesialis Jantung',
     },
     {
+  'nama': 'dr. Nurlitta Dwi',
+  'spesialis': 'Spesialis Jantung',
+},
+    {
       'nama': 'dr. Rina Amelia',
-      'spesialis': 'Dokter Umum',
+      'spesialis': 'Spesialis Jantung',
     },
   ];
 
@@ -271,11 +272,20 @@ class _PilihDokterPageState extends State<PilihDokterPage> {
                         final dokter =
                             _filteredDoctors[index];
 
-                        return _doctorCard(
-                          name: dokter['nama']!,
-                          specialist:
-                              dokter['spesialis']!,
-                        );
+                        return GestureDetector(
+  onTap: () {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => const DetailDokterPage(),
+      ),
+    );
+  },
+  child: _doctorCard(
+    name: dokter['nama']!,
+    specialist: dokter['spesialis']!,
+  ),
+);
                       },
                     ),
             ),
