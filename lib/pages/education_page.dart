@@ -103,6 +103,7 @@ class EducationPage extends StatelessWidget {
                     const SizedBox(height: 10),
 
                     // ARTIKEL 1
+                    // BISA DIPENCET
                     _articleCard(
                       context,
                       image:
@@ -113,11 +114,21 @@ class EducationPage extends StatelessWidget {
                           'Penyakit jantung koroner merupakan salah satu '
                           'penyakit yang perlu diwaspadai karena dapat '
                           'mengganggu fungsi jantung.',
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) =>
+                                const ArticleDetailPage(),
+                          ),
+                        );
+                      },
                     ),
 
                     const SizedBox(height: 17),
 
                     // ARTIKEL 2
+                    // TIDAK BISA DIPENCET
                     _articleCard(
                       context,
                       image:
@@ -132,6 +143,7 @@ class EducationPage extends StatelessWidget {
                     const SizedBox(height: 17),
 
                     // ARTIKEL 3
+                    // TIDAK BISA DIPENCET
                     _articleCard(
                       context,
                       image:
@@ -184,16 +196,10 @@ class EducationPage extends StatelessWidget {
     required String category,
     required String title,
     required String description,
+    VoidCallback? onTap,
   }) {
     return GestureDetector(
-      onTap: () {
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (context) => const ArticleDetailPage(),
-          ),
-        );
-      },
+      onTap: onTap,
       child: Container(
         height: 119,
         padding: const EdgeInsets.all(7),
