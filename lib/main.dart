@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'pages/welcome_page.dart';
+import 'pages/pengingat_kesehatan_page.dart';
 
 void main() {
   runApp(const HeartCareApp());
@@ -13,7 +13,8 @@ class HeartCareApp extends StatelessWidget {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       title: 'HeartCare',
-      home: const WelcomePage(),
+      // Mengarahkan langsung ke halaman Pengingat Kesehatan yang baru dibuat
+      home: const PengingatKesehatanPage(),
     );
   }
 }

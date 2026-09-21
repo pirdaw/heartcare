@@ -1,5 +1,9 @@
 import 'package:flutter/material.dart';
 import 'screening_intro_page.dart';
+import 'dokter_page.dart';
+import 'emergency_page.dart';
+import 'education_page.dart';
+import 'pengingat_kesehatan_page.dart';
 import 'emergency_page.dart';
 import 'education_page.dart';
 import 'profil_page.dart';
@@ -29,36 +33,15 @@ class _HomePageState extends State<HomePage> {
       );
     }
 
-    // MENU DOKTER
-    // Belum diarahkan ke halaman apa pun
+    // Menu Dokter
     if (index == 2) {
-      return;
-    }
-
-    // MENU RIWAYAT
-    // Belum diarahkan ke halaman apa pun
-    if (index == 3) {
-      return;
-    }
-
-    // MENU PROFIL
-    if (index == 4) {
       Navigator.push(
         context,
         MaterialPageRoute(
-          builder: (context) => const ProfilPage(),
+          builder: (context) => const PilihDokterPage(),
         ),
       );
     }
-  }
-
-  void _openEmergencyPage() {
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => const EmergencyPage(),
-      ),
-    );
   }
 
   @override
@@ -66,81 +49,80 @@ class _HomePageState extends State<HomePage> {
     return Scaffold(
       backgroundColor: Colors.white,
       body: SafeArea(
-        child: Container(
-          decoration: const BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.vertical(
-              top: Radius.circular(34),
-            ),
-          ),
-          child: Column(
-            children: [
-              Expanded(
-                child: SingleChildScrollView(
-                  padding: const EdgeInsets.fromLTRB(
-                    20,
-                    18,
-                    20,
-                    18,
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      // HEADER
-                      Row(
-                        crossAxisAlignment: CrossAxisAlignment.center,
-                        children: [
-                          Container(
-                            width: 58,
-                            height: 58,
-                            decoration: const BoxDecoration(
-                              shape: BoxShape.circle,
-                              color: Color(0xFFD8F1F8),
+        child: Column(
+          children: [
+            Expanded(
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.fromLTRB(
+                  20,
+                  18,
+                  20,
+                  18,
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+
+                    // ==================================================
+                    // HEADER
+                    // ==================================================
+
+                    Row(
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      children: [
+                        Container(
+                          width: 58,
+                          height: 58,
+                          decoration: const BoxDecoration(
+                            shape: BoxShape.circle,
+                            color: Color(0xFFD8F1F8),
+                          ),
+                          child: ClipOval(
+                            child: Image.asset(
+                              'assets/images/profile_woman.png',
+                              fit: BoxFit.cover,
+                              errorBuilder:
+                                  (context, error, stackTrace) {
+                                return const Icon(
+                                  Icons.person,
+                                  size: 38,
+                                  color: Color(0xFF079BC1),
+                                );
+                              },
                             ),
-                            child: ClipOval(
-                              child: Image.asset(
-                                'assets/images/profile_woman.png',
-                                fit: BoxFit.cover,
-                                errorBuilder:
-                                    (context, error, stackTrace) {
-                                  return const Icon(
-                                    Icons.person,
-                                    size: 38,
-                                    color: Color(0xFF079BC1),
-                                  );
-                                },
+                          ),
+                        ),
+
+                        const SizedBox(width: 12),
+
+                        const Expanded(
+                          child: Column(
+                            crossAxisAlignment:
+                                CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'Hallo, Nadea...',
+                                style: TextStyle(
+                                  fontSize: 19,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.black,
+                                ),
                               ),
-                            ),
-                          ),
 
-                          const SizedBox(width: 12),
+                              SizedBox(height: 4),
 
-                          const Expanded(
-                            child: Column(
-                              crossAxisAlignment:
-                                  CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  'Hallo, Nadea...',
-                                  style: TextStyle(
-                                    fontSize: 19,
-                                    fontWeight: FontWeight.bold,
-                                    color: Colors.black,
-                                  ),
+                              Text(
+                                'Apa yang bisa kami bantu\n'
+                                'hari ini?',
+                                style: TextStyle(
+                                  fontSize: 15,
+                                  height: 1.25,
+                                  color: Colors.black87,
                                 ),
-                                SizedBox(height: 4),
-                                Text(
-                                  'Apa yang bisa kami bantu\n'
-                                  'hari ini?',
-                                  style: TextStyle(
-                                    fontSize: 15,
-                                    height: 1.25,
-                                    color: Colors.black87,
-                                  ),
-                                ),
-                              ],
-                            ),
+                              ),
+                            ],
                           ),
+                        ),
 
                           // NOTIFIKASI
                           IconButton(
@@ -159,7 +141,7 @@ class _HomePageState extends State<HomePage> {
                         ],
                       ),
 
-                      const SizedBox(height: 24),
+                    const SizedBox(height: 24),
 
                       // CARD SKRINING
                       Container(
@@ -198,20 +180,20 @@ class _HomePageState extends State<HomePage> {
                                     ),
                                   ),
 
-                                  const SizedBox(height: 7),
+                                const SizedBox(height: 7),
 
-                                  const Text(
-                                    'Kenali faktor risiko jantung Anda\n'
-                                    'melalui skrining kesehatan\n'
-                                    'sederhana menggunakan aplikasi',
-                                    style: TextStyle(
-                                      fontSize: 14,
-                                      height: 1.3,
-                                      color: Color(0xFF263238),
-                                    ),
+                                const Text(
+                                  'Kenali faktor risiko jantung Anda\n'
+                                  'melalui skrining kesehatan\n'
+                                  'sederhana menggunakan aplikasi',
+                                  style: TextStyle(
+                                    fontSize: 14,
+                                    height: 1.3,
+                                    color: Color(0xFF263238),
                                   ),
+                                ),
 
-                                  const Spacer(),
+                                const Spacer(),
 
                                   SizedBox(
                                     height: 40,
@@ -278,7 +260,7 @@ class _HomePageState extends State<HomePage> {
                         ),
                       ),
 
-                      const SizedBox(height: 18),
+                    const SizedBox(height: 18),
 
                       // JUDUL LAYANAN
                       const Text(
@@ -290,7 +272,7 @@ class _HomePageState extends State<HomePage> {
                         ),
                       ),
 
-                      const SizedBox(height: 10),
+                    const SizedBox(height: 10),
 
                       // BARIS 1
                       Row(
@@ -306,7 +288,7 @@ class _HomePageState extends State<HomePage> {
                             ),
                           ),
 
-                          const SizedBox(width: 10),
+                        const SizedBox(width: 10),
 
                           Expanded(
                             child: _serviceCard(
@@ -321,7 +303,7 @@ class _HomePageState extends State<HomePage> {
                         ],
                       ),
 
-                      const SizedBox(height: 10),
+                    const SizedBox(height: 10),
 
                       // BARIS 2
                       Row(
@@ -341,7 +323,11 @@ class _HomePageState extends State<HomePage> {
                             ),
                           ),
 
-                          const SizedBox(width: 10),
+                        const SizedBox(width: 10),
+
+                        // ==================================================
+                        // EDUKASI KESEHATAN
+                        // ==================================================
 
                           Expanded(
                             child: _serviceCard(
@@ -365,11 +351,11 @@ class _HomePageState extends State<HomePage> {
                         ],
                       ),
 
-                      const SizedBox(height: 8),
-                    ],
-                  ),
+                    const SizedBox(height: 8),
+                  ],
                 ),
               ),
+            ),
 
               // BOTTOM NAVIGATION
               Container(
@@ -427,11 +413,13 @@ class _HomePageState extends State<HomePage> {
     required String title,
     required String description,
     Color iconColor = Colors.black,
-    Color circleColor = const Color(0xFFF1F1F1),
+    Color circleColor =
+        const Color(0xFFF1F1F1),
     VoidCallback? onTap,
   }) {
     return GestureDetector(
       onTap: onTap,
+      behavior: HitTestBehavior.opaque,
       child: Container(
         height: 170,
         padding: const EdgeInsets.fromLTRB(
@@ -442,7 +430,8 @@ class _HomePageState extends State<HomePage> {
         ),
         decoration: BoxDecoration(
           color: Colors.white,
-          borderRadius: BorderRadius.circular(7),
+          borderRadius:
+              BorderRadius.circular(7),
           border: Border.all(
             color: const Color(0xFFDCDCDC),
             width: 0.9,
@@ -457,7 +446,8 @@ class _HomePageState extends State<HomePage> {
               height: 58,
               decoration: BoxDecoration(
                 color: circleColor,
-                borderRadius: BorderRadius.circular(16),
+                borderRadius:
+                    BorderRadius.circular(16),
               ),
               child: Icon(
                 icon,
@@ -471,10 +461,12 @@ class _HomePageState extends State<HomePage> {
             Text(
               title,
               maxLines: 2,
-              overflow: TextOverflow.ellipsis,
+              overflow:
+                  TextOverflow.ellipsis,
               style: const TextStyle(
                 fontSize: 13,
-                fontWeight: FontWeight.bold,
+                fontWeight:
+                    FontWeight.bold,
                 height: 1.15,
                 color: Colors.black,
               ),
@@ -486,7 +478,8 @@ class _HomePageState extends State<HomePage> {
               child: Text(
                 description,
                 maxLines: 4,
-                overflow: TextOverflow.ellipsis,
+                overflow:
+                    TextOverflow.ellipsis,
                 style: const TextStyle(
                   fontSize: 11,
                   height: 1.25,
