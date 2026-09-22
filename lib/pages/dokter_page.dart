@@ -18,18 +18,22 @@ class _PilihDokterPageState extends State<PilihDokterPage> {
     {
       'nama': 'dr. Andi Pratama',
       'spesialis': 'Spesialis Jantung',
+      'gambar': 'assets/images/dokter1.png',
     },
     {
       'nama': 'dr. Sinta Maharani',
       'spesialis': 'Spesialis Jantung',
+      'gambar': 'assets/images/profile_woman.png',
     },
     {
-  'nama': 'dr. Nurlitta Dwi',
-  'spesialis': 'Spesialis Jantung',
-},
+      'nama': 'dr. Nurlitta Dwi',
+      'spesialis': 'Spesialis Jantung',
+      'gambar': 'assets/images/dokter_nurlitta.png',
+    },
     {
       'nama': 'dr. Rina Amelia',
       'spesialis': 'Spesialis Jantung',
+      'gambar': 'assets/images/profile_woman.png',
     },
   ];
 
@@ -45,8 +49,6 @@ class _PilihDokterPageState extends State<PilihDokterPage> {
 
   final List<String> _categories = [
     'Semua',
-    'Jantung',
-    'Umum',
     'Spesialis',
   ];
 
@@ -74,14 +76,6 @@ class _PilihDokterPageState extends State<PilihDokterPage> {
       // Filter kategori
       if (_selectedCategory == 'Semua') {
         return true;
-      }
-
-      if (_selectedCategory == 'Jantung') {
-        return spesialis.contains('jantung');
-      }
-
-      if (_selectedCategory == 'Umum') {
-        return spesialis.contains('umum');
       }
 
       if (_selectedCategory == 'Spesialis') {
@@ -284,6 +278,7 @@ class _PilihDokterPageState extends State<PilihDokterPage> {
   child: _doctorCard(
     name: dokter['nama']!,
     specialist: dokter['spesialis']!,
+    image: dokter['gambar'],
   ),
 );
                       },
@@ -411,6 +406,7 @@ class _PilihDokterPageState extends State<PilihDokterPage> {
   Widget _doctorCard({
     required String name,
     required String specialist,
+    String? image,
   }) {
     return Container(
       padding: const EdgeInsets.all(14),
@@ -432,7 +428,7 @@ class _PilihDokterPageState extends State<PilihDokterPage> {
       child: Row(
         children: [
           // =======================================================
-          // PLACEHOLDER FOTO DOKTER
+          // FOTO DOKTER
           // =======================================================
 
           Container(
@@ -442,11 +438,24 @@ class _PilihDokterPageState extends State<PilihDokterPage> {
               color: const Color(0xFFEFF3F7),
               borderRadius: BorderRadius.circular(12),
             ),
-            child: const Icon(
-              Icons.person,
-              size: 40,
-              color: Color(0xFF9CA3AF),
-            ),
+            clipBehavior: Clip.antiAlias,
+            child: image != null && image.isNotEmpty
+                ? Image.asset(
+                    image,
+                    fit: BoxFit.cover,
+                    errorBuilder: (context, error, stackTrace) {
+                      return const Icon(
+                        Icons.person,
+                        size: 40,
+                        color: Color(0xFF9CA3AF),
+                      );
+                    },
+                  )
+                : const Icon(
+                    Icons.person,
+                    size: 40,
+                    color: Color(0xFF9CA3AF),
+                  ),
           ),
 
           const SizedBox(width: 14),
