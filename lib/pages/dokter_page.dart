@@ -1,7 +1,100 @@
 import 'package:flutter/material.dart';
+import 'home_page.dart';
+import 'detail_dokter_page.dart';
 
-class PilihDokterPage extends StatelessWidget {
+class PilihDokterPage extends StatefulWidget {
   const PilihDokterPage({super.key});
+
+  @override
+  State<PilihDokterPage> createState() => _PilihDokterPageState();
+}
+
+class _PilihDokterPageState extends State<PilihDokterPage> {
+  // =========================================================
+  // DATA
+  // =========================================================
+
+  final List<Map<String, String>> _dokter = [
+    {
+      'nama': 'dr. Andi Pratama',
+      'spesialis': 'Spesialis Jantung',
+    },
+    {
+      'nama': 'dr. Sinta Maharani',
+      'spesialis': 'Spesialis Jantung',
+    },
+    {
+  'nama': 'dr. Nurlitta Dwi',
+  'spesialis': 'Spesialis Jantung',
+},
+    {
+      'nama': 'dr. Rina Amelia',
+      'spesialis': 'Spesialis Jantung',
+    },
+  ];
+
+  final TextEditingController _searchController =
+      TextEditingController();
+
+  String _selectedCategory = 'Semua';
+  String _searchQuery = '';
+
+  // =========================================================
+  // CATEGORY
+  // =========================================================
+
+  final List<String> _categories = [
+    'Semua',
+    'Jantung',
+    'Umum',
+    'Spesialis',
+  ];
+
+  // =========================================================
+  // FILTER DOKTER
+  // =========================================================
+
+  List<Map<String, String>> get _filteredDoctors {
+    return _dokter.where((dokter) {
+      final String nama =
+          dokter['nama']!.toLowerCase();
+
+      final String spesialis =
+          dokter['spesialis']!.toLowerCase();
+
+      // Filter pencarian
+      final bool cocokSearch =
+          nama.contains(_searchQuery.toLowerCase()) ||
+          spesialis.contains(_searchQuery.toLowerCase());
+
+      if (!cocokSearch) {
+        return false;
+      }
+
+      // Filter kategori
+      if (_selectedCategory == 'Semua') {
+        return true;
+      }
+
+      if (_selectedCategory == 'Jantung') {
+        return spesialis.contains('jantung');
+      }
+
+      if (_selectedCategory == 'Umum') {
+        return spesialis.contains('umum');
+      }
+
+      if (_selectedCategory == 'Spesialis') {
+        return spesialis.contains('spesialis');
+      }
+
+      return true;
+    }).toList();
+  }
+
+  // =========================================================
+  // BUILD
+  // =========================================================
 
   @override
   Widget build(BuildContext context) {
@@ -11,234 +104,301 @@ class PilihDokterPage extends StatelessWidget {
       body: SafeArea(
         child: Column(
           children: [
-            // =========================
+            // =========================================================
             // HEADER
-            // =========================
+            // =========================================================
+
             Padding(
-              padding: const EdgeInsets.fromLTRB(20, 18, 20, 10),
+              padding: const EdgeInsets.fromLTRB(
+                20,
+                18,
+                20,
+                10,
+              ),
               child: Row(
                 children: [
-                  Container(
-                    width: 38,
-                    height: 38,
-                    decoration: BoxDecoration(
-                      color: const Color(0xFFF4F4F4),
-                      shape: BoxShape.circle,
-                    ),
-                    child: IconButton(
-                      padding: EdgeInsets.zero,
-                      icon: const Icon(
-                        Icons.chevron_left,
-                        size: 28,
-                        color: Colors.black87,
+                  GestureDetector(
+                    onTap: () => Navigator.pop(context),
+                    child: Container(
+                      width: 40,
+                      height: 40,
+                      decoration: const BoxDecoration(
+                        color: Color(0xFFF1F3F6),
+                        shape: BoxShape.circle,
                       ),
-                      onPressed: () {
-                        Navigator.pop(context);
-                      },
+                      child: const Icon(
+                        Icons.chevron_left,
+                        color: Color(0xFF1E293B),
+                        size: 26,
+                      ),
                     ),
                   ),
 
                   const Expanded(
-                    child: Center(
-                      child: Text(
-                        "Pilih Dokter",
-                        style: TextStyle(
-                          fontSize: 21,
-                          fontWeight: FontWeight.w700,
-                          color: Colors.black,
-                        ),
+                    child: Text(
+                      'Pilih Dokter',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        fontSize: 22,
+                        fontWeight: FontWeight.bold,
+                        color: Color(0xFF111827),
                       ),
                     ),
                   ),
 
-                  const SizedBox(width: 38),
+                  const SizedBox(width: 40),
                 ],
               ),
             ),
 
-            // =========================
-            // CONTENT
-            // =========================
-            Expanded(
-              child: SingleChildScrollView(
-                padding: const EdgeInsets.symmetric(horizontal: 20),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
+            // =========================================================
+            // SEARCH
+            // =========================================================
 
-                    const SizedBox(height: 5),
-
-                    // =========================
-                    // SEARCH BAR
-                    // =========================
-                    Container(
-                      height: 48,
-                      decoration: BoxDecoration(
-                        border: Border.all(
-                          color: const Color(0xFFB8CDD4),
-                          width: 1,
-                        ),
-                        borderRadius: BorderRadius.circular(9),
-                      ),
-                      child: TextField(
-                        decoration: InputDecoration(
-                          border: InputBorder.none,
-                          prefixIcon: const Icon(
-                            Icons.search,
-                            size: 28,
-                            color: Color(0xFF555555),
-                          ),
-                          hintText: "Cari dokter atau spesialis",
-                          hintStyle: TextStyle(
-                            color: Colors.grey.shade500,
-                            fontSize: 13,
-                          ),
-                          contentPadding: const EdgeInsets.symmetric(
-                            vertical: 14,
-                          ),
-                        ),
-                      ),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(
+                20,
+                8,
+                20,
+                12,
+              ),
+              child: Container(
+                height: 46,
+                decoration: BoxDecoration(
+                  color: const Color(0xFFF5F7F9),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: TextField(
+                  controller: _searchController,
+                  onChanged: (value) {
+                    setState(() {
+                      _searchQuery = value;
+                    });
+                  },
+                  decoration: InputDecoration(
+                    hintText: 'Cari dokter...',
+                    hintStyle: const TextStyle(
+                      color: Color(0xFF9CA3AF),
+                      fontSize: 14,
+                    ),
+                    prefixIcon: const Icon(
+                      Icons.search,
+                      color: Color(0xFF6B7280),
+                      size: 22,
                     ),
 
-                    const SizedBox(height: 15),
+                    // Tombol X ketika mengetik
+                    suffixIcon: _searchQuery.isNotEmpty
+                        ? IconButton(
+                            icon: const Icon(
+                              Icons.close,
+                              color: Color(0xFF6B7280),
+                              size: 20,
+                            ),
+                            onPressed: () {
+                              _searchController.clear();
 
-                    // =========================
-                    // CATEGORY
-                    // =========================
-                    SingleChildScrollView(
-                      scrollDirection: Axis.horizontal,
-                      child: Row(
-                        children: [
-                          _categoryButton(
-                            "Semua",
-                            selected: true,
-                          ),
-                          _categoryButton("Umum"),
-                          _categoryButton("Anak"),
-                          _categoryButton("Penyakit Dalam"),
-                        ],
-                      ),
+                              setState(() {
+                                _searchQuery = '';
+                              });
+                            },
+                          )
+                        : null,
+
+                    border: InputBorder.none,
+                    contentPadding:
+                        const EdgeInsets.symmetric(
+                      vertical: 13,
                     ),
-
-                    const SizedBox(height: 12),
-
-                    // =========================
-                    // DOCTOR LIST
-                    // =========================
-                    _doctorCard(
-                      image: "assets/images/dokter1.png",
-                      name: "dr. Nurlitta Dwi",
-                      specialist: "Dokter Umum",
-                    ),
-
-                    _doctorCard(
-                      image: "assets/images/dokter2.png",
-                      name: "dr. Alvian Pratama, Sp.PD",
-                      specialist: "Dokter Spesialis Penyakit Dalam",
-                    ),
-
-                    _doctorCard(
-                      image: "assets/images/dokter3.png",
-                      name: "dr. Aisyah Putri, Sp.A",
-                      specialist: "Dokter Spesialis Anak",
-                    ),
-
-                    _doctorCard(
-                      image: "assets/images/dokter4.png",
-                      name: "dr. Adrian Mahendra, Sp.B",
-                      specialist: "Dokter Spesialis Bedah",
-                    ),
-
-                    const SizedBox(height: 15),
-                  ],
+                  ),
                 ),
               ),
+            ),
+
+            // =========================================================
+            // CATEGORY
+            // =========================================================
+
+            SizedBox(
+              height: 42,
+              child: ListView.builder(
+                scrollDirection: Axis.horizontal,
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 20),
+                itemCount: _categories.length,
+                itemBuilder: (context, index) {
+                  final String category =
+                      _categories[index];
+
+                  final bool selected =
+                      _selectedCategory == category;
+
+                  return GestureDetector(
+                    onTap: () {
+                      setState(() {
+                        _selectedCategory = category;
+                      });
+                    },
+                    child: _categoryItem(
+                      category,
+                      selected,
+                    ),
+                  );
+                },
+              ),
+            ),
+
+            const SizedBox(height: 8),
+
+            // =========================================================
+            // DAFTAR DOKTER
+            // =========================================================
+
+            Expanded(
+              child: _filteredDoctors.isEmpty
+                  ? _emptyDoctorState()
+                  : ListView.separated(
+                      padding: const EdgeInsets.fromLTRB(
+                        20,
+                        8,
+                        20,
+                        20,
+                      ),
+                      itemCount: _filteredDoctors.length,
+                      separatorBuilder: (context, index) {
+                        return const SizedBox(height: 14);
+                      },
+                      itemBuilder: (context, index) {
+                        final dokter =
+                            _filteredDoctors[index];
+
+                        return GestureDetector(
+  onTap: () {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => const DetailDokterPage(),
+      ),
+    );
+  },
+  child: _doctorCard(
+    name: dokter['nama']!,
+    specialist: dokter['spesialis']!,
+  ),
+);
+                      },
+                    ),
             ),
           ],
         ),
       ),
 
-      // =========================
+      // =========================================================
       // BOTTOM NAVIGATION
-      // =========================
-      bottomNavigationBar: Container(
-        height: 82,
-        decoration: BoxDecoration(
-          color: Colors.white,
-          border: Border(
-            top: BorderSide(
-              color: Colors.grey.shade300,
-              width: 1,
+      // =========================================================
+
+      bottomNavigationBar: SafeArea(
+        top: false,
+        child: Container(
+          height: 62,
+          decoration: const BoxDecoration(
+            color: Colors.white,
+            border: Border(
+              top: BorderSide(
+                color: Color(0xFFE5E5E5),
+                width: 0.7,
+              ),
             ),
           ),
-        ),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceAround,
-          children: [
-            _bottomItem(
-              Icons.home_outlined,
-              "Home",
-              false,
-            ),
-            _bottomItem(
-              Icons.favorite_border,
-              "Skrining",
-              false,
-            ),
-            _bottomItem(
-              Icons.person_outline,
-              "Dokter",
-              true,
-            ),
-            _bottomItem(
-              Icons.description_outlined,
-              "Riwayat",
-              false,
-            ),
-            _bottomItem(
-              Icons.person_outline,
-              "Profil",
-              false,
-            ),
-          ],
+          child: Row(
+            mainAxisAlignment:
+                MainAxisAlignment.spaceAround,
+            children: [
+              // HOME
+              _bottomItem(
+                context,
+                Icons.home_outlined,
+                'Home',
+                false,
+                onTap: () {
+                  Navigator.pushReplacement(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) =>
+                          const HomePage(),
+                    ),
+                  );
+                },
+              ),
+
+              // SKRINING
+              _bottomItem(
+                context,
+                Icons.favorite_border,
+                'Skrining',
+                false,
+              ),
+
+              // DOKTER
+              _bottomItem(
+                context,
+                Icons.medical_services_outlined,
+                'Dokter',
+                true,
+              ),
+
+              // RIWAYAT
+              _bottomItem(
+                context,
+                Icons.description_outlined,
+                'Riwayat',
+                false,
+              ),
+
+              // PROFIL
+              _bottomItem(
+                context,
+                Icons.person_outline,
+                'Profil',
+                false,
+              ),
+            ],
+          ),
         ),
       ),
     );
   }
 
   // =========================================================
-  // CATEGORY BUTTON
+  // CATEGORY ITEM
   // =========================================================
 
-  static Widget _categoryButton(
-    String text, {
-    bool selected = false,
-  }) {
+  Widget _categoryItem(
+    String text,
+    bool selected,
+  ) {
     return Container(
-      margin: const EdgeInsets.only(right: 7),
+      margin: const EdgeInsets.only(right: 10),
       padding: const EdgeInsets.symmetric(
-        horizontal: 13,
-        vertical: 7,
+        horizontal: 18,
       ),
       decoration: BoxDecoration(
         color: selected
-            ? const Color(0xFF079BC0)
-            : Colors.white,
+            ? const Color(0xFF087EFF)
+            : const Color(0xFFF1F3F6),
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(
-          color: selected
-              ? const Color(0xFF079BC0)
-              : const Color(0xFFD0D0D0),
-        ),
       ),
+      alignment: Alignment.center,
       child: Text(
         text,
         style: TextStyle(
-          fontSize: 12,
-          fontWeight: FontWeight.w500,
+          fontSize: 13,
+          fontWeight: selected
+              ? FontWeight.w600
+              : FontWeight.w400,
           color: selected
               ? Colors.white
-              : const Color(0xFF555555),
+              : const Color(0xFF4B5563),
         ),
       ),
     );
@@ -248,108 +408,84 @@ class PilihDokterPage extends StatelessWidget {
   // DOCTOR CARD
   // =========================================================
 
-  static Widget _doctorCard({
-    required String image,
+  Widget _doctorCard({
     required String name,
     required String specialist,
   }) {
     return Container(
-      height: 72,
-      margin: const EdgeInsets.only(bottom: 12),
-      padding: const EdgeInsets.symmetric(
-        horizontal: 10,
-        vertical: 8,
-      ),
+      padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: const Color(0xFFF7F7F7),
-        borderRadius: BorderRadius.circular(17),
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: const Color(0xFFE5E7EB),
+          width: 1,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.04),
+            blurRadius: 8,
+            offset: const Offset(0, 3),
+          ),
+        ],
       ),
       child: Row(
         children: [
+          // =======================================================
+          // PLACEHOLDER FOTO DOKTER
+          // =======================================================
 
-          // FOTO DOKTER
           Container(
-            width: 54,
-            height: 54,
-            decoration: const BoxDecoration(
-              shape: BoxShape.circle,
-              color: Color(0xFFE7E7E7),
+            width: 72,
+            height: 82,
+            decoration: BoxDecoration(
+              color: const Color(0xFFEFF3F7),
+              borderRadius: BorderRadius.circular(12),
             ),
-            clipBehavior: Clip.antiAlias,
-            child: Image.asset(
-              image,
-              fit: BoxFit.cover,
-              errorBuilder: (context, error, stackTrace) {
-                return const Icon(
-                  Icons.person,
-                  size: 35,
-                  color: Colors.grey,
-                );
-              },
+            child: const Icon(
+              Icons.person,
+              size: 40,
+              color: Color(0xFF9CA3AF),
             ),
           ),
 
-          const SizedBox(width: 12),
+          const SizedBox(width: 14),
 
-          // NAMA + SPESIALIS
+          // =======================================================
+          // INFORMASI DOKTER
+          // =======================================================
+
           Expanded(
             child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              crossAxisAlignment: CrossAxisAlignment.start,
+              crossAxisAlignment:
+                  CrossAxisAlignment.start,
               children: [
-
                 Text(
                   name,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
                   style: const TextStyle(
-                    fontSize: 12.5,
-                    fontWeight: FontWeight.w700,
-                    color: Colors.black87,
+                    fontSize: 15,
+                    fontWeight: FontWeight.bold,
+                    color: Color(0xFF111827),
                   ),
                 ),
 
-                const SizedBox(height: 3),
+                const SizedBox(height: 6),
 
                 Text(
                   specialist,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: TextStyle(
-                    fontSize: 9.5,
-                    color: Colors.grey.shade600,
+                  style: const TextStyle(
+                    fontSize: 12,
+                    color: Color(0xFF4B5563),
                   ),
-                ),
-
-                const SizedBox(height: 4),
-
-                // STATUS ONLINE
-                Row(
-                  children: [
-                    Container(
-                      width: 8,
-                      height: 8,
-                      decoration: const BoxDecoration(
-                        color: Color(0xFF55C900),
-                        shape: BoxShape.circle,
-                      ),
-                    ),
-                    const SizedBox(width: 5),
-                    const Text(
-                      "Online",
-                      style: TextStyle(
-                        fontSize: 9,
-                        color: Color(0xFF55C900),
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                  ],
                 ),
               ],
             ),
           ),
 
+          // =======================================================
           // PANAH
+          // =======================================================
+
           const Icon(
             Icons.chevron_right,
             size: 25,
@@ -361,42 +497,91 @@ class PilihDokterPage extends StatelessWidget {
   }
 
   // =========================================================
+  // EMPTY STATE
+  // =========================================================
+
+  Widget _emptyDoctorState() {
+    return Center(
+      child: Column(
+        mainAxisAlignment:
+            MainAxisAlignment.center,
+        children: [
+          const Icon(
+            Icons.search_off,
+            size: 50,
+            color: Color(0xFFB0B7C3),
+          ),
+
+          const SizedBox(height: 12),
+
+          const Text(
+            'Dokter tidak ditemukan',
+            style: TextStyle(
+              fontSize: 15,
+              fontWeight: FontWeight.w600,
+              color: Color(0xFF374151),
+            ),
+          ),
+
+          const SizedBox(height: 5),
+
+          const Text(
+            'Coba gunakan kata kunci lain.',
+            style: TextStyle(
+              fontSize: 12,
+              color: Color(0xFF6B7280),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // =========================================================
   // BOTTOM NAV ITEM
   // =========================================================
 
   static Widget _bottomItem(
+    BuildContext context,
     IconData icon,
     String label,
-    bool selected,
-  ) {
-    return SizedBox(
-      width: 60,
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(
-            icon,
-            size: 27,
-            color: selected
-                ? const Color(0xFF087EFF)
-                : Colors.black87,
-          ),
-
-          const SizedBox(height: 3),
-
-          Text(
-            label,
-            style: TextStyle(
-              fontSize: 9,
-              fontWeight: selected
-                  ? FontWeight.w600
-                  : FontWeight.w400,
+    bool selected, {
+    VoidCallback? onTap,
+  }) {
+    return GestureDetector(
+      onTap: onTap,
+      behavior: HitTestBehavior.opaque,
+      child: SizedBox(
+        width: 60,
+        height: 58,
+        child: Column(
+          mainAxisAlignment:
+              MainAxisAlignment.center,
+          children: [
+            Icon(
+              icon,
+              size: 27,
               color: selected
                   ? const Color(0xFF087EFF)
                   : Colors.black87,
             ),
-          ),
-        ],
+
+            const SizedBox(height: 3),
+
+            Text(
+              label,
+              style: TextStyle(
+                fontSize: 9,
+                fontWeight: selected
+                    ? FontWeight.w600
+                    : FontWeight.w400,
+                color: selected
+                    ? const Color(0xFF087EFF)
+                    : Colors.black87,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
