@@ -306,61 +306,63 @@ class _PilihJadwalPageState extends State<PilihJadwalPage> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-
         Text(
           title,
           style: const TextStyle(
             fontSize: 12,
-            fontWeight: FontWeight.w500,
-            color: Color(0xFF555555),
+            fontWeight: FontWeight.w600,
+            color: Color(0xFF333333),
           ),
         ),
 
         const SizedBox(height: 10),
 
-        Wrap(
-          spacing: 7,
-          runSpacing: 8,
-          children: times.map((time) {
-            final bool isSelected =
-                selectedTime == time;
+        LayoutBuilder(
+          builder: (context, constraints) {
+            const int crossAxisCount = 5;
+            const double spacing = 8;
+            final double itemWidth =
+                (constraints.maxWidth - (spacing * (crossAxisCount - 1))) /
+                    crossAxisCount;
 
-            return GestureDetector(
-              onTap: () {
-                setState(() {
-                  selectedTime = time;
-                });
-              },
-              child: Container(
-                height: 28,
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 9,
-                ),
-                alignment: Alignment.center,
-                decoration: BoxDecoration(
-                  color: isSelected
-                      ? const Color(0xFF079BC0)
-                      : Colors.white,
-                  borderRadius: BorderRadius.circular(6),
-                  border: Border.all(
-                    color: isSelected
-                        ? const Color(0xFF079BC0)
-                        : const Color(0xFFE1E1E1),
+            return Wrap(
+              spacing: spacing,
+              runSpacing: 10,
+              children: times.map((time) {
+                final bool isSelected = selectedTime == time;
+
+                return GestureDetector(
+                  onTap: () {
+                    setState(() {
+                      selectedTime = time;
+                    });
+                  },
+                  child: Container(
+                    width: itemWidth,
+                    height: 32,
+                    alignment: Alignment.center,
+                    decoration: BoxDecoration(
+                      color: isSelected
+                          ? const Color(0xFF079BC0)
+                          : const Color(0xFFF4F6F8),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Text(
+                      time,
+                      style: TextStyle(
+                        fontSize: 11,
+                        fontWeight:
+                            isSelected ? FontWeight.w600 : FontWeight.w500,
+                        color: isSelected
+                            ? Colors.white
+                            : const Color(0xFF4B5563),
+                      ),
+                    ),
                   ),
-                ),
-                child: Text(
-                  time,
-                  style: TextStyle(
-                    fontSize: 10,
-                    fontWeight: FontWeight.w500,
-                    color: isSelected
-                        ? Colors.white
-                        : const Color(0xFF777777),
-                  ),
-                ),
-              ),
+                );
+              }).toList(),
             );
-          }).toList(),
+          },
         ),
       ],
     );
