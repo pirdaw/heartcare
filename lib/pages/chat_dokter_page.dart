@@ -90,11 +90,11 @@ class _KonsultasiDokterPageState
 
                   // FOTO DOKTER
                   _doctorImage(
-                    width: 40,
-                    height: 40,
+                    width: 44,
+                    height: 44,
                   ),
 
-                  const SizedBox(width: 8),
+                  const SizedBox(width: 10),
 
                   // NAMA DOKTER
                   const Column(
@@ -107,7 +107,7 @@ class _KonsultasiDokterPageState
                       Text(
                         "Konsultasi dengan",
                         style: TextStyle(
-                          fontSize: 10,
+                          fontSize: 11,
                           fontWeight: FontWeight.w700,
                           color: Colors.black87,
                         ),
@@ -116,7 +116,7 @@ class _KonsultasiDokterPageState
                       Text(
                         "dr. Nurlitta Dwi",
                         style: TextStyle(
-                          fontSize: 11,
+                          fontSize: 14,
                           fontWeight: FontWeight.w700,
                           color: Colors.black87,
                         ),
@@ -128,14 +128,14 @@ class _KonsultasiDokterPageState
                         children: [
                           Icon(
                             Icons.circle,
-                            size: 7,
+                            size: 8,
                             color: onlineGreen,
                           ),
-                          SizedBox(width: 3),
+                          SizedBox(width: 4),
                           Text(
                             "Online",
                             style: TextStyle(
-                              fontSize: 7,
+                              fontSize: 9.5,
                               color: onlineGreen,
                               fontWeight:
                                   FontWeight.w500,
@@ -181,7 +181,7 @@ class _KonsultasiDokterPageState
                             child: const Text(
                               "Hari ini",
                               style: TextStyle(
-                                fontSize: 9,
+                                fontSize: 11,
                                 color: Color(0xFF397A8A),
                                 fontWeight:
                                     FontWeight.w600,
@@ -206,6 +206,14 @@ class _KonsultasiDokterPageState
                           "Dok, saya tadi melakukan skrining,\n"
                           "hasilnya risiko tinggi.\n"
                           "Apa yang harus saya lakukan?",
+                          "14.01",
+                        ),
+
+                        const SizedBox(height: 10),
+
+                        // FOTO HASIL SKRINING USER
+                        _userImageMessage(
+                          "assets/images/screening_jantung.png",
                           "14.01",
                         ),
 
@@ -269,21 +277,21 @@ class _KonsultasiDokterPageState
                               controller:
                                   messageController,
                               style: const TextStyle(
-                                fontSize: 11,
+                                fontSize: 13.5,
                               ),
                               decoration:
                                   const InputDecoration(
                                 hintText:
                                     "Ketik pesan....",
                                 hintStyle: TextStyle(
-                                  fontSize: 11,
+                                  fontSize: 13.5,
                                   color: Colors.grey,
                                 ),
                                 border: InputBorder.none,
                                 contentPadding:
                                     EdgeInsets.symmetric(
                                   horizontal: 14,
-                                  vertical: 10,
+                                  vertical: 9,
                                 ),
                                 suffixIcon: Icon(
                                   Icons.camera_alt_outlined,
@@ -354,26 +362,26 @@ class _KonsultasiDokterPageState
       children: [
 
         _doctorImage(
-          width: 22,
-          height: 22,
+          width: 30,
+          height: 30,
         ),
 
-        const SizedBox(width: 6),
+        const SizedBox(width: 8),
 
         Flexible(
           child: Container(
             constraints:
-                const BoxConstraints(maxWidth: 160),
+                const BoxConstraints(maxWidth: 245),
             padding: const EdgeInsets.fromLTRB(
+              12,
               10,
-              8,
-              8,
-              5,
+              10,
+              6,
             ),
             decoration: BoxDecoration(
               color: const Color(0xFFD9D9D9),
               borderRadius:
-                  BorderRadius.circular(6),
+                  BorderRadius.circular(8),
             ),
             child: Column(
               crossAxisAlignment:
@@ -385,19 +393,20 @@ class _KonsultasiDokterPageState
                   child: Text(
                     message,
                     style: const TextStyle(
-                      fontSize: 9.5,
+                      fontSize: 13,
+                      height: 1.35,
                       color: Colors.black87,
                     ),
                   ),
                 ),
 
-                const SizedBox(height: 2),
+                const SizedBox(height: 3),
 
                 Text(
                   time,
                   style: const TextStyle(
-                    fontSize: 6.5,
-                    color: Colors.grey,
+                    fontSize: 9.5,
+                    color: Colors.black45,
                   ),
                 ),
               ],
@@ -420,17 +429,17 @@ class _KonsultasiDokterPageState
       alignment: Alignment.centerRight,
       child: Container(
         constraints:
-            const BoxConstraints(maxWidth: 205),
+            const BoxConstraints(maxWidth: 255),
         padding: const EdgeInsets.fromLTRB(
+          12,
           10,
-          8,
-          8,
-          5,
+          10,
+          6,
         ),
         decoration: BoxDecoration(
           color: doctorBlue,
           borderRadius:
-              BorderRadius.circular(6),
+              BorderRadius.circular(8),
         ),
         child: Column(
           crossAxisAlignment:
@@ -442,19 +451,76 @@ class _KonsultasiDokterPageState
               child: Text(
                 message,
                 style: const TextStyle(
-                  fontSize: 9.5,
+                  fontSize: 13,
+                  height: 1.35,
                   color: Colors.black87,
                 ),
               ),
             ),
 
-            const SizedBox(height: 2),
+            const SizedBox(height: 3),
 
             Text(
               time,
               style: const TextStyle(
-                fontSize: 6.5,
+                fontSize: 9.5,
                 color: Color(0xFF397080),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // ==========================================================
+  // PESAN GAMBAR USER
+  // ==========================================================
+
+  Widget _userImageMessage(
+    String imagePath,
+    String time,
+  ) {
+    return Align(
+      alignment: Alignment.centerRight,
+      child: Container(
+        constraints: const BoxConstraints(maxWidth: 210),
+        padding: const EdgeInsets.all(4),
+        decoration: BoxDecoration(
+          color: doctorBlue,
+          borderRadius: BorderRadius.circular(10),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.end,
+          children: [
+            ClipRRect(
+              borderRadius: BorderRadius.circular(8),
+              child: Image.asset(
+                imagePath,
+                fit: BoxFit.cover,
+                errorBuilder: (context, error, stackTrace) {
+                  return Container(
+                    height: 120,
+                    color: Colors.white24,
+                    alignment: Alignment.center,
+                    child: const Icon(
+                      Icons.image_outlined,
+                      color: Colors.white,
+                      size: 36,
+                    ),
+                  );
+                },
+              ),
+            ),
+            const SizedBox(height: 3),
+            Padding(
+              padding: const EdgeInsets.only(right: 6, bottom: 2),
+              child: Text(
+                time,
+                style: const TextStyle(
+                  fontSize: 9.5,
+                  color: Color(0xFF397080),
+                ),
               ),
             ),
           ],
@@ -480,17 +546,22 @@ class _KonsultasiDokterPageState
       ),
       clipBehavior: Clip.antiAlias,
       child: Image.asset(
-        "assets/images/dokter1.png",
+        "assets/images/dokter_nurlitta.png",
         fit: BoxFit.cover,
 
-        // Kalau gambar belum ada,
-        // aplikasi TIDAK ERROR.
+        // Kalau gambar belum ada, coba profile_woman atau icon
         errorBuilder:
             (context, error, stackTrace) {
-          return const Icon(
-            Icons.person,
-            color: Colors.grey,
-            size: 25,
+          return Image.asset(
+            "assets/images/profile_woman.png",
+            fit: BoxFit.cover,
+            errorBuilder: (context, error, stackTrace) {
+              return Icon(
+                Icons.person,
+                color: Colors.grey,
+                size: width * 0.6,
+              );
+            },
           );
         },
       ),
@@ -576,7 +647,7 @@ class _KonsultasiDokterPageState
           Text(
             text,
             style: TextStyle(
-              fontSize: 7.5,
+              fontSize: 9.5,
               color: active
                   ? const Color(0xFF087EFF)
                   : Colors.black87,
