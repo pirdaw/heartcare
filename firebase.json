@@ -1,0 +1,25 @@
+{
+    "flutter": {
+        "platforms": {
+            "android": {
+                "default": {
+                    "projectId": "heart-care-firebase-d19a0",
+                    "appId": "1:605450405329:android:40d69ecab4f2296ac34cf0",
+                    "fileOutput": "android/app/google-services.json"
+                }
+            },
+            "dart": {
+                "lib/firebase_options.dart": {
+                    "projectId": "heart-care-firebase-d19a0",
+                    "configurations": {
+                        "android": "1:605450405329:android:40d69ecab4f2296ac34cf0",
+                        "ios": "1:605450405329:ios:d30467f2435f00abc34cf0",
+                        "macos": "1:605450405329:ios:d30467f2435f00abc34cf0",
+                        "web": "1:605450405329:web:6e139934134189d3c34cf0",
+                        "windows": "1:605450405329:web:e170cf1481d9751ec34cf0"
+                    }
+                }
+            }
+        }
+    }
+}
