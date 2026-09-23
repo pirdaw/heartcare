@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'screening_model.dart';
 import 'screening_result_page.dart';
 import 'custom_bottom_nav_bar.dart';
+import 'package:heartcare/pages/riwayat_model.dart';
 
 /// Halaman Proses Analisis AI dengan animasi detak jantung dan status tahapan
 class ScreeningAiAnalysisPage extends StatefulWidget {
@@ -19,7 +20,7 @@ class ScreeningAiAnalysisPage extends StatefulWidget {
 
 class _ScreeningAiAnalysisPageState extends State<ScreeningAiAnalysisPage>
     with SingleTickerProviderStateMixin {
-  static const Color primaryTeal = Color(0xFF0098B9);
+  static const Color primaryTeal = Color(0xFF079BC1);
 
   late AnimationController _pulseController;
   late Animation<double> _scaleAnimation;
@@ -63,6 +64,12 @@ class _ScreeningAiAnalysisPageState extends State<ScreeningAiAnalysisPage>
 
     await Future.delayed(const Duration(milliseconds: 500));
     if (!mounted) return;
+
+    // Simpan ke Riwayat
+    RiwayatService().addScreeningRecord(
+      data: widget.data,
+      result: result,
+    );
 
     // Pindah ke Halaman Hasil Skrining
     Navigator.pushReplacement(

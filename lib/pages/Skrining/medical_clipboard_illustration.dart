@@ -56,7 +56,7 @@ class _ClipboardPainter extends CustomPainter {
 
     // 3. Border Clipboard (Cyan/Teal)
     final Paint boardBorder = Paint()
-      ..color = const Color(0xFF0098B9)
+      ..color = const Color(0xFF079BC1)
       ..style = PaintingStyle.stroke
       ..strokeWidth = 5.5;
     canvas.drawRRect(boardRRect, boardBorder);

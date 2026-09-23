@@ -1,8 +1,19 @@
 import 'package:flutter/material.dart';
-import 'konsultasi_dokter_page.dart';
+import 'home_page.dart';
+import 'konfirmasi_jadwal_page.dart';
+import 'profil_page.dart';
 
 class PilihJadwalPage extends StatefulWidget {
-  const PilihJadwalPage({super.key});
+  final String doctorName;
+  final String doctorSpecialty;
+  final String doctorPhoto;
+
+  const PilihJadwalPage({
+    super.key,
+    this.doctorName = 'dr. Nurlitta Dwi',
+    this.doctorSpecialty = 'Spesialis Jantung',
+    this.doctorPhoto = 'assets/images/dokter_nurlitta.jpg',
+  });
 
   @override
   State<PilihJadwalPage> createState() => _PilihJadwalPageState();
@@ -10,7 +21,10 @@ class PilihJadwalPage extends StatefulWidget {
 
 class _PilihJadwalPageState extends State<PilihJadwalPage> {
   int selectedDay = 2;
-  String? selectedTime;
+  String selectedDayName = 'Sel';
+  String? selectedTime = '09.00';
+
+  static const Color brandTeal = Color(0xFF0098B9);
 
   final List<Map<String, String>> dates = [
     {"day": "Sen", "date": "1"},
@@ -48,38 +62,30 @@ class _PilihJadwalPageState extends State<PilihJadwalPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white,
-
       body: SafeArea(
         child: Column(
           children: [
-
             // ==================================================
             // HEADER
             // ==================================================
             Padding(
-              padding: const EdgeInsets.fromLTRB(
-                20,
-                18,
-                20,
-                10,
-              ),
+              padding: const EdgeInsets.fromLTRB(20, 16, 20, 12),
               child: Row(
                 children: [
-
-                  // TOMBOL KEMBALI
+                  // TOMBOL KEMBALI BUNDAR
                   Container(
-                    width: 36,
-                    height: 36,
+                    width: 40,
+                    height: 40,
                     decoration: const BoxDecoration(
-                      color: Color(0xFFF1F1F1),
+                      color: Color(0xFFF1F3F6),
                       shape: BoxShape.circle,
                     ),
                     child: IconButton(
                       padding: EdgeInsets.zero,
                       icon: const Icon(
                         Icons.chevron_left,
-                        size: 27,
-                        color: Colors.black87,
+                        size: 28,
+                        color: Color(0xFF1E293B),
                       ),
                       onPressed: () {
                         Navigator.pop(context);
@@ -93,120 +99,111 @@ class _PilihJadwalPageState extends State<PilihJadwalPage> {
                       child: Text(
                         "Pilih Jadwal",
                         style: TextStyle(
-                          fontSize: 20,
-                          fontWeight: FontWeight.w700,
-                          color: Colors.black,
+                          fontSize: 21,
+                          fontWeight: FontWeight.bold,
+                          color: Color(0xFF0F172A),
                         ),
                       ),
                     ),
                   ),
 
-                  // PENYEIMBANG HEADER
-                  const SizedBox(width: 36),
+                  // PENYEIMBANG KANAN
+                  const SizedBox(width: 40),
                 ],
               ),
             ),
 
             // ==================================================
-            // CONTENT
+            // CONTENT PEMILIHAN JADWAL
             // ==================================================
             Expanded(
               child: SingleChildScrollView(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 28,
-                ),
+                padding: const EdgeInsets.fromLTRB(22, 10, 22, 24),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-
-                    const SizedBox(height: 10),
-
-                    // ==================================================
-                    // BULAN
-                    // ==================================================
+                    // BULAN & TAHUN
                     const Text(
                       "September 2026",
                       style: TextStyle(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w500,
-                        color: Color(0xFF555555),
+                        fontSize: 13.5,
+                        fontWeight: FontWeight.w600,
+                        color: Color(0xFF334155),
                       ),
                     ),
 
                     const SizedBox(height: 12),
 
-                    // ==================================================
-                    // TANGGAL
-                    // ==================================================
+                    // BARIS 7 KAPSUL HARI (Sen 1 - Min 7)
                     Row(
                       children: dates.map((item) {
-                        final int day =
-                            int.parse(item["date"]!);
-
-                        final bool isSelected =
-                            selectedDay == day;
+                        final int day = int.parse(item["date"]!);
+                        final bool isSelected = selectedDay == day;
 
                         return Expanded(
                           child: Padding(
-                            padding: const EdgeInsets.only(
-                              right: 5,
-                            ),
-                            child: GestureDetector(
-                              onTap: () {
-                                setState(() {
-                                  selectedDay = day;
-                                  selectedTime = null;
-                                });
-                              },
-                              child: Container(
-                                height: 42,
-                                decoration: BoxDecoration(
-                                  color: isSelected
-                                      ? const Color(0xFF079BC0)
-                                      : Colors.white,
-                                  borderRadius:
-                                      BorderRadius.circular(9),
-                                  border: Border.all(
+                            padding: const EdgeInsets.symmetric(horizontal: 2.5),
+                            child: Material(
+                              color: Colors.transparent,
+                              child: InkWell(
+                                onTap: () {
+                                  setState(() {
+                                    selectedDay = day;
+                                    selectedDayName = item["day"]!;
+                                  });
+                                },
+                                borderRadius: BorderRadius.circular(14),
+                                child: Container(
+                                  height: 68,
+                                  decoration: BoxDecoration(
                                     color: isSelected
-                                        ? const Color(0xFF079BC0)
-                                        : const Color(0xFFD5D5D5),
+                                        ? brandTeal
+                                        : Colors.white,
+                                    borderRadius: BorderRadius.circular(14),
+                                    border: Border.all(
+                                      color: isSelected
+                                          ? brandTeal
+                                          : const Color(0xFFE2E8F0),
+                                      width: 1.2,
+                                    ),
+                                    boxShadow: isSelected
+                                        ? [
+                                            BoxShadow(
+                                              color: brandTeal
+                                                  .withValues(alpha: 0.25),
+                                              blurRadius: 8,
+                                              offset: const Offset(0, 3),
+                                            ),
+                                          ]
+                                        : null,
                                   ),
-                                ),
-                                child: Column(
-                                  mainAxisAlignment:
-                                      MainAxisAlignment.center,
-                                  children: [
-
-                                    Text(
-                                      item["day"]!,
-                                      style: TextStyle(
-                                        fontSize: 9,
-                                        fontWeight:
-                                            FontWeight.w500,
-                                        color: isSelected
-                                            ? Colors.white
-                                            : const Color(
-                                                0xFF666666,
-                                              ),
+                                  child: Column(
+                                    mainAxisAlignment:
+                                        MainAxisAlignment.center,
+                                    children: [
+                                      Text(
+                                        item["day"]!,
+                                        style: TextStyle(
+                                          fontSize: 11.5,
+                                          fontWeight: FontWeight.w500,
+                                          color: isSelected
+                                              ? Colors.white
+                                              : const Color(0xFF475569),
+                                        ),
                                       ),
-                                    ),
-
-                                    const SizedBox(height: 1),
-
-                                    Text(
-                                      item["date"]!,
-                                      style: TextStyle(
-                                        fontSize: 15,
-                                        fontWeight:
-                                            FontWeight.w600,
-                                        color: isSelected
-                                            ? Colors.white
-                                            : const Color(
-                                                0xFF333333,
-                                              ),
+                                      const SizedBox(height: 3),
+                                      Text(
+                                        item["date"]!,
+                                        style: TextStyle(
+                                          fontSize: 16.5,
+                                          fontWeight: FontWeight.bold,
+                                          color: isSelected
+                                              ? Colors.white
+                                              : const Color(0xFF0F172A),
+                                        ),
                                       ),
-                                    ),
-                                  ],
+                                    ],
+                                  ),
                                 ),
                               ),
                             ),
@@ -215,7 +212,7 @@ class _PilihJadwalPageState extends State<PilihJadwalPage> {
                       }).toList(),
                     ),
 
-                    const SizedBox(height: 32),
+                    const SizedBox(height: 28),
 
                     // ==================================================
                     // PAGI
@@ -225,7 +222,7 @@ class _PilihJadwalPageState extends State<PilihJadwalPage> {
                       times: morningTimes,
                     ),
 
-                    const SizedBox(height: 28),
+                    const SizedBox(height: 24),
 
                     // ==================================================
                     // SIANG
@@ -235,7 +232,7 @@ class _PilihJadwalPageState extends State<PilihJadwalPage> {
                       times: afternoonTimes,
                     ),
 
-                    const SizedBox(height: 28),
+                    const SizedBox(height: 24),
 
                     // ==================================================
                     // SORE
@@ -245,41 +242,38 @@ class _PilihJadwalPageState extends State<PilihJadwalPage> {
                       times: eveningTimes,
                     ),
 
-                    const SizedBox(height: 35),
+                    const SizedBox(height: 36),
 
                     // ==================================================
-                    // KONFIRMASI
+                    // TOMBOL KONFIRMASI JADWAL (TEAL)
                     // ==================================================
                     SizedBox(
                       width: double.infinity,
-                      height: 44,
+                      height: 48,
                       child: ElevatedButton(
                         onPressed: selectedTime == null
                             ? null
-                            : _confirmSchedule,
+                            : _onConfirmSchedule,
                         style: ElevatedButton.styleFrom(
-                          backgroundColor:
-                              const Color(0xFF079BC0),
-                          disabledBackgroundColor:
-                              const Color(0xFFB8DDE5),
+                          backgroundColor: brandTeal,
+                          disabledBackgroundColor: const Color(0xFFB4E3EE),
                           foregroundColor: Colors.white,
                           elevation: 0,
                           shape: RoundedRectangleBorder(
-                            borderRadius:
-                                BorderRadius.circular(7),
+                            borderRadius: BorderRadius.circular(10),
                           ),
                         ),
                         child: const Text(
                           "Konfirmasi Jadwal",
                           style: TextStyle(
-                            fontSize: 13,
-                            fontWeight: FontWeight.w700,
+                            fontSize: 15,
+                            fontWeight: FontWeight.bold,
                           ),
                         ),
                       ),
                     ),
 
-                    const SizedBox(height: 20),
+                    const SizedBox(height: 12),
                   ],
                 ),
               ),
@@ -289,16 +283,80 @@ class _PilihJadwalPageState extends State<PilihJadwalPage> {
       ),
 
       // ==================================================
-      // BOTTOM NAVIGATION
+      // BOTTOM NAVIGATION (SESUAI GAMBAR)
       // ==================================================
-      bottomNavigationBar: _buildBottomNavigation(),
+      bottomNavigationBar: SafeArea(
+        top: false,
+        child: Container(
+          height: 62,
+          decoration: const BoxDecoration(
+            color: Colors.white,
+            border: Border(
+              top: BorderSide(
+                color: Color(0xFFE2E8F0),
+                width: 0.8,
+              ),
+            ),
+          ),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceAround,
+            children: [
+              _bottomNavItem(
+                icon: Icons.home_outlined,
+                label: "Home",
+                active: false,
+                onTap: () {
+                  Navigator.pushAndRemoveUntil(
+                    context,
+                    MaterialPageRoute(builder: (context) => const HomePage()),
+                    (route) => false,
+                  );
+                },
+              ),
+              _bottomNavItem(
+                icon: Icons.favorite_border,
+                label: "Skrining",
+                active: false,
+                onTap: () {
+                  Navigator.pop(context);
+                },
+              ),
+              _bottomNavItem(
+                icon: Icons.medical_services_outlined,
+                label: "Dokter",
+                active: true,
+                onTap: () {
+                  Navigator.pop(context);
+                },
+              ),
+              _bottomNavItem(
+                icon: Icons.description_outlined,
+                label: "Riwayat",
+                active: false,
+              ),
+              _bottomNavItem(
+                icon: Icons.person_outline,
+                label: "Profil",
+                active: false,
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const ProfilPage(),
+                    ),
+                  );
+                },
+              ),
+            ],
+          ),
+        ),
+      ),
     );
   }
 
   // ==========================================================
-  // TIME SECTION
+  // WIDGET KELOMPOK WAKTU (PAGI / SIANG / SORE)
   // ==========================================================
-
   Widget _timeSection({
     required String title,
     required List<String> times,
@@ -306,56 +364,64 @@ class _PilihJadwalPageState extends State<PilihJadwalPage> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-
         Text(
           title,
           style: const TextStyle(
-            fontSize: 12,
-            fontWeight: FontWeight.w500,
-            color: Color(0xFF555555),
+            fontSize: 14,
+            fontWeight: FontWeight.w600,
+            color: Color(0xFF334155),
           ),
         ),
-
         const SizedBox(height: 10),
-
         Wrap(
-          spacing: 7,
+          spacing: 8,
           runSpacing: 8,
           children: times.map((time) {
-            final bool isSelected =
-                selectedTime == time;
+            final bool isSelected = selectedTime == time;
 
-            return GestureDetector(
-              onTap: () {
-                setState(() {
-                  selectedTime = time;
-                });
-              },
-              child: Container(
-                height: 28,
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 9,
-                ),
-                alignment: Alignment.center,
-                decoration: BoxDecoration(
-                  color: isSelected
-                      ? const Color(0xFF079BC0)
-                      : Colors.white,
-                  borderRadius: BorderRadius.circular(6),
-                  border: Border.all(
-                    color: isSelected
-                        ? const Color(0xFF079BC0)
-                        : const Color(0xFFE1E1E1),
+            return Material(
+              color: Colors.transparent,
+              child: InkWell(
+                onTap: () {
+                  setState(() {
+                    selectedTime = time;
+                  });
+                },
+                borderRadius: BorderRadius.circular(8),
+                child: Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 14,
+                    vertical: 8,
                   ),
-                ),
-                child: Text(
-                  time,
-                  style: TextStyle(
-                    fontSize: 10,
-                    fontWeight: FontWeight.w500,
-                    color: isSelected
-                        ? Colors.white
-                        : const Color(0xFF777777),
+                  decoration: BoxDecoration(
+                    color: isSelected ? brandTeal : Colors.white,
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(
+                      color: isSelected
+                          ? brandTeal
+                          : const Color(0xFFE2E8F0),
+                      width: 1.2,
+                    ),
+                    boxShadow: isSelected
+                        ? [
+                            BoxShadow(
+                              color: brandTeal.withValues(alpha: 0.20),
+                              blurRadius: 6,
+                              offset: const Offset(0, 2),
+                            ),
+                          ]
+                        : null,
+                  ),
+                  child: Text(
+                    time,
+                    style: TextStyle(
+                      fontSize: 13,
+                      fontWeight:
+                          isSelected ? FontWeight.bold : FontWeight.w500,
+                      color: isSelected
+                          ? Colors.white
+                          : const Color(0xFF475569),
+                    ),
                   ),
                 ),
               ),
@@ -367,148 +433,63 @@ class _PilihJadwalPageState extends State<PilihJadwalPage> {
   }
 
   // ==========================================================
-  // KONFIRMASI JADWAL
+  // AKSI KONFIRMASI: MEMBUKA HALAMAN BARU (BUKAN POP-UP)
   // ==========================================================
+  void _onConfirmSchedule() {
+    if (selectedTime == null) return;
 
-  void _confirmSchedule() {
-    if (selectedTime == null) {
-      return;
-    }
-
-    showDialog(
-      context: context,
-      builder: (context) {
-        return AlertDialog(
-          title: const Text(
-            "Jadwal Berhasil Dipilih",
-            style: TextStyle(
-              fontWeight: FontWeight.w700,
-            ),
-          ),
-          content: Text(
-            "Jadwal konsultasi:\n"
-            "2 September 2026\n"
-            "Pukul $selectedTime",
-          ),
-          actions: [
-            TextButton(
-  onPressed: () {
-    Navigator.pop(context);
+    final formattedDate = '$selectedDayName, $selectedDay September 2026';
 
     Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (context) => KonsultasiDokterPage(),
+        builder: (context) => KonfirmasiJadwalPage(
+          doctorName: widget.doctorName,
+          doctorSpecialty: widget.doctorSpecialty,
+          doctorPhoto: widget.doctorPhoto,
+          selectedDate: formattedDate,
+          selectedTime: selectedTime!,
+        ),
       ),
     );
-  },
-  child: const Text(
-    "OK",
-                style: TextStyle(
-                  color: Color(0xFF079BC0),
-                ),
+  }
+
+  // ==========================================================
+  // BOTTOM NAVIGATION ITEM
+  // ==========================================================
+  Widget _bottomNavItem({
+    required IconData icon,
+    required String label,
+    required bool active,
+    VoidCallback? onTap,
+  }) {
+    return GestureDetector(
+      onTap: onTap,
+      behavior: HitTestBehavior.opaque,
+      child: SizedBox(
+        width: 55,
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              icon,
+              size: 23,
+              color: active ? brandTeal : const Color(0xFF64748B),
+            ),
+            const SizedBox(height: 2),
+            Text(
+              label,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(
+                fontSize: 10.5,
+                fontWeight: active ? FontWeight.bold : FontWeight.normal,
+                color: active ? brandTeal : const Color(0xFF64748B),
               ),
             ),
           ],
-        );
-      },
-    );
-  }
-
-  // ==========================================================
-  // BOTTOM NAVIGATION
-  // ==========================================================
-
-  Widget _buildBottomNavigation() {
-    return Container(
-      height: 72,
-      decoration: BoxDecoration(
-        color: Colors.white,
-        border: Border(
-          top: BorderSide(
-            color: Colors.grey.shade300,
-            width: 1,
-          ),
         ),
-      ),
-      child: Row(
-        mainAxisAlignment:
-            MainAxisAlignment.spaceAround,
-        children: [
-
-          _bottomItem(
-            icon: Icons.home_outlined,
-            label: "Home",
-            selected: false,
-          ),
-
-          _bottomItem(
-            icon: Icons.favorite_border,
-            label: "Skrining",
-            selected: false,
-          ),
-
-          _bottomItem(
-            icon: Icons.person_outline,
-            label: "Dokter",
-            selected: true,
-          ),
-
-          _bottomItem(
-            icon: Icons.description_outlined,
-            label: "Riwayat",
-            selected: false,
-          ),
-
-          _bottomItem(
-            icon: Icons.person_outline,
-            label: "Profil",
-            selected: false,
-          ),
-        ],
-      ),
-    );
-  }
-
-  // ==========================================================
-  // BOTTOM NAV ITEM
-  // ==========================================================
-
-  Widget _bottomItem({
-    required IconData icon,
-    required String label,
-    required bool selected,
-  }) {
-    return SizedBox(
-      width: 55,
-      child: Column(
-        mainAxisAlignment:
-            MainAxisAlignment.center,
-        children: [
-
-          Icon(
-            icon,
-            size: 25,
-            color: selected
-                ? const Color(0xFF087EFF)
-                : Colors.black87,
-          ),
-
-          const SizedBox(height: 2),
-
-          Text(
-            label,
-            style: TextStyle(
-              fontSize: 8,
-              fontWeight: selected
-                  ? FontWeight.w600
-                  : FontWeight.w400,
-              color: selected
-                  ? const Color(0xFF087EFF)
-                  : Colors.black87,
-            ),
-          ),
-        ],
       ),
     );
   }

@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
-import 'custom_bottom_nav_bar.dart';
+import 'Skrining/medical_clipboard_illustration.dart';
+import 'Skrining/custom_bottom_nav_bar.dart';
+import 'Skrining/screening_input_page.dart';
 
-/// Halaman Pengantar Skrining Risiko Penyakit Jantung
+/// Halaman Pertama: Pengantar Skrining Risiko Penyakit Jantung
 class ScreeningIntroPage extends StatelessWidget {
   const ScreeningIntroPage({super.key});
 
-  static const Color primaryTeal = Color(0xFF0098B9);
+  static const Color primaryBlue = Color(0xFF079BC1);
 
   @override
   Widget build(BuildContext context) {
@@ -72,34 +74,11 @@ class ScreeningIntroPage extends StatelessWidget {
 
             const Spacer(flex: 2),
 
-            // Ilustrasi Medis Clipboard
-            Center(
-              child: Container(
-                width: 200,
-                height: 250,
-                decoration: BoxDecoration(
-                  color: const Color(0xFFE8F7FB),
-                  borderRadius: BorderRadius.circular(20),
-                ),
-                child: const Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(
-                      Icons.assignment_turned_in_rounded,
-                      size: 80,
-                      color: primaryTeal,
-                    ),
-                    SizedBox(height: 12),
-                    Text(
-                      'AI Health Screening',
-                      style: TextStyle(
-                        fontSize: 15,
-                        fontWeight: FontWeight.bold,
-                        color: primaryTeal,
-                      ),
-                    ),
-                  ],
-                ),
+            // Ilustrasi Clipboard Medis dengan Jantung EKG
+            const Center(
+              child: MedicalClipboardIllustration(
+                width: 220,
+                height: 275,
               ),
             ),
 
@@ -113,16 +92,15 @@ class ScreeningIntroPage extends StatelessWidget {
                 height: 48,
                 child: ElevatedButton(
                   onPressed: () {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text('Memulai proses Skrining...'),
-                        backgroundColor: primaryTeal,
-                        duration: Duration(seconds: 2),
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const ScreeningInputPage(),
                       ),
                     );
                   },
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: primaryTeal,
+                    backgroundColor: primaryBlue,
                     foregroundColor: Colors.white,
                     elevation: 0,
                     shape: RoundedRectangleBorder(

@@ -13,7 +13,7 @@ class ScreeningInputPage extends StatefulWidget {
 }
 
 class _ScreeningInputPageState extends State<ScreeningInputPage> {
-  static const Color primaryTeal = Color(0xFF0098B9);
+  static const Color primaryTeal = Color(0xFF079BC1);
 
   int _currentStep = 1;
   final int _totalSteps = 5;

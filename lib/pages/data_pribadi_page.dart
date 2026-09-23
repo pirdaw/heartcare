@@ -4,28 +4,28 @@ import 'package:heartcare/pages/dokter_page.dart';
 import 'package:heartcare/pages/riwayat_page.dart';
 import 'package:heartcare/pages/Skrining/screening_input_page.dart';
 
-class DataKesehatanPage extends StatefulWidget {
-  const DataKesehatanPage({super.key});
+class DataPribadiPage extends StatefulWidget {
+  const DataPribadiPage({super.key});
 
   @override
-  State<DataKesehatanPage> createState() => _DataKesehatanPageState();
+  State<DataPribadiPage> createState() => _DataPribadiPageState();
 }
 
-class _DataKesehatanPageState extends State<DataKesehatanPage> {
-  String golonganDarah = "O";
-  String tinggiBadan = "167 cm";
-  String beratBadan = "51 kg";
-  String alergi = "Tidak ada";
-  String penyakitDiderita = "Tidak ada";
-  String riwayatOperasi = "Tidak ada";
+class _DataPribadiPageState extends State<DataPribadiPage> {
+  String nama = "Nadea Fieldzah Putri";
+  String jenisKelamin = "Perempuan";
+  String ttl = "Jember, 29 Februari 2004";
+  String alamat = "Jl. Gandaria Tengah No. 24, Jakarta Selatan";
+  String telepon = "+62 123 456 799";
+  String email = "nadea123@gmail.com";
 
   void _showEditSheet() {
-    final goldarCtrl = TextEditingController(text: golonganDarah);
-    final tbCtrl = TextEditingController(text: tinggiBadan);
-    final bbCtrl = TextEditingController(text: beratBadan);
-    final alergiCtrl = TextEditingController(text: alergi);
-    final penyakitCtrl = TextEditingController(text: penyakitDiderita);
-    final operasiCtrl = TextEditingController(text: riwayatOperasi);
+    final namaCtrl = TextEditingController(text: nama);
+    final jkCtrl = TextEditingController(text: jenisKelamin);
+    final ttlCtrl = TextEditingController(text: ttl);
+    final alamatCtrl = TextEditingController(text: alamat);
+    final telpCtrl = TextEditingController(text: telepon);
+    final emailCtrl = TextEditingController(text: email);
 
     showModalBottomSheet(
       context: context,
@@ -60,7 +60,7 @@ class _DataKesehatanPageState extends State<DataKesehatanPage> {
                 ),
                 const SizedBox(height: 16),
                 const Text(
-                  "Ubah Data Kesehatan",
+                  "Ubah Data Pribadi",
                   style: TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.bold,
@@ -68,12 +68,12 @@ class _DataKesehatanPageState extends State<DataKesehatanPage> {
                   ),
                 ),
                 const SizedBox(height: 14),
-                _inputField("Golongan Darah", goldarCtrl),
-                _inputField("Tinggi Badan", tbCtrl),
-                _inputField("Berat Badan", bbCtrl),
-                _inputField("Alergi", alergiCtrl),
-                _inputField("Penyakit yang Diderita", penyakitCtrl),
-                _inputField("Riwayat Operasi", operasiCtrl),
+                _inputField("Nama Lengkap", namaCtrl),
+                _inputField("Jenis Kelamin", jkCtrl),
+                _inputField("Tempat, Tanggal Lahir", ttlCtrl),
+                _inputField("Alamat", alamatCtrl),
+                _inputField("No. Telepon", telpCtrl),
+                _inputField("Email", emailCtrl),
                 const SizedBox(height: 16),
                 SizedBox(
                   width: double.infinity,
@@ -81,17 +81,17 @@ class _DataKesehatanPageState extends State<DataKesehatanPage> {
                   child: ElevatedButton(
                     onPressed: () {
                       setState(() {
-                        golonganDarah = goldarCtrl.text.trim();
-                        tinggiBadan = tbCtrl.text.trim();
-                        beratBadan = bbCtrl.text.trim();
-                        alergi = alergiCtrl.text.trim();
-                        penyakitDiderita = penyakitCtrl.text.trim();
-                        riwayatOperasi = operasiCtrl.text.trim();
+                        nama = namaCtrl.text.trim();
+                        jenisKelamin = jkCtrl.text.trim();
+                        ttl = ttlCtrl.text.trim();
+                        alamat = alamatCtrl.text.trim();
+                        telepon = telpCtrl.text.trim();
+                        email = emailCtrl.text.trim();
                       });
                       Navigator.pop(context);
                       ScaffoldMessenger.of(context).showSnackBar(
                         const SnackBar(
-                          content: Text("Data kesehatan berhasil diperbarui"),
+                          content: Text("Data pribadi berhasil diperbarui"),
                           backgroundColor: Color(0xFF0098B9),
                         ),
                       );
@@ -183,7 +183,7 @@ class _DataKesehatanPageState extends State<DataKesehatanPage> {
         ),
         centerTitle: true,
         title: const Text(
-          "Data Kesehatan",
+          "Data Pribadi",
           style: TextStyle(
             fontSize: 17,
             fontWeight: FontWeight.bold,
@@ -198,7 +198,7 @@ class _DataKesehatanPageState extends State<DataKesehatanPage> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               const Text(
-                "Informasi Kesehatan",
+                "Informasi Pribadi",
                 style: TextStyle(
                   fontSize: 14,
                   fontWeight: FontWeight.bold,
@@ -207,7 +207,7 @@ class _DataKesehatanPageState extends State<DataKesehatanPage> {
               ),
               const SizedBox(height: 12),
 
-              // CARD DATA KESEHATAN (Border & Row List)
+              // CARD DATA PRIBADI (Border & Row List)
               Container(
                 decoration: BoxDecoration(
                   color: Colors.white,
@@ -223,17 +223,17 @@ class _DataKesehatanPageState extends State<DataKesehatanPage> {
                 ),
                 child: Column(
                   children: [
-                    _dataRow("Golongan Darah", golonganDarah, isFirst: true),
+                    _dataRow("Nama Lengkap", nama, isFirst: true),
                     const Divider(height: 1, color: Color(0xFFF1F5F9)),
-                    _dataRow("Tinggi Badan", tinggiBadan),
+                    _dataRow("Jenis Kelamin", jenisKelamin),
                     const Divider(height: 1, color: Color(0xFFF1F5F9)),
-                    _dataRow("Berat Badan", beratBadan),
+                    _dataRow("Tempat, Tanggal Lahir", ttl),
                     const Divider(height: 1, color: Color(0xFFF1F5F9)),
-                    _dataRow("Alergi", alergi),
+                    _dataRow("Alamat", alamat),
                     const Divider(height: 1, color: Color(0xFFF1F5F9)),
-                    _dataRow("Penyakit yang di derita", penyakitDiderita),
+                    _dataRow("No. Telepon", telepon),
                     const Divider(height: 1, color: Color(0xFFF1F5F9)),
-                    _dataRow("Riwayat Operasi", riwayatOperasi, isLast: true),
+                    _dataRow("Email", email, isLast: true),
                   ],
                 ),
               ),
