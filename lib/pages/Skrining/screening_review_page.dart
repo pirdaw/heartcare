@@ -12,7 +12,7 @@ class ScreeningReviewPage extends StatelessWidget {
     required this.data,
   });
 
-  static const Color primaryTeal = Color(0xFF0098B9);
+  static const Color primaryTeal = Color(0xFF079BC1);
   static const Color reviewCardColor = Color(0xFFE2F0F7);
   static const Color dividerColor = Color(0xFFCCE4F1);
 

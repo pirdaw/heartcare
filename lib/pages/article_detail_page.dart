@@ -1,7 +1,22 @@
 import 'package:flutter/material.dart';
 
 class ArticleDetailPage extends StatelessWidget {
-  const ArticleDetailPage({super.key});
+  final String image;
+  final String category;
+  final String title;
+  final String description;
+  final String content;
+  final String date;
+
+  const ArticleDetailPage({
+    super.key,
+    required this.image,
+    required this.category,
+    required this.title,
+    required this.description,
+    required this.content,
+    required this.date,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -70,7 +85,7 @@ class ArticleDetailPage extends StatelessWidget {
                     ClipRRect(
                       borderRadius: BorderRadius.circular(5),
                       child: Image.network(
-                        'https://images.unsplash.com/photo-1530026405186-ed1f139313f8?w=800',
+                        image,
                         width: double.infinity,
                         height: 150,
                         fit: BoxFit.cover,
@@ -101,9 +116,9 @@ class ArticleDetailPage extends StatelessWidget {
                         color: const Color(0xFFD9F5FF),
                         borderRadius: BorderRadius.circular(10),
                       ),
-                      child: const Text(
-                        'Penyakit Jantung',
-                        style: TextStyle(
+                      child: Text(
+                        category,
+                        style: const TextStyle(
                           fontSize: 7,
                           color: Color(0xFF168BB2),
                         ),
@@ -113,9 +128,9 @@ class ArticleDetailPage extends StatelessWidget {
                     const SizedBox(height: 7),
 
                     // JUDUL
-                    const Text(
-                      'Mengenal Penyakit Jantung Koroner',
-                      style: TextStyle(
+                    Text(
+                      title,
+                      style: const TextStyle(
                         fontSize: 20,
                         fontWeight: FontWeight.bold,
                         height: 1.1,
@@ -125,17 +140,17 @@ class ArticleDetailPage extends StatelessWidget {
                     const SizedBox(height: 8),
 
                     // INFO ARTIKEL
-                    const Row(
+                    Row(
                       children: [
                         Text(
-                          '08 September 2026',
-                          style: TextStyle(
+                          date,
+                          style: const TextStyle(
                             fontSize: 8,
                             color: Colors.grey,
                           ),
                         ),
-                        Spacer(),
-                        Text(
+                        const Spacer(),
+                        const Text(
                           'by Pirdaawaan',
                           style: TextStyle(
                             fontSize: 8,
@@ -147,12 +162,10 @@ class ArticleDetailPage extends StatelessWidget {
 
                     const SizedBox(height: 14),
 
-                    const Text(
-                      'Penyakit jantung koroner merupakan salah satu '
-                      'penyakit yang perlu diwaspadai karena dapat '
-                      'memengaruhi fungsi jantung dalam memompa darah '
-                      'ke seluruh tubuh.',
-                      style: TextStyle(
+                    // DESKRIPSI
+                    Text(
+                      description,
+                      style: const TextStyle(
                         fontSize: 9,
                         height: 1.5,
                       ),
@@ -160,71 +173,12 @@ class ArticleDetailPage extends StatelessWidget {
 
                     const SizedBox(height: 15),
 
-                    const Text(
-                      'Apa Itu Penyakit Jantung Koroner?',
-                      style: TextStyle(
-                        fontSize: 10,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-
-                    const SizedBox(height: 6),
-
-                    const Text(
-                      'Penyakit jantung koroner adalah kondisi ketika '
-                      'pembuluh darah yang berfungsi mengalirkan darah '
-                      'dan oksigen ke otot jantung mengalami penyempitan '
-                      'atau penyumbatan. Kondisi ini dapat menyebabkan '
-                      'aliran darah menuju jantung menjadi berkurang.',
-                      style: TextStyle(
+                    // ISI ARTIKEL
+                    Text(
+                      content,
+                      style: const TextStyle(
                         fontSize: 9,
                         height: 1.5,
-                      ),
-                    ),
-
-                    const SizedBox(height: 13),
-
-                    const Text(
-                      'Penyempitan pembuluh darah umumnya terjadi '
-                      'akibat penumpukan lemak atau plak pada dinding '
-                      'pembuluh darah.',
-                      style: TextStyle(
-                        fontSize: 9,
-                        height: 1.5,
-                      ),
-                    ),
-
-                    const SizedBox(height: 15),
-
-                    const Text(
-                      'Faktor Risiko Penyakit Jantung',
-                      style: TextStyle(
-                        fontSize: 10,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-
-                    const SizedBox(height: 6),
-
-                    const Text(
-                      'Beberapa faktor dapat meningkatkan risiko '
-                      'penyakit jantung, antara lain:',
-                      style: TextStyle(
-                        fontSize: 9,
-                        height: 1.5,
-                      ),
-                    ),
-
-                    const SizedBox(height: 3),
-
-                    const Text(
-                      '• Tekanan darah tinggi\n'
-                      '• Kolesterol tinggi\n'
-                      '• Kurang aktivitas fisik\n'
-                      '• Pola makan kurang sehat',
-                      style: TextStyle(
-                        fontSize: 9,
-                        height: 1.6,
                       ),
                     ),
                   ],

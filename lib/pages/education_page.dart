@@ -38,9 +38,7 @@ class EducationPage extends StatelessWidget {
                             ),
                           ),
                         ),
-
                         const SizedBox(width: 18),
-
                         Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: const [
@@ -113,6 +111,35 @@ class EducationPage extends StatelessWidget {
                           'Penyakit jantung koroner merupakan salah satu '
                           'penyakit yang perlu diwaspadai karena dapat '
                           'mengganggu fungsi jantung.',
+                      onTap: () {
+  Navigator.push(
+    context,
+    MaterialPageRoute(
+      builder: (context) => const ArticleDetailPage(
+        image:
+            'https://images.unsplash.com/photo-1530026405186-ed1f139313f8?w=800',
+        category: 'Penyakit Jantung',
+        title: 'Mengenal Penyakit Jantung Koroner',
+        description:
+            'Penyakit jantung koroner merupakan salah satu penyakit '
+            'yang perlu diwaspadai karena dapat memengaruhi fungsi '
+            'jantung dalam memompa darah ke seluruh tubuh.',
+        date: '08 September 2026',
+        content:
+            'Penyakit jantung koroner adalah kondisi ketika pembuluh '
+            'darah yang berfungsi mengalirkan darah dan oksigen ke '
+            'otot jantung mengalami penyempitan atau penyumbatan. '
+            'Kondisi ini dapat menyebabkan aliran darah menuju '
+            'jantung menjadi berkurang.\n\n'
+            'Penyempitan pembuluh darah umumnya terjadi akibat '
+            'penumpukan lemak atau plak pada dinding pembuluh darah.\n\n'
+            'Beberapa faktor dapat meningkatkan risiko penyakit '
+            'jantung, antara lain tekanan darah tinggi, kolesterol '
+            'tinggi, kurang aktivitas fisik, dan pola makan kurang sehat.',
+      ),
+    ),
+  );
+},
                     ),
 
                     const SizedBox(height: 17),
@@ -125,8 +152,35 @@ class EducationPage extends StatelessWidget {
                       category: 'Pola Hidup',
                       title: 'Makanan Sehat\nuntuk Jantung',
                       description:
-                          'Menjaga kesehatan jantung dapat dimulai dari '
-                          'pilihan makanan sehari-hari.',
+    'Menjaga kesehatan jantung dapat dimulai dari '
+    'pilihan makanan sehari-hari.',
+onTap: () {
+  Navigator.push(
+    context,
+    MaterialPageRoute(
+      builder: (context) => const ArticleDetailPage(
+        image:
+            'https://images.unsplash.com/photo-1490645935967-10de6ba17061?w=800',
+        category: 'Pola Hidup',
+        title: 'Makanan Sehat untuk Jantung',
+        description:
+            'Menjaga kesehatan jantung dapat dimulai dari pilihan '
+            'makanan sehari-hari.',
+        date: '08 September 2026',
+        content:
+            'Pola makan yang sehat merupakan salah satu bagian penting '
+            'dalam menjaga kesehatan jantung. Pemilihan makanan yang '
+            'tepat dapat membantu mendukung kesehatan tubuh secara '
+            'keseluruhan.\n\n'
+            'Beberapa pilihan makanan yang dapat dikonsumsi antara '
+            'lain sayuran, buah-buahan, biji-bijian, dan makanan yang '
+            'memiliki kandungan gizi seimbang.\n\n'
+            'Selain memilih makanan yang sehat, penting juga untuk '
+            'memperhatikan jumlah dan pola makan sehari-hari.',
+      ),
+    ),
+  );
+},
                     ),
 
                     const SizedBox(height: 17),
@@ -139,8 +193,35 @@ class EducationPage extends StatelessWidget {
                       category: 'Pola Hidup',
                       title: 'Olahraga yang Baik\nuntuk Kesehatan Jantung',
                       description:
-                          'Aktivitas fisik secara rutin dapat membantu '
-                          'menjaga kebugaran tubuh dan mendukung kesehatan.',
+    'Aktivitas fisik secara rutin dapat membantu '
+    'menjaga kebugaran tubuh dan mendukung kesehatan.',
+onTap: () {
+  Navigator.push(
+    context,
+    MaterialPageRoute(
+      builder: (context) => const ArticleDetailPage(
+        image:
+            'https://images.unsplash.com/photo-1552674605-db6ffd4facb5?w=800',
+        category: 'Pola Hidup',
+        title: 'Olahraga yang Baik untuk Kesehatan Jantung',
+        description:
+            'Aktivitas fisik secara rutin dapat membantu menjaga '
+            'kebugaran tubuh dan mendukung kesehatan.',
+        date: '08 September 2026',
+        content:
+            'Aktivitas fisik secara rutin dapat membantu menjaga '
+            'kebugaran tubuh dan mendukung kesehatan jantung. Olahraga '
+            'juga dapat menjadi bagian dari pola hidup sehat apabila '
+            'dilakukan secara teratur.\n\n'
+            'Beberapa aktivitas fisik yang dapat dilakukan antara lain '
+            'berjalan kaki, bersepeda, dan aktivitas fisik lainnya '
+            'sesuai dengan kemampuan tubuh.\n\n'
+            'Yang penting adalah melakukan aktivitas secara rutin dan '
+            'menyesuaikannya dengan kondisi masing-masing.',
+      ),
+    ),
+  );
+},
                     ),
                   ],
                 ),
@@ -184,16 +265,10 @@ class EducationPage extends StatelessWidget {
     required String category,
     required String title,
     required String description,
+    VoidCallback? onTap,
   }) {
     return GestureDetector(
-      onTap: () {
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (context) => const ArticleDetailPage(),
-          ),
-        );
-      },
+      onTap: onTap,
       child: Container(
         height: 119,
         padding: const EdgeInsets.all(7),

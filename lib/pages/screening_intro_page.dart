@@ -7,7 +7,7 @@ import 'Skrining/screening_input_page.dart';
 class ScreeningIntroPage extends StatelessWidget {
   const ScreeningIntroPage({super.key});
 
-  static const Color primaryTeal = Color(0xFF0098B9);
+  static const Color primaryBlue = Color(0xFF079BC1);
 
   @override
   Widget build(BuildContext context) {
@@ -100,7 +100,7 @@ class ScreeningIntroPage extends StatelessWidget {
                     );
                   },
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: primaryTeal,
+                    backgroundColor: primaryBlue,
                     foregroundColor: Colors.white,
                     elevation: 0,
                     shape: RoundedRectangleBorder(
