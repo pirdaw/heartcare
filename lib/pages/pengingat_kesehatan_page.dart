@@ -2,8 +2,10 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 
 // ============================================================================
-// MODEL DATA OBAT & PENGINGAT
+// MODEL DATA PENGINGAT (OBAT & OLAHRAGA RINGAN)
 // ============================================================================
+
+/// Model Data Pengingat Obat
 class MedicineReminder {
   final String id;
   String name;
@@ -26,22 +28,63 @@ class MedicineReminder {
   });
 }
 
+/// Model Data Pengingat Olahraga Ringan
+class ExerciseReminder {
+  final String id;
+  String activityName; // e.g. "Joging", "Bersepeda", "Yoga", dll
+  int durationMinutes; // e.g. 30 menit
+  String reminderTime; // e.g. "07.30"
+  String repeatFrequency; // e.g. "Setiap Hari", "3x Seminggu", dll
+  List<String> repeatDays; // e.g. ["Senin", "Rabu", "Jumat"]
+  String note; // e.g. "Setelah makan ya", "Setelah bangun tidur"
+  bool isActive;
+
+  ExerciseReminder({
+    required this.id,
+    required this.activityName,
+    this.durationMinutes = 30,
+    required this.reminderTime,
+    this.repeatFrequency = 'Setiap Hari',
+    this.repeatDays = const ['Setiap Hari'],
+    this.note = 'Setelah makan ya',
+    this.isActive = true,
+  });
+}
+
+/// Model Pilihan Jenis Olahraga
+class ExerciseActivityItem {
+  final String name;
+  final IconData icon;
+  final String description;
+
+  const ExerciseActivityItem({
+    required this.name,
+    required this.icon,
+    required this.description,
+  });
+}
+
 // ============================================================================
-// STATE CONTROLLER & NOTIFIER (SINGLETON)
+// STATE CONTROLLER & NOTIFIER TERPADU (SINGLETON)
 // ============================================================================
 class HealthReminderController extends ChangeNotifier {
   static final HealthReminderController _instance =
       HealthReminderController._internal();
   factory HealthReminderController() => _instance;
-  HealthReminderController._internal() {
-    _startTimer();
-  }
+  HealthReminderController._internal();
 
   final List<MedicineReminder> medicines = [];
+  final List<ExerciseReminder> exercises = [];
+
   Timer? _timer;
   String? _lastTriggeredMinute;
-  void Function(MedicineReminder reminder, String time)? onReminderTriggered;
 
+  // Callback notifikasi yang otomatis dipicu saat jam & jadwal cocok
+  void Function(MedicineReminder reminder, String time)? onReminderTriggered;
+  void Function(ExerciseReminder reminder, String time)?
+      onExerciseReminderTriggered;
+
+  // --- Operasi Obat ---
   void addMedicine(MedicineReminder medicine) {
     medicines.add(medicine);
     notifyListeners();
@@ -60,25 +103,47 @@ class HealthReminderController extends ChangeNotifier {
     }
   }
 
-  // Pengingat Otomatis Berdasarkan Waktu yang Dipilih
-  void _startTimer() {
+  // --- Operasi Olahraga ---
+  void addExercise(ExerciseReminder exercise) {
+    exercises.add(exercise);
+    notifyListeners();
+  }
+
+  void updateExercise(ExerciseReminder exercise) {
+    final index = exercises.indexWhere((item) => item.id == exercise.id);
+    if (index != -1) {
+      exercises[index] = exercise;
+    } else {
+      exercises.add(exercise);
+    }
+    notifyListeners();
+  }
+
+  void removeExercise(String id) {
+    exercises.removeWhere((item) => item.id == id);
+    notifyListeners();
+  }
+
+  // Pengingat Otomatis Berdasarkan Waktu yang Dipilih (Real-time Timer)
+  void startTimer() {
     _timer?.cancel();
     _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
       final now = DateTime.now();
-      final currentFormattedTime =
+      final currentFormattedDot =
           '${now.hour.toString().padLeft(2, '0')}.${now.minute.toString().padLeft(2, '0')}';
       final currentFormattedColon =
           '${now.hour.toString().padLeft(2, '0')}:${now.minute.toString().padLeft(2, '0')}';
 
       // Cegah trigger berulang pada menit yang sama
-      if (_lastTriggeredMinute == currentFormattedTime) return;
+      if (_lastTriggeredMinute == currentFormattedDot) return;
 
+      // 1. Cek Jadwal Minum Obat
       for (var med in medicines) {
         for (var timeStr in med.reminderTimes) {
           final cleanTime = timeStr.trim().replaceAll(':', '.');
-          if (cleanTime == currentFormattedTime ||
+          if (cleanTime == currentFormattedDot ||
               cleanTime == currentFormattedColon.replaceAll(':', '.')) {
-            _lastTriggeredMinute = currentFormattedTime;
+            _lastTriggeredMinute = currentFormattedDot;
             if (onReminderTriggered != null) {
               onReminderTriggered!(med, timeStr);
             }
@@ -86,38 +151,125 @@ class HealthReminderController extends ChangeNotifier {
           }
         }
       }
+
+      // 2. Cek Jadwal Olahraga Ringan
+      for (var ex in exercises) {
+        if (!ex.isActive) continue;
+        final cleanExTime = ex.reminderTime
+            .trim()
+            .replaceAll(' WIB', '')
+            .replaceAll(':', '.');
+        if (cleanExTime == currentFormattedDot ||
+            cleanExTime == currentFormattedColon.replaceAll(':', '.')) {
+          _lastTriggeredMinute = currentFormattedDot;
+          if (onExerciseReminderTriggered != null) {
+            onExerciseReminderTriggered!(ex, ex.reminderTime);
+          }
+          return;
+        }
+      }
     });
   }
 
-  // Hitung jumlah pengingat aktif hari ini
+  void stopTimer() {
+    _timer?.cancel();
+    _timer = null;
+  }
+
+  // Hitung jumlah pengingat aktif hari ini (kombinasi Obat + Olahraga)
   int get activeRemindersCount {
     int count = 0;
     for (var med in medicines) {
       count += med.reminderTimes.length;
     }
-    // Default minimal 3 pengingat hari ini jika masih awal / sesuai desain
+    for (var ex in exercises) {
+      if (ex.isActive) {
+        count += 1;
+      }
+    }
+    // Jika masih awal/kosong, tampilkan 3 sesuai desain mockup iPhone 16 - 112
     return count > 0 ? count : 3;
   }
 
-  // Dapatkan pengingat berikutnya
+  // Ringkasan Pengingat Berikutnya (Terpadu antara Obat & Olahraga)
   String get nextReminderSummary {
-    if (medicines.isEmpty) {
+    if (medicines.isEmpty && exercises.isEmpty) {
       return 'Tidak ada pengingat';
     }
-    final first = medicines.first;
-    final time = first.reminderTimes.isNotEmpty ? first.reminderTimes.first : '';
-    return '${first.name} ($time)';
+
+    // Jika ada olahraga aktif
+    if (exercises.isNotEmpty && exercises.first.isActive) {
+      final ex = exercises.first;
+      final cleanTime = ex.reminderTime.replaceAll(' WIB', '').trim();
+      return '${ex.activityName} ($cleanTime WIB)';
+    }
+
+    // Jika ada obat
+    if (medicines.isNotEmpty) {
+      final first = medicines.first;
+      final time =
+          first.reminderTimes.isNotEmpty ? first.reminderTimes.first : '07.30';
+      return '${first.name} ($time)';
+    }
+
+    return 'Tidak ada pengingat';
   }
 
   @override
   void dispose() {
-    _timer?.cancel();
+    stopTimer();
     super.dispose();
   }
 }
 
 // ============================================================================
-// HALAMAN UTAMA PENGINGAT KESEHATAN (SLIDE 1: iPhone 16 - 64)
+// DAFTAR PILIHAN OLAHRAGA LENGKAP (SESUAI PERMINTAAN USER: BISA PILIH BANYAK OLAHRAGA)
+// ============================================================================
+const List<ExerciseActivityItem> kAvailableExerciseActivities = [
+  ExerciseActivityItem(
+    name: 'Joging',
+    icon: Icons.directions_run_rounded,
+    description: 'Lari santai untuk meningkatkan kapasitas paru dan jantung',
+  ),
+  ExerciseActivityItem(
+    name: 'Bersepeda',
+    icon: Icons.directions_bike_rounded,
+    description: 'Mengayuh santai, ramah sendi dan melatih sirkulasi darah',
+  ),
+  ExerciseActivityItem(
+    name: 'Yoga',
+    icon: Icons.self_improvement_rounded,
+    description: 'Latihan pernapasan dan relaksasi untuk menurunkan stres',
+  ),
+  ExerciseActivityItem(
+    name: 'Jalan Santai',
+    icon: Icons.directions_walk_rounded,
+    description: 'Jalan kaki ringan di pagi atau sore hari selama 20-30 menit',
+  ),
+  ExerciseActivityItem(
+    name: 'Senam Jantung Sehat',
+    icon: Icons.favorite_rounded,
+    description: 'Gerakan ritmik terstruktur khusus memelihara denyut jantung',
+  ),
+  ExerciseActivityItem(
+    name: 'Peregangan (Stretching)',
+    icon: Icons.accessibility_new_rounded,
+    description: 'Melenturkan otot kaku dan melancarkan aliran pembuluh darah',
+  ),
+  ExerciseActivityItem(
+    name: 'Renang Ringan',
+    icon: Icons.pool_rounded,
+    description: 'Aktivitas air berdaya apung tinggi yang aman bagi jantung',
+  ),
+  ExerciseActivityItem(
+    name: 'Senam Aerobik Ringan',
+    icon: Icons.fitness_center_rounded,
+    description: 'Gerakan aerobik santai di rumah dengan tempo musik teratur',
+  ),
+];
+
+// ============================================================================
+// SLIDE 1: HALAMAN UTAMA PENGINGAT KESEHATAN (iPhone 16 - 112)
 // ============================================================================
 class PengingatKesehatanPage extends StatefulWidget {
   const PengingatKesehatanPage({super.key});
@@ -131,15 +283,33 @@ class PengingatKesehatanPage extends StatefulWidget {
 
 class _PengingatKesehatanPageState extends State<PengingatKesehatanPage> {
   final HealthReminderController _controller = HealthReminderController();
-  int _currentNavIndex = 3; // Riwayat tab aktif sesuai desain
+  int _currentNavIndex = 3; // Tab Riwayat aktif sesuai desain
 
   @override
   void initState() {
     super.initState();
     _controller.addListener(_onControllerUpdate);
+    _controller.startTimer();
+
+    // Listener pemicu notifikasi otomatis untuk Obat
     _controller.onReminderTriggered = (reminder, time) {
       if (mounted) {
-        showMedicineReminderDialog(context, reminder: reminder, timeText: time);
+        showModernMedicineReminderDialog(
+          context,
+          reminder: reminder,
+          timeText: time,
+        );
+      }
+    };
+
+    // Listener pemicu notifikasi otomatis untuk Olahraga
+    _controller.onExerciseReminderTriggered = (exercise, time) {
+      if (mounted) {
+        showModernExerciseReminderDialog(
+          context,
+          reminder: exercise,
+          timeText: time,
+        );
       }
     };
   }
@@ -151,12 +321,13 @@ class _PengingatKesehatanPageState extends State<PengingatKesehatanPage> {
   @override
   void dispose() {
     _controller.removeListener(_onControllerUpdate);
+    _controller.stopTimer();
     super.dispose();
   }
 
+  // Navigasi ke Alur Minum Obat
   void _navigateToMedicineFlow() {
     if (_controller.medicines.isEmpty) {
-      // Masuk ke Slide 2 (Belum ada obat yang ditambahkan)
       Navigator.push(
         context,
         MaterialPageRoute(
@@ -164,7 +335,6 @@ class _PengingatKesehatanPageState extends State<PengingatKesehatanPage> {
         ),
       );
     } else {
-      // Masuk ke Slide 4 (Daftar Obat)
       Navigator.push(
         context,
         MaterialPageRoute(
@@ -174,8 +344,36 @@ class _PengingatKesehatanPageState extends State<PengingatKesehatanPage> {
     }
   }
 
+  // Navigasi ke Alur Olahraga Ringan
+  void _navigateToExerciseFlow() {
+    if (_controller.exercises.isEmpty) {
+      // Masuk ke Slide 2: Tambah Pengingat (Intro Olahraga Ringan)
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => const TambahOlahragaIntroPage(),
+        ),
+      );
+    } else {
+      // Masuk ke Slide 4: Atur Pengingat (Ringkasan Olahraga yang sudah diisi)
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => AturPengingatOlahragaPage(
+            reminder: _controller.exercises.first,
+          ),
+        ),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
+    final bool hasExercise = _controller.exercises.isNotEmpty;
+    final String exerciseSubtitle = hasExercise
+        ? '${_controller.exercises.first.activityName} • ${_controller.exercises.first.durationMinutes} mnt'
+        : 'Atur Pengingat';
+
     return Scaffold(
       backgroundColor: Colors.white,
       body: SafeArea(
@@ -188,7 +386,7 @@ class _PengingatKesehatanPageState extends State<PengingatKesehatanPage> {
               padding: const EdgeInsets.only(left: 16, right: 16, top: 12),
               child: Row(
                 children: [
-                  _buildCircularBackButton(context),
+                  buildCircularBackButton(context),
                   const SizedBox(width: 12),
                   Expanded(
                     child: Column(
@@ -249,14 +447,16 @@ class _PengingatKesehatanPageState extends State<PengingatKesehatanPage> {
 
                     const SizedBox(height: 12),
 
-                    // ITEM 1: Minum Obat (Klik panah kanan masuk ke Tambah / Daftar Obat)
+                    // ITEM 1: Minum Obat
                     _buildActivityCard(
                       iconWidget: const CapsuleIconWidget(
                         color: PengingatKesehatanPage.primaryTeal,
                         size: 22,
                       ),
                       title: 'Minum Obat',
-                      subtitle: 'Atur Pengingat',
+                      subtitle: _controller.medicines.isEmpty
+                          ? 'Atur Pengingat'
+                          : '${_controller.medicines.length} Obat Aktif',
                       onTap: _navigateToMedicineFlow,
                     ),
 
@@ -270,17 +470,8 @@ class _PengingatKesehatanPageState extends State<PengingatKesehatanPage> {
                         size: 24,
                       ),
                       title: 'Olahraga Ringan',
-                      subtitle: 'Atur Pengingat',
-                      onTap: () {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                            content: Text(
-                              'Pengingat Olahraga Ringan: Pukul 06.00 WIB setiap pagi.',
-                            ),
-                            duration: Duration(seconds: 2),
-                          ),
-                        );
-                      },
+                      subtitle: exerciseSubtitle,
+                      onTap: _navigateToExerciseFlow,
                     ),
 
                     const SizedBox(height: 14),
@@ -288,10 +479,10 @@ class _PengingatKesehatanPageState extends State<PengingatKesehatanPage> {
                     // CARD: Pengingat Berikutnya (Biru Muda)
                     _buildNextReminderCard(),
 
-                    const SizedBox(height: 16),
+                    const SizedBox(height: 18),
 
-                    // TOMBOL TES NOTIFIKASI LANGSUNG (Fitur Pengujian Interaktif)
-                    _buildQuickTestNotificationButton(),
+                    // QUICK TEST NOTIFIKASI INTERAKTIF (Obat & Olahraga)
+                    _buildInteractiveTestNotificationCard(),
 
                     const SizedBox(height: 24),
                   ],
@@ -302,7 +493,13 @@ class _PengingatKesehatanPageState extends State<PengingatKesehatanPage> {
             // ==============================================================
             // BOTTOM NAVIGATION BAR
             // ==============================================================
-            _buildBottomNavigationBar(),
+            HeartCareBottomNavBarWidget(
+              currentIndex: _currentNavIndex,
+              onTap: (index) {
+                setState(() => _currentNavIndex = index);
+                if (index == 0) Navigator.pop(context);
+              },
+            ),
           ],
         ),
       ),
@@ -320,7 +517,6 @@ class _PengingatKesehatanPageState extends State<PengingatKesehatanPage> {
       ),
       child: Row(
         children: [
-          // Icon Kalender dengan Checkmark
           Container(
             width: 46,
             height: 46,
@@ -395,7 +591,6 @@ class _PengingatKesehatanPageState extends State<PengingatKesehatanPage> {
         ),
         child: Row(
           children: [
-            // Icon Lingkaran Biru Lembut
             Container(
               width: 44,
               height: 44,
@@ -427,12 +622,16 @@ class _PengingatKesehatanPageState extends State<PengingatKesehatanPage> {
                         color: Color(0xFF64748B),
                       ),
                       const SizedBox(width: 4),
-                      Text(
-                        subtitle,
-                        style: const TextStyle(
-                          fontSize: 11.5,
-                          color: Color(0xFF64748B),
-                          fontWeight: FontWeight.w400,
+                      Expanded(
+                        child: Text(
+                          subtitle,
+                          style: const TextStyle(
+                            fontSize: 11.5,
+                            color: Color(0xFF64748B),
+                            fontWeight: FontWeight.w400,
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
                         ),
                       ),
                     ],
@@ -496,7 +695,7 @@ class _PengingatKesehatanPageState extends State<PengingatKesehatanPage> {
                   style: const TextStyle(
                     fontSize: 11.5,
                     color: Color(0xFF475569),
-                    fontWeight: FontWeight.w400,
+                    fontWeight: FontWeight.w500,
                   ),
                 ),
               ],
@@ -507,91 +706,133 @@ class _PengingatKesehatanPageState extends State<PengingatKesehatanPage> {
     );
   }
 
-  // Tombol Uji Notifikasi Langsung (Agar pengguna bisa langsung melihat pop-up Slide 5 kapan saja)
-  Widget _buildQuickTestNotificationButton() {
+  // Tombol Uji Pop-up Notifikasi (Desain Baru yang Lebih Menarik)
+  Widget _buildInteractiveTestNotificationCard() {
     return Container(
       width: double.infinity,
+      padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
         color: const Color(0xFFF8FAFC),
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(16),
         border: Border.all(color: const Color(0xFFE2E8F0)),
       ),
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-      child: Row(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Icon(
-            Icons.notifications_active_outlined,
-            color: PengingatKesehatanPage.primaryTeal,
-            size: 22,
-          ),
-          const SizedBox(width: 10),
-          const Expanded(
-            child: Text(
-              'Ingin menguji tampilan notifikasi pengingat?',
-              style: TextStyle(
-                fontSize: 11,
-                color: Color(0xFF475569),
+          Row(
+            children: const [
+              Icon(
+                Icons.notifications_active_outlined,
+                color: PengingatKesehatanPage.primaryTeal,
+                size: 20,
               ),
-            ),
+              SizedBox(width: 8),
+              Text(
+                'Uji Tampilan Notifikasi Pengingat',
+                style: TextStyle(
+                  fontSize: 12.5,
+                  fontWeight: FontWeight.w700,
+                  color: Color(0xFF1E293B),
+                ),
+              ),
+            ],
           ),
-          TextButton(
-            onPressed: () {
-              final sample = _controller.medicines.isNotEmpty
-                  ? _controller.medicines.first
-                  : MedicineReminder(
-                      id: 'sample',
-                      name: 'Aspirin 300 mg',
-                      amount: '1',
-                      unit: 'Tablet',
-                      schedule: 'Setelah makan ya',
-                      reminderTimes: ['07.30', '15.30', '22.00'],
-                      note: 'Setelah makan ya',
+          const SizedBox(height: 4),
+          const Text(
+            'Klik tombol di bawah untuk melihat tampilan notifikasi pop-up modern:',
+            style: TextStyle(fontSize: 11, color: Color(0xFF64748B)),
+          ),
+          const SizedBox(height: 10),
+          Row(
+            children: [
+              Expanded(
+                child: ElevatedButton.icon(
+                  onPressed: () {
+                    final sampleMedicine = _controller.medicines.isNotEmpty
+                        ? _controller.medicines.first
+                        : MedicineReminder(
+                            id: 'sample-med',
+                            name: 'Aspirin 300 mg',
+                            amount: '1',
+                            unit: 'Tablet',
+                            schedule: 'Setelah makan ya',
+                            reminderTimes: ['07.30', '15.30', '22.00'],
+                            note: 'Setelah makan ya',
+                          );
+                    showModernMedicineReminderDialog(
+                      context,
+                      reminder: sampleMedicine,
+                      timeText: '07.30 WIB',
                     );
-              showMedicineReminderDialog(
-                context,
-                reminder: sample,
-                timeText: 'sekarang',
-              );
-            },
-            style: TextButton.styleFrom(
-              foregroundColor: PengingatKesehatanPage.primaryTeal,
-              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-              minimumSize: Size.zero,
-              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-            ),
-            child: const Text(
-              'Uji Sekarang',
-              style: TextStyle(
-                fontSize: 11.5,
-                fontWeight: FontWeight.bold,
+                  },
+                  icon: const Icon(Icons.medication_rounded, size: 16),
+                  label: const Text('Notif Obat'),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFF0098B9),
+                    foregroundColor: Colors.white,
+                    elevation: 0,
+                    padding: const EdgeInsets.symmetric(vertical: 8),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    textStyle: const TextStyle(
+                      fontSize: 11.5,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
               ),
-            ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: ElevatedButton.icon(
+                  onPressed: () {
+                    final sampleExercise = _controller.exercises.isNotEmpty
+                        ? _controller.exercises.first
+                        : ExerciseReminder(
+                            id: 'sample-ex',
+                            activityName: 'Joging',
+                            durationMinutes: 30,
+                            reminderTime: '07.30 WIB',
+                            repeatFrequency: 'Setiap Hari',
+                            repeatDays: const ['Setiap Hari'],
+                            note: 'Setelah makan ya',
+                          );
+                    showModernExerciseReminderDialog(
+                      context,
+                      reminder: sampleExercise,
+                      timeText: '07.30 WIB',
+                    );
+                  },
+                  icon: const Icon(Icons.directions_run_rounded, size: 16),
+                  label: const Text('Notif Olahraga'),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFFC7EBF4),
+                    foregroundColor: const Color(0xFF0098B9),
+                    elevation: 0,
+                    padding: const EdgeInsets.symmetric(vertical: 8),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    textStyle: const TextStyle(
+                      fontSize: 11.5,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+              ),
+            ],
           ),
         ],
       ),
     );
   }
-
-  Widget _buildBottomNavigationBar() {
-    return HeartCareBottomNavBarWidget(
-      currentIndex: _currentNavIndex,
-      onTap: (index) {
-        setState(() {
-          _currentNavIndex = index;
-        });
-        if (index == 0) {
-          Navigator.pop(context);
-        }
-      },
-    );
-  }
 }
 
 // ============================================================================
-// SLIDE 2: TAMBAH OBAT (EMPTY STATE / BELUM ADA OBAT - iPhone 16 - 108)
+// SLIDE 2: TAMBAH PENGINGAT (INTRO / EMPTY STATE OLAHRAGA - iPhone 16 - 113)
 // ============================================================================
-class TambahObatEmptyPage extends StatelessWidget {
-  const TambahObatEmptyPage({super.key});
+class TambahOlahragaIntroPage extends StatelessWidget {
+  const TambahOlahragaIntroPage({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -605,7 +846,1995 @@ class TambahObatEmptyPage extends StatelessWidget {
               padding: const EdgeInsets.only(left: 16, right: 16, top: 12),
               child: Row(
                 children: [
-                  _buildCircularBackButton(context),
+                  buildCircularBackButton(context),
+                  const SizedBox(width: 16),
+                  const Text(
+                    'Tambah Pengingat',
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.w700,
+                      color: Color(0xFF1E293B),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+
+            Expanded(
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.symmetric(horizontal: 24),
+                child: Column(
+                  children: [
+                    const SizedBox(height: 14),
+
+                    // Ilustrasi Vektor Pelari Cantik
+                    const Center(
+                      child: ExerciseRunnerCircularIllustration(size: 175),
+                    ),
+
+                    const SizedBox(height: 20),
+
+                    // Judul & Subtitle
+                    const Text(
+                      'Olahraga Ringan',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.w800,
+                        color: Color(0xFF1E293B),
+                      ),
+                    ),
+
+                    const SizedBox(height: 6),
+
+                    const Padding(
+                      padding: EdgeInsets.symmetric(horizontal: 20),
+                      child: Text(
+                        'Jaga tubuh tetap bugar dengan\nolahraga ringan secara rutin',
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                          fontSize: 13,
+                          color: Color(0xFF64748B),
+                          height: 1.35,
+                        ),
+                      ),
+                    ),
+
+                    const SizedBox(height: 18),
+
+                    // Kartu Manfaat (Background Biru Muda Cyan)
+                    Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 18, vertical: 14),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFC7EBF4).withOpacity(0.65),
+                        borderRadius: BorderRadius.circular(16),
+                        border: Border.all(
+                          color: const Color(0xFFB5E4F0),
+                          width: 1,
+                        ),
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            children: const [
+                              Text(
+                                '💖',
+                                style: TextStyle(fontSize: 16),
+                              ),
+                              SizedBox(width: 8),
+                              Text(
+                                'Manfaat',
+                                style: TextStyle(
+                                  fontSize: 14.5,
+                                  fontWeight: FontWeight.w800,
+                                  color: Color(0xFF0098B9),
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 8),
+                          _benefitBullet('Meningkatkan daya tahan tubuh'),
+                          const SizedBox(height: 4),
+                          _benefitBullet('Menjaga Kesehatan Jantung'),
+                          const SizedBox(height: 4),
+                          _benefitBullet('Mengurangi Stres'),
+                        ],
+                      ),
+                    ),
+
+                    const SizedBox(height: 20),
+                  ],
+                ),
+              ),
+            ),
+
+            // Tombol "Atur Pengingat"
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
+              child: SizedBox(
+                width: double.infinity,
+                height: 48,
+                child: ElevatedButton(
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const TambahOlahragaFormPage(),
+                      ),
+                    );
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFF0098B9),
+                    foregroundColor: Colors.white,
+                    elevation: 0,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(24),
+                    ),
+                  ),
+                  child: const Text(
+                    'Atur Pengingat',
+                    style: TextStyle(
+                      fontSize: 15,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                ),
+              ),
+            ),
+
+            const SizedBox(height: 4),
+
+            const HeartCareBottomNavBarWidget(currentIndex: 3),
+          ],
+        ),
+      ),
+    );
+  }
+
+  static Widget _benefitBullet(String text) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text(
+          '• ',
+          style: TextStyle(
+            color: Color(0xFF334155),
+            fontSize: 13,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        Expanded(
+          child: Text(
+            text,
+            style: const TextStyle(
+              fontSize: 12.5,
+              color: Color(0xFF334155),
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+// ============================================================================
+// SLIDE 3: FORM TAMBAH PENGINGAT OLAHRAGA (iPhone 16 - 114)
+// ============================================================================
+class TambahOlahragaFormPage extends StatefulWidget {
+  const TambahOlahragaFormPage({super.key});
+
+  @override
+  State<TambahOlahragaFormPage> createState() => _TambahOlahragaFormPageState();
+}
+
+class _TambahOlahragaFormPageState extends State<TambahOlahragaFormPage> {
+  // Pilihan Jenis Olahraga (bisa pilih banyak olahraga) - Awalnya belum dipilih
+  String? _selectedActivity;
+  int _selectedDurationMinutes = 30; // default 30 menit
+  String? _selectedTime; // Awalnya null -> menampilkan placeholder "Pilih Jam"
+  String? _selectedSchedule; // Awalnya null -> menampilkan placeholder "Pengulangan"
+  List<String> _selectedDays = [];
+  final TextEditingController _noteController =
+      TextEditingController(); // Awalnya kosongan
+
+  final List<ExerciseActivityItem> _activities = List.from(kAvailableExerciseActivities);
+
+  @override
+  void dispose() {
+    _noteController.dispose();
+    super.dispose();
+  }
+
+  // Dialog Pemilihan Frekuensi & Hari (seminggu brp kali & hari apa aja)
+  void _openScheduleBottomSheet() {
+    final allDays = [
+      'Senin',
+      'Selasa',
+      'Rabu',
+      'Kamis',
+      'Jumat',
+      'Sabtu',
+      'Minggu',
+    ];
+    List<String> tempDays = List.from(_selectedDays);
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.white,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      builder: (ctx) {
+        return StatefulBuilder(
+          builder: (context, setModalState) {
+            final isEveryDay = tempDays.contains('Setiap Hari') ||
+                tempDays.length == allDays.length;
+
+            return SafeArea(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        const Text(
+                          'Jadwal & Pengulangan Olahraga',
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                            color: Color(0xFF1E293B),
+                          ),
+                        ),
+                        IconButton(
+                          icon: const Icon(Icons.close_rounded),
+                          onPressed: () => Navigator.pop(ctx),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 6),
+                    const Text(
+                      'Pilih seberapa sering dan di hari apa saja Anda ingin diingatkan:',
+                      style: TextStyle(fontSize: 12, color: Color(0xFF64748B)),
+                    ),
+                    const SizedBox(height: 16),
+
+                    // Opsi Cepat
+                    Wrap(
+                      spacing: 8,
+                      runSpacing: 8,
+                      children: [
+                        ChoiceChip(
+                          label: const Text('Setiap Hari (7x seminggu)'),
+                          selected: isEveryDay,
+                          selectedColor: const Color(0xFF0098B9),
+                          labelStyle: TextStyle(
+                            color: isEveryDay ? Colors.white : const Color(0xFF1E293B),
+                            fontWeight: FontWeight.w600,
+                            fontSize: 12,
+                          ),
+                          onSelected: (selected) {
+                            if (selected) {
+                              setModalState(() {
+                                tempDays = ['Setiap Hari'];
+                              });
+                            }
+                          },
+                        ),
+                        ChoiceChip(
+                          label: const Text('Hari Kerja (Sen - Jum)'),
+                          selected: !tempDays.contains('Setiap Hari') &&
+                              tempDays.length == 5 &&
+                              tempDays.contains('Senin') &&
+                              tempDays.contains('Jumat'),
+                          selectedColor: const Color(0xFF0098B9),
+                          labelStyle: TextStyle(
+                            color: (!tempDays.contains('Setiap Hari') &&
+                                    tempDays.length == 5 &&
+                                    tempDays.contains('Senin') &&
+                                    tempDays.contains('Jumat'))
+                                ? Colors.white
+                                : const Color(0xFF1E293B),
+                            fontWeight: FontWeight.w600,
+                            fontSize: 12,
+                          ),
+                          onSelected: (selected) {
+                            setModalState(() {
+                              tempDays = [
+                                'Senin',
+                                'Selasa',
+                                'Rabu',
+                                'Kamis',
+                                'Jumat'
+                              ];
+                            });
+                          },
+                        ),
+                        ChoiceChip(
+                          label: const Text('3x Seminggu (Sen, Rab, Jum)'),
+                          selected: tempDays.length == 3 &&
+                              tempDays.contains('Senin') &&
+                              tempDays.contains('Rabu') &&
+                              tempDays.contains('Jumat'),
+                          selectedColor: const Color(0xFF0098B9),
+                          labelStyle: TextStyle(
+                            color: (tempDays.length == 3 &&
+                                    tempDays.contains('Senin') &&
+                                    tempDays.contains('Rabu') &&
+                                    tempDays.contains('Jumat'))
+                                ? Colors.white
+                                : const Color(0xFF1E293B),
+                            fontWeight: FontWeight.w600,
+                            fontSize: 12,
+                          ),
+                          onSelected: (selected) {
+                            setModalState(() {
+                              tempDays = ['Senin', 'Rabu', 'Jumat'];
+                            });
+                          },
+                        ),
+                      ],
+                    ),
+
+                    const SizedBox(height: 18),
+                    const Text(
+                      'Pilih Hari Spesifik:',
+                      style: TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w700,
+                        color: Color(0xFF1E293B),
+                      ),
+                    ),
+                    const SizedBox(height: 10),
+
+                    // Chip Hari
+                    Wrap(
+                      spacing: 8,
+                      runSpacing: 8,
+                      children: allDays.map((day) {
+                        final isSelected =
+                            tempDays.contains(day) || tempDays.contains('Setiap Hari');
+                        return FilterChip(
+                          label: Text(day),
+                          selected: isSelected,
+                          selectedColor: const Color(0xFFC7EBF4),
+                          checkmarkColor: const Color(0xFF0098B9),
+                          labelStyle: TextStyle(
+                            color: isSelected
+                                ? const Color(0xFF0098B9)
+                                : const Color(0xFF475569),
+                            fontWeight:
+                                isSelected ? FontWeight.bold : FontWeight.w500,
+                            fontSize: 12,
+                          ),
+                          onSelected: (bool selected) {
+                            setModalState(() {
+                              if (tempDays.contains('Setiap Hari')) {
+                                tempDays = List.from(allDays);
+                              }
+                              if (selected) {
+                                if (!tempDays.contains(day)) tempDays.add(day);
+                              } else {
+                                tempDays.remove(day);
+                              }
+                              if (tempDays.length == allDays.length) {
+                                tempDays = ['Setiap Hari'];
+                              }
+                            });
+                          },
+                        );
+                      }).toList(),
+                    ),
+
+                    const SizedBox(height: 20),
+                    SizedBox(
+                      width: double.infinity,
+                      height: 46,
+                      child: ElevatedButton(
+                        onPressed: () {
+                          setState(() {
+                            if (tempDays.isEmpty) {
+                              _selectedDays = ['Setiap Hari'];
+                              _selectedSchedule = 'Setiap Hari';
+                            } else if (tempDays.contains('Setiap Hari') ||
+                                tempDays.length == 7) {
+                              _selectedDays = ['Setiap Hari'];
+                              _selectedSchedule = 'Setiap Hari';
+                            } else {
+                              _selectedDays = tempDays;
+                              _selectedSchedule =
+                                  '${tempDays.join(', ')} (${tempDays.length}x seminggu)';
+                            }
+                          });
+                          Navigator.pop(ctx);
+                        },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: const Color(0xFF0098B9),
+                          foregroundColor: Colors.white,
+                          elevation: 0,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                        ),
+                        child: const Text(
+                          'Terapkan Jadwal',
+                          style: TextStyle(fontWeight: FontWeight.bold),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+
+  // Dialog Pemilihan Waktu Pengingat & Durasi Olahraga
+  void _openTimeAndDurationBottomSheet() {
+    int tempDuration = _selectedDurationMinutes;
+    String tempTime = _selectedTime ?? '07.30 WIB';
+
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.white,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      builder: (ctx) {
+        return StatefulBuilder(
+          builder: (context, setModalState) {
+            return SafeArea(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        const Text(
+                          'Waktu & Durasi Olahraga',
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                            color: Color(0xFF1E293B),
+                          ),
+                        ),
+                        IconButton(
+                          icon: const Icon(Icons.close_rounded),
+                          onPressed: () => Navigator.pop(ctx),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 12),
+
+                    // 1. Pilih Jam Mulai
+                    const Text(
+                      'Jam Mulai:',
+                      style: TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w700,
+                        color: Color(0xFF1E293B),
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    InkWell(
+                      onTap: () async {
+                        final picked = await showTimePicker(
+                          context: context,
+                          initialTime: const TimeOfDay(hour: 7, minute: 30),
+                        );
+                        if (picked != null) {
+                          final formatted =
+                              '${picked.hour.toString().padLeft(2, '0')}.${picked.minute.toString().padLeft(2, '0')} WIB';
+                          setModalState(() {
+                            tempTime = formatted;
+                          });
+                        }
+                      },
+                      borderRadius: BorderRadius.circular(12),
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 14, vertical: 12),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFF1F5F9),
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(color: const Color(0xFFCBD5E1)),
+                        ),
+                        child: Row(
+                          children: [
+                            const Icon(
+                              Icons.access_time_rounded,
+                              color: Color(0xFF0098B9),
+                              size: 22,
+                            ),
+                            const SizedBox(width: 12),
+                            Text(
+                              tempTime,
+                              style: const TextStyle(
+                                fontSize: 15,
+                                fontWeight: FontWeight.bold,
+                                color: Color(0xFF1E293B),
+                              ),
+                            ),
+                            const Spacer(),
+                            const Text(
+                              'Ubah Jam',
+                              style: TextStyle(
+                                color: Color(0xFF0098B9),
+                                fontWeight: FontWeight.w600,
+                                fontSize: 12.5,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+
+                    const SizedBox(height: 18),
+
+                    // 2. Pilih Berapa Menit Olahraganya
+                    const Text(
+                      'Berapa Menit Melakukan Olahraga?',
+                      style: TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w700,
+                        color: Color(0xFF1E293B),
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Wrap(
+                      spacing: 10,
+                      children: [15, 20, 30, 45, 60].map((mins) {
+                        final isSel = tempDuration == mins;
+                        return ChoiceChip(
+                          label: Text('$mins Menit'),
+                          selected: isSel,
+                          selectedColor: const Color(0xFF0098B9),
+                          labelStyle: TextStyle(
+                            color: isSel ? Colors.white : const Color(0xFF1E293B),
+                            fontWeight: FontWeight.bold,
+                            fontSize: 12.5,
+                          ),
+                          onSelected: (selected) {
+                            if (selected) {
+                              setModalState(() => tempDuration = mins);
+                            }
+                          },
+                        );
+                      }).toList(),
+                    ),
+
+                    const SizedBox(height: 22),
+
+                    SizedBox(
+                      width: double.infinity,
+                      height: 46,
+                      child: ElevatedButton(
+                        onPressed: () {
+                          setState(() {
+                            _selectedTime = tempTime;
+                            _selectedDurationMinutes = tempDuration;
+                          });
+                          Navigator.pop(ctx);
+                        },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: const Color(0xFF0098B9),
+                          foregroundColor: Colors.white,
+                          elevation: 0,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                        ),
+                        child: const Text(
+                          'Selesai',
+                          style: TextStyle(fontWeight: FontWeight.bold),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+
+  // Dialog Tambah Olahraga Kustom (Jika ingin olahraga lainnya)
+  void _openAddCustomSportDialog() {
+    final textCtrl = TextEditingController();
+    showDialog(
+      context: context,
+      builder: (ctx) {
+        return AlertDialog(
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          title: const Text(
+            'Tambah Jenis Olahraga',
+            style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+          ),
+          content: TextField(
+            controller: textCtrl,
+            autofocus: true,
+            decoration: const InputDecoration(
+              hintText: 'Contoh: Senam Lansia, Pilates...',
+              border: OutlineInputBorder(),
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(ctx),
+              child: const Text('Batal'),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                final name = textCtrl.text.trim();
+                if (name.isNotEmpty) {
+                  setState(() {
+                    _activities.add(
+                      ExerciseActivityItem(
+                        name: name,
+                        icon: Icons.fitness_center_rounded,
+                        description: 'Aktivitas olahraga kustom pilihan Anda',
+                      ),
+                    );
+                    _selectedActivity = name;
+                  });
+                }
+                Navigator.pop(ctx);
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFF0098B9),
+                foregroundColor: Colors.white,
+              ),
+              child: const Text('Tambah'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  void _saveExerciseReminder() {
+    if (_selectedActivity == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Silakan pilih jenis aktivitas olahraga terlebih dahulu'),
+          backgroundColor: Color(0xFF0098B9),
+          duration: Duration(seconds: 2),
+        ),
+      );
+      return;
+    }
+
+    final note = _noteController.text.trim();
+    final time = _selectedTime ?? '07.30 WIB';
+    final schedule = _selectedSchedule ?? 'Setiap Hari';
+    final days = _selectedDays.isEmpty ? ['Setiap Hari'] : _selectedDays;
+
+    final newExercise = ExerciseReminder(
+      id: DateTime.now().millisecondsSinceEpoch.toString(),
+      activityName: _selectedActivity!,
+      durationMinutes: _selectedDurationMinutes,
+      reminderTime: time,
+      repeatFrequency: schedule,
+      repeatDays: days,
+      note: note.isEmpty ? 'Setelah makan ya' : note,
+      isActive: true,
+    );
+
+    HealthReminderController().updateExercise(newExercise);
+
+    // Navigasi ke Slide 4: Atur Pengingat (Detail yang sudah diisi)
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(
+        builder: (context) => AturPengingatOlahragaPage(reminder: newExercise),
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: Colors.white,
+      body: SafeArea(
+        child: Column(
+          children: [
+            // Top Bar
+            Padding(
+              padding: const EdgeInsets.only(left: 16, right: 16, top: 12),
+              child: Row(
+                children: [
+                  buildCircularBackButton(context),
+                  const SizedBox(width: 16),
+                  const Text(
+                    'Tambah Pengingat',
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.w700,
+                      color: Color(0xFF1E293B),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+
+            const SizedBox(height: 12),
+
+            Expanded(
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.symmetric(horizontal: 20),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Mini Illustration Banner (Pemandangan Lari Outdoor)
+                    Container(
+                      width: double.infinity,
+                      height: 80,
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFE9F8FB),
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                      child: const Center(
+                        child: ExerciseBannerIllustration(),
+                      ),
+                    ),
+
+                    const SizedBox(height: 16),
+
+                    // SECTION 1: Jenis Aktivitas (bisa memilih banyak olahraga)
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        const Text(
+                          'Jenis Aktivitas',
+                          style: TextStyle(
+                            fontSize: 13.5,
+                            fontWeight: FontWeight.w700,
+                            color: Color(0xFF1E293B),
+                          ),
+                        ),
+                        TextButton.icon(
+                          onPressed: _openAddCustomSportDialog,
+                          icon: const Icon(Icons.add, size: 16),
+                          label: const Text('Olahraga Lain'),
+                          style: TextButton.styleFrom(
+                            foregroundColor: const Color(0xFF0098B9),
+                            padding: EdgeInsets.zero,
+                            minimumSize: Size.zero,
+                            tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                          ),
+                        ),
+                      ],
+                    ),
+
+                    const SizedBox(height: 8),
+
+                    // List Pilihan Olahraga Ringan
+                    ..._activities.map((item) {
+                      final isSelected = _selectedActivity == item.name;
+                      return Padding(
+                        padding: const EdgeInsets.only(bottom: 8),
+                        child: InkWell(
+                          onTap: () {
+                            setState(() {
+                              _selectedActivity = item.name;
+                            });
+                          },
+                          borderRadius: BorderRadius.circular(12),
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 12, vertical: 10),
+                            decoration: BoxDecoration(
+                              color: isSelected
+                                  ? const Color(0xFFF0FAFC)
+                                  : Colors.white,
+                              borderRadius: BorderRadius.circular(12),
+                              border: Border.all(
+                                color: isSelected
+                                    ? const Color(0xFF0098B9)
+                                    : const Color(0xFFE2E8F0),
+                                width: isSelected ? 1.5 : 1,
+                              ),
+                            ),
+                            child: Row(
+                              children: [
+                                Container(
+                                  width: 38,
+                                  height: 38,
+                                  decoration: BoxDecoration(
+                                    color: const Color(0xFFE0F7FA),
+                                    shape: BoxShape.circle,
+                                  ),
+                                  child: Center(
+                                    child: Icon(
+                                      item.icon,
+                                      color: const Color(0xFF0098B9),
+                                      size: 22,
+                                    ),
+                                  ),
+                                ),
+                                const SizedBox(width: 12),
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        item.name,
+                                        style: TextStyle(
+                                          fontSize: 13.5,
+                                          fontWeight: isSelected
+                                              ? FontWeight.w700
+                                              : FontWeight.w600,
+                                          color: const Color(0xFF1E293B),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                                Container(
+                                  width: 22,
+                                  height: 22,
+                                  decoration: BoxDecoration(
+                                    shape: BoxShape.circle,
+                                    border: Border.all(
+                                      color: isSelected
+                                          ? const Color(0xFF0098B9)
+                                          : const Color(0xFFCBD5E1),
+                                      width: isSelected ? 6 : 1.5,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      );
+                    }).toList(),
+
+                    const SizedBox(height: 14),
+
+                    // SECTION 2: Jadwal Olahraga (Pengulangan & Hari)
+                    const Text(
+                      'Jadwal Olahraga',
+                      style: TextStyle(
+                        fontSize: 13.5,
+                        fontWeight: FontWeight.w700,
+                        color: Color(0xFF1E293B),
+                      ),
+                    ),
+                    const SizedBox(height: 6),
+                    InkWell(
+                      onTap: _openScheduleBottomSheet,
+                      borderRadius: BorderRadius.circular(10),
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 14, vertical: 12),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(10),
+                          border: Border.all(
+                            color: const Color(0xFFD1D5DB),
+                            width: 1,
+                          ),
+                        ),
+                        child: Row(
+                          children: [
+                            const Icon(
+                              Icons.calendar_month_outlined,
+                              color: Color(0xFF64748B),
+                              size: 20,
+                            ),
+                            const SizedBox(width: 10),
+                            Expanded(
+                              child: Text(
+                                _selectedSchedule ?? 'Pengulangan',
+                                style: TextStyle(
+                                  fontSize: 13,
+                                  color: _selectedSchedule != null
+                                      ? const Color(0xFF1E293B)
+                                      : const Color(0xFF94A3B8),
+                                  fontWeight: _selectedSchedule != null
+                                      ? FontWeight.w500
+                                      : FontWeight.w400,
+                                ),
+                              ),
+                            ),
+                            const Icon(
+                              Icons.chevron_right_rounded,
+                              color: Color(0xFF94A3B8),
+                              size: 20,
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+
+                    const SizedBox(height: 14),
+
+                    // SECTION 3: Waktu Pengingat & Durasi Olahraga
+                    const Text(
+                      'Waktu Pengingat',
+                      style: TextStyle(
+                        fontSize: 13.5,
+                        fontWeight: FontWeight.w700,
+                        color: Color(0xFF1E293B),
+                      ),
+                    ),
+                    const SizedBox(height: 6),
+                    InkWell(
+                      onTap: _openTimeAndDurationBottomSheet,
+                      borderRadius: BorderRadius.circular(10),
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 14, vertical: 12),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(10),
+                          border: Border.all(
+                            color: const Color(0xFFD1D5DB),
+                            width: 1,
+                          ),
+                        ),
+                        child: Row(
+                          children: [
+                            const Icon(
+                              Icons.access_time_rounded,
+                              color: Color(0xFF64748B),
+                              size: 20,
+                            ),
+                            const SizedBox(width: 10),
+                            Expanded(
+                              child: Text(
+                                _selectedTime != null
+                                    ? '$_selectedTime  •  $_selectedDurationMinutes menit'
+                                    : 'Pilih Jam',
+                                style: TextStyle(
+                                  fontSize: 13,
+                                  color: _selectedTime != null
+                                      ? const Color(0xFF1E293B)
+                                      : const Color(0xFF94A3B8),
+                                  fontWeight: _selectedTime != null
+                                      ? FontWeight.w600
+                                      : FontWeight.w400,
+                                ),
+                              ),
+                            ),
+                            const Icon(
+                              Icons.chevron_right_rounded,
+                              color: Color(0xFF94A3B8),
+                              size: 20,
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+
+                    const SizedBox(height: 14),
+
+                    // SECTION 4: Catatan
+                    const Text(
+                      'Catatan',
+                      style: TextStyle(
+                        fontSize: 13.5,
+                        fontWeight: FontWeight.w700,
+                        color: Color(0xFF1E293B),
+                      ),
+                    ),
+                    const SizedBox(height: 6),
+                    Container(
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(10),
+                        border: Border.all(
+                          color: const Color(0xFFD1D5DB),
+                          width: 1,
+                        ),
+                      ),
+                      child: Row(
+                        crossAxisAlignment: CrossAxisAlignment.center,
+                        children: [
+                          const Padding(
+                            padding: EdgeInsets.only(left: 12, right: 8),
+                            child: Icon(
+                              Icons.edit_note_rounded,
+                              color: Color(0xFF64748B),
+                              size: 24,
+                            ),
+                          ),
+                          Expanded(
+                            child: TextField(
+                              controller: _noteController,
+                              style: const TextStyle(
+                                fontSize: 13,
+                                color: Color(0xFF1E293B),
+                              ),
+                              decoration: const InputDecoration(
+                                hintText: 'Tambahkan catatan......',
+                                hintStyle: TextStyle(
+                                  color: Color(0xFF9CA3AF),
+                                  fontSize: 13,
+                                ),
+                                border: InputBorder.none,
+                                contentPadding: EdgeInsets.symmetric(
+                                  vertical: 14,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+
+                    const SizedBox(height: 24),
+
+                    // TOMBOL SIMPAN
+                    SizedBox(
+                      width: double.infinity,
+                      height: 48,
+                      child: ElevatedButton(
+                        onPressed: _saveExerciseReminder,
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: const Color(0xFF0098B9),
+                          foregroundColor: Colors.white,
+                          elevation: 0,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(24),
+                          ),
+                        ),
+                        child: const Text(
+                          'Simpan',
+                          style: TextStyle(
+                            fontSize: 15,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                      ),
+                    ),
+
+                    const SizedBox(height: 20),
+                  ],
+                ),
+              ),
+            ),
+
+            const HeartCareBottomNavBarWidget(currentIndex: 3),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// ============================================================================
+// SLIDE 4: ATUR PENGINGAT (RINGKASAN DATA OLAHRAGA - iPhone 16 - 115)
+// ============================================================================
+class AturPengingatOlahragaPage extends StatefulWidget {
+  final ExerciseReminder reminder;
+
+  const AturPengingatOlahragaPage({
+    super.key,
+    required this.reminder,
+  });
+
+  @override
+  State<AturPengingatOlahragaPage> createState() =>
+      _AturPengingatOlahragaPageState();
+}
+
+class _AturPengingatOlahragaPageState extends State<AturPengingatOlahragaPage> {
+  late ExerciseReminder _reminder;
+
+  @override
+  void initState() {
+    super.initState();
+    _reminder = widget.reminder;
+  }
+
+  IconData _getActivityIcon(String name) {
+    for (var act in kAvailableExerciseActivities) {
+      if (act.name.toLowerCase() == name.toLowerCase()) {
+        return act.icon;
+      }
+    }
+    return Icons.directions_run_rounded;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: Colors.white,
+      body: SafeArea(
+        child: Column(
+          children: [
+            // Top Bar
+            Padding(
+              padding: const EdgeInsets.only(left: 16, right: 16, top: 12),
+              child: Row(
+                children: [
+                  buildCircularBackButton(context),
+                  const SizedBox(width: 16),
+                  const Text(
+                    'Atur Pengingat',
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.w700,
+                      color: Color(0xFF1E293B),
+                    ),
+                  ),
+                  const Spacer(),
+                  // Tombol Edit/Ubah Pengaturan
+                  IconButton(
+                    icon: const Icon(
+                      Icons.edit_outlined,
+                      color: Color(0xFF0098B9),
+                      size: 22,
+                    ),
+                    onPressed: () {
+                      Navigator.pushReplacement(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const TambahOlahragaFormPage(),
+                        ),
+                      );
+                    },
+                  ),
+                ],
+              ),
+            ),
+
+            const SizedBox(height: 16),
+
+            Expanded(
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.symmetric(horizontal: 20),
+                child: Column(
+                  children: [
+                    // CARD 1: Jenis Olahraga & Durasi Menit
+                    _buildSummaryCard(
+                      iconWidget: Container(
+                        width: 46,
+                        height: 46,
+                        decoration: const BoxDecoration(
+                          color: Color(0xFFE0F7FA),
+                          shape: BoxShape.circle,
+                        ),
+                        child: Center(
+                          child: Icon(
+                            _getActivityIcon(_reminder.activityName),
+                            color: const Color(0xFF0098B9),
+                            size: 26,
+                          ),
+                        ),
+                      ),
+                      title: _reminder.activityName,
+                      subtitle: '${_reminder.durationMinutes} menit',
+                      titleColor: const Color(0xFF0098B9),
+                      titleBold: true,
+                    ),
+
+                    const SizedBox(height: 14),
+
+                    // CARD 2: Waktu Pengingat
+                    _buildSummaryCard(
+                      iconWidget: Container(
+                        width: 46,
+                        height: 46,
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFF1F5F9),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: const Center(
+                          child: Icon(
+                            Icons.access_time_rounded,
+                            color: Color(0xFF1E293B),
+                            size: 26,
+                          ),
+                        ),
+                      ),
+                      title: 'Waktu Pengingat',
+                      subtitle: _reminder.reminderTime,
+                      subtitleBold: true,
+                      titleColor: const Color(0xFF0098B9),
+                    ),
+
+                    const SizedBox(height: 14),
+
+                    // CARD 3: Pengulangan (Jadwal Hari)
+                    _buildSummaryCard(
+                      iconWidget: Container(
+                        width: 46,
+                        height: 46,
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFF1F5F9),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: const Center(
+                          child: Icon(
+                            Icons.calendar_month_outlined,
+                            color: Color(0xFF1E293B),
+                            size: 26,
+                          ),
+                        ),
+                      ),
+                      title: 'Pengulangan',
+                      subtitle: _reminder.repeatFrequency,
+                      subtitleBold: true,
+                      titleColor: const Color(0xFF0098B9),
+                    ),
+
+                    const SizedBox(height: 14),
+
+                    // CARD 4: Catatan
+                    _buildSummaryCard(
+                      iconWidget: Container(
+                        width: 46,
+                        height: 46,
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFF1F5F9),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: const Center(
+                          child: Icon(
+                            Icons.assignment_outlined,
+                            color: Color(0xFF1E293B),
+                            size: 26,
+                          ),
+                        ),
+                      ),
+                      title: 'Catatan',
+                      subtitle: _reminder.note,
+                      subtitleBold: true,
+                      titleColor: const Color(0xFF0098B9),
+                    ),
+
+                    const SizedBox(height: 24),
+
+                    // FITUR PREVIEW: Uji Notifikasi Langsung Dari Sini
+                    InkWell(
+                      onTap: () {
+                        showModernExerciseReminderDialog(
+                          context,
+                          reminder: _reminder,
+                          timeText: _reminder.reminderTime,
+                        );
+                      },
+                      borderRadius: BorderRadius.circular(12),
+                      child: Container(
+                        width: double.infinity,
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 14, vertical: 10),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFF0FAFC),
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(color: const Color(0xFFB5E4F0)),
+                        ),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: const [
+                            Icon(
+                              Icons.notifications_active_rounded,
+                              color: Color(0xFF0098B9),
+                              size: 18,
+                            ),
+                            SizedBox(width: 8),
+                            Text(
+                              'Lihat Contoh Notifikasi Olahraga Ini',
+                              style: TextStyle(
+                                fontSize: 12.5,
+                                fontWeight: FontWeight.bold,
+                                color: Color(0xFF0098B9),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+
+                    const SizedBox(height: 24),
+                  ],
+                ),
+              ),
+            ),
+
+            // Tombol Simpan / Selesai
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
+              child: SizedBox(
+                width: double.infinity,
+                height: 48,
+                child: ElevatedButton(
+                  onPressed: () {
+                    final messenger = ScaffoldMessenger.of(context);
+                    final nav = Navigator.of(context);
+                    messenger.showSnackBar(
+                      SnackBar(
+                        content: Text(
+                          'Pengingat olahraga ${_reminder.activityName} berhasil diaktifkan!',
+                        ),
+                        backgroundColor: const Color(0xFF0098B9),
+                        duration: const Duration(seconds: 2),
+                      ),
+                    );
+                    nav.popUntil((route) => route.isFirst);
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFF0098B9),
+                    foregroundColor: Colors.white,
+                    elevation: 0,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(24),
+                    ),
+                  ),
+                  child: const Text(
+                    'Simpan',
+                    style: TextStyle(
+                      fontSize: 15,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                ),
+              ),
+            ),
+
+            const HeartCareBottomNavBarWidget(currentIndex: 3),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildSummaryCard({
+    required Widget iconWidget,
+    required String title,
+    required String subtitle,
+    Color titleColor = const Color(0xFF1E293B),
+    bool titleBold = false,
+    bool subtitleBold = false,
+  }) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(
+          color: const Color(0xFFD1D5DB),
+          width: 1,
+        ),
+      ),
+      child: Row(
+        children: [
+          iconWidget,
+          const SizedBox(width: 14),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  title,
+                  style: TextStyle(
+                    fontSize: 13.5,
+                    fontWeight: titleBold ? FontWeight.w700 : FontWeight.w600,
+                    color: titleColor,
+                  ),
+                ),
+                const SizedBox(height: 3),
+                Text(
+                  subtitle,
+                  style: TextStyle(
+                    fontSize: 14,
+                    fontWeight:
+                        subtitleBold ? FontWeight.w700 : FontWeight.w500,
+                    color: const Color(0xFF1E293B),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// ============================================================================
+// SLIDE 5: POP-UP NOTIFIKASI MODERN & ELEGAN (iPhone 16 - 116 DIPERCANTIK)
+// ============================================================================
+
+/// Tampilan Pop-up Notifikasi Olahraga Ringan (Modern, Estetik, & Terpadu)
+void showModernExerciseReminderDialog(
+  BuildContext context, {
+  required ExerciseReminder reminder,
+  String timeText = '07.30 WIB',
+}) {
+  showDialog(
+    context: context,
+    barrierDismissible: true,
+    builder: (BuildContext dialogContext) {
+      return Dialog(
+        backgroundColor: Colors.transparent,
+        insetPadding: const EdgeInsets.symmetric(horizontal: 22),
+        child: Container(
+          width: double.infinity,
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(24),
+            boxShadow: [
+              BoxShadow(
+                color: const Color(0xFF0098B9).withOpacity(0.18),
+                blurRadius: 28,
+                offset: const Offset(0, 10),
+              ),
+              BoxShadow(
+                color: Colors.black.withOpacity(0.08),
+                blurRadius: 10,
+                offset: const Offset(0, 4),
+              ),
+            ],
+          ),
+          padding: const EdgeInsets.all(22),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // Header Badge: Lonceng Cyan, Judul Pengingat, Waktu
+              Row(
+                children: [
+                  Container(
+                    width: 32,
+                    height: 32,
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFE0F7FA),
+                      shape: BoxShape.circle,
+                      border: Border.all(
+                        color: const Color(0xFF90D5E4),
+                        width: 1,
+                      ),
+                    ),
+                    child: const Icon(
+                      Icons.notifications_active_rounded,
+                      color: Color(0xFF0098B9),
+                      size: 18,
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  const Text(
+                    'Pengingat Olahraga Ringan',
+                    style: TextStyle(
+                      fontSize: 13.5,
+                      fontWeight: FontWeight.w800,
+                      color: Color(0xFF1E293B),
+                    ),
+                  ),
+                  const Spacer(),
+                  Container(
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFF1F5F9),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Text(
+                      timeText,
+                      style: const TextStyle(
+                        fontSize: 11,
+                        fontWeight: FontWeight.w600,
+                        color: Color(0xFF475569),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+
+              const SizedBox(height: 18),
+
+              // Ilustrasi Runner Cantik dengan Radial Glow
+              Container(
+                width: 86,
+                height: 86,
+                decoration: BoxDecoration(
+                  gradient: RadialGradient(
+                    colors: [
+                      const Color(0xFFC7EBF4),
+                      const Color(0xFFE9F8FB),
+                      Colors.white.withOpacity(0),
+                    ],
+                  ),
+                  shape: BoxShape.circle,
+                ),
+                child: const Center(
+                  child: ExerciseRunnerCircularIllustration(size: 80),
+                ),
+              ),
+
+              const SizedBox(height: 14),
+
+              // Pesan Utama
+              const Text(
+                'Saatnya olahraga ringan!',
+                style: TextStyle(
+                  fontSize: 17,
+                  fontWeight: FontWeight.w800,
+                  color: Color(0xFF1E293B),
+                  letterSpacing: -0.2,
+                ),
+              ),
+
+              const SizedBox(height: 8),
+
+              // Info Badge: Aktivitas, Durasi, Jadwal
+              Wrap(
+                alignment: WrapAlignment.center,
+                spacing: 8,
+                runSpacing: 6,
+                children: [
+                  _infoChip(
+                    Icons.directions_run_rounded,
+                    reminder.activityName,
+                  ),
+                  _infoChip(
+                    Icons.timer_outlined,
+                    '${reminder.durationMinutes} Menit',
+                  ),
+                  _infoChip(
+                    Icons.event_repeat_rounded,
+                    reminder.repeatFrequency,
+                  ),
+                ],
+              ),
+
+              const SizedBox(height: 12),
+
+              // Kartu Catatan Tambahan
+              if (reminder.note.isNotEmpty)
+                Container(
+                  width: double.infinity,
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFF8FAFC),
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: const Color(0xFFE2E8F0)),
+                  ),
+                  child: Row(
+                    children: [
+                      const Icon(
+                        Icons.sticky_note_2_outlined,
+                        size: 16,
+                        color: Color(0xFF0098B9),
+                      ),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          reminder.note,
+                          style: const TextStyle(
+                            fontSize: 12,
+                            color: Color(0xFF334155),
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+
+              const SizedBox(height: 10),
+
+              // Tips Kesehatan Jantung
+              Container(
+                width: double.infinity,
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFE8F8FA),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: const Text(
+                  '💡 Tips Jantung: Lakukan pemanasan 3-5 menit dan jaga detak napas teratur.',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontSize: 11,
+                    color: Color(0xFF007A94),
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ),
+
+              const SizedBox(height: 20),
+
+              // Tombol Utama: "Mulai Olahraga" (Teal)
+              SizedBox(
+                width: double.infinity,
+                height: 46,
+                child: ElevatedButton.icon(
+                  onPressed: () {
+                    Navigator.pop(dialogContext);
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text(
+                          'Semangat berolahraga ${reminder.activityName}! Jaga ritme dan minum air secukupnya.',
+                        ),
+                        backgroundColor: const Color(0xFF0098B9),
+                        duration: const Duration(seconds: 3),
+                      ),
+                    );
+                  },
+                  icon: const Icon(Icons.play_arrow_rounded, size: 20),
+                  label: const Text(
+                    'Mulai Olahraga',
+                    style: TextStyle(
+                      fontSize: 14.5,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFF0098B9),
+                    foregroundColor: Colors.white,
+                    elevation: 0,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(14),
+                    ),
+                  ),
+                ),
+              ),
+
+              const SizedBox(height: 10),
+
+              // Tombol Sekunder: "Tunda" (Biru Muda)
+              SizedBox(
+                width: double.infinity,
+                height: 44,
+                child: ElevatedButton(
+                  onPressed: () {
+                    Navigator.pop(dialogContext);
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text('Pengingat olahraga ditunda 10 menit.'),
+                        duration: Duration(seconds: 2),
+                      ),
+                    );
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFFC7EBF4),
+                    foregroundColor: const Color(0xFF0098B9),
+                    elevation: 0,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(14),
+                    ),
+                  ),
+                  child: const Text(
+                    'Tunda 10 Menit',
+                    style: TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
+    },
+  );
+}
+
+/// Tampilan Pop-up Notifikasi Minum Obat (Modern, Estetik, & Terpadu)
+void showModernMedicineReminderDialog(
+  BuildContext context, {
+  required MedicineReminder reminder,
+  String timeText = 'sekarang',
+}) {
+  showDialog(
+    context: context,
+    barrierDismissible: true,
+    builder: (BuildContext dialogContext) {
+      return Dialog(
+        backgroundColor: Colors.transparent,
+        insetPadding: const EdgeInsets.symmetric(horizontal: 22),
+        child: Container(
+          width: double.infinity,
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(24),
+            boxShadow: [
+              BoxShadow(
+                color: const Color(0xFF0098B9).withOpacity(0.18),
+                blurRadius: 28,
+                offset: const Offset(0, 10),
+              ),
+              BoxShadow(
+                color: Colors.black.withOpacity(0.08),
+                blurRadius: 10,
+                offset: const Offset(0, 4),
+              ),
+            ],
+          ),
+          padding: const EdgeInsets.all(22),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // Header Badge
+              Row(
+                children: [
+                  Container(
+                    width: 32,
+                    height: 32,
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFE0F7FA),
+                      shape: BoxShape.circle,
+                      border: Border.all(
+                        color: const Color(0xFF90D5E4),
+                        width: 1,
+                      ),
+                    ),
+                    child: const Icon(
+                      Icons.medication_rounded,
+                      color: Color(0xFF0098B9),
+                      size: 18,
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  const Text(
+                    'Pengingat Minum Obat',
+                    style: TextStyle(
+                      fontSize: 13.5,
+                      fontWeight: FontWeight.w800,
+                      color: Color(0xFF1E293B),
+                    ),
+                  ),
+                  const Spacer(),
+                  Container(
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFF1F5F9),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Text(
+                      timeText,
+                      style: const TextStyle(
+                        fontSize: 11,
+                        fontWeight: FontWeight.w600,
+                        color: Color(0xFF475569),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+
+              const SizedBox(height: 18),
+
+              // Ilustrasi Kapsul dengan Glow
+              Container(
+                width: 86,
+                height: 86,
+                decoration: BoxDecoration(
+                  gradient: RadialGradient(
+                    colors: [
+                      const Color(0xFFC7EBF4),
+                      const Color(0xFFE9F8FB),
+                      Colors.white.withOpacity(0),
+                    ],
+                  ),
+                  shape: BoxShape.circle,
+                ),
+                child: const Center(
+                  child: CapsuleIconWidget(
+                    color: Color(0xFF0098B9),
+                    size: 52,
+                  ),
+                ),
+              ),
+
+              const SizedBox(height: 14),
+
+              // Judul Utama
+              const Text(
+                'Saatnya Minum Obat!',
+                style: TextStyle(
+                  fontSize: 17,
+                  fontWeight: FontWeight.w800,
+                  color: Color(0xFF1E293B),
+                  letterSpacing: -0.2,
+                ),
+              ),
+
+              const SizedBox(height: 8),
+
+              // Chips Dosis & Jadwal
+              Wrap(
+                alignment: WrapAlignment.center,
+                spacing: 8,
+                runSpacing: 6,
+                children: [
+                  _infoChip(
+                    Icons.healing_rounded,
+                    reminder.name,
+                  ),
+                  _infoChip(
+                    Icons.science_outlined,
+                    '${reminder.amount} ${reminder.unit}',
+                  ),
+                  _infoChip(
+                    Icons.access_time_rounded,
+                    reminder.schedule,
+                  ),
+                ],
+              ),
+
+              const SizedBox(height: 12),
+
+              // Box Catatan & Tips
+              Container(
+                width: double.infinity,
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFF8FAFC),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: const Color(0xFFE2E8F0)),
+                ),
+                child: Text(
+                  'Catatan: ${reminder.note}',
+                  style: const TextStyle(
+                    fontSize: 12,
+                    color: Color(0xFF334155),
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ),
+
+              const SizedBox(height: 20),
+
+              // Tombol Sudah Minum (Teal)
+              SizedBox(
+                width: double.infinity,
+                height: 46,
+                child: ElevatedButton.icon(
+                  onPressed: () {
+                    HealthReminderController().markAsTaken(reminder.id);
+                    Navigator.pop(dialogContext);
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text(
+                          'Bagus! Anda sudah meminum ${reminder.name}.',
+                        ),
+                        backgroundColor: const Color(0xFF0098B9),
+                        duration: const Duration(seconds: 2),
+                      ),
+                    );
+                  },
+                  icon: const Icon(Icons.check_circle_outline, size: 20),
+                  label: const Text(
+                    'Sudah Minum',
+                    style: TextStyle(
+                      fontSize: 14.5,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFF0098B9),
+                    foregroundColor: Colors.white,
+                    elevation: 0,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(14),
+                    ),
+                  ),
+                ),
+              ),
+
+              const SizedBox(height: 10),
+
+              // Tombol Tunda (Biru Muda)
+              SizedBox(
+                width: double.infinity,
+                height: 44,
+                child: ElevatedButton(
+                  onPressed: () {
+                    Navigator.pop(dialogContext);
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text('Pengingat minum obat ditunda 10 menit.'),
+                        duration: Duration(seconds: 2),
+                      ),
+                    );
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFFC7EBF4),
+                    foregroundColor: const Color(0xFF0098B9),
+                    elevation: 0,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(14),
+                    ),
+                  ),
+                  child: const Text(
+                    'Tunda 10 Menit',
+                    style: TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
+    },
+  );
+}
+
+// Kompatibilitas mundur untuk pemanggilan lama
+void showMedicineReminderDialog(
+  BuildContext context, {
+  required MedicineReminder reminder,
+  String timeText = 'sekarang',
+}) {
+  showModernMedicineReminderDialog(context,
+      reminder: reminder, timeText: timeText);
+}
+
+Widget _infoChip(IconData icon, String text) {
+  return Container(
+    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+    decoration: BoxDecoration(
+      color: const Color(0xFFE9F8FB),
+      borderRadius: BorderRadius.circular(20),
+      border: Border.all(color: const Color(0xFFBBE5EE)),
+    ),
+    child: Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Icon(icon, size: 14, color: const Color(0xFF0098B9)),
+        const SizedBox(width: 5),
+        Text(
+          text,
+          style: const TextStyle(
+            fontSize: 11.5,
+            fontWeight: FontWeight.bold,
+            color: Color(0xFF0098B9),
+          ),
+        ),
+      ],
+    ),
+  );
+}
+
+// ============================================================================
+// ALUR TAMBAH & DAFTAR OBAT (SLIDE SEBELUMNYA DIJAGA INTEGRITASNYA)
+// ============================================================================
+
+/// Empty State Obat (Slide 2 Alur Obat)
+class TambahObatEmptyPage extends StatelessWidget {
+  const TambahObatEmptyPage({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: Colors.white,
+      body: SafeArea(
+        child: Column(
+          children: [
+            Padding(
+              padding: const EdgeInsets.only(left: 16, right: 16, top: 12),
+              child: Row(
+                children: [
+                  buildCircularBackButton(context),
                   const SizedBox(width: 16),
                   const Text(
                     'Tambah Obat',
@@ -615,26 +2844,14 @@ class TambahObatEmptyPage extends StatelessWidget {
                       color: Color(0xFF1E293B),
                     ),
                   ),
-                  const Spacer(),
-                  const Icon(
-                    Icons.chevron_right_rounded,
-                    color: Color(0xFF1E293B),
-                    size: 24,
-                  ),
                 ],
               ),
             ),
-
             const Spacer(flex: 2),
-
-            // Ilustrasi Botol Obat & Blister Pack
             const Center(
               child: MedicineBottleIllustration(size: 190),
             ),
-
             const SizedBox(height: 24),
-
-            // Teks Keterangan
             const Text(
               'Belum ada obat yang ditambahkan',
               textAlign: TextAlign.center,
@@ -644,9 +2861,7 @@ class TambahObatEmptyPage extends StatelessWidget {
                 color: Color(0xFF1E293B),
               ),
             ),
-
             const SizedBox(height: 6),
-
             const Padding(
               padding: EdgeInsets.symmetric(horizontal: 36),
               child: Text(
@@ -659,10 +2874,7 @@ class TambahObatEmptyPage extends StatelessWidget {
                 ),
               ),
             ),
-
             const Spacer(flex: 3),
-
-            // Tombol "+ Tambah Obat"
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
               child: SizedBox(
@@ -695,10 +2907,7 @@ class TambahObatEmptyPage extends StatelessWidget {
                 ),
               ),
             ),
-
             const SizedBox(height: 8),
-
-            // Bottom Navigation Bar
             const HeartCareBottomNavBarWidget(currentIndex: 3),
           ],
         ),
@@ -707,9 +2916,7 @@ class TambahObatEmptyPage extends StatelessWidget {
   }
 }
 
-// ============================================================================
-// SLIDE 3: FORM TAMBAH OBAT (INPUT DATA OBAT - iPhone 16 - 96)
-// ============================================================================
+/// Form Tambah Obat (Slide 3 Alur Obat)
 class TambahObatFormPage extends StatefulWidget {
   const TambahObatFormPage({super.key});
 
@@ -750,178 +2957,6 @@ class _TambahObatFormPageState extends State<TambahObatFormPage> {
     super.dispose();
   }
 
-  void _pickScheduleDialog() {
-    showModalBottomSheet(
-      context: context,
-      backgroundColor: Colors.white,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
-      builder: (ctx) {
-        return SafeArea(
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text(
-                  'Pilih Jadwal Minum',
-                  style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                    color: Color(0xFF1E293B),
-                  ),
-                ),
-                const SizedBox(height: 12),
-                ..._scheduleOptions.map((opt) {
-                  return ListTile(
-                    contentPadding: EdgeInsets.zero,
-                    title: Text(
-                      opt,
-                      style: TextStyle(
-                        fontSize: 14,
-                        color: _selectedSchedule == opt
-                            ? const Color(0xFF0098B9)
-                            : const Color(0xFF1E293B),
-                        fontWeight: _selectedSchedule == opt
-                            ? FontWeight.bold
-                            : FontWeight.normal,
-                      ),
-                    ),
-                    trailing: _selectedSchedule == opt
-                        ? const Icon(Icons.check_circle,
-                            color: Color(0xFF0098B9))
-                        : null,
-                    onTap: () {
-                      setState(() {
-                        _selectedSchedule = opt;
-                      });
-                      Navigator.pop(ctx);
-                    },
-                  );
-                }),
-              ],
-            ),
-          ),
-        );
-      },
-    );
-  }
-
-  void _pickTimesDialog() {
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.white,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
-      builder: (ctx) {
-        return StatefulBuilder(
-          builder: (context, setSheetState) {
-            return SafeArea(
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        const Text(
-                          'Waktu Pengingat',
-                          style: TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.bold,
-                            color: Color(0xFF1E293B),
-                          ),
-                        ),
-                        TextButton.icon(
-                          onPressed: () async {
-                            final picked = await showTimePicker(
-                              context: context,
-                              initialTime: TimeOfDay.now(),
-                            );
-                            if (picked != null) {
-                              final formatted =
-                                  '${picked.hour.toString().padLeft(2, '0')}.${picked.minute.toString().padLeft(2, '0')}';
-                              if (!_selectedTimes.contains(formatted)) {
-                                setSheetState(() {
-                                  _selectedTimes.add(formatted);
-                                  _selectedTimes.sort();
-                                });
-                                setState(() {});
-                              }
-                            }
-                          },
-                          icon: const Icon(Icons.add, size: 18),
-                          label: const Text('Tambah Jam'),
-                          style: TextButton.styleFrom(
-                            foregroundColor: const Color(0xFF0098B9),
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 8),
-                    const Text(
-                      'Pilih atau tambah waktu pengingat minum obat Anda:',
-                      style: TextStyle(fontSize: 12, color: Color(0xFF64748B)),
-                    ),
-                    const SizedBox(height: 12),
-                    Wrap(
-                      spacing: 8,
-                      runSpacing: 8,
-                      children: _selectedTimes.map((time) {
-                        return Chip(
-                          backgroundColor: const Color(0xFFE0F7FA),
-                          label: Text(
-                            time,
-                            style: const TextStyle(
-                              fontSize: 13,
-                              fontWeight: FontWeight.bold,
-                              color: Color(0xFF0098B9),
-                            ),
-                          ),
-                          deleteIcon: const Icon(Icons.close, size: 16),
-                          deleteIconColor: const Color(0xFF0098B9),
-                          onDeleted: () {
-                            setSheetState(() {
-                              _selectedTimes.remove(time);
-                            });
-                            setState(() {});
-                          },
-                        );
-                      }).toList(),
-                    ),
-                    const SizedBox(height: 16),
-                    SizedBox(
-                      width: double.infinity,
-                      height: 44,
-                      child: ElevatedButton(
-                        onPressed: () => Navigator.pop(ctx),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0xFF0098B9),
-                          foregroundColor: Colors.white,
-                          elevation: 0,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(10),
-                          ),
-                        ),
-                        child: const Text('Selesai'),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            );
-          },
-        );
-      },
-    );
-  }
-
   void _saveMedicine() {
     final name = _nameController.text.trim();
     final amount = _amountController.text.trim();
@@ -942,13 +2977,13 @@ class _TambahObatFormPageState extends State<TambahObatFormPage> {
       amount: amount.isEmpty ? '1' : amount,
       unit: _selectedUnit,
       schedule: _selectedSchedule,
-      reminderTimes: _selectedTimes.isEmpty ? ['07.30'] : List.from(_selectedTimes),
+      reminderTimes:
+          _selectedTimes.isEmpty ? ['07.30'] : List.from(_selectedTimes),
       note: note.isEmpty ? _selectedSchedule : note,
     );
 
     HealthReminderController().addMedicine(newMedicine);
 
-    // Langsung navigasi ke Slide 4 (Daftar Obat)
     Navigator.pushReplacement(
       context,
       MaterialPageRoute(
@@ -964,12 +2999,11 @@ class _TambahObatFormPageState extends State<TambahObatFormPage> {
       body: SafeArea(
         child: Column(
           children: [
-            // Top Bar
             Padding(
               padding: const EdgeInsets.only(left: 16, right: 16, top: 12),
               child: Row(
                 children: [
-                  _buildCircularBackButton(context),
+                  buildCircularBackButton(context),
                   const SizedBox(width: 16),
                   const Text(
                     'Tambah Obat',
@@ -982,16 +3016,13 @@ class _TambahObatFormPageState extends State<TambahObatFormPage> {
                 ],
               ),
             ),
-
             const SizedBox(height: 12),
-
             Expanded(
               child: SingleChildScrollView(
                 padding: const EdgeInsets.symmetric(horizontal: 20),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // Mini Illustration Banner
                     Container(
                       width: double.infinity,
                       height: 80,
@@ -1003,20 +3034,14 @@ class _TambahObatFormPageState extends State<TambahObatFormPage> {
                         child: MiniMedicineBannerIllustration(),
                       ),
                     ),
-
                     const SizedBox(height: 16),
-
-                    // FIELD 1: Nama Obat
                     _buildFieldLabel('Nama Obat'),
                     const SizedBox(height: 6),
                     _buildTextField(
                       controller: _nameController,
                       hintText: 'Masukkan Nama Obat',
                     ),
-
                     const SizedBox(height: 14),
-
-                    // FIELD 2: Jumlah Obat + Unit Tablet
                     _buildFieldLabel('Jumlah Obat'),
                     const SizedBox(height: 6),
                     Row(
@@ -1047,11 +3072,6 @@ class _TambahObatFormPageState extends State<TambahObatFormPage> {
                               child: DropdownButton<String>(
                                 value: _selectedUnit,
                                 isExpanded: true,
-                                icon: const Icon(
-                                  Icons.keyboard_arrow_down_rounded,
-                                  color: Color(0xFF64748B),
-                                  size: 20,
-                                ),
                                 items: _unitOptions.map((unit) {
                                   return DropdownMenuItem(
                                     value: unit,
@@ -1067,9 +3087,7 @@ class _TambahObatFormPageState extends State<TambahObatFormPage> {
                                 }).toList(),
                                 onChanged: (val) {
                                   if (val != null) {
-                                    setState(() {
-                                      _selectedUnit = val;
-                                    });
+                                    setState(() => _selectedUnit = val);
                                   }
                                 },
                               ),
@@ -1078,14 +3096,69 @@ class _TambahObatFormPageState extends State<TambahObatFormPage> {
                         ),
                       ],
                     ),
-
                     const SizedBox(height: 14),
-
-                    // FIELD 3: Jadwal Minum
                     _buildFieldLabel('Jadwal Minum'),
                     const SizedBox(height: 6),
                     InkWell(
-                      onTap: _pickScheduleDialog,
+                      onTap: () {
+                        showModalBottomSheet(
+                          context: context,
+                          backgroundColor: Colors.white,
+                          shape: const RoundedRectangleBorder(
+                            borderRadius:
+                                BorderRadius.vertical(top: Radius.circular(20)),
+                          ),
+                          builder: (ctx) {
+                            return SafeArea(
+                              child: Padding(
+                                padding: const EdgeInsets.symmetric(
+                                    horizontal: 20, vertical: 16),
+                                child: Column(
+                                  mainAxisSize: MainAxisSize.min,
+                                  crossAxisAlignment:
+                                      CrossAxisAlignment.start,
+                                  children: [
+                                    const Text(
+                                      'Pilih Jadwal Minum',
+                                      style: TextStyle(
+                                        fontSize: 16,
+                                        fontWeight: FontWeight.bold,
+                                        color: Color(0xFF1E293B),
+                                      ),
+                                    ),
+                                    const SizedBox(height: 12),
+                                    ..._scheduleOptions.map((opt) {
+                                      return ListTile(
+                                        contentPadding: EdgeInsets.zero,
+                                        title: Text(
+                                          opt,
+                                          style: TextStyle(
+                                            fontSize: 14,
+                                            color: _selectedSchedule == opt
+                                                ? const Color(0xFF0098B9)
+                                                : const Color(0xFF1E293B),
+                                            fontWeight: _selectedSchedule == opt
+                                                ? FontWeight.bold
+                                                : FontWeight.normal,
+                                          ),
+                                        ),
+                                        trailing: _selectedSchedule == opt
+                                            ? const Icon(Icons.check_circle,
+                                                color: Color(0xFF0098B9))
+                                            : null,
+                                        onTap: () {
+                                          setState(() => _selectedSchedule = opt);
+                                          Navigator.pop(ctx);
+                                        },
+                                      );
+                                    }),
+                                  ],
+                                ),
+                              ),
+                            );
+                          },
+                        );
+                      },
                       borderRadius: BorderRadius.circular(10),
                       child: Container(
                         height: 48,
@@ -1124,61 +3197,42 @@ class _TambahObatFormPageState extends State<TambahObatFormPage> {
                         ),
                       ),
                     ),
-
                     const SizedBox(height: 14),
-
-                    // FIELD 4: Waktu Pengingat
                     _buildFieldLabel('Waktu Pengingat'),
                     const SizedBox(height: 6),
-                    InkWell(
-                      onTap: _pickTimesDialog,
-                      borderRadius: BorderRadius.circular(10),
-                      child: Container(
-                        height: 48,
-                        padding: const EdgeInsets.symmetric(horizontal: 12),
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          borderRadius: BorderRadius.circular(10),
-                          border: Border.all(
-                            color: const Color(0xFFD1D5DB),
-                            width: 1,
-                          ),
-                        ),
-                        child: Row(
-                          children: [
-                            const Icon(
-                              Icons.access_time_rounded,
-                              color: Color(0xFF64748B),
-                              size: 20,
-                            ),
-                            const SizedBox(width: 10),
-                            Expanded(
-                              child: Text(
-                                _selectedTimes.isEmpty
-                                    ? 'Pilih jadwal'
-                                    : _selectedTimes.join('   '),
-                                style: const TextStyle(
-                                  fontSize: 13,
-                                  color: Color(0xFF1E293B),
-                                  fontWeight: FontWeight.w600,
-                                ),
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                            ),
-                            const Icon(
-                              Icons.chevron_right_rounded,
-                              color: Color(0xFF94A3B8),
-                              size: 20,
-                            ),
-                          ],
+                    Container(
+                      height: 48,
+                      padding: const EdgeInsets.symmetric(horizontal: 12),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(10),
+                        border: Border.all(
+                          color: const Color(0xFFD1D5DB),
+                          width: 1,
                         ),
                       ),
+                      child: Row(
+                        children: [
+                          const Icon(
+                            Icons.access_time_rounded,
+                            color: Color(0xFF64748B),
+                            size: 20,
+                          ),
+                          const SizedBox(width: 10),
+                          Expanded(
+                            child: Text(
+                              _selectedTimes.join('   '),
+                              style: const TextStyle(
+                                fontSize: 13,
+                                color: Color(0xFF1E293B),
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
-
                     const SizedBox(height: 14),
-
-                    // FIELD 5: Catatan
                     _buildFieldLabel('Catatan'),
                     const SizedBox(height: 6),
                     Container(
@@ -1191,7 +3245,6 @@ class _TambahObatFormPageState extends State<TambahObatFormPage> {
                         ),
                       ),
                       child: Row(
-                        crossAxisAlignment: CrossAxisAlignment.center,
                         children: [
                           const Padding(
                             padding: EdgeInsets.only(left: 12, right: 8),
@@ -1204,30 +3257,17 @@ class _TambahObatFormPageState extends State<TambahObatFormPage> {
                           Expanded(
                             child: TextField(
                               controller: _noteController,
-                              style: const TextStyle(
-                                fontSize: 13,
-                                color: Color(0xFF1E293B),
-                              ),
+                              style: const TextStyle(fontSize: 13),
                               decoration: const InputDecoration(
                                 hintText: 'Tambahkan catatan.....',
-                                hintStyle: TextStyle(
-                                  color: Color(0xFF9CA3AF),
-                                  fontSize: 13,
-                                ),
                                 border: InputBorder.none,
-                                contentPadding: EdgeInsets.symmetric(
-                                  vertical: 14,
-                                ),
                               ),
                             ),
                           ),
                         ],
                       ),
                     ),
-
                     const SizedBox(height: 24),
-
-                    // TOMBOL SIMPAN
                     SizedBox(
                       width: double.infinity,
                       height: 48,
@@ -1250,13 +3290,11 @@ class _TambahObatFormPageState extends State<TambahObatFormPage> {
                         ),
                       ),
                     ),
-
                     const SizedBox(height: 20),
                   ],
                 ),
               ),
             ),
-
             const HeartCareBottomNavBarWidget(currentIndex: 3),
           ],
         ),
@@ -1295,16 +3333,9 @@ class _TambahObatFormPageState extends State<TambahObatFormPage> {
         child: TextField(
           controller: controller,
           keyboardType: keyboardType,
-          style: const TextStyle(
-            fontSize: 13,
-            color: Color(0xFF1E293B),
-          ),
+          style: const TextStyle(fontSize: 13),
           decoration: InputDecoration(
             hintText: hintText,
-            hintStyle: const TextStyle(
-              color: Color(0xFF9CA3AF),
-              fontSize: 13,
-            ),
             border: InputBorder.none,
             isDense: true,
           ),
@@ -1314,9 +3345,7 @@ class _TambahObatFormPageState extends State<TambahObatFormPage> {
   }
 }
 
-// ============================================================================
-// SLIDE 4: DAFTAR OBAT (DETAIL / LIST DATA YANG SUDAH DIISI - iPhone 16 - 109)
-// ============================================================================
+/// Daftar Obat (Slide 4 Alur Obat)
 class DaftarObatPage extends StatefulWidget {
   const DaftarObatPage({super.key});
 
@@ -1331,7 +3360,6 @@ class _DaftarObatPageState extends State<DaftarObatPage> {
   void initState() {
     super.initState();
     _controller.addListener(_refresh);
-    // Jika belum ada obat, buatkan contoh default "Aspirin 300 mg" sesuai Slide 4
     if (_controller.medicines.isEmpty) {
       _controller.addMedicine(
         MedicineReminder(
@@ -1364,12 +3392,11 @@ class _DaftarObatPageState extends State<DaftarObatPage> {
       body: SafeArea(
         child: Column(
           children: [
-            // Top Bar
             Padding(
               padding: const EdgeInsets.only(left: 16, right: 16, top: 12),
               child: Row(
                 children: [
-                  _buildCircularBackButton(context),
+                  buildCircularBackButton(context),
                   const SizedBox(width: 16),
                   const Text(
                     'Daftar Obat',
@@ -1380,7 +3407,6 @@ class _DaftarObatPageState extends State<DaftarObatPage> {
                     ),
                   ),
                   const Spacer(),
-                  // Tombol Tambah Obat Baru dari Daftar
                   IconButton(
                     icon: const Icon(
                       Icons.add_circle_outline_rounded,
@@ -1399,9 +3425,7 @@ class _DaftarObatPageState extends State<DaftarObatPage> {
                 ],
               ),
             ),
-
             const SizedBox(height: 12),
-
             Expanded(
               child: _controller.medicines.isEmpty
                   ? const Center(
@@ -1417,96 +3441,75 @@ class _DaftarObatPageState extends State<DaftarObatPage> {
                         final med = _controller.medicines[index];
                         return Column(
                           children: [
-                            // CARD 1: Info Obat & Dosis
-                            _buildMedicineInfoCard(med),
-
+                            _buildCard(
+                              icon: const CapsuleIconWidget(
+                                color: Color(0xFF0098B9),
+                                size: 26,
+                              ),
+                              title: med.name,
+                              subtitle: '${med.amount} ${med.unit}',
+                              titleColor: const Color(0xFF0098B9),
+                            ),
                             const SizedBox(height: 14),
-
-                            // CARD 2: Waktu Pengingat
-                            _buildReminderTimeCard(med),
-
+                            _buildCard(
+                              icon: const Icon(Icons.access_time_rounded,
+                                  color: Color(0xFF1E293B), size: 28),
+                              title: 'Waktu Pengingat',
+                              subtitle: med.reminderTimes.join('   '),
+                              titleColor: const Color(0xFF0098B9),
+                              subtitleBold: true,
+                            ),
                             const SizedBox(height: 14),
-
-                            // CARD 3: Catatan
-                            _buildNoteCard(med),
-
+                            _buildCard(
+                              icon: const Icon(Icons.assignment_outlined,
+                                  color: Color(0xFF1E293B), size: 28),
+                              title: 'Catatan',
+                              subtitle: med.note,
+                              titleColor: const Color(0xFF0098B9),
+                              subtitleBold: true,
+                            ),
                             const SizedBox(height: 20),
                           ],
                         );
                       },
                     ),
             ),
-
-            // Tombol Aksi Bawah
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
-              child: Column(
-                children: [
-                  // Tombol Simpan / Kembali
-                  SizedBox(
-                    width: double.infinity,
-                    height: 48,
-                    child: ElevatedButton(
-                      onPressed: () {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                            content: Text(
-                              'Pengingat obat berhasil disimpan & diaktifkan!',
-                            ),
-                            backgroundColor: Color(0xFF0098B9),
-                            duration: Duration(seconds: 2),
-                          ),
-                        );
-                        Navigator.popUntil(context, (route) => route.isFirst);
-                      },
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFF0098B9),
-                        foregroundColor: Colors.white,
-                        elevation: 0,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(24),
+              child: SizedBox(
+                width: double.infinity,
+                height: 48,
+                child: ElevatedButton(
+                  onPressed: () {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text(
+                          'Pengingat obat berhasil disimpan & diaktifkan!',
                         ),
+                        backgroundColor: Color(0xFF0098B9),
+                        duration: Duration(seconds: 2),
                       ),
-                      child: const Text(
-                        'Simpan',
-                        style: TextStyle(
-                          fontSize: 15,
-                          fontWeight: FontWeight.w700,
-                        ),
-                      ),
+                    );
+                    Navigator.popUntil(context, (route) => route.isFirst);
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFF0098B9),
+                    foregroundColor: Colors.white,
+                    elevation: 0,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(24),
                     ),
                   ),
-
-                  const SizedBox(height: 6),
-
-                  // Opsi Tambah Obat Lagi
-                  TextButton.icon(
-                    onPressed: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => const TambahObatFormPage(),
-                        ),
-                      );
-                    },
-                    icon: const Icon(
-                      Icons.add,
-                      color: Color(0xFF0098B9),
-                      size: 18,
-                    ),
-                    label: const Text(
-                      '+ Tambah Obat Lain',
-                      style: TextStyle(
-                        color: Color(0xFF0098B9),
-                        fontSize: 13.5,
-                        fontWeight: FontWeight.bold,
-                      ),
+                  child: const Text(
+                    'Simpan',
+                    style: TextStyle(
+                      fontSize: 15,
+                      fontWeight: FontWeight.w700,
                     ),
                   ),
-                ],
+                ),
               ),
             ),
-
             const HeartCareBottomNavBarWidget(currentIndex: 3),
           ],
         ),
@@ -1514,35 +3517,31 @@ class _DaftarObatPageState extends State<DaftarObatPage> {
     );
   }
 
-  // Card 1: Nama & Dosis Obat
-  Widget _buildMedicineInfoCard(MedicineReminder med) {
+  Widget _buildCard({
+    required Widget icon,
+    required String title,
+    required String subtitle,
+    Color titleColor = const Color(0xFF1E293B),
+    bool subtitleBold = false,
+  }) {
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(
-          color: const Color(0xFFD1D5DB),
-          width: 1,
-        ),
+        border: Border.all(color: const Color(0xFFD1D5DB)),
       ),
       child: Row(
         children: [
-          // Ikon Kapsul Biru Putih
           Container(
             width: 46,
             height: 46,
             decoration: BoxDecoration(
-              color: const Color(0xFFE9F8FB),
+              color: const Color(0xFFF1F5F9),
               borderRadius: BorderRadius.circular(12),
             ),
-            child: const Center(
-              child: CapsuleIconWidget(
-                color: Color(0xFF0098B9),
-                size: 26,
-              ),
-            ),
+            child: Center(child: icon),
           ),
           const SizedBox(width: 14),
           Expanded(
@@ -1550,143 +3549,21 @@ class _DaftarObatPageState extends State<DaftarObatPage> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  med.name,
-                  style: const TextStyle(
-                    fontSize: 15,
+                  title,
+                  style: TextStyle(
+                    fontSize: 13.5,
                     fontWeight: FontWeight.w700,
-                    color: Color(0xFF0098B9),
+                    color: titleColor,
                   ),
                 ),
                 const SizedBox(height: 3),
                 Text(
-                  '${med.amount} ${med.unit}',
-                  style: const TextStyle(
-                    fontSize: 12.5,
-                    color: Color(0xFF64748B),
-                    fontWeight: FontWeight.w400,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  // Card 2: Waktu Pengingat
-  Widget _buildReminderTimeCard(MedicineReminder med) {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(
-          color: const Color(0xFFD1D5DB),
-          width: 1,
-        ),
-      ),
-      child: Row(
-        children: [
-          // Ikon Jam
-          Container(
-            width: 46,
-            height: 46,
-            decoration: BoxDecoration(
-              color: const Color(0xFFF1F5F9),
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: const Center(
-              child: Icon(
-                Icons.access_time_rounded,
-                color: Color(0xFF1E293B),
-                size: 28,
-              ),
-            ),
-          ),
-          const SizedBox(width: 14),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text(
-                  'Waktu Pengingat',
+                  subtitle,
                   style: TextStyle(
-                    fontSize: 13,
-                    fontWeight: FontWeight.w700,
-                    color: Color(0xFF0098B9),
-                  ),
-                ),
-                const SizedBox(height: 6),
-                Text(
-                  med.reminderTimes.join('   '),
-                  style: const TextStyle(
-                    fontSize: 14.5,
-                    fontWeight: FontWeight.w700,
-                    color: Color(0xFF1E293B),
-                    letterSpacing: 0.5,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  // Card 3: Catatan
-  Widget _buildNoteCard(MedicineReminder med) {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(
-          color: const Color(0xFFD1D5DB),
-          width: 1,
-        ),
-      ),
-      child: Row(
-        children: [
-          // Ikon Catatan & Pensil
-          Container(
-            width: 46,
-            height: 46,
-            decoration: BoxDecoration(
-              color: const Color(0xFFF1F5F9),
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: const Center(
-              child: Icon(
-                Icons.assignment_outlined,
-                color: Color(0xFF1E293B),
-                size: 28,
-              ),
-            ),
-          ),
-          const SizedBox(width: 14),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text(
-                  'Catatan',
-                  style: TextStyle(
-                    fontSize: 13,
-                    fontWeight: FontWeight.w700,
-                    color: Color(0xFF0098B9),
-                  ),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  med.note,
-                  style: const TextStyle(
-                    fontSize: 13.5,
-                    fontWeight: FontWeight.w700,
-                    color: Color(0xFF1E293B),
+                    fontSize: 14,
+                    fontWeight:
+                        subtitleBold ? FontWeight.w700 : FontWeight.normal,
+                    color: const Color(0xFF1E293B),
                   ),
                 ),
               ],
@@ -1699,203 +3576,9 @@ class _DaftarObatPageState extends State<DaftarObatPage> {
 }
 
 // ============================================================================
-// SLIDE 5: POPUP MODAL PENGINGAT OBAT (SAATNYA MINUM OBAT! - iPhone 16 - 110)
+// WIDGET HELPER: TOMBOL BACK LINGKARAN & NAV BAR
 // ============================================================================
-void showMedicineReminderDialog(
-  BuildContext context, {
-  required MedicineReminder reminder,
-  String timeText = 'sekarang',
-}) {
-  showDialog(
-    context: context,
-    barrierDismissible: true,
-    builder: (BuildContext dialogContext) {
-      return Dialog(
-        backgroundColor: Colors.transparent,
-        insetPadding: const EdgeInsets.symmetric(horizontal: 24),
-        child: Container(
-          width: double.infinity,
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(20),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withOpacity(0.15),
-                blurRadius: 20,
-                offset: const Offset(0, 8),
-              ),
-            ],
-          ),
-          padding: const EdgeInsets.all(20),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              // Header Notifikasi: Lonceng, Pengingat Obat, Timestamp
-              Row(
-                children: [
-                  Container(
-                    width: 28,
-                    height: 28,
-                    decoration: const BoxDecoration(
-                      color: Color(0xFFE0F7FA),
-                      shape: BoxShape.circle,
-                    ),
-                    child: const Icon(
-                      Icons.notifications_active_rounded,
-                      color: Color(0xFF0098B9),
-                      size: 16,
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  const Text(
-                    'Pengingat Obat',
-                    style: TextStyle(
-                      fontSize: 13.5,
-                      fontWeight: FontWeight.w700,
-                      color: Color(0xFF1E293B),
-                    ),
-                  ),
-                  const Spacer(),
-                  Text(
-                    timeText,
-                    style: const TextStyle(
-                      fontSize: 11.5,
-                      color: Color(0xFF94A3B8),
-                    ),
-                  ),
-                ],
-              ),
-
-              const SizedBox(height: 18),
-
-              // Ilustrasi Kapsul Obat Angled
-              const Center(
-                child: CapsuleIconWidget(
-                  color: Color(0xFF0098B9),
-                  size: 56,
-                ),
-              ),
-
-              const SizedBox(height: 14),
-
-              // Judul Utama: Saatnya Minum Obat!
-              const Text(
-                'Saatnya Minum Obat!',
-                style: TextStyle(
-                  fontSize: 16.5,
-                  fontWeight: FontWeight.w800,
-                  color: Color(0xFF1E293B),
-                ),
-              ),
-
-              const SizedBox(height: 6),
-
-              // Nama Obat
-              Text(
-                reminder.name,
-                style: const TextStyle(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w700,
-                  color: Color(0xFF334155),
-                ),
-              ),
-
-              const SizedBox(height: 4),
-
-              // Keterangan Dosis & Jadwal
-              Text(
-                '${reminder.amount} ${reminder.unit}  -  ${reminder.schedule}',
-                style: const TextStyle(
-                  fontSize: 12,
-                  color: Color(0xFF64748B),
-                ),
-              ),
-
-              const SizedBox(height: 22),
-
-              // Tombol "Sudah Minum" (Cyan)
-              SizedBox(
-                width: double.infinity,
-                height: 44,
-                child: ElevatedButton(
-                  onPressed: () {
-                    HealthReminderController().markAsTaken(reminder.id);
-                    Navigator.pop(dialogContext);
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: Text(
-                          'Bagus! Anda sudah meminum ${reminder.name}.',
-                        ),
-                        backgroundColor: const Color(0xFF0098B9),
-                        duration: const Duration(seconds: 2),
-                      ),
-                    );
-                  },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF0098B9),
-                    foregroundColor: Colors.white,
-                    elevation: 0,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                  ),
-                  child: const Text(
-                    'Sudah Minum',
-                    style: TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w700,
-                    ),
-                  ),
-                ),
-              ),
-
-              const SizedBox(height: 10),
-
-              // Tombol "Tunda" (Biru Muda)
-              SizedBox(
-                width: double.infinity,
-                height: 44,
-                child: ElevatedButton(
-                  onPressed: () {
-                    Navigator.pop(dialogContext);
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text(
-                          'Pengingat ditunda 10 menit.',
-                        ),
-                        duration: Duration(seconds: 2),
-                      ),
-                    );
-                  },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFFC7EBF4),
-                    foregroundColor: const Color(0xFF0098B9),
-                    elevation: 0,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                  ),
-                  child: const Text(
-                    'Tunda',
-                    style: TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w700,
-                    ),
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
-      );
-    },
-  );
-}
-
-// ============================================================================
-// WIDGET HELPER: TOMBOL BACK LINGKARAN
-// ============================================================================
-Widget _buildCircularBackButton(BuildContext context) {
+Widget buildCircularBackButton(BuildContext context) {
   return Container(
     width: 38,
     height: 38,
@@ -1915,9 +3598,6 @@ Widget _buildCircularBackButton(BuildContext context) {
   );
 }
 
-// ============================================================================
-// WIDGET HELPER: BOTTOM NAVIGATION BAR SESUAI DESAIN
-// ============================================================================
 class HeartCareBottomNavBarWidget extends StatelessWidget {
   final int currentIndex;
   final ValueChanged<int>? onTap;
@@ -1956,7 +3636,8 @@ class HeartCareBottomNavBarWidget extends StatelessWidget {
 
   Widget _navItem(IconData icon, String label, int index) {
     final bool active = currentIndex == index;
-    final Color color = active ? const Color(0xFF0098B9) : const Color(0xFF64748B);
+    final Color color =
+        active ? const Color(0xFF0098B9) : const Color(0xFF64748B);
 
     return InkWell(
       onTap: () => onTap?.call(index),
@@ -1983,7 +3664,7 @@ class HeartCareBottomNavBarWidget extends StatelessWidget {
 }
 
 // ============================================================================
-// CUSTOM VECTOR ARTWORK: KAPSUL OBAT 2 WARNA (BIRU & PUTIH)
+// CUSTOM VECTOR ARTWORK: KAPSUL OBAT
 // ============================================================================
 class CapsuleIconWidget extends StatelessWidget {
   final Color color;
@@ -1998,7 +3679,7 @@ class CapsuleIconWidget extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Transform.rotate(
-      angle: -0.75, // sedikit miring sesuai desain
+      angle: -0.75,
       child: Container(
         width: size * 0.48,
         height: size,
@@ -2023,7 +3704,6 @@ class CapsuleIconWidget extends StatelessWidget {
                 decoration: BoxDecoration(
                   color: Colors.white,
                   borderRadius: BorderRadius.vertical(
-                    top: Radius.zero,
                     bottom: Radius.circular(size * 0.24),
                   ),
                 ),
@@ -2037,7 +3717,271 @@ class CapsuleIconWidget extends StatelessWidget {
 }
 
 // ============================================================================
-// CUSTOM VECTOR ARTWORK: ILUSTRASI BOTOL OBAT & BLISTER PACK (SLIDE 2)
+// CUSTOM VECTOR ARTWORK: PELARI LINGKARAN (SLIDE 113 & NOTIFIKASI)
+// ============================================================================
+class ExerciseRunnerCircularIllustration extends StatelessWidget {
+  final double size;
+
+  const ExerciseRunnerCircularIllustration({super.key, this.size = 180});
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      width: size,
+      height: size,
+      child: CustomPaint(
+        size: Size(size, size),
+        painter: _RunnerCirclePainter(),
+      ),
+    );
+  }
+}
+
+class _RunnerCirclePainter extends CustomPainter {
+  @override
+  void paint(Canvas canvas, Size size) {
+    final center = Offset(size.width / 2, size.height / 2);
+    final radius = size.width / 2;
+
+    // 1. Lingkaran Background Biru Lembut
+    final bgPaint = Paint()
+      ..color = const Color(0xFFE2F4F8)
+      ..style = PaintingStyle.fill;
+    canvas.drawCircle(center, radius, bgPaint);
+
+    // Clip ke lingkaran agar elemen di dalam tidak keluar
+    canvas.save();
+    final clipPath = Path()..addOval(Rect.fromCircle(center: center, radius: radius));
+    canvas.clipPath(clipPath);
+
+    // 2. Awan Putih Halus di Belakang
+    final cloudPaint = Paint()..color = Colors.white.withOpacity(0.7);
+    canvas.drawCircle(Offset(size.width * 0.35, size.height * 0.28), size.width * 0.14, cloudPaint);
+    canvas.drawCircle(Offset(size.width * 0.48, size.height * 0.24), size.width * 0.16, cloudPaint);
+    canvas.drawCircle(Offset(size.width * 0.62, size.height * 0.28), size.width * 0.13, cloudPaint);
+
+    // 3. Bukit Rumput Hijau Tosca di Bagian Bawah
+    final hillPaint = Paint()
+      ..color = const Color(0xFFA5E3DB)
+      ..style = PaintingStyle.fill;
+    final hillPath = Path()
+      ..moveTo(0, size.height * 0.72)
+      ..quadraticBezierTo(
+        size.width * 0.5,
+        size.height * 0.65,
+        size.width,
+        size.height * 0.74,
+      )
+      ..lineTo(size.width, size.height)
+      ..lineTo(0, size.height)
+      ..close();
+    canvas.drawPath(hillPath, hillPaint);
+
+    // Lapisan Rumput Kedua (Sedikit Lebih Tua)
+    final pathGrass = Paint()..color = const Color(0xFF6ED0C2);
+    final grassPath = Path()
+      ..moveTo(0, size.height * 0.82)
+      ..quadraticBezierTo(
+        size.width * 0.6,
+        size.height * 0.78,
+        size.width,
+        size.height * 0.86,
+      )
+      ..lineTo(size.width, size.height)
+      ..lineTo(0, size.height)
+      ..close();
+    canvas.drawPath(grassPath, pathGrass);
+
+    // 4. Karakter Pelari (Wanita/Pria Sporty dengan Baju Biru)
+    final scale = size.width / 180;
+    canvas.translate(size.width * 0.5, size.height * 0.48);
+
+    // Warna Pelari
+    final skinPaint = Paint()..color = const Color(0xFFFFD1B3);
+    final hairPaint = Paint()..color = const Color(0xFF2C3E50);
+    final clothPaint = Paint()..color = const Color(0xFF0098B9);
+    final pantsPaint = Paint()..color = const Color(0xFF1E293B);
+    final shoePaint = Paint()..color = Colors.white;
+
+    // Rambut Kuncir Kuda Melayang
+    final hairPath = Path()
+      ..moveTo(-12 * scale, -32 * scale)
+      ..quadraticBezierTo(-32 * scale, -28 * scale, -28 * scale, -14 * scale)
+      ..quadraticBezierTo(-18 * scale, -20 * scale, -10 * scale, -24 * scale)
+      ..close();
+    canvas.drawPath(hairPath, hairPaint);
+
+    // Kepala
+    canvas.drawCircle(Offset(0, -28 * scale), 12 * scale, skinPaint);
+    // Rambut Depan
+    canvas.drawArc(
+      Rect.fromCircle(center: Offset(0, -28 * scale), radius: 12.5 * scale),
+      3.14,
+      3.14,
+      true,
+      hairPaint,
+    );
+
+    // Badan / Baju Kaos Biru
+    final bodyPath = Path()
+      ..moveTo(-8 * scale, -15 * scale)
+      ..lineTo(8 * scale, -15 * scale)
+      ..lineTo(11 * scale, 12 * scale)
+      ..lineTo(-11 * scale, 12 * scale)
+      ..close();
+    canvas.drawPath(bodyPath, clothPaint);
+
+    // Celana Pendek Sporty
+    final pantsPath = Path()
+      ..moveTo(-11 * scale, 12 * scale)
+      ..lineTo(11 * scale, 12 * scale)
+      ..lineTo(14 * scale, 26 * scale)
+      ..lineTo(1 * scale, 24 * scale)
+      ..lineTo(-2 * scale, 24 * scale)
+      ..lineTo(-15 * scale, 26 * scale)
+      ..close();
+    canvas.drawPath(pantsPath, pantsPaint);
+
+    // Kaki Depan (Lari Maju)
+    final legFront = Paint()
+      ..color = const Color(0xFFFFD1B3)
+      ..strokeWidth = 6.5 * scale
+      ..strokeCap = StrokeCap.round;
+    canvas.drawLine(
+      Offset(8 * scale, 25 * scale),
+      Offset(22 * scale, 45 * scale),
+      legFront,
+    );
+    canvas.drawLine(
+      Offset(22 * scale, 45 * scale),
+      Offset(18 * scale, 65 * scale),
+      legFront,
+    );
+    // Sepatu Depan
+    canvas.drawRRect(
+      RRect.fromRectAndRadius(
+        Rect.fromLTWH(14 * scale, 64 * scale, 16 * scale, 8 * scale),
+        Radius.circular(4 * scale),
+      ),
+      shoePaint,
+    );
+
+    // Kaki Belakang (Terangkat)
+    final legBack = Paint()
+      ..color = const Color(0xFFFFC3A0)
+      ..strokeWidth = 6.5 * scale
+      ..strokeCap = StrokeCap.round;
+    canvas.drawLine(
+      Offset(-10 * scale, 25 * scale),
+      Offset(-24 * scale, 40 * scale),
+      legBack,
+    );
+    canvas.drawLine(
+      Offset(-24 * scale, 40 * scale),
+      Offset(-38 * scale, 35 * scale),
+      legBack,
+    );
+    // Sepatu Belakang
+    canvas.drawRRect(
+      RRect.fromRectAndRadius(
+        Rect.fromLTWH(-48 * scale, 32 * scale, 14 * scale, 7 * scale),
+        Radius.circular(4 * scale),
+      ),
+      shoePaint,
+    );
+
+    // Lengan Belakang
+    final armBack = Paint()
+      ..color = const Color(0xFFFFC3A0)
+      ..strokeWidth = 5.5 * scale
+      ..strokeCap = StrokeCap.round;
+    canvas.drawLine(
+      Offset(-6 * scale, -10 * scale),
+      Offset(-20 * scale, -2 * scale),
+      armBack,
+    );
+    canvas.drawLine(
+      Offset(-20 * scale, -2 * scale),
+      Offset(-18 * scale, 12 * scale),
+      armBack,
+    );
+
+    // Lengan Depan
+    final armFront = Paint()
+      ..color = const Color(0xFFFFD1B3)
+      ..strokeWidth = 5.5 * scale
+      ..strokeCap = StrokeCap.round;
+    canvas.drawLine(
+      Offset(6 * scale, -10 * scale),
+      Offset(20 * scale, -2 * scale),
+      armFront,
+    );
+    canvas.drawLine(
+      Offset(20 * scale, -2 * scale),
+      Offset(14 * scale, -16 * scale),
+      armFront,
+    );
+
+    canvas.restore();
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
+}
+
+// ============================================================================
+// CUSTOM VECTOR ARTWORK: MINI BANNER PELARI LANDSCAPE (SLIDE 114)
+// ============================================================================
+class ExerciseBannerIllustration extends StatelessWidget {
+  const ExerciseBannerIllustration({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        // Pohon Sejuk 1
+        _buildTree(36, const Color(0xFFA0E7E5)),
+        const SizedBox(width: 8),
+        _buildTree(46, const Color(0xFF74D6D0)),
+        const SizedBox(width: 14),
+
+        // Pelari Mini
+        const ExerciseRunnerCircularIllustration(size: 64),
+
+        const SizedBox(width: 14),
+        // Pohon Sejuk 2
+        _buildTree(48, const Color(0xFF74D6D0)),
+        const SizedBox(width: 8),
+        _buildTree(34, const Color(0xFFA0E7E5)),
+      ],
+    );
+  }
+
+  static Widget _buildTree(double height, Color color) {
+    return Column(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        Container(
+          width: height * 0.58,
+          height: height * 0.72,
+          decoration: BoxDecoration(
+            color: color,
+            borderRadius: BorderRadius.circular(height * 0.29),
+          ),
+        ),
+        Container(
+          width: 4,
+          height: height * 0.22,
+          color: const Color(0xFFB5C2C7),
+        ),
+      ],
+    );
+  }
+}
+
+// ============================================================================
+// CUSTOM VECTOR ARTWORK: BOTOL OBAT & BLISTER PACK (SLIDE OBAT)
 // ============================================================================
 class MedicineBottleIllustration extends StatelessWidget {
   final double size;
@@ -2052,7 +3996,6 @@ class MedicineBottleIllustration extends StatelessWidget {
       child: Stack(
         alignment: Alignment.center,
         children: [
-          // Background Glow Lingkaran Lembut
           Container(
             width: size * 0.88,
             height: size * 0.88,
@@ -2061,8 +4004,6 @@ class MedicineBottleIllustration extends StatelessWidget {
               shape: BoxShape.circle,
             ),
           ),
-
-          // Blister pack di sebelah kiri
           Positioned(
             left: size * 0.08,
             bottom: size * 0.16,
@@ -2107,8 +4048,6 @@ class MedicineBottleIllustration extends StatelessWidget {
               ),
             ),
           ),
-
-          // Botol Obat di Tengah
           Positioned(
             child: Container(
               width: size * 0.44,
@@ -2130,19 +4069,17 @@ class MedicineBottleIllustration extends StatelessWidget {
               ),
               child: Column(
                 children: [
-                  // Tutup Botol
                   Container(
                     width: size * 0.36,
                     height: size * 0.12,
-                    decoration: BoxDecoration(
-                      color: const Color(0xFFBBE5EE),
-                      borderRadius: const BorderRadius.vertical(
+                    decoration: const BoxDecoration(
+                      color: Color(0xFFBBE5EE),
+                      borderRadius: BorderRadius.vertical(
                         top: Radius.circular(12),
                       ),
                     ),
                   ),
                   const Spacer(),
-                  // Label dengan Simbol Palang / Cross Medis
                   Container(
                     width: size * 0.28,
                     height: size * 0.28,
@@ -2163,8 +4100,6 @@ class MedicineBottleIllustration extends StatelessWidget {
               ),
             ),
           ),
-
-          // Kapsul Obat di Depan Kanan
           Positioned(
             right: size * 0.14,
             bottom: size * 0.12,
@@ -2179,9 +4114,6 @@ class MedicineBottleIllustration extends StatelessWidget {
   }
 }
 
-// ============================================================================
-// CUSTOM VECTOR ARTWORK: MINI BANNER ILUSTRASI OBAT (SLIDE 3)
-// ============================================================================
 class MiniMedicineBannerIllustration extends StatelessWidget {
   const MiniMedicineBannerIllustration({super.key});
 
@@ -2190,7 +4122,6 @@ class MiniMedicineBannerIllustration extends StatelessWidget {
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
-        // Blister pack kecil
         Container(
           width: 32,
           height: 42,
@@ -2219,8 +4150,6 @@ class MiniMedicineBannerIllustration extends StatelessWidget {
           ),
         ),
         const SizedBox(width: 12),
-
-        // Botol obat kecil
         Container(
           width: 38,
           height: 52,
@@ -2257,8 +4186,6 @@ class MiniMedicineBannerIllustration extends StatelessWidget {
           ),
         ),
         const SizedBox(width: 12),
-
-        // Kapsul kecil
         const CapsuleIconWidget(
           color: Color(0xFF0098B9),
           size: 26,
