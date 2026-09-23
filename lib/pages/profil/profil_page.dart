@@ -4,15 +4,11 @@ import '../screening_intro_page.dart';
 import '../home_page.dart';
 import '../riwayat_page.dart';
 import '../welcome_page.dart';
+import '../../services/auth_service.dart';
 import 'data_pribadi_page.dart';
 
 class ProfilPage extends StatelessWidget {
   const ProfilPage({super.key});
-
-  // Data profil sederhana — nantinya bisa diganti dari API / state management.
-  static const String nama = 'Nadea Fieldzah Putri';
-  static const String telepon = '+62 123 456 799';
-  static const String email = 'nadea123@gmail.com';
 
   void _onNavTap(BuildContext context, int index) {
     switch (index) {
@@ -63,7 +59,9 @@ class ProfilPage extends StatelessWidget {
             ),
           ),
           TextButton(
-            onPressed: () {
+            onPressed: () async {
+              await AuthService.instance.signOut();
+              if (!context.mounted) return;
               Navigator.pushAndRemoveUntil(
                 context,
                 MaterialPageRoute(builder: (context) => const WelcomePage()),
@@ -85,6 +83,12 @@ class ProfilPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final user = AuthService.instance.currentUser;
+    final String nama = (user?.displayName?.trim().isNotEmpty ?? false)
+        ? user!.displayName!
+        : 'Pengguna HeartCare';
+    final String email = user?.email ?? '-';
+
     return Scaffold(
       backgroundColor: Colors.white,
       body: SafeArea(
@@ -156,22 +160,18 @@ class ProfilPage extends StatelessWidget {
                     ),
 
                     const SizedBox(height: 14),
-                    const Text(
+                    Text(
                       nama,
-                      style: TextStyle(
+                      style: const TextStyle(
                         fontSize: 17,
                         fontWeight: FontWeight.bold,
                         color: Color(0xFF111827),
                       ),
                     ),
                     const SizedBox(height: 4),
-                    const Text(
-                      telepon,
-                      style: TextStyle(fontSize: 13, color: Color(0xFF6B7280)),
-                    ),
-                    const Text(
+                    Text(
                       email,
-                      style: TextStyle(fontSize: 13, color: Color(0xFF6B7280)),
+                      style: const TextStyle(fontSize: 13, color: Color(0xFF6B7280)),
                     ),
 
                     const SizedBox(height: 24),

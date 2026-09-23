@@ -1,31 +1,33 @@
 import 'package:flutter/material.dart';
-import 'password_reset_page.dart';
+import '../services/auth_service.dart';
 
 class CheckEmailPage extends StatefulWidget {
-  const CheckEmailPage({super.key});
+  final String email;
+
+  const CheckEmailPage({super.key, required this.email});
 
   @override
   State<CheckEmailPage> createState() => _CheckEmailPageState();
 }
 
 class _CheckEmailPageState extends State<CheckEmailPage> {
-  final List<TextEditingController> _controllers =
-      List.generate(5, (index) => TextEditingController());
+  bool _isResending = false;
 
-  final List<FocusNode> _focusNodes =
-      List.generate(5, (index) => FocusNode());
+  Future<void> _resendEmail() async {
+    setState(() => _isResending = true);
 
-  @override
-  void dispose() {
-    for (final controller in _controllers) {
-      controller.dispose();
-    }
+    final error = await AuthService.instance.sendPasswordResetEmail(
+      widget.email,
+    );
 
-    for (final focusNode in _focusNodes) {
-      focusNode.dispose();
-    }
+    if (!mounted) return;
+    setState(() => _isResending = false);
 
-    super.dispose();
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(error ?? 'Email reset password dikirim ulang'),
+      ),
+    );
   }
 
   @override
@@ -66,10 +68,33 @@ class _CheckEmailPageState extends State<CheckEmailPage> {
               const SizedBox(height: 32),
 
               // ==========================================
+              // ICON EMAIL
+              // ==========================================
+              Container(
+                width: 68,
+                height: 68,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: const Color(0xFFEAF6FB),
+                  border: Border.all(
+                    color: const Color(0xFF009FE3),
+                    width: 1.5,
+                  ),
+                ),
+                child: const Icon(
+                  Icons.mark_email_read_outlined,
+                  color: Color(0xFF0B9AC1),
+                  size: 32,
+                ),
+              ),
+
+              const SizedBox(height: 24),
+
+              // ==========================================
               // JUDUL
               // ==========================================
               const Text(
-                'Check your email',
+                'Periksa email kamu',
                 style: TextStyle(
                   fontSize: 23,
                   fontWeight: FontWeight.bold,
@@ -82,11 +107,12 @@ class _CheckEmailPageState extends State<CheckEmailPage> {
               // ==========================================
               // KETERANGAN
               // ==========================================
-              const Text(
-                'We have sent a reset link\n'
-                'to ciskaaa@gmail.com\n'
-                'Enter the 5-digit code included in the email.',
-                style: TextStyle(
+              Text(
+                'Kami sudah mengirimkan link reset password ke:\n'
+                '${widget.email}\n\n'
+                'Buka email tersebut dan klik link di dalamnya untuk '
+                'membuat kata sandi baru.',
+                style: const TextStyle(
                   fontSize: 14,
                   color: Colors.black87,
                   height: 1.4,
@@ -96,119 +122,16 @@ class _CheckEmailPageState extends State<CheckEmailPage> {
               const SizedBox(height: 35),
 
               // ==========================================
-              // LABEL EMAIL
-              // ==========================================
-              const Text(
-                'Your Email',
-                style: TextStyle(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w600,
-                  color: Colors.black,
-                ),
-              ),
-
-              const SizedBox(height: 14),
-
-              // ==========================================
-              // EMAIL
-              // ==========================================
-              SizedBox(
-                height: 58,
-                child: TextField(
-                  readOnly: true,
-                  controller: TextEditingController(
-                    text: 'ciskaaa@gmail.com',
-                  ),
-                  style: const TextStyle(
-                    fontSize: 14,
-                    color: Colors.black,
-                  ),
-                  decoration: InputDecoration(
-                    contentPadding: const EdgeInsets.symmetric(
-                      horizontal: 18,
-                      vertical: 16,
-                    ),
-                    enabledBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(7),
-                      borderSide: const BorderSide(
-                        color: Color(0xFF76AFC7),
-                        width: 1.2,
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-
-              const SizedBox(height: 27),
-
-              // ==========================================
-              // OTP 5 DIGIT
-              // ==========================================
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: List.generate(
-                  5,
-                  (index) {
-                    return SizedBox(
-                      width: 52,
-                      height: 58,
-                      child: TextField(
-                        controller: _controllers[index],
-                        focusNode: _focusNodes[index],
-                        textAlign: TextAlign.center,
-                        keyboardType: TextInputType.number,
-                        maxLength: 1,
-                        style: const TextStyle(
-                          fontSize: 20,
-                          fontWeight: FontWeight.w600,
-                          color: Colors.black,
-                        ),
-                        decoration: InputDecoration(
-                          counterText: '',
-                          filled: true,
-                          fillColor: const Color(0xFFF8FAFC),
-                          contentPadding: EdgeInsets.zero,
-                          enabledBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(7),
-                            borderSide: const BorderSide(
-                              color: Color(0xFF70B9FF),
-                              width: 1.2,
-                            ),
-                          ),
-                          focusedBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(7),
-                            borderSide: const BorderSide(
-                              color: Color(0xFF0B9AC1),
-                              width: 1.5,
-                            ),
-                          ),
-                        ),
-                        onChanged: (value) {
-                          if (value.isNotEmpty && index < 4) {
-                            _focusNodes[index + 1].requestFocus();
-                          }
-                        },
-                      ),
-                    );
-                  },
-                ),
-              ),
-
-              const SizedBox(height: 30),
-
-              // ==========================================
-              // TOMBOL VERIFIKASI
+              // TOMBOL KEMBALI KE MASUK
               // ==========================================
               SizedBox(
                 width: double.infinity,
                 height: 55,
                 child: ElevatedButton(
                   onPressed: () {
-                    Navigator.push(
+                    Navigator.popUntil(
                       context,
-                      MaterialPageRoute(
-                        builder: (context) => const PasswordResetPage(),
-                      ),
+                      (route) => route.isFirst,
                     );
                   },
                   style: ElevatedButton.styleFrom(
@@ -220,7 +143,7 @@ class _CheckEmailPageState extends State<CheckEmailPage> {
                     ),
                   ),
                   child: const Text(
-                    'Verifikasi kode',
+                    'Kembali ke Masuk',
                     style: TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.bold,
@@ -235,25 +158,30 @@ class _CheckEmailPageState extends State<CheckEmailPage> {
               // KIRIM ULANG EMAIL
               // ==========================================
               Center(
-                child: RichText(
-                  textAlign: TextAlign.center,
-                  text: const TextSpan(
-                    style: TextStyle(
-                      fontSize: 13,
-                      color: Colors.grey,
-                    ),
-                    children: [
-                      TextSpan(
-                        text: 'Belum menerima email? ',
+                child: GestureDetector(
+                  onTap: _isResending ? null : _resendEmail,
+                  child: RichText(
+                    textAlign: TextAlign.center,
+                    text: TextSpan(
+                      style: const TextStyle(
+                        fontSize: 13,
+                        color: Colors.grey,
                       ),
-                      TextSpan(
-                        text: 'Kirim ulang email',
-                        style: TextStyle(
-                          color: Color(0xFF0077CC),
-                          fontWeight: FontWeight.w600,
+                      children: [
+                        const TextSpan(
+                          text: 'Belum menerima email? ',
                         ),
-                      ),
-                    ],
+                        TextSpan(
+                          text: _isResending
+                              ? 'Mengirim...'
+                              : 'Kirim ulang email',
+                          style: const TextStyle(
+                            color: Color(0xFF0077CC),
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
                 ),
               ),

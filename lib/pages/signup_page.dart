@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import '../services/auth_service.dart';
+import 'login_page.dart';
 import 'success_page.dart';
 
 class SignupPage extends StatefulWidget {
@@ -33,11 +35,77 @@ class _SignupPageState extends State<SignupPage> {
     super.dispose();
   }
 
-  void _daftar() {
+  bool _isLoading = false;
+
+  Future<void> _daftar() async {
+    final nama = _namaController.text.trim();
+    final email = _emailController.text.trim();
+    final password = _passwordController.text.trim();
+    final confirmPassword = _confirmPasswordController.text.trim();
+
+    if (nama.isEmpty || email.isEmpty || password.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Semua kolom wajib diisi')),
+      );
+      return;
+    }
+
+    if (password.length < 6) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Kata sandi terlalu lemah (minimal 6 karakter)'),
+        ),
+      );
+      return;
+    }
+
+    if (password != confirmPassword) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Konfirmasi kata sandi tidak cocok')),
+      );
+      return;
+    }
+
+    setState(() => _isLoading = true);
+
+    final error = await AuthService.instance.signUp(
+      name: nama,
+      email: email,
+      password: password,
+    );
+
+    if (!mounted) return;
+
+    if (error != null) {
+      setState(() => _isLoading = false);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(error)),
+      );
+      return;
+    }
+
+    // Keluar dari sesi otomatis Firebase agar pengguna harus login terlebih dahulu
+    await AuthService.instance.signOut();
+
+    if (!mounted) return;
+    setState(() => _isLoading = false);
+
     Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (context) => const SuccessPage(),
+        builder: (context) => SuccessPage(
+          title: 'Pendaftaran Berhasil',
+          message: 'Akun Anda berhasil dibuat!',
+          subMessage: 'Silakan masuk menggunakan email dan kata sandi Anda.',
+          buttonText: 'Masuk',
+          onButtonPressed: () {
+            Navigator.pushAndRemoveUntil(
+              context,
+              MaterialPageRoute(builder: (context) => const LoginPage()),
+              (route) => false,
+            );
+          },
+        ),
       ),
     );
   }
@@ -204,7 +272,7 @@ class _SignupPageState extends State<SignupPage> {
                   width: double.infinity,
                   height: 55,
                   child: ElevatedButton(
-                    onPressed: _daftar,
+                    onPressed: _isLoading ? null : _daftar,
                     style: ElevatedButton.styleFrom(
                       backgroundColor:
                           const Color(0xFF0B9AC1),
@@ -215,13 +283,22 @@ class _SignupPageState extends State<SignupPage> {
                             BorderRadius.circular(8),
                       ),
                     ),
-                    child: const Text(
-                      'Daftar',
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
+                    child: _isLoading
+                        ? const SizedBox(
+                            width: 22,
+                            height: 22,
+                            child: CircularProgressIndicator(
+                              color: Colors.white,
+                              strokeWidth: 2.5,
+                            ),
+                          )
+                        : const Text(
+                            'Daftar',
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
                   ),
                 ),
 

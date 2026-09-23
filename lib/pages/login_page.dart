@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import '../services/auth_service.dart';
 import 'forgot_password_page.dart';
 import 'signup_page.dart';
+import 'home_page.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -21,11 +23,51 @@ class _LoginPageState extends State<LoginPage> {
   // Menampilkan / menyembunyikan password
   bool _obscurePassword = true;
 
+  // Status loading saat proses login berlangsung
+  bool _isLoading = false;
+
   @override
   void dispose() {
     emailController.dispose();
     passwordController.dispose();
     super.dispose();
+  }
+
+  // ==========================================
+  // PROSES LOGIN DENGAN FIREBASE AUTHENTICATION
+  // ==========================================
+  Future<void> _login() async {
+    final email = emailController.text.trim();
+    final password = passwordController.text.trim();
+
+    if (email.isEmpty || password.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Email dan kata sandi wajib diisi')),
+      );
+      return;
+    }
+
+    setState(() => _isLoading = true);
+
+    final error = await AuthService.instance.signIn(
+      email: email,
+      password: password,
+    );
+
+    if (!mounted) return;
+    setState(() => _isLoading = false);
+
+    if (error != null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(error)),
+      );
+      return;
+    }
+
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(builder: (context) => const HomePage()),
+    );
   }
 
   @override
@@ -289,18 +331,7 @@ class _LoginPageState extends State<LoginPage> {
                         width: double.infinity,
                         height: 55,
                         child: ElevatedButton(
-                          onPressed: () {
-                            // Data sementara ditampilkan
-                            // di console
-
-                            print(
-                              'Email: ${emailController.text}',
-                            );
-
-                            print(
-                              'Password: ${passwordController.text}',
-                            );
-                          },
+                          onPressed: _isLoading ? null : _login,
                           style: ElevatedButton.styleFrom(
                             backgroundColor:
                                 const Color(0xFF0B9AC1),
@@ -312,13 +343,22 @@ class _LoginPageState extends State<LoginPage> {
                                   BorderRadius.circular(8),
                             ),
                           ),
-                          child: const Text(
-                            'Masuk',
-                            style: TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
+                          child: _isLoading
+                              ? const SizedBox(
+                                  width: 22,
+                                  height: 22,
+                                  child: CircularProgressIndicator(
+                                    color: Colors.white,
+                                    strokeWidth: 2.5,
+                                  ),
+                                )
+                              : const Text(
+                                  'Masuk',
+                                  style: TextStyle(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
                         ),
                       ),
 

@@ -1,8 +1,21 @@
 import 'package:flutter/material.dart';
-import 'home_page.dart';
+import 'login_page.dart';
 
 class SuccessPage extends StatelessWidget {
-  const SuccessPage({super.key});
+  final String title;
+  final String message;
+  final String subMessage;
+  final String buttonText;
+  final VoidCallback? onButtonPressed;
+
+  const SuccessPage({
+    super.key,
+    this.title = 'Successful',
+    this.message = 'Password Anda telah berhasil diubah',
+    this.subMessage = 'Silakan klik Selesai untuk masuk ke akun Anda.',
+    this.buttonText = 'Selesai',
+    this.onButtonPressed,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -39,11 +52,12 @@ class SuccessPage extends StatelessWidget {
                 const SizedBox(height: 24),
 
                 // ==========================================
-                // SUCCESSFUL
+                // SUCCESSFUL / JUDUL
                 // ==========================================
-                const Text(
-                  'Successful',
-                  style: TextStyle(
+                Text(
+                  title,
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(
                     fontSize: 23,
                     fontWeight: FontWeight.bold,
                     color: Colors.black,
@@ -55,10 +69,10 @@ class SuccessPage extends StatelessWidget {
                 // ==========================================
                 // KETERANGAN
                 // ==========================================
-                const Text(
-                  'Password Anda telah berhasil diubah',
+                Text(
+                  message,
                   textAlign: TextAlign.center,
-                  style: TextStyle(
+                  style: const TextStyle(
                     fontSize: 14,
                     color: Colors.black87,
                   ),
@@ -66,10 +80,10 @@ class SuccessPage extends StatelessWidget {
 
                 const SizedBox(height: 6),
 
-                const Text(
-                  'Silakan klik Selesai untuk masuk ke akun Anda.',
+                Text(
+                  subMessage,
                   textAlign: TextAlign.center,
-                  style: TextStyle(
+                  style: const TextStyle(
                     fontSize: 14,
                     color: Colors.black87,
                   ),
@@ -78,33 +92,34 @@ class SuccessPage extends StatelessWidget {
                 const SizedBox(height: 40),
 
                 // ==========================================
-                // TOMBOL SELESAI
+                // TOMBOL SELESAI / AKSI
                 // ==========================================
                 SizedBox(
-                  width: 120,
+                  width: 130,
                   height: 50,
                   child: ElevatedButton(
-                    onPressed: () {
-                      Navigator.pushAndRemoveUntil(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => const HomePage(),
-                        ),
-                        (route) => false,
-                      );
-                    },
+                    onPressed: onButtonPressed ??
+                        () {
+                          Navigator.pushAndRemoveUntil(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => const LoginPage(),
+                            ),
+                            (route) => false,
+                          );
+                        },
                     style: ElevatedButton.styleFrom(
                       backgroundColor: const Color(0xFF0B9AC1),
                       foregroundColor: Colors.white,
                       elevation: 0,
-                      padding: EdgeInsets.zero,
+                      padding: const EdgeInsets.symmetric(horizontal: 16),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(8),
                       ),
                     ),
-                    child: const Text(
-                      'Selesai',
-                      style: TextStyle(
+                    child: Text(
+                      buttonText,
+                      style: const TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.bold,
                       ),

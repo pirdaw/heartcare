@@ -1,8 +1,55 @@
 import 'package:flutter/material.dart';
 import 'check_email_page.dart';
+import '../services/auth_service.dart';
 
-class ForgotPasswordPage extends StatelessWidget {
+class ForgotPasswordPage extends StatefulWidget {
   const ForgotPasswordPage({super.key});
+
+  @override
+  State<ForgotPasswordPage> createState() => _ForgotPasswordPageState();
+}
+
+class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
+  final TextEditingController _emailController = TextEditingController();
+  bool _isLoading = false;
+
+  @override
+  void dispose() {
+    _emailController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _handleResetPassword() async {
+    final email = _emailController.text.trim();
+
+    if (email.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Masukkan email kamu terlebih dahulu')),
+      );
+      return;
+    }
+
+    setState(() => _isLoading = true);
+
+    final error = await AuthService.instance.sendPasswordResetEmail(email);
+
+    if (!mounted) return;
+    setState(() => _isLoading = false);
+
+    if (error != null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(error)),
+      );
+      return;
+    }
+
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => CheckEmailPage(email: email),
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -88,6 +135,7 @@ class ForgotPasswordPage extends StatelessWidget {
               SizedBox(
                 height: 58,
                 child: TextField(
+                  controller: _emailController,
                   keyboardType: TextInputType.emailAddress,
                   style: const TextStyle(
                     fontSize: 14,
@@ -130,14 +178,7 @@ class ForgotPasswordPage extends StatelessWidget {
                 width: double.infinity,
                 height: 55,
                 child: ElevatedButton(
-                  onPressed: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => const CheckEmailPage(),
-                      ),
-                    );
-                  },
+                  onPressed: _isLoading ? null : _handleResetPassword,
                   style: ElevatedButton.styleFrom(
                     backgroundColor: const Color(0xFF0B9AC1),
                     foregroundColor: Colors.white,
@@ -146,13 +187,22 @@ class ForgotPasswordPage extends StatelessWidget {
                       borderRadius: BorderRadius.circular(8),
                     ),
                   ),
-                  child: const Text(
-                    'Reset password',
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
+                  child: _isLoading
+                      ? const SizedBox(
+                          width: 22,
+                          height: 22,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2.4,
+                            color: Colors.white,
+                          ),
+                        )
+                      : const Text(
+                          'Reset password',
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
                 ),
               ),
             ],

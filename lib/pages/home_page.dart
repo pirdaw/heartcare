@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../services/auth_service.dart';
 import 'screening_intro_page.dart';
 import 'riwayat_page.dart';
 import 'Profil/profil_page.dart';
@@ -51,6 +52,11 @@ class _HomePageState extends State<HomePage> {
 
   @override
   Widget build(BuildContext context) {
+    final user = AuthService.instance.currentUser;
+    final String displayName = (user?.displayName?.trim().isNotEmpty ?? false)
+        ? user!.displayName!.split(' ').first
+        : 'Nadea';
+
     return Scaffold(
       // PINK DIHILANGKAN
       backgroundColor: Colors.white,
@@ -119,23 +125,23 @@ class _HomePageState extends State<HomePage> {
                           const SizedBox(width: 12),
 
                           // TEKS SAPAAN
-                          const Expanded(
+                          Expanded(
                             child: Column(
                               crossAxisAlignment:
                                   CrossAxisAlignment.start,
                               children: [
                                 Text(
-                                  'Hallo, Nadea...',
-                                  style: TextStyle(
+                                  'Hallo, $displayName...',
+                                  style: const TextStyle(
                                     fontSize: 19,
                                     fontWeight: FontWeight.bold,
                                     color: Colors.black,
                                   ),
                                 ),
 
-                                SizedBox(height: 4),
+                                const SizedBox(height: 4),
 
-                                Text(
+                                const Text(
                                   'Apa yang bisa kami bantu\n'
                                   'hari ini?',
                                   style: TextStyle(
@@ -181,7 +187,7 @@ class _HomePageState extends State<HomePage> {
                           boxShadow: [
                             BoxShadow(
                               color:
-                                  Colors.black.withOpacity(0.10),
+                                  Colors.black.withValues(alpha: 0.10),
                               blurRadius: 5,
                               offset: const Offset(0, 3),
                             ),
