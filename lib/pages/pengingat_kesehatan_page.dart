@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import '../services/alarm_service.dart';
 
 // ============================================================================
 // MODEL DATA OBAT & PENGINGAT
@@ -13,6 +14,7 @@ class MedicineReminder {
   List<String> reminderTimes; // e.g. ["07.30", "15.30", "22.00"]
   String note;
   bool isTaken;
+  bool syncWithPhoneAlarm;
 
   MedicineReminder({
     required this.id,
@@ -23,6 +25,7 @@ class MedicineReminder {
     required this.reminderTimes,
     required this.note,
     this.isTaken = false,
+    this.syncWithPhoneAlarm = true,
   });
 }
 
@@ -502,6 +505,39 @@ class _PengingatKesehatanPageState extends State<PengingatKesehatanPage> {
               ],
             ),
           ),
+          InkWell(
+            onTap: () => AlarmService.openAlarmApp(),
+            borderRadius: BorderRadius.circular(10),
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(10),
+                border: Border.all(
+                  color: PengingatKesehatanPage.primaryTeal.withValues(alpha: 0.3),
+                ),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: const [
+                  Icon(
+                    Icons.alarm_on_rounded,
+                    color: PengingatKesehatanPage.primaryTeal,
+                    size: 15,
+                  ),
+                  SizedBox(width: 4),
+                  Text(
+                    'Jam HP',
+                    style: TextStyle(
+                      fontSize: 11,
+                      fontWeight: FontWeight.w700,
+                      color: PengingatKesehatanPage.primaryTeal,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
         ],
       ),
     );
@@ -725,6 +761,7 @@ class _TambahObatFormPageState extends State<TambahObatFormPage> {
   String _selectedUnit = 'Tablet';
   String _selectedSchedule = 'Setelah makan ya';
   final List<String> _selectedTimes = ['07.30', '15.30', '22.00'];
+  bool _syncWithPhoneAlarm = true;
 
   final List<String> _unitOptions = [
     'Tablet',
@@ -922,7 +959,7 @@ class _TambahObatFormPageState extends State<TambahObatFormPage> {
     );
   }
 
-  void _saveMedicine() {
+  void _saveMedicine() async {
     final name = _nameController.text.trim();
     final amount = _amountController.text.trim();
     final note = _noteController.text.trim();
@@ -942,19 +979,52 @@ class _TambahObatFormPageState extends State<TambahObatFormPage> {
       amount: amount.isEmpty ? '1' : amount,
       unit: _selectedUnit,
       schedule: _selectedSchedule,
-      reminderTimes: _selectedTimes.isEmpty ? ['07.30'] : List.from(_selectedTimes),
+      reminderTimes:
+          _selectedTimes.isEmpty ? ['07.30'] : List.from(_selectedTimes),
       note: note.isEmpty ? _selectedSchedule : note,
+      syncWithPhoneAlarm: _syncWithPhoneAlarm,
     );
 
     HealthReminderController().addMedicine(newMedicine);
 
-    // Langsung navigasi ke Slide 4 (Daftar Obat)
-    Navigator.pushReplacement(
-      context,
-      MaterialPageRoute(
-        builder: (context) => const DaftarObatPage(),
-      ),
-    );
+    // Otomatis pasang alarm ke aplikasi Jam / Alarm HP jika opsi aktif
+    if (_syncWithPhoneAlarm) {
+      AlarmService.setAlarmsForMedicine(
+        name: newMedicine.name,
+        amount: newMedicine.amount,
+        unit: newMedicine.unit,
+        reminderTimes: newMedicine.reminderTimes,
+      );
+    }
+
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            _syncWithPhoneAlarm
+                ? 'Obat disimpan & alarm dipasang di Jam HP (${newMedicine.reminderTimes.join(", ")})!'
+                : 'Pengingat obat berhasil disimpan!',
+          ),
+          backgroundColor: const Color(0xFF0098B9),
+          duration: const Duration(seconds: 4),
+          action: _syncWithPhoneAlarm
+              ? SnackBarAction(
+                  label: 'Buka Jam',
+                  textColor: Colors.white,
+                  onPressed: () => AlarmService.openAlarmApp(),
+                )
+              : null,
+        ),
+      );
+
+      // Langsung navigasi ke Slide 4 (Daftar Obat)
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(
+          builder: (context) => const DaftarObatPage(),
+        ),
+      );
+    }
   }
 
   @override
@@ -1225,6 +1295,11 @@ class _TambahObatFormPageState extends State<TambahObatFormPage> {
                       ),
                     ),
 
+                    const SizedBox(height: 18),
+
+                    // FIELD: Hubungkan ke Alarm HP Bawaan
+                    _buildAlarmSyncSwitchCard(),
+
                     const SizedBox(height: 24),
 
                     // TOMBOL SIMPAN
@@ -1260,6 +1335,74 @@ class _TambahObatFormPageState extends State<TambahObatFormPage> {
             const HeartCareBottomNavBarWidget(currentIndex: 3),
           ],
         ),
+      ),
+    );
+  }
+
+  Widget _buildAlarmSyncSwitchCard() {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+      decoration: BoxDecoration(
+        color: const Color(0xFFF0FDF4),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: const Color(0xFFBBF7D0),
+          width: 1,
+        ),
+      ),
+      child: Row(
+        children: [
+          Container(
+            width: 38,
+            height: 38,
+            decoration: BoxDecoration(
+              color: const Color(0xFFDCFCE7),
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: const Center(
+              child: Icon(
+                Icons.alarm_on_rounded,
+                color: Color(0xFF16A34A),
+                size: 22,
+              ),
+            ),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: const [
+                Text(
+                  'Sambungkan ke Alarm HP',
+                  style: TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w700,
+                    color: Color(0xFF1E293B),
+                  ),
+                ),
+                SizedBox(height: 2),
+                Text(
+                  'Otomatis membuat alarm di aplikasi Jam HP',
+                  style: TextStyle(
+                    fontSize: 11,
+                    color: Color(0xFF475569),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          Switch(
+            value: _syncWithPhoneAlarm,
+            activeThumbColor: const Color(0xFF0098B9),
+            activeTrackColor: const Color(0xFFC7EBF4),
+            onChanged: (val) {
+              setState(() {
+                _syncWithPhoneAlarm = val;
+              });
+            },
+          ),
+        ],
       ),
     );
   }
@@ -1587,49 +1730,156 @@ class _DaftarObatPageState extends State<DaftarObatPage> {
           width: 1,
         ),
       ),
-      child: Row(
+      child: Column(
         children: [
-          // Ikon Jam
-          Container(
-            width: 46,
-            height: 46,
-            decoration: BoxDecoration(
-              color: const Color(0xFFF1F5F9),
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: const Center(
-              child: Icon(
-                Icons.access_time_rounded,
-                color: Color(0xFF1E293B),
-                size: 28,
-              ),
-            ),
-          ),
-          const SizedBox(width: 14),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text(
-                  'Waktu Pengingat',
-                  style: TextStyle(
-                    fontSize: 13,
-                    fontWeight: FontWeight.w700,
+          Row(
+            children: [
+              // Ikon Jam
+              Container(
+                width: 46,
+                height: 46,
+                decoration: BoxDecoration(
+                  color: const Color(0xFFE0F7FA),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: const Center(
+                  child: Icon(
+                    Icons.access_time_rounded,
                     color: Color(0xFF0098B9),
+                    size: 26,
                   ),
                 ),
-                const SizedBox(height: 6),
-                Text(
-                  med.reminderTimes.join('   '),
-                  style: const TextStyle(
-                    fontSize: 14.5,
-                    fontWeight: FontWeight.w700,
-                    color: Color(0xFF1E293B),
-                    letterSpacing: 0.5,
+              ),
+              const SizedBox(width: 14),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        const Text(
+                          'Waktu Pengingat',
+                          style: TextStyle(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w700,
+                            color: Color(0xFF0098B9),
+                          ),
+                        ),
+                        const Spacer(),
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 8,
+                            vertical: 3,
+                          ),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFFE8F5E9),
+                            borderRadius: BorderRadius.circular(8),
+                            border: Border.all(
+                              color: const Color(0xFFA5D6A7),
+                              width: 0.8,
+                            ),
+                          ),
+                          child: const Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(
+                                Icons.alarm_on_rounded,
+                                size: 12,
+                                color: Color(0xFF2E7D32),
+                              ),
+                              SizedBox(width: 4),
+                              Text(
+                                'Alarm HP',
+                                style: TextStyle(
+                                  fontSize: 10,
+                                  fontWeight: FontWeight.w700,
+                                  color: Color(0xFF2E7D32),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 6),
+                    Text(
+                      med.reminderTimes.join('   '),
+                      style: const TextStyle(
+                        fontSize: 14.5,
+                        fontWeight: FontWeight.w700,
+                        color: Color(0xFF1E293B),
+                        letterSpacing: 0.5,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          const Divider(height: 1, color: Color(0xFFF1F5F9)),
+          const SizedBox(height: 10),
+          Row(
+            children: [
+              Expanded(
+                child: OutlinedButton.icon(
+                  onPressed: () async {
+                    final count = await AlarmService.setAlarmsForMedicine(
+                      name: med.name,
+                      amount: med.amount,
+                      unit: med.unit,
+                      reminderTimes: med.reminderTimes,
+                    );
+                    if (!mounted) return;
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text(
+                          '$count alarm berhasil dipasang di Jam HP (${med.reminderTimes.join(", ")})',
+                        ),
+                        backgroundColor: const Color(0xFF0098B9),
+                        action: SnackBarAction(
+                          label: 'Buka Jam',
+                          textColor: Colors.white,
+                          onPressed: () => AlarmService.openAlarmApp(),
+                        ),
+                      ),
+                    );
+                  },
+                  icon: const Icon(Icons.alarm_add_rounded, size: 16),
+                  label: const Text(
+                    'Pasang ke Alarm HP',
+                    style: TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: const Color(0xFF0098B9),
+                    side: const BorderSide(color: Color(0xFF0098B9)),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    padding: const EdgeInsets.symmetric(vertical: 8),
                   ),
                 ),
-              ],
-            ),
+              ),
+              const SizedBox(width: 8),
+              IconButton(
+                onPressed: () => AlarmService.openAlarmApp(),
+                tooltip: 'Buka Aplikasi Jam HP',
+                icon: const Icon(
+                  Icons.open_in_new_rounded,
+                  color: Color(0xFF0098B9),
+                  size: 20,
+                ),
+                style: IconButton.styleFrom(
+                  backgroundColor: const Color(0xFFE0F7FA),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                ),
+              ),
+            ],
           ),
         ],
       ),
