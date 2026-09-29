@@ -4,6 +4,37 @@ import 'article_detail_page.dart';
 class EducationPage extends StatelessWidget {
   const EducationPage({super.key});
 
+  static const List<Map<String, String>> articles = [
+    {
+      'image':
+          'https://images.unsplash.com/photo-1530026405186-ed1f139313f8?w=500',
+      'category': 'Penyakit Jantung',
+      'title': 'Mengenal Penyakit\nJantung Koroner',
+      'description':
+          'Penyakit jantung koroner merupakan salah satu '
+          'penyakit yang perlu diwaspadai karena dapat '
+          'mengganggu fungsi jantung.',
+    },
+    {
+      'image':
+          'https://images.unsplash.com/photo-1490645935967-10de6ba17061?w=500',
+      'category': 'Pola Hidup',
+      'title': 'Makanan Sehat\nuntuk Jantung',
+      'description':
+          'Menjaga kesehatan jantung dapat dimulai dari '
+          'pilihan makanan sehari-hari.',
+    },
+    {
+      'image':
+          'https://images.unsplash.com/photo-1552674605-db6ffd4facb5?w=500',
+      'category': 'Pola Hidup',
+      'title': 'Olahraga yang Baik\nuntuk Kesehatan Jantung',
+      'description':
+          'Aktivitas fisik secara rutin dapat membantu '
+          'menjaga kebugaran tubuh dan mendukung kesehatan.',
+    },
+  ];
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -102,45 +133,18 @@ class EducationPage extends StatelessWidget {
 
                     const SizedBox(height: 10),
 
-                    // ARTIKEL 1
-                    _articleCard(
-                      context,
-                      image:
-                          'https://images.unsplash.com/photo-1530026405186-ed1f139313f8?w=500',
-                      category: 'Penyakit Jantung',
-                      title: 'Mengenal Penyakit\nJantung Koroner',
-                      description:
-                          'Penyakit jantung koroner merupakan salah satu '
-                          'penyakit yang perlu diwaspadai karena dapat '
-                          'mengganggu fungsi jantung.',
-                    ),
-
-                    const SizedBox(height: 17),
-
-                    // ARTIKEL 2
-                    _articleCard(
-                      context,
-                      image:
-                          'https://images.unsplash.com/photo-1490645935967-10de6ba17061?w=500',
-                      category: 'Pola Hidup',
-                      title: 'Makanan Sehat\nuntuk Jantung',
-                      description:
-                          'Menjaga kesehatan jantung dapat dimulai dari '
-                          'pilihan makanan sehari-hari.',
-                    ),
-
-                    const SizedBox(height: 17),
-
-                    // ARTIKEL 3
-                    _articleCard(
-                      context,
-                      image:
-                          'https://images.unsplash.com/photo-1552674605-db6ffd4facb5?w=500',
-                      category: 'Pola Hidup',
-                      title: 'Olahraga yang Baik\nuntuk Kesehatan Jantung',
-                      description:
-                          'Aktivitas fisik secara rutin dapat membantu '
-                          'menjaga kebugaran tubuh dan mendukung kesehatan.',
+                    // ARTIKEL LIST
+                    ...articles.map(
+                      (article) => Padding(
+                        padding: const EdgeInsets.only(bottom: 17),
+                        child: buildArticleCard(
+                          context,
+                          image: article['image']!,
+                          category: article['category']!,
+                          title: article['title']!,
+                          description: article['description']!,
+                        ),
+                      ),
                     ),
                   ],
                 ),
@@ -178,7 +182,7 @@ class EducationPage extends StatelessWidget {
     );
   }
 
-  Widget _articleCard(
+  static Widget buildArticleCard(
     BuildContext context, {
     required String image,
     required String category,

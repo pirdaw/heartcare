@@ -3,6 +3,7 @@ import 'screening_intro_page.dart';
 import 'dokter_page.dart';
 import 'emergency_page.dart';
 import 'education_page.dart';
+import 'article_detail_page.dart';
 import 'pengingat_kesehatan_page.dart';
 
 class HomePage extends StatefulWidget {
@@ -369,34 +370,67 @@ class _HomePageState extends State<HomePage> {
 
                         const SizedBox(width: 10),
 
-                        // ==================================================
-                        // ARTIKEL KESEHATAN
-                        // ==================================================
+                        const Expanded(
+                          child: SizedBox(),
+                        ),
+                      ],
+                    ),
 
-                        Expanded(
-                          child: _serviceCard(
-                            icon:
-                                Icons.menu_book_outlined,
-                            title: 'Artikel Kesehatan',
-                            description:
-                                'Baca artikel dan tips untuk menjaga kesehatan Anda.',
-                            iconColor:
-                                const Color(0xFF237BEA),
+                    const SizedBox(height: 20),
 
-                            // HOME → EDUCATION PAGE
-                            onTap: () {
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (context) =>
-                                      const EducationPage(),
-                                ),
-                              );
-                            },
+                    // ==================================================
+                    // ARTIKEL KESEHATAN
+                    // ==================================================
+
+                    Row(
+                      mainAxisAlignment:
+                          MainAxisAlignment.spaceBetween,
+                      children: [
+                        const Text(
+                          'Artikel Kesehatan',
+                          style: TextStyle(
+                            fontSize: 17,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.black,
+                          ),
+                        ),
+                        GestureDetector(
+                          onTap: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) =>
+                                    const EducationPage(),
+                              ),
+                            );
+                          },
+                          child: const Text(
+                            'Lihat Semua',
+                            style: TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w600,
+                              color: Color(0xFF1479F5),
+                            ),
                           ),
                         ),
                       ],
                     ),
+
+                    const SizedBox(height: 12),
+
+                    // PREVIEW ARTIKEL DARI EDUCATION PAGE
+                    ...EducationPage.articles.take(2).map(
+                          (article) => Padding(
+                            padding: const EdgeInsets.only(bottom: 12),
+                            child: EducationPage.buildArticleCard(
+                              context,
+                              image: article['image']!,
+                              category: article['category']!,
+                              title: article['title']!,
+                              description: article['description']!,
+                            ),
+                          ),
+                        ),
 
                     const SizedBox(height: 8),
                   ],
