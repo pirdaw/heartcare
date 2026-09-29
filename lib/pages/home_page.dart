@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
+
 import 'screening_intro_page.dart';
 import 'dokter_page.dart';
 import 'detail_dokter_page.dart';
 import 'emergency_page.dart';
 import 'education_page.dart';
+import 'artikel_kesehatan_page.dart';
 import 'article_detail_page.dart';
 import 'pengingat_kesehatan_page.dart';
 import 'riwayat_page.dart';
@@ -33,9 +35,7 @@ class _HomePageState extends State<HomePage> {
       });
       Navigator.push(
         context,
-        MaterialPageRoute(
-          builder: (context) => const ScreeningIntroPage(),
-        ),
+        MaterialPageRoute(builder: (context) => const ScreeningIntroPage()),
       );
       return;
     }
@@ -46,9 +46,7 @@ class _HomePageState extends State<HomePage> {
       });
       Navigator.push(
         context,
-        MaterialPageRoute(
-          builder: (context) => const PilihDokterPage(),
-        ),
+        MaterialPageRoute(builder: (context) => const PilihDokterPage()),
       );
       return;
     }
@@ -59,9 +57,7 @@ class _HomePageState extends State<HomePage> {
       });
       Navigator.push(
         context,
-        MaterialPageRoute(
-          builder: (context) => const RiwayatPage(),
-        ),
+        MaterialPageRoute(builder: (context) => const RiwayatPage()),
       );
       return;
     }
@@ -72,202 +68,10 @@ class _HomePageState extends State<HomePage> {
       });
       Navigator.push(
         context,
-        MaterialPageRoute(
-          builder: (context) => const ProfilPage(),
-        ),
+        MaterialPageRoute(builder: (context) => const ProfilPage()),
       );
       return;
     }
-  }
-
-  void _showProgramModal() {
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (context) => Container(
-        padding: const EdgeInsets.fromLTRB(22, 16, 22, 28),
-        decoration: const BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Center(
-              child: Container(
-                width: 42,
-                height: 4,
-                margin: const EdgeInsets.only(bottom: 18),
-                decoration: BoxDecoration(
-                  color: const Color(0xFFCBD5E1),
-                  borderRadius: BorderRadius.circular(2),
-                ),
-              ),
-            ),
-            Row(
-              children: [
-                Container(
-                  width: 50,
-                  height: 50,
-                  decoration: BoxDecoration(
-                    color: const Color(0xFFE8F7FB),
-                    borderRadius: BorderRadius.circular(14),
-                  ),
-                  child: const Icon(
-                    Icons.monitor_heart_outlined,
-                    color: Color(0xFF0098B9),
-                    size: 28,
-                  ),
-                ),
-                const SizedBox(width: 14),
-                const Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Program Kesehatan Jantung',
-                        style: TextStyle(
-                          fontSize: 16.5,
-                          fontWeight: FontWeight.bold,
-                          color: Color(0xFF0F172A),
-                        ),
-                      ),
-                      SizedBox(height: 3),
-                      Text(
-                        'Panduan 30 hari untuk jantung sehat & prima',
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: Color(0xFF64748B),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 20),
-            _programBenefitItem(
-              Icons.restaurant_rounded,
-              'Panduan Gizi Rendah Garam & Kolesterol',
-              'Menu harian terstruktur ramah kardiovaskular.',
-            ),
-            const SizedBox(height: 12),
-            _programBenefitItem(
-              Icons.directions_walk_rounded,
-              'Target Aktivitas Fisik Ringan 30 Menit/Hari',
-              'Latihan aerobik santai menjaga kelenturan pembuluh darah.',
-            ),
-            const SizedBox(height: 12),
-            _programBenefitItem(
-              Icons.fact_check_outlined,
-              'Evaluasi Risiko Berkala dengan AI',
-              'Pantau progres kesehatan jantung Anda secara berkelanjutan.',
-            ),
-            const SizedBox(height: 22),
-            Row(
-              children: [
-                Expanded(
-                  child: OutlinedButton(
-                    onPressed: () {
-                      Navigator.pop(context);
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => const EducationPage(),
-                        ),
-                      );
-                    },
-                    style: OutlinedButton.styleFrom(
-                      foregroundColor: const Color(0xFF079BC1),
-                      side: const BorderSide(color: Color(0xFF079BC1)),
-                      padding: const EdgeInsets.symmetric(vertical: 12),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                    ),
-                    child: const Text(
-                      'Buka Edukasi',
-                      style: TextStyle(fontWeight: FontWeight.bold),
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: ElevatedButton(
-                    onPressed: () {
-                      Navigator.pop(context);
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => const ScreeningIntroPage(),
-                        ),
-                      );
-                    },
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFF079BC1),
-                      foregroundColor: Colors.white,
-                      elevation: 0,
-                      padding: const EdgeInsets.symmetric(vertical: 12),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                    ),
-                    child: const Text(
-                      'Mulai Skrining',
-                      style: TextStyle(fontWeight: FontWeight.bold),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _programBenefitItem(
-      IconData icon, String title, String subtitle) {
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Container(
-          width: 34,
-          height: 34,
-          decoration: BoxDecoration(
-            color: const Color(0xFFE8F7FB),
-            borderRadius: BorderRadius.circular(8),
-          ),
-          child: Icon(icon, size: 18, color: const Color(0xFF079BC1)),
-        ),
-        const SizedBox(width: 12),
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                title,
-                style: const TextStyle(
-                  fontSize: 13,
-                  fontWeight: FontWeight.w600,
-                  color: Color(0xFF1E293B),
-                ),
-              ),
-              const SizedBox(height: 1),
-              Text(
-                subtitle,
-                style: const TextStyle(
-                  fontSize: 11,
-                  color: Color(0xFF64748B),
-                ),
-              ),
-            ],
-          ),
-        ),
-      ],
-    );
   }
 
   @override
@@ -305,7 +109,8 @@ class _HomePageState extends State<HomePage> {
                               shape: BoxShape.circle,
                               color: const Color(0xFFD8F1F8),
                               border: Border.all(
-                                color: const Color(0xFF079BC1).withValues(alpha: 0.3),
+                                color: const Color(0xFF079BC1)
+                                    .withValues(alpha: 0.3),
                                 width: 2,
                               ),
                             ),
@@ -491,15 +296,13 @@ class _HomePageState extends State<HomePage> {
                         gradient: const LinearGradient(
                           begin: Alignment.topLeft,
                           end: Alignment.bottomRight,
-                          colors: [
-                            Color(0xFFD4F3FA),
-                            Color(0xFFC4F0F9),
-                          ],
+                          colors: [Color(0xFFD4F3FA), Color(0xFFC4F0F9)],
                         ),
                         borderRadius: BorderRadius.circular(20),
                         boxShadow: [
                           BoxShadow(
-                            color: const Color(0xFF079BC1).withValues(alpha: 0.12),
+                            color: const Color(0xFF079BC1)
+                                .withValues(alpha: 0.12),
                             blurRadius: 10,
                             offset: const Offset(0, 4),
                           ),
@@ -655,8 +458,7 @@ class _HomePageState extends State<HomePage> {
                           child: _serviceCard(
                             icon: Icons.notifications_active_outlined,
                             title: 'Pengingat Kesehatan',
-                            description:
-                                'Pengingat agar tidak melewati kegiatan penting.',
+                            description: 'Pengingat agar tidak melewati kegiatan penting.',
                             onTap: () {
                               Navigator.push(
                                 context,
@@ -673,14 +475,12 @@ class _HomePageState extends State<HomePage> {
                           child: _serviceCard(
                             icon: Icons.medical_services_outlined,
                             title: 'Konsultasi Dokter',
-                            description:
-                                'Konsultasikan kondisi kesehatan Anda dengan dokter.',
+                            description: 'Konsultasikan kondisi kesehatan Anda dengan dokter.',
                             onTap: () {
                               Navigator.push(
                                 context,
                                 MaterialPageRoute(
-                                  builder: (context) =>
-                                      const PilihDokterPage(),
+                                  builder: (context) => const PilihDokterPage(),
                                 ),
                               );
                             },
@@ -697,26 +497,31 @@ class _HomePageState extends State<HomePage> {
                       children: [
                         Expanded(
                           child: _serviceCard(
-                            icon: Icons.monitor_heart_outlined,
-                            title: 'Program Kesehatan Jantung',
-                            description:
-                                'Ikuti program untuk menjaga kesehatan jantung Anda.',
-                            onTap: _showProgramModal,
+                            icon: Icons.menu_book_rounded,
+                            title: 'Edukasi Kesehatan',
+                            description: 'Panduan pola makan, aktivitas fisik, & kebiasaan sehat.',
+                            onTap: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) => const EducationPage(),
+                                ),
+                              );
+                            },
                           ),
                         ),
                         const SizedBox(width: 10),
                         Expanded(
                           child: _serviceCard(
-                            icon: Icons.menu_book_rounded,
-                            title: 'Edukasi Kesehatan',
-                            description:
-                                'Dapatkan informasi dan tips menjaga kesehatan Anda.',
+                            icon: Icons.article_outlined,
+                            title: 'Artikel Kesehatan',
+                            description: 'Dapatkan informasi dan tips menjaga kesehatan Anda.',
                             onTap: () {
                               Navigator.push(
                                 context,
                                 MaterialPageRoute(
                                   builder: (context) =>
-                                      const EducationPage(),
+                                      const ArtikelKesehatanPage(),
                                 ),
                               );
                             },
@@ -927,8 +732,7 @@ class _HomePageState extends State<HomePage> {
                             experience: '10 tahun',
                             sip: '1823/SIP/2021',
                             location: 'Klinik Jantung Sejahtera, Jember',
-                            about:
-                                'Fokus pada prevensi dan penanganan penyakit jantung koroner serta aritmia dengan pendekatan preventif dan rehabilitasi kardiovaskular.',
+                            about: 'Fokus pada prevensi dan penanganan penyakit jantung koroner serta aritmia dengan pendekatan preventif dan rehabilitasi kardiovaskular.',
                             isOnline: true,
                           ),
                           const SizedBox(width: 12),
@@ -940,8 +744,7 @@ class _HomePageState extends State<HomePage> {
                             experience: '8 tahun',
                             sip: '2105/SIP/2022',
                             location: 'RS Graha Medika, Jember',
-                            about:
-                                'Berpengalaman dalam ekokardiografi, diagnosis gagal jantung dini, dan konsultasi gaya hidup sehat untuk penderita hipertensi.',
+                            about: 'Berpengalaman dalam ekokardiografi, diagnosis gagal jantung dini, dan konsultasi gaya hidup sehat untuk penderita hipertensi.',
                             isOnline: true,
                           ),
                           const SizedBox(width: 12),
@@ -953,8 +756,7 @@ class _HomePageState extends State<HomePage> {
                             experience: '12 tahun',
                             sip: '2406/SIP/2023',
                             location: 'RS Mitra Sehat, Jember',
-                            about:
-                                'Berpengalaman dalam memberikan pemeriksaan dan penanganan komprehensif terhadap berbagai kondisi jantung dan kardiovaskular.',
+                            about: 'Berpengalaman dalam memberikan pemeriksaan dan penanganan komprehensif terhadap berbagai kondisi jantung dan kardiovaskular.',
                             isOnline: true,
                           ),
                         ],
@@ -982,7 +784,8 @@ class _HomePageState extends State<HomePage> {
                             Navigator.push(
                               context,
                               MaterialPageRoute(
-                                builder: (context) => const EducationPage(),
+                                builder: (context) =>
+                                    const ArtikelKesehatanPage(),
                               ),
                             );
                           },
@@ -1007,28 +810,22 @@ class _HomePageState extends State<HomePage> {
 
                     _featuredArticleItem(
                       context,
-                      imageUrl:
-                          'https://images.unsplash.com/photo-1530026405186-ed1f139313f8?w=500',
+                      imageUrl: 'https://images.unsplash.com/photo-1530026405186-ed1f139313f8?w=500',
                       category: 'Penyakit Jantung',
-                      title:
-                          'Mengenal Penyakit Jantung Koroner: Gejala & Pencegahan Dini',
+                      title: 'Mengenal Penyakit Jantung Koroner: Gejala & Pencegahan Dini',
                       duration: '5 menit baca',
-                      content:
-                          'Penyakit jantung koroner adalah kondisi ketika pembuluh darah yang berfungsi mengalirkan darah dan oksigen ke otot jantung mengalami penyempitan atau penyumbatan.\n\nKondisi ini umumnya terjadi akibat penumpukan lemak atau plak kolesterol pada dinding pembuluh arteri koroner. Menjaga pola makan seimbang dan berolahraga rutin adalah kunci utama pencegahan.',
+                      content: 'Penyakit jantung koroner adalah kondisi ketika pembuluh darah yang berfungsi mengalirkan darah dan oksigen ke otot jantung mengalami penyempitan atau penyumbatan.\n\nKondisi ini umumnya terjadi akibat penumpukan lemak atau plak kolesterol pada dinding pembuluh arteri koroner. Menjaga pola makan seimbang dan berolahraga rutin adalah kunci utama pencegahan.',
                     ),
 
                     const SizedBox(height: 10),
 
                     _featuredArticleItem(
                       context,
-                      imageUrl:
-                          'https://images.unsplash.com/photo-1490645935967-10de6ba17061?w=500',
+                      imageUrl: 'https://images.unsplash.com/photo-1490645935967-10de6ba17061?w=500',
                       category: 'Pola Hidup',
-                      title:
-                          '5 Pilihan Makanan Sehat Terbaik untuk Kekuatan Jantung Anda',
+                      title: '5 Pilihan Makanan Sehat Terbaik untuk Kekuatan Jantung Anda',
                       duration: '3 menit baca',
-                      content:
-                          'Menjaga kesehatan jantung dapat dimulai dari pilihan makanan sehari-hari seperti ikan salmon kaya asam lemak omega-3, oatmeal, buah beri antioksidan, kacang almond, dan sayuran hijau seperti bayam.',
+                      content: 'Menjaga kesehatan jantung dapat dimulai dari pilihan makanan sehari-hari seperti ikan salmon kaya asam lemak omega-3, oatmeal, buah beri antioksidan, kacang almond, dan sayuran hijau seperti bayam.',
                     ),
 
                     const SizedBox(height: 18),
@@ -1105,20 +902,13 @@ class _HomePageState extends State<HomePage> {
               decoration: const BoxDecoration(
                 color: Colors.white,
                 border: Border(
-                  top: BorderSide(
-                    color: Color(0xFFE5E5E5),
-                    width: 0.7,
-                  ),
+                  top: BorderSide(color: Color(0xFFE5E5E5), width: 0.7),
                 ),
               ),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceAround,
                 children: [
-                  _bottomItem(
-                    icon: Icons.home,
-                    label: 'Home',
-                    index: 0,
-                  ),
+                  _bottomItem(icon: Icons.home, label: 'Home', index: 0),
                   _bottomItem(
                     icon: Icons.favorite_border,
                     label: 'Skrining',
@@ -1169,10 +959,7 @@ class _HomePageState extends State<HomePage> {
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(14),
-          border: Border.all(
-            color: const Color(0xFFE2E8F0),
-            width: 1.0,
-          ),
+          border: Border.all(color: const Color(0xFFE2E8F0), width: 1.0),
           boxShadow: [
             BoxShadow(
               color: Colors.black.withValues(alpha: 0.03),
@@ -1191,11 +978,7 @@ class _HomePageState extends State<HomePage> {
                 color: bgTeal,
                 borderRadius: BorderRadius.circular(14),
               ),
-              child: Icon(
-                icon,
-                size: 27,
-                color: brandTeal,
-              ),
+              child: Icon(icon, size: 27, color: brandTeal),
             ),
             const SizedBox(height: 10),
             Text(
@@ -1228,7 +1011,6 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-
   // ==============================================================
   // WIDGET HELPER: DOCTOR CARD
   // ==============================================================
@@ -1249,10 +1031,7 @@ class _HomePageState extends State<HomePage> {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(
-          color: const Color(0xFFE2E8F0),
-          width: 1,
-        ),
+        border: Border.all(color: const Color(0xFFE2E8F0), width: 1),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withValues(alpha: 0.03),
@@ -1280,10 +1059,8 @@ class _HomePageState extends State<HomePage> {
                   child: Image.asset(
                     photo,
                     fit: BoxFit.cover,
-                    errorBuilder: (context, error, stackTrace) => const Icon(
-                      Icons.person,
-                      color: Color(0xFF079BC1),
-                    ),
+                    errorBuilder: (context, error, stackTrace) =>
+                        const Icon(Icons.person, color: Color(0xFF079BC1)),
                   ),
                 ),
               ),
@@ -1368,10 +1145,7 @@ class _HomePageState extends State<HomePage> {
               ),
               child: const Text(
                 'Konsultasi',
-                style: TextStyle(
-                  fontSize: 11.5,
-                  fontWeight: FontWeight.bold,
-                ),
+                style: TextStyle(fontSize: 11.5, fontWeight: FontWeight.bold),
               ),
             ),
           ),
@@ -1412,10 +1186,7 @@ class _HomePageState extends State<HomePage> {
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(14),
-          border: Border.all(
-            color: const Color(0xFFE2E8F0),
-            width: 1,
-          ),
+          border: Border.all(color: const Color(0xFFE2E8F0), width: 1),
           boxShadow: [
             BoxShadow(
               color: Colors.black.withValues(alpha: 0.02),
