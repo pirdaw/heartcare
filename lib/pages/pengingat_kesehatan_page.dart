@@ -2,9 +2,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:heartcare/services/theme_service.dart';
 
-// ============================================================================
 // MODEL DATA OBAT & PENGINGAT
-// ============================================================================
 class MedicineReminder {
   final String id;
   String name;
@@ -27,14 +25,24 @@ class MedicineReminder {
   });
 }
 
-// ============================================================================
 // STATE CONTROLLER & NOTIFIER (SINGLETON)
-// ============================================================================
 class HealthReminderController extends ChangeNotifier {
   static final HealthReminderController _instance =
       HealthReminderController._internal();
   factory HealthReminderController() => _instance;
   HealthReminderController._internal() {
+    // Inisialisasi pengingat obat default yang sinkron dengan beranda
+    medicines.add(
+      MedicineReminder(
+        id: 'amlodipine_1',
+        name: 'Amlodipine 5 mg',
+        amount: '1',
+        unit: 'Tablet',
+        schedule: 'Setelah makan siang (Hipertensi)',
+        reminderTimes: ['13.00'],
+        note: 'Setelah makan siang ya',
+      ),
+    );
     _startTimer();
   }
 
@@ -90,20 +98,19 @@ class HealthReminderController extends ChangeNotifier {
     });
   }
 
-  // Hitung jumlah pengingat aktif hari ini
+  // Hitung jumlah pengingat aktif hari ini sesuai data riil pengguna
   int get activeRemindersCount {
     int count = 0;
     for (var med in medicines) {
       count += med.reminderTimes.length;
     }
-    // Default minimal 3 pengingat hari ini jika masih awal / sesuai desain
-    return count > 0 ? count : 3;
+    return count;
   }
 
   // Dapatkan pengingat berikutnya
   String get nextReminderSummary {
     if (medicines.isEmpty) {
-      return 'Tidak ada pengingat';
+      return 'Belum ada jadwal minum obat';
     }
     final first = medicines.first;
     final time = first.reminderTimes.isNotEmpty ? first.reminderTimes.first : '';
@@ -117,9 +124,7 @@ class HealthReminderController extends ChangeNotifier {
   }
 }
 
-// ============================================================================
 // HALAMAN UTAMA PENGINGAT KESEHATAN (SLIDE 1: iPhone 16 - 64)
-// ============================================================================
 class PengingatKesehatanPage extends StatefulWidget {
   const PengingatKesehatanPage({super.key});
 
@@ -187,9 +192,7 @@ class _PengingatKesehatanPageState extends State<PengingatKesehatanPage> {
           body: SafeArea(
             child: Column(
               children: [
-                // ==============================================================
                 // HEADER DENGAN TOMBOL BACK LINGKARAN & JUDUL
-                // ==============================================================
                 Padding(
                   padding: const EdgeInsets.only(left: 16, right: 16, top: 12),
                   child: Row(
@@ -229,9 +232,7 @@ class _PengingatKesehatanPageState extends State<PengingatKesehatanPage> {
 
                 const SizedBox(height: 16),
 
-                // ==============================================================
                 // KONTEN UTAMA
-                // ==============================================================
                 Expanded(
                   child: SingleChildScrollView(
                     padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -252,7 +253,6 @@ class _PengingatKesehatanPageState extends State<PengingatKesehatanPage> {
                             color: isDark ? Colors.white : const Color(0xFF1E293B),
                           ),
                         ),
-
                         const SizedBox(height: 12),
 
                         // ITEM 1: Minum Obat (Klik panah kanan masuk ke Tambah / Daftar Obat)
@@ -307,9 +307,7 @@ class _PengingatKesehatanPageState extends State<PengingatKesehatanPage> {
                   ),
                 ),
 
-                // ==============================================================
                 // BOTTOM NAVIGATION BAR
-                // ==============================================================
                 _buildBottomNavigationBar(),
               ],
             ),
@@ -319,8 +317,12 @@ class _PengingatKesehatanPageState extends State<PengingatKesehatanPage> {
     );
   }
 
-  // Banner Biru Muda: 3 Pengingat Hari Ini
+
+  // Banner Biru Muda: Pengingat Hari Ini
   Widget _buildTopBannerCard(bool isDark) {
+    final count = _controller.activeRemindersCount;
+    final titleText = count > 0 ? '$count Pengingat Hari Ini' : 'Belum Ada Pengingat Hari Ini';
+
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
@@ -330,7 +332,7 @@ class _PengingatKesehatanPageState extends State<PengingatKesehatanPage> {
       ),
       child: Row(
         children: [
-          // Icon Kalender dengan Checkmark
+          // Icon Obat / Medis Konsisten
           Container(
             width: 46,
             height: 46,
@@ -347,7 +349,7 @@ class _PengingatKesehatanPageState extends State<PengingatKesehatanPage> {
             ),
             child: const Center(
               child: Icon(
-                Icons.event_available_rounded,
+                Icons.medication_rounded,
                 color: PengingatKesehatanPage.primaryTeal,
                 size: 26,
               ),
@@ -359,7 +361,7 @@ class _PengingatKesehatanPageState extends State<PengingatKesehatanPage> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  '${_controller.activeRemindersCount} Pengingat Hari Ini',
+                  titleText,
                   style: TextStyle(
                     fontSize: 15,
                     fontWeight: FontWeight.w700,
@@ -368,7 +370,7 @@ class _PengingatKesehatanPageState extends State<PengingatKesehatanPage> {
                 ),
                 const SizedBox(height: 3),
                 Text(
-                  'Jangan lewatkan jadwal kesehatanmu.',
+                  'Jangan lewatkan pengingat minum obatmu.',
                   style: TextStyle(
                     fontSize: 11.5,
                     color: isDark ? const Color(0xFFCBD5E1) : const Color(0xFF475569),
@@ -582,7 +584,6 @@ class _PengingatKesehatanPageState extends State<PengingatKesehatanPage> {
       ),
     );
   }
-
   Widget _buildBottomNavigationBar() {
     return HeartCareBottomNavBarWidget(
       currentIndex: _currentNavIndex,
@@ -598,9 +599,7 @@ class _PengingatKesehatanPageState extends State<PengingatKesehatanPage> {
   }
 }
 
-// ============================================================================
 // SLIDE 2: TAMBAH OBAT (EMPTY STATE / BELUM ADA OBAT - iPhone 16 - 108)
-// ============================================================================
 class TambahObatEmptyPage extends StatelessWidget {
   const TambahObatEmptyPage({super.key});
 
@@ -718,9 +717,7 @@ class TambahObatEmptyPage extends StatelessWidget {
   }
 }
 
-// ============================================================================
 // SLIDE 3: FORM TAMBAH OBAT (INPUT DATA OBAT - iPhone 16 - 96)
-// ============================================================================
 class TambahObatFormPage extends StatefulWidget {
   const TambahObatFormPage({super.key});
 
@@ -1325,9 +1322,7 @@ class _TambahObatFormPageState extends State<TambahObatFormPage> {
   }
 }
 
-// ============================================================================
 // SLIDE 4: DAFTAR OBAT (DETAIL / LIST DATA YANG SUDAH DIISI - iPhone 16 - 109)
-// ============================================================================
 class DaftarObatPage extends StatefulWidget {
   const DaftarObatPage({super.key});
 
@@ -1342,20 +1337,6 @@ class _DaftarObatPageState extends State<DaftarObatPage> {
   void initState() {
     super.initState();
     _controller.addListener(_refresh);
-    // Jika belum ada obat, buatkan contoh default "Aspirin 300 mg" sesuai Slide 4
-    if (_controller.medicines.isEmpty) {
-      _controller.addMedicine(
-        MedicineReminder(
-          id: '1',
-          name: 'Aspirin 300 mg',
-          amount: '1',
-          unit: 'Tablet',
-          schedule: 'Setelah makan ya',
-          reminderTimes: ['07.30', '15.30', '22.00'],
-          note: 'Setelah makan ya',
-        ),
-      );
-    }
   }
 
   void _refresh() {
@@ -1709,9 +1690,7 @@ class _DaftarObatPageState extends State<DaftarObatPage> {
   }
 }
 
-// ============================================================================
 // SLIDE 5: POPUP MODAL PENGINGAT OBAT (SAATNYA MINUM OBAT! - iPhone 16 - 110)
-// ============================================================================
 void showMedicineReminderDialog(
   BuildContext context, {
   required MedicineReminder reminder,
@@ -1903,9 +1882,7 @@ void showMedicineReminderDialog(
   );
 }
 
-// ============================================================================
 // WIDGET HELPER: TOMBOL BACK LINGKARAN
-// ============================================================================
 Widget _buildCircularBackButton(BuildContext context) {
   final isDark = ThemeService.isDarkMode;
   return Container(
@@ -1927,9 +1904,7 @@ Widget _buildCircularBackButton(BuildContext context) {
   );
 }
 
-// ============================================================================
 // WIDGET HELPER: BOTTOM NAVIGATION BAR SESUAI DESAIN
-// ============================================================================
 class HeartCareBottomNavBarWidget extends StatelessWidget {
   final int currentIndex;
   final ValueChanged<int>? onTap;
@@ -2003,9 +1978,7 @@ class HeartCareBottomNavBarWidget extends StatelessWidget {
   }
 }
 
-// ============================================================================
 // CUSTOM VECTOR ARTWORK: KAPSUL OBAT 2 WARNA (BIRU & PUTIH)
-// ============================================================================
 class CapsuleIconWidget extends StatelessWidget {
   final Color color;
   final double size;
@@ -2057,9 +2030,7 @@ class CapsuleIconWidget extends StatelessWidget {
   }
 }
 
-// ============================================================================
 // CUSTOM VECTOR ARTWORK: ILUSTRASI BOTOL OBAT & BLISTER PACK (SLIDE 2)
-// ============================================================================
 class MedicineBottleIllustration extends StatelessWidget {
   final double size;
 
@@ -2200,9 +2171,7 @@ class MedicineBottleIllustration extends StatelessWidget {
   }
 }
 
-// ============================================================================
 // CUSTOM VECTOR ARTWORK: MINI BANNER ILUSTRASI OBAT (SLIDE 3)
-// ============================================================================
 class MiniMedicineBannerIllustration extends StatelessWidget {
   const MiniMedicineBannerIllustration({super.key});
 

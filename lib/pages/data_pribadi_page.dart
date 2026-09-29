@@ -4,6 +4,7 @@ import 'package:heartcare/pages/dokter_page.dart';
 import 'package:heartcare/pages/riwayat_page.dart';
 import 'package:heartcare/pages/Skrining/screening_input_page.dart';
 import '../services/theme_service.dart';
+import '../services/user_profile_service.dart';
 
 class DataPribadiPage extends StatefulWidget {
   const DataPribadiPage({super.key});
@@ -13,20 +14,36 @@ class DataPribadiPage extends StatefulWidget {
 }
 
 class _DataPribadiPageState extends State<DataPribadiPage> {
-  String nama = "Nadea Fieldzah Putri";
-  String jenisKelamin = "Perempuan";
-  String ttl = "Jember, 29 Februari 2004";
-  String alamat = "Jl. Gandaria Tengah No. 24, Jakarta Selatan";
-  String telepon = "+62 123 456 799";
-  String email = "nadea123@gmail.com";
+  late UserProfileData _profile;
+
+  @override
+  void initState() {
+    super.initState();
+    _profile = UserProfileService.instance.currentProfile;
+    UserProfileService.instance.addListener(_onProfileChanged);
+  }
+
+  @override
+  void dispose() {
+    UserProfileService.instance.removeListener(_onProfileChanged);
+    super.dispose();
+  }
+
+  void _onProfileChanged() {
+    if (mounted) {
+      setState(() {
+        _profile = UserProfileService.instance.currentProfile;
+      });
+    }
+  }
 
   void _showEditSheet() {
-    final namaCtrl = TextEditingController(text: nama);
-    final jkCtrl = TextEditingController(text: jenisKelamin);
-    final ttlCtrl = TextEditingController(text: ttl);
-    final alamatCtrl = TextEditingController(text: alamat);
-    final telpCtrl = TextEditingController(text: telepon);
-    final emailCtrl = TextEditingController(text: email);
+    final namaCtrl = TextEditingController(text: _profile.nama);
+    final jkCtrl = TextEditingController(text: _profile.jenisKelamin);
+    final ttlCtrl = TextEditingController(text: _profile.ttl);
+    final alamatCtrl = TextEditingController(text: _profile.alamat);
+    final telpCtrl = TextEditingController(text: _profile.telepon);
+    final emailCtrl = TextEditingController(text: _profile.email);
 
     showModalBottomSheet(
       context: context,
@@ -140,23 +157,24 @@ class _DataPribadiPageState extends State<DataPribadiPage> {
                     ],
                   ),
                   child: ElevatedButton(
-                    onPressed: () {
-                      setState(() {
-                        nama = namaCtrl.text.trim();
-                        jenisKelamin = jkCtrl.text.trim();
-                        ttl = ttlCtrl.text.trim();
-                        alamat = alamatCtrl.text.trim();
-                        telepon = telpCtrl.text.trim();
-                        email = emailCtrl.text.trim();
-                      });
-                      Navigator.pop(context);
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text("Data pribadi berhasil diperbarui"),
-                          backgroundColor: Color(0xFF0098B9),
-                          behavior: SnackBarBehavior.floating,
-                        ),
+                    onPressed: () async {
+                      await UserProfileService.instance.updateDataPribadi(
+                        nama: namaCtrl.text,
+                        jenisKelamin: jkCtrl.text,
+                        ttl: ttlCtrl.text,
+                        alamat: alamatCtrl.text,
+                        telepon: telpCtrl.text,
+                        email: emailCtrl.text,
                       );
+                      if (context.mounted) {
+                        Navigator.pop(context);
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text("Data pribadi berhasil diperbarui"),
+                            backgroundColor: Color(0xFF0098B9),
+                          ),
+                        );
+                      }
                     },
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.transparent,
@@ -389,7 +407,9 @@ class _DataPribadiPageState extends State<DataPribadiPage> {
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 Text(
-                                  nama,
+                                  _profile.nama.isNotEmpty
+                                      ? _profile.nama
+                                      : "Pengguna",
                                   style: TextStyle(
                                     fontSize: 15,
                                     fontWeight: FontWeight.bold,
@@ -448,18 +468,18 @@ class _DataPribadiPageState extends State<DataPribadiPage> {
                       ),
                       child: Column(
                         children: [
-                          _dataRow("Nama Lengkap", nama,
+                          _dataRow("Nama Lengkap", _profile.nama,
                               isFirst: true, isDark: isDark),
                           _divider(isDark),
-                          _dataRow("Jenis Kelamin", jenisKelamin, isDark: isDark),
+                          _dataRow("Jenis Kelamin", _profile.jenisKelamin, isDark: isDark),
                           _divider(isDark),
-                          _dataRow("Tempat, Tanggal Lahir", ttl, isDark: isDark),
+                          _dataRow("Tempat, Tanggal Lahir", _profile.ttl, isDark: isDark),
                           _divider(isDark),
-                          _dataRow("Alamat", alamat, isDark: isDark),
+                          _dataRow("Alamat", _profile.alamat, isDark: isDark),
                           _divider(isDark),
-                          _dataRow("No. Telepon", telepon, isDark: isDark),
+                          _dataRow("No. Telepon", _profile.telepon, isDark: isDark),
                           _divider(isDark),
-                          _dataRow("Email", email,
+                          _dataRow("Email", _profile.email,
                               isLast: true, isDark: isDark),
                         ],
                       ),
@@ -562,11 +582,18 @@ class _DataPribadiPageState extends State<DataPribadiPage> {
                   ),
                   const SizedBox(height: 3),
                   Text(
-                    value,
+                    value.trim().isNotEmpty ? value : "Belum diisi",
                     style: TextStyle(
                       fontSize: 13,
                       fontWeight: FontWeight.w600,
-                      color: isDark ? Colors.white : const Color(0xFF0F172A),
+                      color: value.trim().isNotEmpty
+                          ? (isDark ? Colors.white : const Color(0xFF0F172A))
+                          : (isDark
+                              ? const Color(0xFF64748B)
+                              : const Color(0xFF94A3B8)),
+                      fontStyle: value.trim().isNotEmpty
+                          ? FontStyle.normal
+                          : FontStyle.italic,
                     ),
                   ),
                 ],

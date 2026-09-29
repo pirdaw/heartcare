@@ -4,6 +4,7 @@ import 'package:heartcare/pages/dokter_page.dart';
 import 'package:heartcare/pages/riwayat_page.dart';
 import 'package:heartcare/pages/Skrining/screening_input_page.dart';
 import '../services/theme_service.dart';
+import '../services/user_profile_service.dart';
 
 class DataKesehatanPage extends StatefulWidget {
   const DataKesehatanPage({super.key});
@@ -13,20 +14,36 @@ class DataKesehatanPage extends StatefulWidget {
 }
 
 class _DataKesehatanPageState extends State<DataKesehatanPage> {
-  String golonganDarah = "O";
-  String tinggiBadan = "167 cm";
-  String beratBadan = "51 kg";
-  String alergi = "Tidak ada";
-  String penyakitDiderita = "Tidak ada";
-  String riwayatOperasi = "Tidak ada";
+  late UserProfileData _profile;
+
+  @override
+  void initState() {
+    super.initState();
+    _profile = UserProfileService.instance.currentProfile;
+    UserProfileService.instance.addListener(_onProfileChanged);
+  }
+
+  @override
+  void dispose() {
+    UserProfileService.instance.removeListener(_onProfileChanged);
+    super.dispose();
+  }
+
+  void _onProfileChanged() {
+    if (mounted) {
+      setState(() {
+        _profile = UserProfileService.instance.currentProfile;
+      });
+    }
+  }
 
   void _showEditSheet() {
-    final goldarCtrl = TextEditingController(text: golonganDarah);
-    final tbCtrl = TextEditingController(text: tinggiBadan);
-    final bbCtrl = TextEditingController(text: beratBadan);
-    final alergiCtrl = TextEditingController(text: alergi);
-    final penyakitCtrl = TextEditingController(text: penyakitDiderita);
-    final operasiCtrl = TextEditingController(text: riwayatOperasi);
+    final goldarCtrl = TextEditingController(text: _profile.golonganDarah);
+    final tbCtrl = TextEditingController(text: _profile.tinggiBadan);
+    final bbCtrl = TextEditingController(text: _profile.beratBadan);
+    final alergiCtrl = TextEditingController(text: _profile.alergi);
+    final penyakitCtrl = TextEditingController(text: _profile.penyakitDiderita);
+    final operasiCtrl = TextEditingController(text: _profile.riwayatOperasi);
 
     showModalBottomSheet(
       context: context,
@@ -140,23 +157,25 @@ class _DataKesehatanPageState extends State<DataKesehatanPage> {
                     ],
                   ),
                   child: ElevatedButton(
-                    onPressed: () {
-                      setState(() {
-                        golonganDarah = goldarCtrl.text.trim();
-                        tinggiBadan = tbCtrl.text.trim();
-                        beratBadan = bbCtrl.text.trim();
-                        alergi = alergiCtrl.text.trim();
-                        penyakitDiderita = penyakitCtrl.text.trim();
-                        riwayatOperasi = operasiCtrl.text.trim();
-                      });
-                      Navigator.pop(context);
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text("Data kesehatan berhasil diperbarui"),
-                          backgroundColor: Color(0xFF0098B9),
-                          behavior: SnackBarBehavior.floating,
-                        ),
+                    onPressed: () async {
+                      await UserProfileService.instance.updateDataKesehatan(
+                        golonganDarah: goldarCtrl.text,
+                        tinggiBadan: tbCtrl.text,
+                        beratBadan: bbCtrl.text,
+                        alergi: alergiCtrl.text,
+                        penyakitDiderita: penyakitCtrl.text,
+                        riwayatOperasi: operasiCtrl.text,
                       );
+                      if (context.mounted) {
+                        Navigator.pop(context);
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text("Data kesehatan berhasil diperbarui"),
+                            backgroundColor: Color(0xFF0098B9),
+                            behavior: SnackBarBehavior.floating,
+                          ),
+                        );
+                      }
                     },
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.transparent,
@@ -448,19 +467,19 @@ class _DataKesehatanPageState extends State<DataKesehatanPage> {
                       ),
                       child: Column(
                         children: [
-                          _dataRow("Golongan Darah", golonganDarah,
+                          _dataRow("Golongan Darah", _profile.golonganDarah,
                               isFirst: true, isDark: isDark),
                           _divider(isDark),
-                          _dataRow("Tinggi Badan", tinggiBadan, isDark: isDark),
+                          _dataRow("Tinggi Badan", _profile.tinggiBadan, isDark: isDark),
                           _divider(isDark),
-                          _dataRow("Berat Badan", beratBadan, isDark: isDark),
+                          _dataRow("Berat Badan", _profile.beratBadan, isDark: isDark),
                           _divider(isDark),
-                          _dataRow("Alergi", alergi, isDark: isDark),
+                          _dataRow("Alergi", _profile.alergi, isDark: isDark),
                           _divider(isDark),
-                          _dataRow("Penyakit yang diderita", penyakitDiderita,
+                          _dataRow("Penyakit yang diderita", _profile.penyakitDiderita,
                               isDark: isDark),
                           _divider(isDark),
-                          _dataRow("Riwayat Operasi", riwayatOperasi,
+                          _dataRow("Riwayat Operasi", _profile.riwayatOperasi,
                               isLast: true, isDark: isDark),
                         ],
                       ),
@@ -563,11 +582,18 @@ class _DataKesehatanPageState extends State<DataKesehatanPage> {
                   ),
                   const SizedBox(height: 3),
                   Text(
-                    value,
+                    value.trim().isNotEmpty ? value : "Belum diisi",
                     style: TextStyle(
                       fontSize: 13,
                       fontWeight: FontWeight.w600,
-                      color: isDark ? Colors.white : const Color(0xFF0F172A),
+                      color: value.trim().isNotEmpty
+                          ? (isDark ? Colors.white : const Color(0xFF0F172A))
+                          : (isDark
+                              ? const Color(0xFF64748B)
+                              : const Color(0xFF94A3B8)),
+                      fontStyle: value.trim().isNotEmpty
+                          ? FontStyle.normal
+                          : FontStyle.italic,
                     ),
                   ),
                 ],

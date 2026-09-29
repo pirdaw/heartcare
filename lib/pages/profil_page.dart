@@ -11,6 +11,8 @@ import 'package:heartcare/pages/login_page.dart';
 import 'package:heartcare/pages/Skrining/screening_input_page.dart';
 import '../services/profile_service.dart';
 import '../services/theme_service.dart';
+import '../services/auth_service.dart';
+import '../services/user_profile_service.dart';
 
 class ProfilPage extends StatefulWidget {
   const ProfilPage({super.key});
@@ -20,6 +22,22 @@ class ProfilPage extends StatefulWidget {
 }
 
 class _ProfilPageState extends State<ProfilPage> {
+  @override
+  void initState() {
+    super.initState();
+    UserProfileService.instance.addListener(_onProfileChanged);
+  }
+
+  @override
+  void dispose() {
+    UserProfileService.instance.removeListener(_onProfileChanged);
+    super.dispose();
+  }
+
+  void _onProfileChanged() {
+    if (mounted) setState(() {});
+  }
+
   Future<void> _pickFromGallery() async {
     final path = await ProfileService.instance.pickImageFromGallery();
     if (!mounted || path == null) return;
@@ -318,15 +336,18 @@ class _ProfilPageState extends State<ProfilPage> {
                       child: SizedBox(
                         height: 40,
                         child: ElevatedButton(
-                          onPressed: () {
+                          onPressed: () async {
                             Navigator.pop(context);
-                            Navigator.pushAndRemoveUntil(
-                              context,
-                              MaterialPageRoute(
-                                builder: (context) => const LoginPage(),
-                              ),
-                              (route) => false,
-                            );
+                            await AuthService.instance.signOut();
+                            if (context.mounted) {
+                              Navigator.pushAndRemoveUntil(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) => const LoginPage(),
+                                ),
+                                (route) => false,
+                              );
+                            }
                           },
                           style: ElevatedButton.styleFrom(
                             backgroundColor: const Color(0xFFEF4444),
@@ -358,6 +379,7 @@ class _ProfilPageState extends State<ProfilPage> {
 
   @override
   Widget build(BuildContext context) {
+    final profile = UserProfileService.instance.currentProfile;
     return ValueListenableBuilder<ThemeMode>(
       valueListenable: ThemeService.themeModeNotifier,
       builder: (context, themeMode, _) {
@@ -409,9 +431,7 @@ class _ProfilPageState extends State<ProfilPage> {
                   children: [
                     const SizedBox(height: 6),
 
-                    // ==========================================================
                     // AVATAR PROFIL DENGAN BADGE KAMERA
-                    // ==========================================================
                     Center(
                       child: GestureDetector(
                         onTap: _showPhotoPickerOptions,
@@ -510,8 +530,9 @@ class _ProfilPageState extends State<ProfilPage> {
                     const SizedBox(height: 16),
 
                     // NAMA LENGKAP
+                    // NAMA LENGKAP
                     Text(
-                      "Nadea Fieldzah Putri",
+                      profile.nama.isNotEmpty ? profile.nama : "Pengguna",
                       style: TextStyle(
                         fontSize: 18,
                         fontWeight: FontWeight.bold,
@@ -522,7 +543,7 @@ class _ProfilPageState extends State<ProfilPage> {
 
                     // TELEPON
                     Text(
-                      "+62 123 456 799",
+                      profile.telepon.isNotEmpty ? profile.telepon : "-",
                       style: TextStyle(
                         fontSize: 12,
                         color: isDark
@@ -534,7 +555,7 @@ class _ProfilPageState extends State<ProfilPage> {
 
                     // EMAIL
                     Text(
-                      "nadea123@gmail.com",
+                      profile.email.isNotEmpty ? profile.email : "-",
                       style: TextStyle(
                         fontSize: 12,
                         color: isDark
@@ -542,12 +563,9 @@ class _ProfilPageState extends State<ProfilPage> {
                             : const Color(0xFF64748B),
                       ),
                     ),
-
                     const SizedBox(height: 26),
 
-                    // ==========================================================
                     // SECTION: INFORMASI (MENU DENGAN GRADASI BIRU MUDA)
-                    // ==========================================================
                     Align(
                       alignment: Alignment.centerLeft,
                       child: Text(
@@ -565,6 +583,9 @@ class _ProfilPageState extends State<ProfilPage> {
                       icon: Icons.person_rounded,
                       title: "Data Pribadi",
                       subtitle: "Informasi identitas dan kontak",
+                      trailing: !profile.isDataPribadiComplete
+                          ? _buildIncompleteBadge()
+                          : null,
                       onTap: () {
                         Navigator.push(
                           context,
@@ -579,6 +600,9 @@ class _ProfilPageState extends State<ProfilPage> {
                       icon: Icons.favorite_rounded,
                       title: "Data Kesehatan",
                       subtitle: "Riwayat medis dan kondisi kesehatan",
+                      trailing: !profile.isDataKesehatanComplete
+                          ? _buildIncompleteBadge()
+                          : null,
                       onTap: () {
                         Navigator.push(
                           context,
@@ -620,9 +644,7 @@ class _ProfilPageState extends State<ProfilPage> {
 
                     const SizedBox(height: 24),
 
-                    // ==========================================================
                     // TOMBOL KELUAR
-                    // ==========================================================
                     Container(
                       width: double.infinity,
                       height: 48,
@@ -817,6 +839,26 @@ class _ProfilPageState extends State<ProfilPage> {
               ],
             ),
           ),
+        ),
+      ),
+    );
+  }
+
+
+  Widget _buildIncompleteBadge() {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2.5),
+      decoration: BoxDecoration(
+        color: const Color(0xFFFFF7ED),
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: const Color(0xFFFDBA74), width: 1),
+      ),
+      child: const Text(
+        'Lengkapi',
+        style: TextStyle(
+          fontSize: 10,
+          fontWeight: FontWeight.w700,
+          color: Color(0xFFEA580C),
         ),
       ),
     );
