@@ -1,16 +1,94 @@
 import 'package:flutter/material.dart';
+import '../services/auth_service.dart';
 import 'check_email_page.dart';
 
-class ForgotPasswordPage extends StatelessWidget {
+class ForgotPasswordPage extends StatefulWidget {
   const ForgotPasswordPage({super.key});
+
+  @override
+  State<ForgotPasswordPage> createState() => _ForgotPasswordPageState();
+}
+
+class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
+  final TextEditingController _emailController = TextEditingController();
+  bool _isLoading = false;
+
+  @override
+  void dispose() {
+    _emailController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _handleResetPassword() async {
+    if (_isLoading) return;
+
+    final email = _emailController.text.trim();
+
+    if (email.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Masukkan alamat email terlebih dahulu.'),
+          backgroundColor: Color(0xFFE53935),
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+      return;
+    }
+
+    // Validasi format email dasar
+    final emailRegex = RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$');
+    if (!emailRegex.hasMatch(email)) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Format email tidak valid. Masukkan format yang benar.'),
+          backgroundColor: Color(0xFFE53935),
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+      return;
+    }
+
+    // Sembunyikan keyboard
+    FocusScope.of(context).unfocus();
+
+    setState(() {
+      _isLoading = true;
+    });
+
+    final error = await AuthService.instance.sendPasswordResetEmail(email);
+
+    if (!mounted) return;
+
+    setState(() {
+      _isLoading = false;
+    });
+
+    if (error != null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(error),
+          backgroundColor: const Color(0xFFE53935),
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+      return;
+    }
+
+    // Berhasil kirim email -> pindah ke CheckEmailPage dengan email tujuan
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => CheckEmailPage(email: email),
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white,
-
       body: SafeArea(
-        child: Padding(
+        child: SingleChildScrollView(
           padding: const EdgeInsets.symmetric(horizontal: 28),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -45,7 +123,7 @@ class ForgotPasswordPage extends StatelessWidget {
               // JUDUL
               // ==========================================
               const Text(
-                'Forgot Password',
+                'Lupa Kata Sandi',
                 style: TextStyle(
                   fontSize: 23,
                   fontWeight: FontWeight.bold,
@@ -59,10 +137,11 @@ class ForgotPasswordPage extends StatelessWidget {
               // DESKRIPSI
               // ==========================================
               const Text(
-                'Please enter your email to reset the password',
+                'Masukkan email yang terdaftar untuk menerima tautan pengaturan ulang kata sandi.',
                 style: TextStyle(
                   fontSize: 14,
                   color: Colors.black87,
+                  height: 1.4,
                 ),
               ),
 
@@ -72,7 +151,7 @@ class ForgotPasswordPage extends StatelessWidget {
               // LABEL EMAIL
               // ==========================================
               const Text(
-                'Your Email',
+                'Email Anda',
                 style: TextStyle(
                   fontSize: 14,
                   fontWeight: FontWeight.w600,
@@ -88,13 +167,17 @@ class ForgotPasswordPage extends StatelessWidget {
               SizedBox(
                 height: 58,
                 child: TextField(
+                  controller: _emailController,
+                  enabled: !_isLoading,
                   keyboardType: TextInputType.emailAddress,
+                  textInputAction: TextInputAction.done,
+                  onSubmitted: (_) => _handleResetPassword(),
                   style: const TextStyle(
                     fontSize: 14,
                     color: Colors.black,
                   ),
                   decoration: InputDecoration(
-                    hintText: 'enter your email',
+                    hintText: 'nama@email.com',
                     hintStyle: const TextStyle(
                       fontSize: 14,
                       color: Colors.grey,
@@ -130,31 +213,36 @@ class ForgotPasswordPage extends StatelessWidget {
                 width: double.infinity,
                 height: 55,
                 child: ElevatedButton(
-                  onPressed: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => const CheckEmailPage(),
-                      ),
-                    );
-                  },
+                  onPressed: _isLoading ? null : _handleResetPassword,
                   style: ElevatedButton.styleFrom(
                     backgroundColor: const Color(0xFF0B9AC1),
                     foregroundColor: Colors.white,
+                    disabledBackgroundColor: const Color(0xFF0B9AC1).withValues(alpha: 0.6),
                     elevation: 0,
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(8),
                     ),
                   ),
-                  child: const Text(
-                    'Reset password',
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
+                  child: _isLoading
+                      ? const SizedBox(
+                          width: 24,
+                          height: 24,
+                          child: CircularProgressIndicator(
+                            color: Colors.white,
+                            strokeWidth: 2.5,
+                          ),
+                        )
+                      : const Text(
+                          'Kirim Tautan Reset',
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
                 ),
               ),
+
+              const SizedBox(height: 30),
             ],
           ),
         ),

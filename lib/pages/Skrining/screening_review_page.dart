@@ -43,7 +43,7 @@ class ScreeningReviewPage extends StatelessWidget {
           ],
         ),
         content: const Text(
-          'Apakah seluruh data skrining Anda sudah benar? Data Anda akan dianalisis secara komprehensif oleh AI HeartCare.',
+          'Apakah seluruh data skrining Anda sudah benar? Data Anda akan dianalisis secara komprehensif oleh sistem HeartCare.',
           style: TextStyle(
             fontSize: 13.5,
             color: Color(0xFF4B5563),

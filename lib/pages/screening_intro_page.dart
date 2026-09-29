@@ -61,7 +61,7 @@ class ScreeningIntroPage extends StatelessWidget {
             const Padding(
               padding: EdgeInsets.symmetric(horizontal: 24),
               child: Text(
-                'AI menganalisis data kesehatan Anda\nuntuk menilai risiko penyakit jantung.',
+                'Sistem menganalisis data kesehatan Anda\nuntuk menilai risiko penyakit jantung.',
                 textAlign: TextAlign.center,
                 style: TextStyle(
                   fontSize: 13.5,

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../services/auth_service.dart';
 import 'success_page.dart';
 
 class SignupPage extends StatefulWidget {
@@ -24,6 +25,8 @@ class _SignupPageState extends State<SignupPage> {
   final TextEditingController _confirmPasswordController =
       TextEditingController();
 
+  bool _isLoading = false;
+
   @override
   void dispose() {
     _namaController.dispose();
@@ -33,8 +36,53 @@ class _SignupPageState extends State<SignupPage> {
     super.dispose();
   }
 
-  void _daftar() {
-    Navigator.push(
+  Future<void> _daftar() async {
+    if (_isLoading) return;
+
+    if (_passwordController.text != _confirmPasswordController.text) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Konfirmasi kata sandi tidak sama.'),
+        ),
+      );
+      return;
+    }
+
+    if (_namaController.text.trim().isEmpty ||
+        _emailController.text.trim().isEmpty ||
+        _passwordController.text.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Mohon lengkapi semua data.'),
+        ),
+      );
+      return;
+    }
+
+    setState(() {
+      _isLoading = true;
+    });
+
+    final error = await AuthService.instance.signUp(
+      name: _namaController.text,
+      email: _emailController.text,
+      password: _passwordController.text,
+    );
+
+    if (!mounted) return;
+
+    setState(() {
+      _isLoading = false;
+    });
+
+    if (error != null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(error)),
+      );
+      return;
+    }
+
+    Navigator.pushReplacement(
       context,
       MaterialPageRoute(
         builder: (context) => const SuccessPage(),
@@ -204,24 +252,35 @@ class _SignupPageState extends State<SignupPage> {
                   width: double.infinity,
                   height: 55,
                   child: ElevatedButton(
-                    onPressed: _daftar,
+                    onPressed: _isLoading ? null : _daftar,
                     style: ElevatedButton.styleFrom(
                       backgroundColor:
                           const Color(0xFF0B9AC1),
                       foregroundColor: Colors.white,
+                      disabledBackgroundColor:
+                          const Color(0xFF0B9AC1).withValues(alpha: 0.6),
                       elevation: 0,
                       shape: RoundedRectangleBorder(
                         borderRadius:
                             BorderRadius.circular(8),
                       ),
                     ),
-                    child: const Text(
-                      'Daftar',
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
+                    child: _isLoading
+                        ? const SizedBox(
+                            width: 24,
+                            height: 24,
+                            child: CircularProgressIndicator(
+                              color: Colors.white,
+                              strokeWidth: 2.5,
+                            ),
+                          )
+                        : const Text(
+                            'Daftar',
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
                   ),
                 ),
 

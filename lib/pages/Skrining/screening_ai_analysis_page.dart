@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'screening_model.dart';
+import 'package:heartcare/pages/Skrining/screening_model.dart';
 import 'screening_result_page.dart';
 import 'custom_bottom_nav_bar.dart';
 import 'package:heartcare/pages/riwayat_model.dart';
@@ -128,7 +128,7 @@ class _ScreeningAiAnalysisPageState extends State<ScreeningAiAnalysisPage>
                   ),
                   const Center(
                     child: Text(
-                      'Analisis AI',
+                      'Sedang Menganalisis',
                       style: TextStyle(
                         fontSize: 17,
                         fontWeight: FontWeight.bold,
@@ -186,7 +186,7 @@ class _ScreeningAiAnalysisPageState extends State<ScreeningAiAnalysisPage>
 
                     // Judul Proses
                     const Text(
-                      'AI Sedang Menganalisis Data Anda',
+                      'Sedang Menganalisis Data Anda',
                       textAlign: TextAlign.center,
                       style: TextStyle(
                         fontSize: 18,

@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
+import '../services/auth_service.dart';
 import 'forgot_password_page.dart';
 import 'home_page.dart';
 import 'signup_page.dart';
 
 class LoginPage extends StatefulWidget {
-  const LoginPage({super.key});
+  final String? initialEmail;
+  const LoginPage({super.key, this.initialEmail});
 
   @override
   State<LoginPage> createState() => _LoginPageState();
@@ -12,8 +14,7 @@ class LoginPage extends StatefulWidget {
 
 class _LoginPageState extends State<LoginPage> {
   // Controller untuk input email/no HP
-  final TextEditingController emailController =
-      TextEditingController();
+  late final TextEditingController emailController;
 
   // Controller untuk input password
   final TextEditingController passwordController =
@@ -21,6 +22,12 @@ class _LoginPageState extends State<LoginPage> {
 
   // Menampilkan / menyembunyikan password
   bool _obscurePassword = true;
+
+  @override
+  void initState() {
+    super.initState();
+    emailController = TextEditingController(text: widget.initialEmail ?? '');
+  }
 
   @override
   void dispose() {
@@ -290,14 +297,28 @@ class _LoginPageState extends State<LoginPage> {
                         width: double.infinity,
                         height: 55,
                         child: ElevatedButton(
-                          onPressed: () {
-                            Navigator.pushReplacement(
-                              context,
-                              MaterialPageRoute(
-                                builder: (context) => const HomePage(),
-                              ),
-                            );
-                          },
+                          onPressed: () async {
+  final error = await AuthService.instance.signIn(
+    email: emailController.text,
+    password: passwordController.text,
+  );
+
+  if (!context.mounted) return;
+
+  if (error != null) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(error)),
+    );
+    return;
+  }
+
+  Navigator.pushReplacement(
+    context,
+    MaterialPageRoute(
+      builder: (context) => const HomePage(),
+    ),
+  );
+},
                           style: ElevatedButton.styleFrom(
                             backgroundColor:
                                 const Color(0xFF0B9AC1),
