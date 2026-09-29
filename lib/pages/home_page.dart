@@ -8,6 +8,7 @@ import 'article_detail_page.dart';
 import 'pengingat_kesehatan_page.dart';
 import 'riwayat_page.dart';
 import 'profil_page.dart';
+import '../services/user_profile_service.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -18,6 +19,30 @@ class HomePage extends StatefulWidget {
 
 class _HomePageState extends State<HomePage> {
   int _selectedIndex = 0;
+  final HealthReminderController _reminderController =
+      HealthReminderController();
+
+  @override
+  void initState() {
+    super.initState();
+    UserProfileService.instance.addListener(_onProfileChanged);
+    _reminderController.addListener(_onReminderChanged);
+  }
+
+  @override
+  void dispose() {
+    UserProfileService.instance.removeListener(_onProfileChanged);
+    _reminderController.removeListener(_onReminderChanged);
+    super.dispose();
+  }
+
+  void _onProfileChanged() {
+    if (mounted) setState(() {});
+  }
+
+  void _onReminderChanged() {
+    if (mounted) setState(() {});
+  }
 
   void _onItemTapped(int index) {
     if (index == 0) {
@@ -335,26 +360,78 @@ class _HomePageState extends State<HomePage> {
                                 ),
                               );
                             },
-                            child: const Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  'Hallo, Nadea...',
-                                  style: TextStyle(
-                                    fontSize: 19,
-                                    fontWeight: FontWeight.bold,
-                                    color: Color(0xFF0F172A),
-                                  ),
-                                ),
-                                SizedBox(height: 2),
-                                Text(
-                                  'Yuk cek kesehatan jantungmu!',
-                                  style: TextStyle(
-                                    fontSize: 11.5,
-                                    color: Color(0xFF64748B),
-                                  ),
-                                ),
-                              ],
+                            child: Builder(
+                              builder: (context) {
+                                final profile = UserProfileService.instance.currentProfile;
+                                final firstName = profile.nama.trim().isNotEmpty
+                                    ? profile.nama.trim().split(' ').first
+                                    : 'Pengguna';
+                                return Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Row(
+                                      children: [
+                                        Flexible(
+                                          child: Text(
+                                            'Hallo, $firstName...',
+                                            maxLines: 1,
+                                            overflow: TextOverflow.ellipsis,
+                                            style: const TextStyle(
+                                              fontSize: 19,
+                                              fontWeight: FontWeight.bold,
+                                              color: Color(0xFF0F172A),
+                                            ),
+                                          ),
+                                        ),
+                                        if (!profile.isProfileFullyComplete) ...[
+                                          const SizedBox(width: 8),
+                                          Container(
+                                            padding: const EdgeInsets.symmetric(
+                                              horizontal: 8,
+                                              vertical: 2.5,
+                                            ),
+                                            decoration: BoxDecoration(
+                                              color: const Color(0xFFFFF7ED),
+                                              borderRadius: BorderRadius.circular(20),
+                                              border: Border.all(
+                                                color: const Color(0xFFFDBA74),
+                                                width: 1,
+                                              ),
+                                            ),
+                                            child: const Row(
+                                              mainAxisSize: MainAxisSize.min,
+                                              children: [
+                                                Icon(
+                                                  Icons.edit_note_rounded,
+                                                  size: 13,
+                                                  color: Color(0xFFEA580C),
+                                                ),
+                                                SizedBox(width: 3),
+                                                Text(
+                                                  'Lengkapi data',
+                                                  style: TextStyle(
+                                                    fontSize: 10,
+                                                    fontWeight: FontWeight.w700,
+                                                    color: Color(0xFFEA580C),
+                                                  ),
+                                                ),
+                                              ],
+                                            ),
+                                          ),
+                                        ],
+                                      ],
+                                    ),
+                                    const SizedBox(height: 2),
+                                    const Text(
+                                      'Yuk cek kesehatan jantungmu!',
+                                      style: TextStyle(
+                                        fontSize: 11.5,
+                                        color: Color(0xFF64748B),
+                                      ),
+                                    ),
+                                  ],
+                                );
+                              },
                             ),
                           ),
                         ),
@@ -653,10 +730,10 @@ class _HomePageState extends State<HomePage> {
                       children: [
                         Expanded(
                           child: _serviceCard(
-                            icon: Icons.notifications_active_outlined,
-                            title: 'Pengingat Kesehatan',
+                            icon: Icons.medication_rounded,
+                            title: 'Pengingat Obat',
                             description:
-                                'Pengingat agar tidak melewati kegiatan penting.',
+                                'Pengingat agar tidak melewati jadwal minum obat.',
                             onTap: () {
                               Navigator.push(
                                 context,
@@ -770,103 +847,224 @@ class _HomePageState extends State<HomePage> {
 
                     const SizedBox(height: 10),
 
-                    Container(
-                      padding: const EdgeInsets.all(14),
-                      decoration: BoxDecoration(
-                        color: const Color(0xFFF3FAFC),
-                        borderRadius: BorderRadius.circular(14),
-                        border: Border.all(
-                          color: const Color(0xFFBBE5EE),
-                          width: 1,
-                        ),
-                      ),
-                      child: Row(
-                        children: [
-                          Container(
-                            width: 44,
-                            height: 44,
-                            decoration: BoxDecoration(
-                              color: const Color(0xFF0098B9)
-                                  .withValues(alpha: 0.12),
-                              borderRadius: BorderRadius.circular(11),
-                            ),
-                            child: const Icon(
-                              Icons.medication_rounded,
-                              color: Color(0xFF0098B9),
-                              size: 24,
+                    Builder(
+                      builder: (context) {
+                        final hasReminder =
+                            _reminderController.medicines.isNotEmpty;
+                        final nextMed = hasReminder
+                            ? _reminderController.medicines.first
+                            : null;
+                        final timeRaw = (nextMed != null &&
+                                nextMed.reminderTimes.isNotEmpty)
+                            ? nextMed.reminderTimes.first
+                            : '';
+                        final timeFormatted = timeRaw.isNotEmpty
+                            ? (timeRaw.contains('WIB')
+                                ? timeRaw
+                                : '$timeRaw WIB')
+                            : '';
+
+                        return Container(
+                          padding: const EdgeInsets.all(14),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFFF3FAFC),
+                            borderRadius: BorderRadius.circular(14),
+                            border: Border.all(
+                              color: const Color(0xFFBBE5EE),
+                              width: 1,
                             ),
                           ),
-                          const SizedBox(width: 12),
-                          const Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Row(
+                          child: hasReminder && nextMed != null
+                              ? Row(
                                   children: [
-                                    Text(
-                                      'Amlodipine 5 mg',
-                                      style: TextStyle(
-                                        fontSize: 13.5,
-                                        fontWeight: FontWeight.bold,
-                                        color: Color(0xFF1E293B),
+                                    Container(
+                                      width: 44,
+                                      height: 44,
+                                      decoration: BoxDecoration(
+                                        color: const Color(0xFF0098B9)
+                                            .withValues(alpha: 0.12),
+                                        borderRadius:
+                                            BorderRadius.circular(11),
+                                      ),
+                                      child: const Icon(
+                                        Icons.medication_rounded,
+                                        color: Color(0xFF0098B9),
+                                        size: 24,
                                       ),
                                     ),
-                                    SizedBox(width: 6),
-                                    Text(
-                                      '• 13:00 WIB',
-                                      style: TextStyle(
-                                        fontSize: 11,
-                                        fontWeight: FontWeight.w600,
+                                    const SizedBox(width: 12),
+                                    Expanded(
+                                      child: Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        children: [
+                                          Row(
+                                            children: [
+                                              Flexible(
+                                                child: Text(
+                                                  nextMed.name,
+                                                  maxLines: 1,
+                                                  overflow:
+                                                      TextOverflow.ellipsis,
+                                                  style: const TextStyle(
+                                                    fontSize: 13.5,
+                                                    fontWeight:
+                                                        FontWeight.bold,
+                                                    color: Color(0xFF1E293B),
+                                                  ),
+                                                ),
+                                              ),
+                                              if (timeFormatted
+                                                  .isNotEmpty) ...[
+                                                const SizedBox(width: 6),
+                                                Text(
+                                                  '• $timeFormatted',
+                                                  style: const TextStyle(
+                                                    fontSize: 11,
+                                                    fontWeight:
+                                                        FontWeight.w600,
+                                                    color: Color(0xFF0098B9),
+                                                  ),
+                                                ),
+                                              ],
+                                            ],
+                                          ),
+                                          const SizedBox(height: 2),
+                                          Text(
+                                            nextMed.schedule.isNotEmpty
+                                                ? '${nextMed.amount} ${nextMed.unit} ${nextMed.schedule}'
+                                                : (nextMed.note.isNotEmpty
+                                                    ? nextMed.note
+                                                    : '${nextMed.amount} ${nextMed.unit}'),
+                                            maxLines: 1,
+                                            overflow:
+                                                TextOverflow.ellipsis,
+                                            style: const TextStyle(
+                                              fontSize: 11,
+                                              color: Color(0xFF64748B),
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                    ElevatedButton(
+                                      onPressed: () {
+                                        Navigator.push(
+                                          context,
+                                          MaterialPageRoute(
+                                            builder: (context) =>
+                                                const PengingatKesehatanPage(),
+                                          ),
+                                        );
+                                      },
+                                      style: ElevatedButton.styleFrom(
+                                        backgroundColor:
+                                            const Color(0xFF0098B9),
+                                        foregroundColor: Colors.white,
+                                        elevation: 0,
+                                        padding: const EdgeInsets.symmetric(
+                                          horizontal: 12,
+                                          vertical: 8,
+                                        ),
+                                        minimumSize: Size.zero,
+                                        tapTargetSize: MaterialTapTargetSize
+                                            .shrinkWrap,
+                                        shape: RoundedRectangleBorder(
+                                          borderRadius:
+                                              BorderRadius.circular(8),
+                                        ),
+                                      ),
+                                      child: const Text(
+                                        'Jadwal',
+                                        style: TextStyle(
+                                          fontSize: 11.5,
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                )
+                              : Row(
+                                  children: [
+                                    Container(
+                                      width: 44,
+                                      height: 44,
+                                      decoration: BoxDecoration(
+                                        color: const Color(0xFF0098B9)
+                                            .withValues(alpha: 0.12),
+                                        borderRadius:
+                                            BorderRadius.circular(11),
+                                      ),
+                                      child: const Icon(
+                                        Icons.alarm_off_rounded,
                                         color: Color(0xFF0098B9),
+                                        size: 24,
+                                      ),
+                                    ),
+                                    const SizedBox(width: 12),
+                                    const Expanded(
+                                      child: Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        children: [
+                                          Text(
+                                            'Belum ada jadwal obat',
+                                            style: TextStyle(
+                                              fontSize: 13.5,
+                                              fontWeight: FontWeight.bold,
+                                              color: Color(0xFF1E293B),
+                                            ),
+                                          ),
+                                          SizedBox(height: 2),
+                                          Text(
+                                            'Atur pengingat agar minum obat tepat waktu',
+                                            style: TextStyle(
+                                              fontSize: 11,
+                                              color: Color(0xFF64748B),
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                    ElevatedButton(
+                                      onPressed: () {
+                                        Navigator.push(
+                                          context,
+                                          MaterialPageRoute(
+                                            builder: (context) =>
+                                                const PengingatKesehatanPage(),
+                                          ),
+                                        );
+                                      },
+                                      style: ElevatedButton.styleFrom(
+                                        backgroundColor:
+                                            const Color(0xFF0098B9),
+                                        foregroundColor: Colors.white,
+                                        elevation: 0,
+                                        padding: const EdgeInsets.symmetric(
+                                          horizontal: 12,
+                                          vertical: 8,
+                                        ),
+                                        minimumSize: Size.zero,
+                                        tapTargetSize: MaterialTapTargetSize
+                                            .shrinkWrap,
+                                        shape: RoundedRectangleBorder(
+                                          borderRadius:
+                                              BorderRadius.circular(8),
+                                        ),
+                                      ),
+                                      child: const Text(
+                                        'Atur',
+                                        style: TextStyle(
+                                          fontSize: 11.5,
+                                          fontWeight: FontWeight.bold,
+                                        ),
                                       ),
                                     ),
                                   ],
                                 ),
-                                SizedBox(height: 2),
-                                Text(
-                                  '1 tablet setelah makan siang (Hipertensi)',
-                                  style: TextStyle(
-                                    fontSize: 11,
-                                    color: Color(0xFF64748B),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                          ElevatedButton(
-                            onPressed: () {
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (context) =>
-                                      const PengingatKesehatanPage(),
-                                ),
-                              );
-                            },
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: const Color(0xFF0098B9),
-                              foregroundColor: Colors.white,
-                              elevation: 0,
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 12,
-                                vertical: 8,
-                              ),
-                              minimumSize: Size.zero,
-                              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(8),
-                              ),
-                            ),
-                            child: const Text(
-                              'Jadwal',
-                              style: TextStyle(
-                                fontSize: 11.5,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
+                        );
+                      },
                     ),
 
                     const SizedBox(height: 22),

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:heartcare/pages/Skrining/screening_input_page.dart';
 import 'package:heartcare/pages/home_page.dart';
 import 'package:heartcare/pages/profil_page.dart';
+import '../services/user_profile_service.dart';
 
 class ChatItem {
   final String message;
@@ -48,9 +49,13 @@ class _KonsultasiDokterPageState
   @override
   void initState() {
     super.initState();
+    final profile = UserProfileService.instance.currentProfile;
+    final firstName = profile.nama.trim().isNotEmpty
+        ? profile.nama.trim().split(' ').first
+        : 'Pasien';
     _messages = [
       ChatItem(
-        message: "Halo Nadea, Selamat datang!\nAda yang bisa saya bantu?",
+        message: "Halo $firstName, Selamat datang!\nAda yang bisa saya bantu?",
         time: "14.00",
         isDoctor: true,
       ),

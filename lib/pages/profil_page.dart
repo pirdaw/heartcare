@@ -8,9 +8,32 @@ import 'package:heartcare/pages/dokter_page.dart';
 import 'package:heartcare/pages/riwayat_page.dart';
 import 'package:heartcare/pages/login_page.dart';
 import 'package:heartcare/pages/Skrining/screening_input_page.dart';
+import '../services/auth_service.dart';
+import '../services/user_profile_service.dart';
 
-class ProfilPage extends StatelessWidget {
+class ProfilPage extends StatefulWidget {
   const ProfilPage({super.key});
+
+  @override
+  State<ProfilPage> createState() => _ProfilPageState();
+}
+
+class _ProfilPageState extends State<ProfilPage> {
+  @override
+  void initState() {
+    super.initState();
+    UserProfileService.instance.addListener(_onProfileChanged);
+  }
+
+  @override
+  void dispose() {
+    UserProfileService.instance.removeListener(_onProfileChanged);
+    super.dispose();
+  }
+
+  void _onProfileChanged() {
+    if (mounted) setState(() {});
+  }
 
   void _showLogoutDialog(BuildContext context) {
     showDialog(
@@ -100,15 +123,18 @@ class ProfilPage extends StatelessWidget {
                       child: SizedBox(
                         height: 40,
                         child: ElevatedButton(
-                          onPressed: () {
+                          onPressed: () async {
                             Navigator.pop(context);
-                            Navigator.pushAndRemoveUntil(
-                              context,
-                              MaterialPageRoute(
-                                builder: (context) => const LoginPage(),
-                              ),
-                              (route) => false,
-                            );
+                            await AuthService.instance.signOut();
+                            if (context.mounted) {
+                              Navigator.pushAndRemoveUntil(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) => const LoginPage(),
+                                ),
+                                (route) => false,
+                              );
+                            }
                           },
                           style: ElevatedButton.styleFrom(
                             backgroundColor: const Color(0xFFEF4444),
@@ -140,6 +166,7 @@ class ProfilPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final profile = UserProfileService.instance.currentProfile;
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
@@ -225,9 +252,9 @@ class ProfilPage extends StatelessWidget {
               const SizedBox(height: 16),
 
               // NAMA LENGKAP
-              const Text(
-                "Nadea Fieldzah Putri",
-                style: TextStyle(
+              Text(
+                profile.nama.isNotEmpty ? profile.nama : "Pengguna",
+                style: const TextStyle(
                   fontSize: 17.5,
                   fontWeight: FontWeight.bold,
                   color: Color(0xFF0F172A),
@@ -236,9 +263,9 @@ class ProfilPage extends StatelessWidget {
               const SizedBox(height: 4),
 
               // TELEPON
-              const Text(
-                "+62 123 456 799",
-                style: TextStyle(
+              Text(
+                profile.telepon.isNotEmpty ? profile.telepon : "-",
+                style: const TextStyle(
                   fontSize: 12,
                   color: Color(0xFF64748B),
                 ),
@@ -246,9 +273,9 @@ class ProfilPage extends StatelessWidget {
               const SizedBox(height: 2),
 
               // EMAIL
-              const Text(
-                "nadea123@gmail.com",
-                style: TextStyle(
+              Text(
+                profile.email.isNotEmpty ? profile.email : "-",
+                style: const TextStyle(
                   fontSize: 12,
                   color: Color(0xFF64748B),
                 ),
@@ -292,6 +319,9 @@ class ProfilPage extends StatelessWidget {
                       context,
                       icon: Icons.person_outline_rounded,
                       title: "Data Pribadi",
+                      trailingBadge: !profile.isDataPribadiComplete
+                          ? _buildIncompleteBadge()
+                          : null,
                       isFirst: true,
                       onTap: () {
                         Navigator.push(
@@ -307,6 +337,9 @@ class ProfilPage extends StatelessWidget {
                       context,
                       icon: Icons.add_box_outlined,
                       title: "Data Kesehatan",
+                      trailingBadge: !profile.isDataKesehatanComplete
+                          ? _buildIncompleteBadge()
+                          : null,
                       onTap: () {
                         Navigator.push(
                           context,
@@ -386,6 +419,7 @@ class ProfilPage extends StatelessWidget {
     required IconData icon,
     required String title,
     required VoidCallback onTap,
+    Widget? trailingBadge,
     bool isFirst = false,
     bool isLast = false,
   }) {
@@ -415,12 +449,35 @@ class ProfilPage extends StatelessWidget {
                 ),
               ),
             ),
+            if (trailingBadge != null) ...[
+              trailingBadge,
+              const SizedBox(width: 8),
+            ],
             const Icon(
               Icons.chevron_right_rounded,
               size: 20,
               color: Color(0xFF94A3B8),
             ),
           ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildIncompleteBadge() {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2.5),
+      decoration: BoxDecoration(
+        color: const Color(0xFFFFF7ED),
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: const Color(0xFFFDBA74), width: 1),
+      ),
+      child: const Text(
+        'Lengkapi',
+        style: TextStyle(
+          fontSize: 10,
+          fontWeight: FontWeight.w700,
+          color: Color(0xFFEA580C),
         ),
       ),
     );

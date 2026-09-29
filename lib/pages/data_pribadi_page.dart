@@ -3,6 +3,7 @@ import 'package:heartcare/pages/home_page.dart';
 import 'package:heartcare/pages/dokter_page.dart';
 import 'package:heartcare/pages/riwayat_page.dart';
 import 'package:heartcare/pages/Skrining/screening_input_page.dart';
+import '../services/user_profile_service.dart';
 
 class DataPribadiPage extends StatefulWidget {
   const DataPribadiPage({super.key});
@@ -12,20 +13,36 @@ class DataPribadiPage extends StatefulWidget {
 }
 
 class _DataPribadiPageState extends State<DataPribadiPage> {
-  String nama = "Nadea Fieldzah Putri";
-  String jenisKelamin = "Perempuan";
-  String ttl = "Jember, 29 Februari 2004";
-  String alamat = "Jl. Gandaria Tengah No. 24, Jakarta Selatan";
-  String telepon = "+62 123 456 799";
-  String email = "nadea123@gmail.com";
+  late UserProfileData _profile;
+
+  @override
+  void initState() {
+    super.initState();
+    _profile = UserProfileService.instance.currentProfile;
+    UserProfileService.instance.addListener(_onProfileChanged);
+  }
+
+  @override
+  void dispose() {
+    UserProfileService.instance.removeListener(_onProfileChanged);
+    super.dispose();
+  }
+
+  void _onProfileChanged() {
+    if (mounted) {
+      setState(() {
+        _profile = UserProfileService.instance.currentProfile;
+      });
+    }
+  }
 
   void _showEditSheet() {
-    final namaCtrl = TextEditingController(text: nama);
-    final jkCtrl = TextEditingController(text: jenisKelamin);
-    final ttlCtrl = TextEditingController(text: ttl);
-    final alamatCtrl = TextEditingController(text: alamat);
-    final telpCtrl = TextEditingController(text: telepon);
-    final emailCtrl = TextEditingController(text: email);
+    final namaCtrl = TextEditingController(text: _profile.nama);
+    final jkCtrl = TextEditingController(text: _profile.jenisKelamin);
+    final ttlCtrl = TextEditingController(text: _profile.ttl);
+    final alamatCtrl = TextEditingController(text: _profile.alamat);
+    final telpCtrl = TextEditingController(text: _profile.telepon);
+    final emailCtrl = TextEditingController(text: _profile.email);
 
     showModalBottomSheet(
       context: context,
@@ -79,22 +96,24 @@ class _DataPribadiPageState extends State<DataPribadiPage> {
                   width: double.infinity,
                   height: 46,
                   child: ElevatedButton(
-                    onPressed: () {
-                      setState(() {
-                        nama = namaCtrl.text.trim();
-                        jenisKelamin = jkCtrl.text.trim();
-                        ttl = ttlCtrl.text.trim();
-                        alamat = alamatCtrl.text.trim();
-                        telepon = telpCtrl.text.trim();
-                        email = emailCtrl.text.trim();
-                      });
-                      Navigator.pop(context);
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text("Data pribadi berhasil diperbarui"),
-                          backgroundColor: Color(0xFF0098B9),
-                        ),
+                    onPressed: () async {
+                      await UserProfileService.instance.updateDataPribadi(
+                        nama: namaCtrl.text,
+                        jenisKelamin: jkCtrl.text,
+                        ttl: ttlCtrl.text,
+                        alamat: alamatCtrl.text,
+                        telepon: telpCtrl.text,
+                        email: emailCtrl.text,
                       );
+                      if (context.mounted) {
+                        Navigator.pop(context);
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text("Data pribadi berhasil diperbarui"),
+                            backgroundColor: Color(0xFF0098B9),
+                          ),
+                        );
+                      }
                     },
                     style: ElevatedButton.styleFrom(
                       backgroundColor: const Color(0xFF0098B9),
@@ -223,17 +242,17 @@ class _DataPribadiPageState extends State<DataPribadiPage> {
                 ),
                 child: Column(
                   children: [
-                    _dataRow("Nama Lengkap", nama, isFirst: true),
+                    _dataRow("Nama Lengkap", _profile.nama, isFirst: true),
                     const Divider(height: 1, color: Color(0xFFF1F5F9)),
-                    _dataRow("Jenis Kelamin", jenisKelamin),
+                    _dataRow("Jenis Kelamin", _profile.jenisKelamin),
                     const Divider(height: 1, color: Color(0xFFF1F5F9)),
-                    _dataRow("Tempat, Tanggal Lahir", ttl),
+                    _dataRow("Tempat, Tanggal Lahir", _profile.ttl),
                     const Divider(height: 1, color: Color(0xFFF1F5F9)),
-                    _dataRow("Alamat", alamat),
+                    _dataRow("Alamat", _profile.alamat),
                     const Divider(height: 1, color: Color(0xFFF1F5F9)),
-                    _dataRow("No. Telepon", telepon),
+                    _dataRow("No. Telepon", _profile.telepon),
                     const Divider(height: 1, color: Color(0xFFF1F5F9)),
-                    _dataRow("Email", email, isLast: true),
+                    _dataRow("Email", _profile.email, isLast: true),
                   ],
                 ),
               ),
@@ -296,10 +315,15 @@ class _DataPribadiPageState extends State<DataPribadiPage> {
                   ),
                   const SizedBox(height: 2),
                   Text(
-                    value,
-                    style: const TextStyle(
+                    value.trim().isNotEmpty ? value : "Belum diisi",
+                    style: TextStyle(
                       fontSize: 11.5,
-                      color: Color(0xFF64748B),
+                      color: value.trim().isNotEmpty
+                          ? const Color(0xFF64748B)
+                          : const Color(0xFF94A3B8),
+                      fontStyle: value.trim().isNotEmpty
+                          ? FontStyle.normal
+                          : FontStyle.italic,
                     ),
                   ),
                 ],

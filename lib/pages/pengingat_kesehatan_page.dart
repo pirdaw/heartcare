@@ -34,6 +34,18 @@ class HealthReminderController extends ChangeNotifier {
       HealthReminderController._internal();
   factory HealthReminderController() => _instance;
   HealthReminderController._internal() {
+    // Inisialisasi pengingat obat default yang sinkron dengan beranda
+    medicines.add(
+      MedicineReminder(
+        id: 'amlodipine_1',
+        name: 'Amlodipine 5 mg',
+        amount: '1',
+        unit: 'Tablet',
+        schedule: 'Setelah makan siang (Hipertensi)',
+        reminderTimes: ['13.00'],
+        note: 'Setelah makan siang ya',
+      ),
+    );
     _startTimer();
   }
 
@@ -89,20 +101,19 @@ class HealthReminderController extends ChangeNotifier {
     });
   }
 
-  // Hitung jumlah pengingat aktif hari ini
+  // Hitung jumlah pengingat aktif hari ini sesuai data riil pengguna
   int get activeRemindersCount {
     int count = 0;
     for (var med in medicines) {
       count += med.reminderTimes.length;
     }
-    // Default minimal 3 pengingat hari ini jika masih awal / sesuai desain
-    return count > 0 ? count : 3;
+    return count;
   }
 
   // Dapatkan pengingat berikutnya
   String get nextReminderSummary {
     if (medicines.isEmpty) {
-      return 'Tidak ada pengingat';
+      return 'Belum ada jadwal minum obat';
     }
     final first = medicines.first;
     final time = first.reminderTimes.isNotEmpty ? first.reminderTimes.first : '';
@@ -195,7 +206,7 @@ class _PengingatKesehatanPageState extends State<PengingatKesehatanPage> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: const [
                         Text(
-                          'Pengingat Kesehatan',
+                          'Pengingat Minum Obat',
                           style: TextStyle(
                             fontSize: 18,
                             fontWeight: FontWeight.w700,
@@ -205,7 +216,7 @@ class _PengingatKesehatanPageState extends State<PengingatKesehatanPage> {
                         ),
                         SizedBox(height: 2),
                         Text(
-                          'Atur pengingat agar tidak melewati kegiatan penting',
+                          'Atur pengingat agar tidak melewati jadwal minum obat',
                           style: TextStyle(
                             fontSize: 11,
                             color: Color(0xFF64748B),
@@ -260,38 +271,10 @@ class _PengingatKesehatanPageState extends State<PengingatKesehatanPage> {
                       onTap: _navigateToMedicineFlow,
                     ),
 
-                    const SizedBox(height: 12),
-
-                    // ITEM 2: Olahraga Ringan
-                    _buildActivityCard(
-                      iconWidget: const Icon(
-                        Icons.directions_run_rounded,
-                        color: PengingatKesehatanPage.primaryTeal,
-                        size: 24,
-                      ),
-                      title: 'Olahraga Ringan',
-                      subtitle: 'Atur Pengingat',
-                      onTap: () {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                            content: Text(
-                              'Pengingat Olahraga Ringan: Pukul 06.00 WIB setiap pagi.',
-                            ),
-                            duration: Duration(seconds: 2),
-                          ),
-                        );
-                      },
-                    ),
-
                     const SizedBox(height: 14),
 
                     // CARD: Pengingat Berikutnya (Biru Muda)
                     _buildNextReminderCard(),
-
-                    const SizedBox(height: 16),
-
-                    // TOMBOL TES NOTIFIKASI LANGSUNG (Fitur Pengujian Interaktif)
-                    _buildQuickTestNotificationButton(),
 
                     const SizedBox(height: 24),
                   ],
@@ -309,8 +292,11 @@ class _PengingatKesehatanPageState extends State<PengingatKesehatanPage> {
     );
   }
 
-  // Banner Biru Muda: 3 Pengingat Hari Ini
+  // Banner Biru Muda: Pengingat Hari Ini
   Widget _buildTopBannerCard() {
+    final count = _controller.activeRemindersCount;
+    final titleText = count > 0 ? '$count Pengingat Hari Ini' : 'Belum Ada Pengingat Hari Ini';
+
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
@@ -320,7 +306,7 @@ class _PengingatKesehatanPageState extends State<PengingatKesehatanPage> {
       ),
       child: Row(
         children: [
-          // Icon Kalender dengan Checkmark
+          // Icon Obat / Medis Konsisten
           Container(
             width: 46,
             height: 46,
@@ -337,7 +323,7 @@ class _PengingatKesehatanPageState extends State<PengingatKesehatanPage> {
             ),
             child: const Center(
               child: Icon(
-                Icons.event_available_rounded,
+                Icons.medication_rounded,
                 color: PengingatKesehatanPage.primaryTeal,
                 size: 26,
               ),
@@ -349,7 +335,7 @@ class _PengingatKesehatanPageState extends State<PengingatKesehatanPage> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  '${_controller.activeRemindersCount} Pengingat Hari Ini',
+                  titleText,
                   style: const TextStyle(
                     fontSize: 15,
                     fontWeight: FontWeight.w700,
@@ -358,7 +344,7 @@ class _PengingatKesehatanPageState extends State<PengingatKesehatanPage> {
                 ),
                 const SizedBox(height: 3),
                 const Text(
-                  'Jangan lewatkan jadwal kesehatanmu.',
+                  'Jangan lewatkan pengingat minum obatmu.',
                   style: TextStyle(
                     fontSize: 11.5,
                     color: Color(0xFF475569),
@@ -507,70 +493,7 @@ class _PengingatKesehatanPageState extends State<PengingatKesehatanPage> {
     );
   }
 
-  // Tombol Uji Notifikasi Langsung (Agar pengguna bisa langsung melihat pop-up Slide 5 kapan saja)
-  Widget _buildQuickTestNotificationButton() {
-    return Container(
-      width: double.infinity,
-      decoration: BoxDecoration(
-        color: const Color(0xFFF8FAFC),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: const Color(0xFFE2E8F0)),
-      ),
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-      child: Row(
-        children: [
-          const Icon(
-            Icons.notifications_active_outlined,
-            color: PengingatKesehatanPage.primaryTeal,
-            size: 22,
-          ),
-          const SizedBox(width: 10),
-          const Expanded(
-            child: Text(
-              'Ingin menguji tampilan notifikasi pengingat?',
-              style: TextStyle(
-                fontSize: 11,
-                color: Color(0xFF475569),
-              ),
-            ),
-          ),
-          TextButton(
-            onPressed: () {
-              final sample = _controller.medicines.isNotEmpty
-                  ? _controller.medicines.first
-                  : MedicineReminder(
-                      id: 'sample',
-                      name: 'Aspirin 300 mg',
-                      amount: '1',
-                      unit: 'Tablet',
-                      schedule: 'Setelah makan ya',
-                      reminderTimes: ['07.30', '15.30', '22.00'],
-                      note: 'Setelah makan ya',
-                    );
-              showMedicineReminderDialog(
-                context,
-                reminder: sample,
-                timeText: 'sekarang',
-              );
-            },
-            style: TextButton.styleFrom(
-              foregroundColor: PengingatKesehatanPage.primaryTeal,
-              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-              minimumSize: Size.zero,
-              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-            ),
-            child: const Text(
-              'Uji Sekarang',
-              style: TextStyle(
-                fontSize: 11.5,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
+
 
   Widget _buildBottomNavigationBar() {
     return HeartCareBottomNavBarWidget(
@@ -1331,20 +1254,6 @@ class _DaftarObatPageState extends State<DaftarObatPage> {
   void initState() {
     super.initState();
     _controller.addListener(_refresh);
-    // Jika belum ada obat, buatkan contoh default "Aspirin 300 mg" sesuai Slide 4
-    if (_controller.medicines.isEmpty) {
-      _controller.addMedicine(
-        MedicineReminder(
-          id: '1',
-          name: 'Aspirin 300 mg',
-          amount: '1',
-          unit: 'Tablet',
-          schedule: 'Setelah makan ya',
-          reminderTimes: ['07.30', '15.30', '22.00'],
-          note: 'Setelah makan ya',
-        ),
-      );
-    }
   }
 
   void _refresh() {
