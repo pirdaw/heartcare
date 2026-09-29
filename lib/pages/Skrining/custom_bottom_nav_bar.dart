@@ -4,6 +4,7 @@ import '../screening_intro_page.dart';
 import '../dokter_page.dart';
 import '../riwayat_page.dart';
 import '../profil_page.dart';
+import '../../services/theme_service.dart';
 
 /// Bottom Navigation Bar kustom pada menu skrining yang seragam dengan menu home
 class HeartCareBottomNavBar extends StatelessWidget {
@@ -19,7 +20,9 @@ class HeartCareBottomNavBar extends StatelessWidget {
   });
 
   static const Color primaryActiveBlue = Color(0xFF1479F5);
-  static const Color inactiveColor = Color(0xFF4B5563);
+  static const Color darkActiveCyan = Color(0xFF38BDF8);
+  static const Color inactiveColorLight = Color(0xFF4B5563);
+  static const Color inactiveColorDark = Color(0xFF94A3B8);
 
   void _onItemTapped(BuildContext context, int index) {
     if (onTap != null) {
@@ -60,52 +63,66 @@ class HeartCareBottomNavBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      decoration: BoxDecoration(
-        color: Colors.white,
-        border: Border(
-          top: BorderSide(
-            color: Colors.grey.withValues(alpha: 0.2),
-            width: 1,
+    return ValueListenableBuilder<ThemeMode>(
+      valueListenable: ThemeService.themeModeNotifier,
+      builder: (context, themeMode, _) {
+        final isDark = themeMode == ThemeMode.dark;
+
+        return Container(
+          decoration: BoxDecoration(
+            color: isDark ? const Color(0xFF0F172A) : Colors.white,
+            border: Border(
+              top: BorderSide(
+                color: isDark
+                    ? const Color(0xFF1E293B)
+                    : Colors.grey.withValues(alpha: 0.2),
+                width: 1,
+              ),
+            ),
           ),
-        ),
-      ),
-      padding: const EdgeInsets.only(top: 8, bottom: 12),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceAround,
-        children: [
-          _buildNavItem(
-            context,
-            index: 0,
-            icon: Icons.home,
-            label: 'Home',
+          padding: const EdgeInsets.only(top: 8, bottom: 12),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceAround,
+            children: [
+              _buildNavItem(
+                context,
+                index: 0,
+                icon: Icons.home,
+                label: 'Home',
+                isDark: isDark,
+              ),
+              _buildNavItem(
+                context,
+                index: 1,
+                icon: Icons.favorite_border,
+                label: 'Skrining',
+                isDark: isDark,
+              ),
+              _buildNavItem(
+                context,
+                index: 2,
+                icon: Icons.medical_services_outlined,
+                label: 'Dokter',
+                isDark: isDark,
+              ),
+              _buildNavItem(
+                context,
+                index: 3,
+                icon: Icons.description_outlined,
+                label: 'Riwayat',
+                isDark: isDark,
+              ),
+              _buildNavItem(
+                context,
+                index: 4,
+                icon: Icons.person_outline,
+                label: 'Profil',
+                isDark: isDark,
+              ),
+            ],
           ),
-          _buildNavItem(
-            context,
-            index: 1,
-            icon: Icons.favorite_border,
-            label: 'Skrining',
-          ),
-          _buildNavItem(
-            context,
-            index: 2,
-            icon: Icons.medical_services_outlined,
-            label: 'Dokter',
-          ),
-          _buildNavItem(
-            context,
-            index: 3,
-            icon: Icons.description_outlined,
-            label: 'Riwayat',
-          ),
-          _buildNavItem(
-            context,
-            index: 4,
-            icon: Icons.person_outline,
-            label: 'Profil',
-          ),
-        ],
-      ),
+        );
+      },
     );
   }
 
@@ -114,10 +131,14 @@ class HeartCareBottomNavBar extends StatelessWidget {
     required int index,
     required IconData icon,
     required String label,
+    required bool isDark,
   }) {
     final bool isSelected = currentIndex == index;
-    final Color itemColor =
-        isSelected ? (activeColor ?? primaryActiveBlue) : inactiveColor;
+    final Color selectedColor =
+        activeColor ?? (isDark ? darkActiveCyan : primaryActiveBlue);
+    final Color unselectedColor =
+        isDark ? inactiveColorDark : inactiveColorLight;
+    final Color itemColor = isSelected ? selectedColor : unselectedColor;
 
     return InkWell(
       onTap: () => _onItemTapped(context, index),

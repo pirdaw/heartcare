@@ -3,6 +3,7 @@ import 'package:heartcare/pages/Skrining/screening_model.dart';
 import 'screening_result_page.dart';
 import 'custom_bottom_nav_bar.dart';
 import 'package:heartcare/pages/riwayat_model.dart';
+import 'package:heartcare/services/theme_service.dart';
 
 /// Halaman Proses Analisis AI dengan animasi detak jantung dan status tahapan
 class ScreeningAiAnalysisPage extends StatefulWidget {
@@ -91,149 +92,156 @@ class _ScreeningAiAnalysisPageState extends State<ScreeningAiAnalysisPage>
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.white,
-      body: SafeArea(
-        child: Column(
-          children: [
-            // Top App Bar
-            Padding(
-              padding: const EdgeInsets.only(
-                left: 16,
-                right: 16,
-                top: 12,
-                bottom: 8,
-              ),
-              child: Stack(
-                alignment: Alignment.center,
-                children: [
-                  Align(
-                    alignment: Alignment.centerLeft,
-                    child: Container(
-                      width: 42,
-                      height: 42,
-                      decoration: const BoxDecoration(
-                        color: Color(0xFFF1F3F6),
-                        shape: BoxShape.circle,
-                      ),
-                      child: IconButton(
-                        icon: const Icon(
-                          Icons.chevron_left,
-                          color: Color(0xFF1E293B),
-                          size: 26,
-                        ),
-                        onPressed: () => Navigator.pop(context),
-                      ),
-                    ),
-                  ),
-                  const Center(
-                    child: Text(
-                      'Sedang Menganalisis',
-                      style: TextStyle(
-                        fontSize: 17,
-                        fontWeight: FontWeight.bold,
-                        color: Color(0xFF111827),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
+    return ValueListenableBuilder<ThemeMode>(
+      valueListenable: ThemeService.themeModeNotifier,
+      builder: (context, themeMode, child) {
+        final isDark = themeMode == ThemeMode.dark;
 
-            // Konten Tengah
-            Expanded(
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 32),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    // Lingkaran Animasi Denyut Jantung
-                    ScaleTransition(
-                      scale: _scaleAnimation,
-                      child: Container(
-                        width: 120,
-                        height: 120,
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          color: const Color(0xFFE0F2FE),
-                          boxShadow: [
-                            BoxShadow(
-                              color: primaryTeal.withValues(alpha: 0.25),
-                              blurRadius: 24,
-                              spreadRadius: 4,
+        return Scaffold(
+          backgroundColor: isDark ? const Color(0xFF0F172A) : Colors.white,
+          body: SafeArea(
+            child: Column(
+              children: [
+                // Top App Bar
+                Padding(
+                  padding: const EdgeInsets.only(
+                    left: 16,
+                    right: 16,
+                    top: 12,
+                    bottom: 8,
+                  ),
+                  child: Stack(
+                    alignment: Alignment.center,
+                    children: [
+                      Align(
+                        alignment: Alignment.centerLeft,
+                        child: Container(
+                          width: 42,
+                          height: 42,
+                          decoration: BoxDecoration(
+                            color: isDark ? const Color(0xFF1E293B) : const Color(0xFFF1F3F6),
+                            shape: BoxShape.circle,
+                          ),
+                          child: IconButton(
+                            icon: Icon(
+                              Icons.chevron_left,
+                              color: isDark ? Colors.white : const Color(0xFF1E293B),
+                              size: 26,
                             ),
-                          ],
-                        ),
-                        child: Center(
-                          child: Container(
-                            width: 80,
-                            height: 80,
-                            decoration: const BoxDecoration(
-                              shape: BoxShape.circle,
-                              color: primaryTeal,
-                            ),
-                            child: const Icon(
-                              Icons.favorite_rounded,
-                              color: Colors.white,
-                              size: 44,
-                            ),
+                            onPressed: () => Navigator.pop(context),
                           ),
                         ),
                       ),
-                    ),
-
-                    const SizedBox(height: 38),
-
-                    // Judul Proses
-                    const Text(
-                      'Sedang Menganalisis Data Anda',
-                      textAlign: TextAlign.center,
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                        color: Color(0xFF111827),
-                      ),
-                    ),
-
-                    const SizedBox(height: 10),
-
-                    // Deskripsi Status
-                    Text(
-                      _currentStepStatus,
-                      textAlign: TextAlign.center,
-                      style: const TextStyle(
-                        fontSize: 13.5,
-                        color: Color(0xFF64748B),
-                        height: 1.4,
-                      ),
-                    ),
-
-                    const SizedBox(height: 30),
-
-                    // Progress Bar
-                    ClipRRect(
-                      borderRadius: BorderRadius.circular(8),
-                      child: SizedBox(
-                        height: 6,
-                        child: LinearProgressIndicator(
-                          value: _progressValue,
-                          backgroundColor: const Color(0xFFE2E8F0),
-                          valueColor: const AlwaysStoppedAnimation<Color>(
-                            primaryTeal,
+                      Center(
+                        child: Text(
+                          'Sedang Menganalisis',
+                          style: TextStyle(
+                            fontSize: 17,
+                            fontWeight: FontWeight.bold,
+                            color: isDark ? Colors.white : const Color(0xFF111827),
                           ),
                         ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
-              ),
-            ),
 
-            // Bottom Navigation
-            const HeartCareBottomNavBar(currentIndex: 1),
-          ],
-        ),
-      ),
+                // Konten Tengah
+                Expanded(
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 32),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        // Lingkaran Animasi Denyut Jantung
+                        ScaleTransition(
+                          scale: _scaleAnimation,
+                          child: Container(
+                            width: 120,
+                            height: 120,
+                            decoration: BoxDecoration(
+                              shape: BoxShape.circle,
+                              color: isDark ? const Color(0xFF1E293B) : const Color(0xFFE0F2FE),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: primaryTeal.withValues(alpha: isDark ? 0.4 : 0.25),
+                                  blurRadius: 24,
+                                  spreadRadius: 4,
+                                ),
+                              ],
+                            ),
+                            child: Center(
+                              child: Container(
+                                width: 80,
+                                height: 80,
+                                decoration: const BoxDecoration(
+                                  shape: BoxShape.circle,
+                                  color: primaryTeal,
+                                ),
+                                child: const Icon(
+                                  Icons.favorite_rounded,
+                                  color: Colors.white,
+                                  size: 44,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+
+                        const SizedBox(height: 38),
+
+                        // Judul Proses
+                        Text(
+                          'Sedang Menganalisis Data Anda',
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                            color: isDark ? Colors.white : const Color(0xFF111827),
+                          ),
+                        ),
+
+                        const SizedBox(height: 10),
+
+                        // Deskripsi Status
+                        Text(
+                          _currentStepStatus,
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                            fontSize: 13.5,
+                            color: isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B),
+                            height: 1.4,
+                          ),
+                        ),
+
+                        const SizedBox(height: 30),
+
+                        // Progress Bar
+                        ClipRRect(
+                          borderRadius: BorderRadius.circular(8),
+                          child: SizedBox(
+                            height: 6,
+                            child: LinearProgressIndicator(
+                              value: _progressValue,
+                              backgroundColor: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0),
+                              valueColor: const AlwaysStoppedAnimation<Color>(
+                                primaryTeal,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+
+                // Bottom Navigation
+                const HeartCareBottomNavBar(currentIndex: 1),
+              ],
+            ),
+          ),
+        );
+      },
     );
   }
 }

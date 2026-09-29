@@ -92,17 +92,42 @@ class _SignupPageState extends State<SignupPage> {
 
   @override
   Widget build(BuildContext context) {
+    final screenHeight = MediaQuery.of(context).size.height;
+
     return Scaffold(
       backgroundColor: Colors.white,
 
-      body: SafeArea(
-        child: SingleChildScrollView(
-          child: Padding(
-            padding: const EdgeInsets.symmetric(
-              horizontal: 28,
+      body: SizedBox.expand(
+        child: Stack(
+          clipBehavior: Clip.none,
+          children: [
+            // ==========================================
+            // DEKORASI BIRU MUDA DI KIRI BAWAH
+            // ==========================================
+            Positioned(
+              left: -135,
+              top: screenHeight - 285,
+              child: Container(
+                width: 390,
+                height: 390,
+                decoration: BoxDecoration(
+                  color: const Color(0xFFB8DCEE),
+                  borderRadius: BorderRadius.circular(200),
+                ),
+              ),
             ),
-            child: Column(
-              children: [
+
+            // ==========================================
+            // ISI HALAMAN
+            // ==========================================
+            SafeArea(
+              child: SingleChildScrollView(
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 28,
+                  ),
+                  child: Column(
+                    children: [
                 // =====================================
                 // LOGO
                 // =====================================
@@ -324,6 +349,9 @@ class _SignupPageState extends State<SignupPage> {
           ),
         ),
       ),
+    ],
+  ),
+),
     );
   }
 

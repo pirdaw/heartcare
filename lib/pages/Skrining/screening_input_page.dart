@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'custom_bottom_nav_bar.dart';
 import 'screening_model.dart';
 import 'screening_review_page.dart';
+import '../../services/theme_service.dart';
 
 /// Halaman Skrining - Input Data dengan Stepper bertahap (1/5 s/d 5/5)
 /// Sesuai dengan desain Figma (11 Pertanyaan lengkap + Data Diri)
@@ -121,126 +122,133 @@ class _ScreeningInputPageState extends State<ScreeningInputPage> {
   // ============================================================
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.white,
-      body: SafeArea(
-        child: Column(
-          children: [
-            // ----------------------------------------------------
-            // TOP APP BAR
-            // ----------------------------------------------------
-            Padding(
-              padding: const EdgeInsets.only(
-                left: 16,
-                right: 16,
-                top: 12,
-                bottom: 8,
-              ),
-              child: Stack(
-                alignment: Alignment.center,
-                children: [
-                  Align(
-                    alignment: Alignment.centerLeft,
-                    child: Container(
-                      width: 42,
-                      height: 42,
-                      decoration: const BoxDecoration(
-                        color: Color(0xFFF1F3F6),
-                        shape: BoxShape.circle,
-                      ),
-                      child: IconButton(
-                        icon: const Icon(
-                          Icons.chevron_left,
-                          color: Color(0xFF1E293B),
-                          size: 26,
+    return ValueListenableBuilder<ThemeMode>(
+      valueListenable: ThemeService.themeModeNotifier,
+      builder: (context, themeMode, child) {
+        final isDark = themeMode == ThemeMode.dark;
+
+        return Scaffold(
+          backgroundColor: isDark ? const Color(0xFF0F172A) : Colors.white,
+          body: SafeArea(
+            child: Column(
+              children: [
+                // ----------------------------------------------------
+                // TOP APP BAR
+                // ----------------------------------------------------
+                Padding(
+                  padding: const EdgeInsets.only(
+                    left: 16,
+                    right: 16,
+                    top: 12,
+                    bottom: 8,
+                  ),
+                  child: Stack(
+                    alignment: Alignment.center,
+                    children: [
+                      Align(
+                        alignment: Alignment.centerLeft,
+                        child: Container(
+                          width: 42,
+                          height: 42,
+                          decoration: BoxDecoration(
+                            color: isDark ? const Color(0xFF1E293B) : const Color(0xFFF1F3F6),
+                            shape: BoxShape.circle,
+                          ),
+                          child: IconButton(
+                            icon: Icon(
+                              Icons.chevron_left,
+                              color: isDark ? Colors.white : const Color(0xFF1E293B),
+                              size: 26,
+                            ),
+                            onPressed: _onPreviousStep,
+                          ),
                         ),
-                        onPressed: _onPreviousStep,
                       ),
-                    ),
-                  ),
-                  Center(
-                    child: Text(
-                      'Skrining - Input Data ($_currentStep/$_totalSteps)',
-                      style: const TextStyle(
-                        fontSize: 17,
-                        fontWeight: FontWeight.bold,
-                        color: Color(0xFF111827),
+                      Center(
+                        child: Text(
+                          'Skrining - Input Data ($_currentStep/$_totalSteps)',
+                          style: TextStyle(
+                            fontSize: 17,
+                            fontWeight: FontWeight.bold,
+                            color: isDark ? Colors.white : const Color(0xFF111827),
+                          ),
+                        ),
                       ),
-                    ),
+                    ],
                   ),
-                ],
-              ),
-            ),
+                ),
 
-            const SizedBox(height: 14),
+                const SizedBox(height: 14),
 
-            // ----------------------------------------------------
-            // STEPPER (5 LANGKAH)
-            // ----------------------------------------------------
-            Center(
-              child: _buildStepper(),
-            ),
+                // ----------------------------------------------------
+                // STEPPER (5 LANGKAH)
+                // ----------------------------------------------------
+                Center(
+                  child: _buildStepper(isDark),
+                ),
 
-            const SizedBox(height: 24),
+                const SizedBox(height: 24),
 
-            // ----------------------------------------------------
-            // FORM CONTENT
-            // ----------------------------------------------------
-            Expanded(
-              child: SingleChildScrollView(
-                padding: const EdgeInsets.symmetric(horizontal: 24),
-                child: _buildCurrentStepContent(),
-              ),
-            ),
-
-            // ----------------------------------------------------
-            // BUTTON LANJUTKAN
-            // ----------------------------------------------------
-            Padding(
-              padding: const EdgeInsets.symmetric(
-                horizontal: 24,
-                vertical: 14,
-              ),
-              child: SizedBox(
-                width: double.infinity,
-                height: 50,
-                child: ElevatedButton(
-                  onPressed: _onNextStep,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: primaryTeal,
-                    foregroundColor: Colors.white,
-                    elevation: 0,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
+                // ----------------------------------------------------
+                // FORM CONTENT
+                // ----------------------------------------------------
+                Expanded(
+                  child: SingleChildScrollView(
+                    padding: const EdgeInsets.symmetric(horizontal: 24),
+                    child: _buildCurrentStepContent(isDark),
                   ),
-                  child: const Text(
-                    'Lanjutkan',
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
+                ),
+
+                // ----------------------------------------------------
+                // BUTTON LANJUTKAN
+                // ----------------------------------------------------
+                Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 24,
+                    vertical: 14,
+                  ),
+                  child: SizedBox(
+                    width: double.infinity,
+                    height: 50,
+                    child: ElevatedButton(
+                      onPressed: _onNextStep,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: primaryTeal,
+                        foregroundColor: Colors.white,
+                        elevation: 0,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
+                      child: const Text(
+                        'Lanjutkan',
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
                     ),
                   ),
                 ),
-              ),
-            ),
 
-            // ----------------------------------------------------
-            // BOTTOM NAVIGATION
-            // ----------------------------------------------------
-            const HeartCareBottomNavBar(
-              currentIndex: 1,
+                // ----------------------------------------------------
+                // BOTTOM NAVIGATION
+                // ----------------------------------------------------
+                const HeartCareBottomNavBar(
+                  currentIndex: 1,
+                ),
+              ],
             ),
-          ],
-        ),
-      ),
+          ),
+        );
+      },
     );
   }
 
   // ============================================================
   // STEPPER (1 sampai 5)
   // ============================================================
-  Widget _buildStepper() {
+  Widget _buildStepper(bool isDark) {
     return SizedBox(
       width: 270,
       child: Row(
@@ -257,7 +265,7 @@ class _ScreeningInputPageState extends State<ScreeningInputPage> {
                   height: 1.8,
                   color: isPassed
                       ? primaryTeal
-                      : const Color(0xFFD1D5DB),
+                      : (isDark ? const Color(0xFF334155) : const Color(0xFFD1D5DB)),
                 ),
               );
             } else {
@@ -272,7 +280,7 @@ class _ScreeningInputPageState extends State<ScreeningInputPage> {
                   shape: BoxShape.circle,
                   color: (isActive || isCompleted)
                       ? primaryTeal
-                      : const Color(0xFFE5E7EB),
+                      : (isDark ? const Color(0xFF1E293B) : const Color(0xFFE5E7EB)),
                 ),
                 child: Center(
                   child: Text(
@@ -282,7 +290,7 @@ class _ScreeningInputPageState extends State<ScreeningInputPage> {
                       fontWeight: FontWeight.bold,
                       color: (isActive || isCompleted)
                           ? Colors.white
-                          : const Color(0xFF6B7280),
+                          : (isDark ? const Color(0xFF94A3B8) : const Color(0xFF6B7280)),
                     ),
                   ),
                 ),
@@ -297,47 +305,47 @@ class _ScreeningInputPageState extends State<ScreeningInputPage> {
   // ============================================================
   // MENENTUKAN KONTEN STEP
   // ============================================================
-  Widget _buildCurrentStepContent() {
+  Widget _buildCurrentStepContent(bool isDark) {
     switch (_currentStep) {
       case 1:
-        return _buildStep1DataDiri();
+        return _buildStep1DataDiri(isDark);
       case 2:
-        return _buildStep2Vital();
+        return _buildStep2Vital(isDark);
       case 3:
-        return _buildStep3KondisiKesehatan();
+        return _buildStep3KondisiKesehatan(isDark);
       case 4:
-        return _buildStep4KondisiKesehatan();
+        return _buildStep4KondisiKesehatan(isDark);
       case 5:
-        return _buildStep5KondisiKesehatan();
+        return _buildStep5KondisiKesehatan(isDark);
       default:
-        return _buildStep1DataDiri();
+        return _buildStep1DataDiri(isDark);
     }
   }
 
   // ============================================================
   // STEP 1 - DATA DIRI
   // ============================================================
-  Widget _buildStep1DataDiri() {
+  Widget _buildStep1DataDiri(bool isDark) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
+        Text(
           'Data Diri',
           style: TextStyle(
             fontSize: 16,
             fontWeight: FontWeight.bold,
-            color: Color(0xFF111827),
+            color: isDark ? Colors.white : const Color(0xFF111827),
           ),
         ),
 
         const SizedBox(height: 12),
 
-        const Text(
+        Text(
           'Usia',
           style: TextStyle(
             fontSize: 14,
             fontWeight: FontWeight.w500,
-            color: Color(0xFF1E293B),
+            color: isDark ? const Color(0xFFCBD5E1) : const Color(0xFF1E293B),
           ),
         ),
 
@@ -346,10 +354,10 @@ class _ScreeningInputPageState extends State<ScreeningInputPage> {
         Container(
           height: 48,
           decoration: BoxDecoration(
-            color: Colors.white,
+            color: isDark ? const Color(0xFF1E293B) : Colors.white,
             borderRadius: BorderRadius.circular(10),
             border: Border.all(
-              color: const Color(0xFF8BB5CE),
+              color: isDark ? const Color(0xFF334155) : const Color(0xFF8BB5CE),
               width: 1.2,
             ),
           ),
@@ -357,27 +365,30 @@ class _ScreeningInputPageState extends State<ScreeningInputPage> {
           child: TextField(
             controller: _ageController,
             keyboardType: TextInputType.number,
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 15,
-              color: Color(0xFF111827),
+              color: isDark ? Colors.white : const Color(0xFF111827),
             ),
-            decoration: const InputDecoration(
+            decoration: InputDecoration(
               border: InputBorder.none,
               isDense: true,
               hintText: 'Contoh: 25',
-              contentPadding: EdgeInsets.symmetric(vertical: 14),
+              hintStyle: TextStyle(
+                color: isDark ? const Color(0xFF64748B) : const Color(0xFF94A3B8),
+              ),
+              contentPadding: const EdgeInsets.symmetric(vertical: 14),
             ),
           ),
         ),
 
         const SizedBox(height: 24),
 
-        const Text(
+        Text(
           'Jenis Kelamin',
           style: TextStyle(
             fontSize: 14,
             fontWeight: FontWeight.w500,
-            color: Color(0xFF1E293B),
+            color: isDark ? const Color(0xFFCBD5E1) : const Color(0xFF1E293B),
           ),
         ),
 
@@ -385,16 +396,16 @@ class _ScreeningInputPageState extends State<ScreeningInputPage> {
 
         Row(
           children: [
-            _buildRadioOption('Laki-laki'),
+            _buildRadioOption('Laki-laki', isDark),
             const SizedBox(width: 50),
-            _buildRadioOption('Perempuan'),
+            _buildRadioOption('Perempuan', isDark),
           ],
         ),
       ],
     );
   }
 
-  Widget _buildRadioOption(String value) {
+  Widget _buildRadioOption(String value, bool isDark) {
     final bool isSelected = _selectedGender == value;
 
     return InkWell(
@@ -414,10 +425,10 @@ class _ScreeningInputPageState extends State<ScreeningInputPage> {
             decoration: BoxDecoration(
               shape: BoxShape.circle,
               border: Border.all(
-                color: isSelected ? primaryTeal : const Color(0xFF94A3B8),
+                color: isSelected ? primaryTeal : (isDark ? const Color(0xFF64748B) : const Color(0xFF94A3B8)),
                 width: 1.5,
               ),
-              color: Colors.white,
+              color: isDark ? const Color(0xFF1E293B) : Colors.white,
             ),
             child: isSelected
                 ? Center(
@@ -435,9 +446,9 @@ class _ScreeningInputPageState extends State<ScreeningInputPage> {
           const SizedBox(width: 8),
           Text(
             value,
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 14,
-              color: Color(0xFF1E293B),
+              color: isDark ? const Color(0xFFE2E8F0) : const Color(0xFF1E293B),
               fontWeight: FontWeight.w400,
             ),
           ),
@@ -449,16 +460,16 @@ class _ScreeningInputPageState extends State<ScreeningInputPage> {
   // ============================================================
   // STEP 2 - KONDISI KESEHATAN (Pertanyaan 1, 2, 3)
   // ============================================================
-  Widget _buildStep2Vital() {
+  Widget _buildStep2Vital(bool isDark) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
+        Text(
           'Kondisi Kesehatan',
           style: TextStyle(
             fontSize: 16,
             fontWeight: FontWeight.bold,
-            color: Color(0xFF111827),
+            color: isDark ? Colors.white : const Color(0xFF111827),
           ),
         ),
 
@@ -467,22 +478,22 @@ class _ScreeningInputPageState extends State<ScreeningInputPage> {
         // Pertanyaan 1
         Container(
           decoration: BoxDecoration(
-            color: Colors.white,
+            color: isDark ? const Color(0xFF1E293B) : Colors.white,
             borderRadius: BorderRadius.circular(14),
             border: Border.all(
-              color: const Color(0xFFE2E8F0),
+              color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0),
             ),
           ),
           padding: const EdgeInsets.all(14),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Text(
+              Text(
                 '1. Bagaimana nyeri dada yang anda rasakan?',
                 style: TextStyle(
                   fontSize: 14,
                   fontWeight: FontWeight.bold,
-                  color: Color(0xFF111827),
+                  color: isDark ? Colors.white : const Color(0xFF111827),
                   height: 1.35,
                 ),
               ),
@@ -493,6 +504,7 @@ class _ScreeningInputPageState extends State<ScreeningInputPage> {
                 title: 'Typical Angina',
                 description:
                     'Rasa tertekan atau tidak nyaman di dada yang biasanya muncul saat beraktivitas dan dapat berkurang saat beristirahat.',
+                isDark: isDark,
               ),
 
               const SizedBox(height: 12),
@@ -501,6 +513,7 @@ class _ScreeningInputPageState extends State<ScreeningInputPage> {
                 title: 'Atypical Angina',
                 description:
                     'Rasa tidak nyaman di dada yang mungkin muncul dengan cara berbeda, misalnya tidak selalu terasa tertekan atau tidak selalu muncul saat beraktivitas.',
+                isDark: isDark,
               ),
 
               const SizedBox(height: 12),
@@ -509,6 +522,7 @@ class _ScreeningInputPageState extends State<ScreeningInputPage> {
                 title: 'Non-anginal Pain',
                 description:
                     'Nyeri dada yang lebih terasa seperti nyeri pada bagian tertentu, misalnya sakit saat disentuh, atau terasa seperti nyeri terbakar dari kerongkongan.',
+                isDark: isDark,
               ),
 
               const SizedBox(height: 12),
@@ -516,6 +530,7 @@ class _ScreeningInputPageState extends State<ScreeningInputPage> {
               _buildChestPainOption(
                 title: 'Asymptomatic',
                 description: 'Tidak mengalami gejala atau nyeri dada.',
+                isDark: isDark,
               ),
             ],
           ),
@@ -524,12 +539,12 @@ class _ScreeningInputPageState extends State<ScreeningInputPage> {
         const SizedBox(height: 18),
 
         // Pertanyaan 2
-        const Text(
+        Text(
           '2. Berapa tekanan darah anda saat pemeriksaan?',
           style: TextStyle(
             fontSize: 14,
             fontWeight: FontWeight.bold,
-            color: Color(0xFF111827),
+            color: isDark ? Colors.white : const Color(0xFF111827),
           ),
         ),
 
@@ -538,27 +553,28 @@ class _ScreeningInputPageState extends State<ScreeningInputPage> {
         _buildMeasurementInput(
           controller: _systolicController,
           unit: 'mmHg',
+          isDark: isDark,
         ),
 
         const SizedBox(height: 4),
 
-        const Text(
+        Text(
           '(Masukkan nilai sistolik, contoh: 120)',
           style: TextStyle(
             fontSize: 11.5,
-            color: Color(0xFF64748B),
+            color: isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B),
           ),
         ),
 
         const SizedBox(height: 18),
 
         // Pertanyaan 3
-        const Text(
+        Text(
           '3. Berapa kadar kolestrol anda berdasarkan hasil pemeriksaan?',
           style: TextStyle(
             fontSize: 14,
             fontWeight: FontWeight.bold,
-            color: Color(0xFF111827),
+            color: isDark ? Colors.white : const Color(0xFF111827),
           ),
         ),
 
@@ -567,15 +583,16 @@ class _ScreeningInputPageState extends State<ScreeningInputPage> {
         _buildMeasurementInput(
           controller: _cholesterolController,
           unit: 'mg/dL',
+          isDark: isDark,
         ),
 
         const SizedBox(height: 4),
 
-        const Text(
+        Text(
           '(contoh: 200)',
           style: TextStyle(
             fontSize: 11.5,
-            color: Color(0xFF64748B),
+            color: isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B),
           ),
         ),
 
@@ -587,6 +604,7 @@ class _ScreeningInputPageState extends State<ScreeningInputPage> {
   Widget _buildChestPainOption({
     required String title,
     required String description,
+    required bool isDark,
   }) {
     final bool isSelected = _selectedChestPain == title;
 
@@ -609,10 +627,10 @@ class _ScreeningInputPageState extends State<ScreeningInputPage> {
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
                 border: Border.all(
-                  color: isSelected ? primaryTeal : const Color(0xFFCBD5E1),
+                  color: isSelected ? primaryTeal : (isDark ? const Color(0xFF64748B) : const Color(0xFFCBD5E1)),
                   width: 1.5,
                 ),
-                color: Colors.white,
+                color: isDark ? const Color(0xFF0F172A) : Colors.white,
               ),
               child: isSelected
                   ? Center(
@@ -637,18 +655,18 @@ class _ScreeningInputPageState extends State<ScreeningInputPage> {
               children: [
                 Text(
                   title,
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 13.5,
                     fontWeight: FontWeight.bold,
-                    color: Color(0xFF111827),
+                    color: isDark ? Colors.white : const Color(0xFF111827),
                   ),
                 ),
                 const SizedBox(height: 2),
                 Text(
                   description,
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 11.5,
-                    color: Color(0xFF475569),
+                    color: isDark ? const Color(0xFF94A3B8) : const Color(0xFF475569),
                     height: 1.35,
                   ),
                 ),
@@ -663,16 +681,16 @@ class _ScreeningInputPageState extends State<ScreeningInputPage> {
   // ============================================================
   // STEP 3 - KONDISI KESEHATAN (Pertanyaan 4, 5, 6)
   // ============================================================
-  Widget _buildStep3KondisiKesehatan() {
+  Widget _buildStep3KondisiKesehatan(bool isDark) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
+        Text(
           'Kondisi Kesehatan',
           style: TextStyle(
             fontSize: 16,
             fontWeight: FontWeight.bold,
-            color: Color(0xFF111827),
+            color: isDark ? Colors.white : const Color(0xFF111827),
           ),
         ),
 
@@ -682,22 +700,22 @@ class _ScreeningInputPageState extends State<ScreeningInputPage> {
         Container(
           width: double.infinity,
           decoration: BoxDecoration(
-            color: Colors.white,
+            color: isDark ? const Color(0xFF1E293B) : Colors.white,
             borderRadius: BorderRadius.circular(14),
             border: Border.all(
-              color: const Color(0xFFE2E8F0),
+              color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0),
             ),
           ),
           padding: const EdgeInsets.all(14),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Text(
+              Text(
                 '4. Apakah kadar gula darah puasa anda lebih dari 120 mg/dL?',
                 style: TextStyle(
                   fontSize: 13.5,
                   fontWeight: FontWeight.bold,
-                  color: Color(0xFF111827),
+                  color: isDark ? Colors.white : const Color(0xFF111827),
                   height: 1.35,
                 ),
               ),
@@ -709,6 +727,7 @@ class _ScreeningInputPageState extends State<ScreeningInputPage> {
                   _buildYesNoChoiceButton(
                     label: 'Tidak',
                     isSelected: _fastingBloodSugar == 'Tidak',
+                    isDark: isDark,
                     onTap: () {
                       setState(() {
                         _fastingBloodSugar = 'Tidak';
@@ -719,6 +738,7 @@ class _ScreeningInputPageState extends State<ScreeningInputPage> {
                   _buildYesNoChoiceButton(
                     label: 'Ya',
                     isSelected: _fastingBloodSugar == 'Ya',
+                    isDark: isDark,
                     onTap: () {
                       setState(() {
                         _fastingBloodSugar = 'Ya';
@@ -737,33 +757,33 @@ class _ScreeningInputPageState extends State<ScreeningInputPage> {
         Container(
           width: double.infinity,
           decoration: BoxDecoration(
-            color: Colors.white,
+            color: isDark ? const Color(0xFF1E293B) : Colors.white,
             borderRadius: BorderRadius.circular(14),
             border: Border.all(
-              color: const Color(0xFFE2E8F0),
+              color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0),
             ),
           ),
           padding: const EdgeInsets.all(14),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Text(
+              Text(
                 '5. Bagaimana hasil pemeriksaan EKG saat istirahat?',
                 style: TextStyle(
                   fontSize: 13.5,
                   fontWeight: FontWeight.bold,
-                  color: Color(0xFF111827),
+                  color: isDark ? Colors.white : const Color(0xFF111827),
                   height: 1.35,
                 ),
               ),
 
               const SizedBox(height: 12),
 
-              _buildEcgRadioOption('Normal'),
+              _buildEcgRadioOption('Normal', isDark),
               const SizedBox(height: 10),
-              _buildEcgRadioOption('Terdapat kelainan gelombang ST-T'),
+              _buildEcgRadioOption('Terdapat kelainan gelombang ST-T', isDark),
               const SizedBox(height: 10),
-              _buildEcgRadioOption('Kemungkinan hipertrofi vertikal kiri'),
+              _buildEcgRadioOption('Kemungkinan hipertrofi vertikal kiri', isDark),
             ],
           ),
         ),
@@ -774,22 +794,22 @@ class _ScreeningInputPageState extends State<ScreeningInputPage> {
         Container(
           width: double.infinity,
           decoration: BoxDecoration(
-            color: Colors.white,
+            color: isDark ? const Color(0xFF1E293B) : Colors.white,
             borderRadius: BorderRadius.circular(14),
             border: Border.all(
-              color: const Color(0xFFE2E8F0),
+              color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0),
             ),
           ),
           padding: const EdgeInsets.all(14),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Text(
+              Text(
                 '6. Berapa detak jantung maksimum yang tercatat saat pemeriksaan?',
                 style: TextStyle(
                   fontSize: 13.5,
                   fontWeight: FontWeight.bold,
-                  color: Color(0xFF111827),
+                  color: isDark ? Colors.white : const Color(0xFF111827),
                   height: 1.35,
                 ),
               ),
@@ -799,15 +819,16 @@ class _ScreeningInputPageState extends State<ScreeningInputPage> {
               _buildMeasurementInput(
                 controller: _maxHeartRateController,
                 unit: 'bpm',
+                isDark: isDark,
               ),
 
               const SizedBox(height: 4),
 
-              const Text(
+              Text(
                 '(contoh: 150)',
                 style: TextStyle(
                   fontSize: 11.5,
-                  color: Color(0xFF64748B),
+                  color: isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B),
                 ),
               ),
             ],
@@ -823,16 +844,16 @@ class _ScreeningInputPageState extends State<ScreeningInputPage> {
   // STEP 4 - KONDISI KESEHATAN (Pertanyaan 7, 8, 9)
   // Sesuai Figma Layar 1
   // ============================================================
-  Widget _buildStep4KondisiKesehatan() {
+  Widget _buildStep4KondisiKesehatan(bool isDark) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
+        Text(
           'Kondisi Kesehatan',
           style: TextStyle(
             fontSize: 16,
             fontWeight: FontWeight.bold,
-            color: Color(0xFF111827),
+            color: isDark ? Colors.white : const Color(0xFF111827),
           ),
         ),
 
@@ -842,22 +863,22 @@ class _ScreeningInputPageState extends State<ScreeningInputPage> {
         Container(
           width: double.infinity,
           decoration: BoxDecoration(
-            color: Colors.white,
+            color: isDark ? const Color(0xFF1E293B) : Colors.white,
             borderRadius: BorderRadius.circular(14),
             border: Border.all(
-              color: const Color(0xFFE2E8F0),
+              color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0),
             ),
           ),
           padding: const EdgeInsets.all(14),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Text(
+              Text(
                 '7. Apakah anda mengalami nyeri dada saat melakukan aktivitas atau olahraga?',
                 style: TextStyle(
                   fontSize: 13.5,
                   fontWeight: FontWeight.bold,
-                  color: Color(0xFF111827),
+                  color: isDark ? Colors.white : const Color(0xFF111827),
                   height: 1.35,
                 ),
               ),
@@ -869,6 +890,7 @@ class _ScreeningInputPageState extends State<ScreeningInputPage> {
                   _buildYesNoChoiceButton(
                     label: 'Tidak',
                     isSelected: _exerciseAngina == 'Tidak',
+                    isDark: isDark,
                     onTap: () {
                       setState(() {
                         _exerciseAngina = 'Tidak';
@@ -879,6 +901,7 @@ class _ScreeningInputPageState extends State<ScreeningInputPage> {
                   _buildYesNoChoiceButton(
                     label: 'Ya',
                     isSelected: _exerciseAngina == 'Ya',
+                    isDark: isDark,
                     onTap: () {
                       setState(() {
                         _exerciseAngina = 'Ya';
@@ -897,22 +920,22 @@ class _ScreeningInputPageState extends State<ScreeningInputPage> {
         Container(
           width: double.infinity,
           decoration: BoxDecoration(
-            color: Colors.white,
+            color: isDark ? const Color(0xFF1E293B) : Colors.white,
             borderRadius: BorderRadius.circular(14),
             border: Border.all(
-              color: const Color(0xFFE2E8F0),
+              color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0),
             ),
           ),
           padding: const EdgeInsets.all(14),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Text(
+              Text(
                 '8. Berapa nilai perubahan segmen ST (oldpeak) dari hasil pemeriksaan?',
                 style: TextStyle(
                   fontSize: 13.5,
                   fontWeight: FontWeight.bold,
-                  color: Color(0xFF111827),
+                  color: isDark ? Colors.white : const Color(0xFF111827),
                   height: 1.35,
                 ),
               ),
@@ -923,15 +946,16 @@ class _ScreeningInputPageState extends State<ScreeningInputPage> {
                 controller: _oldpeakController,
                 unit: '(mm)',
                 hintText: 'Contoh: 1.0',
+                isDark: isDark,
               ),
 
               const SizedBox(height: 4),
 
-              const Text(
+              Text(
                 '(Masukkan nilai depresi ST, contoh: 1.0)',
                 style: TextStyle(
                   fontSize: 11.5,
-                  color: Color(0xFF64748B),
+                  color: isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B),
                 ),
               ),
             ],
@@ -944,33 +968,33 @@ class _ScreeningInputPageState extends State<ScreeningInputPage> {
         Container(
           width: double.infinity,
           decoration: BoxDecoration(
-            color: Colors.white,
+            color: isDark ? const Color(0xFF1E293B) : Colors.white,
             borderRadius: BorderRadius.circular(14),
             border: Border.all(
-              color: const Color(0xFFE2E8F0),
+              color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0),
             ),
           ),
           padding: const EdgeInsets.all(14),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Text(
+              Text(
                 '9. Bagaimana kemiringan segmen ST saat pemeriksaan aktivitas?',
                 style: TextStyle(
                   fontSize: 13.5,
                   fontWeight: FontWeight.bold,
-                  color: Color(0xFF111827),
+                  color: isDark ? Colors.white : const Color(0xFF111827),
                   height: 1.35,
                 ),
               ),
 
               const SizedBox(height: 12),
 
-              _buildSlopeRadioOption('Upsloping (Meningkat)'),
+              _buildSlopeRadioOption('Upsloping (Meningkat)', isDark),
               const SizedBox(height: 10),
-              _buildSlopeRadioOption('Flat (Datar)'),
+              _buildSlopeRadioOption('Flat (Datar)', isDark),
               const SizedBox(height: 10),
-              _buildSlopeRadioOption('Downsloping (Menurun)'),
+              _buildSlopeRadioOption('Downsloping (Menurun)', isDark),
             ],
           ),
         ),
@@ -984,16 +1008,16 @@ class _ScreeningInputPageState extends State<ScreeningInputPage> {
   // STEP 5 - KONDISI KESEHATAN (Pertanyaan 10, 11)
   // Sesuai Figma Layar 2
   // ============================================================
-  Widget _buildStep5KondisiKesehatan() {
+  Widget _buildStep5KondisiKesehatan(bool isDark) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
+        Text(
           'Kondisi Kesehatan',
           style: TextStyle(
             fontSize: 16,
             fontWeight: FontWeight.bold,
-            color: Color(0xFF111827),
+            color: isDark ? Colors.white : const Color(0xFF111827),
           ),
         ),
 
@@ -1003,22 +1027,22 @@ class _ScreeningInputPageState extends State<ScreeningInputPage> {
         Container(
           width: double.infinity,
           decoration: BoxDecoration(
-            color: Colors.white,
+            color: isDark ? const Color(0xFF1E293B) : Colors.white,
             borderRadius: BorderRadius.circular(14),
             border: Border.all(
-              color: const Color(0xFFE2E8F0),
+              color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0),
             ),
           ),
           padding: const EdgeInsets.all(14),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Text(
+              Text(
                 '10. Berapa jumlah pembuluh darah yang terlihat pada pemeriksaan',
                 style: TextStyle(
                   fontSize: 13.5,
                   fontWeight: FontWeight.bold,
-                  color: Color(0xFF111827),
+                  color: isDark ? Colors.white : const Color(0xFF111827),
                   height: 1.35,
                 ),
               ),
@@ -1029,11 +1053,11 @@ class _ScreeningInputPageState extends State<ScreeningInputPage> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceAround,
                 children: [
-                  _buildMajorVesselOption(0),
-                  _buildMajorVesselOption(1),
-                  _buildMajorVesselOption(2),
-                  _buildMajorVesselOption(3),
-                  _buildMajorVesselOption(4),
+                  _buildMajorVesselOption(0, isDark),
+                  _buildMajorVesselOption(1, isDark),
+                  _buildMajorVesselOption(2, isDark),
+                  _buildMajorVesselOption(3, isDark),
+                  _buildMajorVesselOption(4, isDark),
                 ],
               ),
             ],
@@ -1046,34 +1070,34 @@ class _ScreeningInputPageState extends State<ScreeningInputPage> {
         Container(
           width: double.infinity,
           decoration: BoxDecoration(
-            color: Colors.white,
+            color: isDark ? const Color(0xFF1E293B) : Colors.white,
             borderRadius: BorderRadius.circular(14),
             border: Border.all(
-              color: const Color(0xFFE2E8F0),
+              color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0),
             ),
           ),
           padding: const EdgeInsets.all(14),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Text(
+              Text(
                 '11. Bagaimana hasil pemeriksaan thal?',
                 style: TextStyle(
                   fontSize: 13.5,
                   fontWeight: FontWeight.bold,
-                  color: Color(0xFF111827),
+                  color: isDark ? Colors.white : const Color(0xFF111827),
                   height: 1.35,
                 ),
               ),
 
               const SizedBox(height: 12),
 
-              _buildThalRadioOption('Normal'),
+              _buildThalRadioOption('Normal', isDark),
               const SizedBox(height: 10),
-              _buildThalRadioOption('Fixed defect (Kelainan Menetap)'),
+              _buildThalRadioOption('Fixed defect (Kelainan Menetap)', isDark),
               const SizedBox(height: 10),
               _buildThalRadioOption(
-                  'Reversible defect (Kelainan dapat diperbaiki)'),
+                  'Reversible defect (Kelainan dapat diperbaiki)', isDark),
             ],
           ),
         ),
@@ -1087,7 +1111,7 @@ class _ScreeningInputPageState extends State<ScreeningInputPage> {
   // HELPER WIDGETS
   // ============================================================
 
-  Widget _buildMajorVesselOption(int value) {
+  Widget _buildMajorVesselOption(int value, bool isDark) {
     final bool isSelected = _majorVessels == value;
 
     return InkWell(
@@ -1102,9 +1126,9 @@ class _ScreeningInputPageState extends State<ScreeningInputPage> {
         height: 44,
         decoration: BoxDecoration(
           shape: BoxShape.circle,
-          color: isSelected ? primaryTeal : Colors.white,
+          color: isSelected ? primaryTeal : (isDark ? const Color(0xFF0F172A) : Colors.white),
           border: Border.all(
-            color: isSelected ? primaryTeal : const Color(0xFFCBD5E1),
+            color: isSelected ? primaryTeal : (isDark ? const Color(0xFF334155) : const Color(0xFFCBD5E1)),
             width: isSelected ? 2 : 1.2,
           ),
           boxShadow: isSelected
@@ -1123,7 +1147,7 @@ class _ScreeningInputPageState extends State<ScreeningInputPage> {
             style: TextStyle(
               fontSize: 18,
               fontWeight: FontWeight.bold,
-              color: isSelected ? Colors.white : const Color(0xFF0F172A),
+              color: isSelected ? Colors.white : (isDark ? Colors.white : const Color(0xFF0F172A)),
             ),
           ),
         ),
@@ -1131,7 +1155,7 @@ class _ScreeningInputPageState extends State<ScreeningInputPage> {
     );
   }
 
-  Widget _buildSlopeRadioOption(String value) {
+  Widget _buildSlopeRadioOption(String value, bool isDark) {
     final bool isSelected = _stSlope == value;
 
     return InkWell(
@@ -1150,10 +1174,10 @@ class _ScreeningInputPageState extends State<ScreeningInputPage> {
             decoration: BoxDecoration(
               shape: BoxShape.circle,
               border: Border.all(
-                color: isSelected ? primaryTeal : const Color(0xFFCBD5E1),
+                color: isSelected ? primaryTeal : (isDark ? const Color(0xFF64748B) : const Color(0xFFCBD5E1)),
                 width: 1.5,
               ),
-              color: Colors.white,
+              color: isDark ? const Color(0xFF0F172A) : Colors.white,
             ),
             child: isSelected
                 ? Center(
@@ -1172,9 +1196,9 @@ class _ScreeningInputPageState extends State<ScreeningInputPage> {
           Expanded(
             child: Text(
               value,
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 13,
-                color: Color(0xFF1E293B),
+                color: isDark ? const Color(0xFFE2E8F0) : const Color(0xFF1E293B),
                 fontWeight: FontWeight.w400,
               ),
             ),
@@ -1184,7 +1208,7 @@ class _ScreeningInputPageState extends State<ScreeningInputPage> {
     );
   }
 
-  Widget _buildThalRadioOption(String value) {
+  Widget _buildThalRadioOption(String value, bool isDark) {
     final bool isSelected = _thal == value;
 
     return InkWell(
@@ -1203,10 +1227,10 @@ class _ScreeningInputPageState extends State<ScreeningInputPage> {
             decoration: BoxDecoration(
               shape: BoxShape.circle,
               border: Border.all(
-                color: isSelected ? primaryTeal : const Color(0xFFCBD5E1),
+                color: isSelected ? primaryTeal : (isDark ? const Color(0xFF64748B) : const Color(0xFFCBD5E1)),
                 width: 1.5,
               ),
-              color: Colors.white,
+              color: isDark ? const Color(0xFF0F172A) : Colors.white,
             ),
             child: isSelected
                 ? Center(
@@ -1225,9 +1249,9 @@ class _ScreeningInputPageState extends State<ScreeningInputPage> {
           Expanded(
             child: Text(
               value,
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 13,
-                color: Color(0xFF1E293B),
+                color: isDark ? const Color(0xFFE2E8F0) : const Color(0xFF1E293B),
                 fontWeight: FontWeight.w400,
               ),
             ),
@@ -1241,6 +1265,7 @@ class _ScreeningInputPageState extends State<ScreeningInputPage> {
     required String label,
     required bool isSelected,
     required VoidCallback onTap,
+    required bool isDark,
   }) {
     return Expanded(
       child: InkWell(
@@ -1249,10 +1274,10 @@ class _ScreeningInputPageState extends State<ScreeningInputPage> {
         child: Container(
           height: 42,
           decoration: BoxDecoration(
-            color: isSelected ? primaryTeal : Colors.white,
+            color: isSelected ? primaryTeal : (isDark ? const Color(0xFF0F172A) : Colors.white),
             borderRadius: BorderRadius.circular(10),
             border: Border.all(
-              color: isSelected ? primaryTeal : const Color(0xFFCBD5E1),
+              color: isSelected ? primaryTeal : (isDark ? const Color(0xFF334155) : const Color(0xFFCBD5E1)),
               width: 1.2,
             ),
           ),
@@ -1262,7 +1287,7 @@ class _ScreeningInputPageState extends State<ScreeningInputPage> {
               style: TextStyle(
                 fontSize: 14,
                 fontWeight: isSelected ? FontWeight.bold : FontWeight.w600,
-                color: isSelected ? Colors.white : const Color(0xFF1E293B),
+                color: isSelected ? Colors.white : (isDark ? const Color(0xFFCBD5E1) : const Color(0xFF1E293B)),
               ),
             ),
           ),
@@ -1271,7 +1296,7 @@ class _ScreeningInputPageState extends State<ScreeningInputPage> {
     );
   }
 
-  Widget _buildEcgRadioOption(String value) {
+  Widget _buildEcgRadioOption(String value, bool isDark) {
     final bool isSelected = _restingEcg == value;
 
     return InkWell(
@@ -1290,10 +1315,10 @@ class _ScreeningInputPageState extends State<ScreeningInputPage> {
             decoration: BoxDecoration(
               shape: BoxShape.circle,
               border: Border.all(
-                color: isSelected ? primaryTeal : const Color(0xFFCBD5E1),
+                color: isSelected ? primaryTeal : (isDark ? const Color(0xFF64748B) : const Color(0xFFCBD5E1)),
                 width: 1.5,
               ),
-              color: Colors.white,
+              color: isDark ? const Color(0xFF0F172A) : Colors.white,
             ),
             child: isSelected
                 ? Center(
@@ -1312,9 +1337,9 @@ class _ScreeningInputPageState extends State<ScreeningInputPage> {
           Expanded(
             child: Text(
               value,
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 13,
-                color: Color(0xFF1E293B),
+                color: isDark ? const Color(0xFFE2E8F0) : const Color(0xFF1E293B),
                 fontWeight: FontWeight.w400,
               ),
             ),
@@ -1328,14 +1353,15 @@ class _ScreeningInputPageState extends State<ScreeningInputPage> {
     required TextEditingController controller,
     required String unit,
     String? hintText,
+    required bool isDark,
   }) {
     return Container(
       height: 48,
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: isDark ? const Color(0xFF0F172A) : Colors.white,
         borderRadius: BorderRadius.circular(10),
         border: Border.all(
-          color: const Color(0xFF8BB5CE),
+          color: isDark ? const Color(0xFF334155) : const Color(0xFF8BB5CE),
           width: 1.2,
         ),
       ),
@@ -1348,24 +1374,27 @@ class _ScreeningInputPageState extends State<ScreeningInputPage> {
               keyboardType: const TextInputType.numberWithOptions(
                 decimal: true,
               ),
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 15,
-                color: Color(0xFF111827),
+                color: isDark ? Colors.white : const Color(0xFF111827),
               ),
               decoration: InputDecoration(
                 border: InputBorder.none,
                 isDense: true,
                 hintText: hintText,
+                hintStyle: TextStyle(
+                  color: isDark ? const Color(0xFF64748B) : const Color(0xFF94A3B8),
+                ),
                 contentPadding: const EdgeInsets.symmetric(vertical: 14),
               ),
             ),
           ),
           Text(
             unit,
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 15,
               fontWeight: FontWeight.w500,
-              color: Color(0xFF64748B),
+              color: isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B),
             ),
           ),
         ],

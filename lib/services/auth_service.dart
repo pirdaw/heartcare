@@ -24,15 +24,30 @@ class AuthService {
     required String email,
     required String password,
   }) async {
+    final trimmedEmail = email.trim();
+    if (trimmedEmail.isEmpty && password.isEmpty) {
+      return 'Harap masukkan email dan kata sandi.';
+    }
+    if (trimmedEmail.isEmpty) {
+      return 'Harap masukkan email atau no. HP.';
+    }
+    if (password.isEmpty) {
+      return 'Harap masukkan kata sandi.';
+    }
+
     try {
       await _auth.signInWithEmailAndPassword(
-        email: email.trim(),
+        email: trimmedEmail,
         password: password,
       );
       return null;
     } on FirebaseAuthException catch (e) {
       return _mapError(e);
-    } catch (_) {
+    } catch (e) {
+      final str = e.toString();
+      if (str.contains('pigeon') || str.contains('FirebaseAuthHostApi')) {
+        return 'Harap masukkan email dan kata sandi yang valid.';
+      }
       return 'Terjadi kesalahan tak terduga. Coba lagi.';
     }
   }
@@ -44,18 +59,29 @@ class AuthService {
     required String email,
     required String password,
   }) async {
+    final trimmedName = name.trim();
+    final trimmedEmail = email.trim();
+
+    if (trimmedName.isEmpty || trimmedEmail.isEmpty || password.isEmpty) {
+      return 'Mohon lengkapi semua data.';
+    }
+
     try {
       final credential = await _auth.createUserWithEmailAndPassword(
-        email: email.trim(),
+        email: trimmedEmail,
         password: password,
       );
-      if (name.trim().isNotEmpty) {
-        await credential.user?.updateDisplayName(name.trim());
+      if (trimmedName.isNotEmpty) {
+        await credential.user?.updateDisplayName(trimmedName);
       }
       return null;
     } on FirebaseAuthException catch (e) {
       return _mapError(e);
-    } catch (_) {
+    } catch (e) {
+      final str = e.toString();
+      if (str.contains('pigeon') || str.contains('FirebaseAuthHostApi')) {
+        return 'Mohon periksa kembali data yang dimasukkan.';
+      }
       return 'Terjadi kesalahan tak terduga. Coba lagi.';
     }
   }
@@ -63,13 +89,43 @@ class AuthService {
   /// Kirim email reset password (berisi link, bukan kode OTP).
   /// Return null jika sukses, atau pesan error jika gagal.
   Future<String?> sendPasswordResetEmail(String email) async {
+    final trimmedEmail = email.trim();
+    if (trimmedEmail.isEmpty) {
+      return 'Masukkan alamat email terlebih dahulu.';
+    }
+
     try {
-      await _auth.sendPasswordResetEmail(email: email.trim());
+      await _auth.sendPasswordResetEmail(email: trimmedEmail);
       return null;
     } on FirebaseAuthException catch (e) {
       return _mapError(e);
-    } catch (_) {
+    } catch (e) {
+      final str = e.toString();
+      if (str.contains('pigeon') || str.contains('FirebaseAuthHostApi')) {
+        return 'Format email tidak valid.';
+      }
       return 'Terjadi kesalahan tak terduga. Coba lagi.';
+    }
+  }
+
+  /// Ubah kata sandi user yang sedang login.
+  /// Return null jika sukses, atau pesan error jika gagal.
+  Future<String?> updatePassword(String newPassword) async {
+    final user = _auth.currentUser;
+    if (user == null) {
+      return null;
+    }
+
+    try {
+      await user.updatePassword(newPassword);
+      return null;
+    } on FirebaseAuthException catch (e) {
+      if (e.code == 'requires-recent-login') {
+        return 'Demi keamanan, silakan keluar dan masuk kembali sebelum mengubah kata sandi.';
+      }
+      return _mapError(e);
+    } catch (_) {
+      return 'Gagal memperbarui kata sandi. Coba lagi.';
     }
   }
 
@@ -95,8 +151,17 @@ class AuthService {
         return 'Terlalu banyak percobaan. Coba lagi beberapa saat lagi.';
       case 'network-request-failed':
         return 'Gagal terhubung. Periksa koneksi internet kamu.';
+      case 'channel-error':
+        return 'Harap masukkan email dan kata sandi dengan benar.';
       default:
-        return e.message ?? 'Terjadi kesalahan (${e.code}).';
+        final msg = e.message;
+        if (msg != null &&
+            (msg.contains('pigeon') ||
+                msg.contains('FirebaseAuthHostApi') ||
+                msg.contains('firebase_auth_platform_interface'))) {
+          return 'Harap masukkan email dan kata sandi yang valid.';
+        }
+        return msg ?? 'Terjadi kesalahan (${e.code}).';
     }
   }
 }

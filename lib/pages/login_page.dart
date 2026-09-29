@@ -22,6 +22,7 @@ class _LoginPageState extends State<LoginPage> {
 
   // Menampilkan / menyembunyikan password
   bool _obscurePassword = true;
+  bool _isLoading = false;
 
   @override
   void initState() {
@@ -36,6 +37,83 @@ class _LoginPageState extends State<LoginPage> {
     super.dispose();
   }
 
+  Future<void> _handleLogin() async {
+    if (_isLoading) return;
+
+    final email = emailController.text.trim();
+    final password = passwordController.text;
+
+    if (email.isEmpty && password.isEmpty) {
+      _showErrorSnackBar('Harap masukkan email dan kata sandi.');
+      return;
+    }
+
+    if (email.isEmpty) {
+      _showErrorSnackBar('Harap masukkan email atau no. HP.');
+      return;
+    }
+
+    if (password.isEmpty) {
+      _showErrorSnackBar('Harap masukkan kata sandi.');
+      return;
+    }
+
+    // Sembunyikan keyboard
+    FocusScope.of(context).unfocus();
+
+    setState(() {
+      _isLoading = true;
+    });
+
+    final error = await AuthService.instance.signIn(
+      email: email,
+      password: password,
+    );
+
+    if (!mounted) return;
+
+    setState(() {
+      _isLoading = false;
+    });
+
+    if (error != null) {
+      _showErrorSnackBar(error);
+      return;
+    }
+
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(
+        builder: (context) => const HomePage(),
+      ),
+    );
+  }
+
+  void _showErrorSnackBar(String message) {
+    ScaffoldMessenger.of(context).hideCurrentSnackBar();
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Row(
+          children: [
+            const Icon(Icons.info_outline, color: Colors.white, size: 20),
+            const SizedBox(width: 10),
+            Expanded(
+              child: Text(
+                message,
+                style: const TextStyle(fontSize: 13.5, color: Colors.white),
+              ),
+            ),
+          ],
+        ),
+        backgroundColor: const Color(0xFFE53935),
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+        margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+        duration: const Duration(seconds: 3),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final screenHeight = MediaQuery.of(context).size.height;
@@ -45,6 +123,7 @@ class _LoginPageState extends State<LoginPage> {
 
       body: SizedBox.expand(
         child: Stack(
+          clipBehavior: Clip.none,
           children: [
             // ==========================================
             // DEKORASI BIRU MUDA DI KIRI BAWAH
@@ -52,7 +131,7 @@ class _LoginPageState extends State<LoginPage> {
 
             Positioned(
               left: -135,
-              bottom: -105,
+              top: screenHeight - 285,
               child: Container(
                 width: 390,
                 height: 390,
@@ -134,6 +213,7 @@ class _LoginPageState extends State<LoginPage> {
                           controller: emailController,
                           keyboardType:
                               TextInputType.emailAddress,
+                          textInputAction: TextInputAction.next,
                           style: const TextStyle(
                             fontSize: 14,
                             color: Colors.black,
@@ -196,6 +276,8 @@ class _LoginPageState extends State<LoginPage> {
                         child: TextField(
                           controller: passwordController,
                           obscureText: _obscurePassword,
+                          textInputAction: TextInputAction.done,
+                          onSubmitted: (_) => _handleLogin(),
                           style: const TextStyle(
                             fontSize: 14,
                             color: Colors.black,
@@ -297,32 +379,13 @@ class _LoginPageState extends State<LoginPage> {
                         width: double.infinity,
                         height: 55,
                         child: ElevatedButton(
-                          onPressed: () async {
-  final error = await AuthService.instance.signIn(
-    email: emailController.text,
-    password: passwordController.text,
-  );
-
-  if (!context.mounted) return;
-
-  if (error != null) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(error)),
-    );
-    return;
-  }
-
-  Navigator.pushReplacement(
-    context,
-    MaterialPageRoute(
-      builder: (context) => const HomePage(),
-    ),
-  );
-},
+                          onPressed: _isLoading ? null : _handleLogin,
                           style: ElevatedButton.styleFrom(
                             backgroundColor:
                                 const Color(0xFF0B9AC1),
                             foregroundColor: Colors.white,
+                            disabledBackgroundColor:
+                                const Color(0xFF0B9AC1).withValues(alpha: 0.6),
                             elevation: 0,
                             shape:
                                 RoundedRectangleBorder(
@@ -330,13 +393,22 @@ class _LoginPageState extends State<LoginPage> {
                                   BorderRadius.circular(8),
                             ),
                           ),
-                          child: const Text(
-                            'Masuk',
-                            style: TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
+                          child: _isLoading
+                              ? const SizedBox(
+                                  width: 24,
+                                  height: 24,
+                                  child: CircularProgressIndicator(
+                                    color: Colors.white,
+                                    strokeWidth: 2.5,
+                                  ),
+                                )
+                              : const Text(
+                                  'Masuk',
+                                  style: TextStyle(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
                         ),
                       ),
 

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:heartcare/services/theme_service.dart';
 import 'home_page.dart';
 import 'konfirmasi_jadwal_page.dart';
 import 'profil_page.dart';
@@ -60,304 +61,305 @@ class _PilihJadwalPageState extends State<PilihJadwalPage> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.white,
-      body: SafeArea(
-        child: Column(
-          children: [
-            // ==================================================
-            // HEADER
-            // ==================================================
-            Padding(
-              padding: const EdgeInsets.fromLTRB(20, 16, 20, 12),
-              child: Row(
-                children: [
-                  // TOMBOL KEMBALI BUNDAR
-                  Container(
-                    width: 40,
-                    height: 40,
-                    decoration: const BoxDecoration(
-                      color: Color(0xFFF1F3F6),
-                      shape: BoxShape.circle,
-                    ),
-                    child: IconButton(
-                      padding: EdgeInsets.zero,
-                      icon: const Icon(
-                        Icons.chevron_left,
-                        size: 28,
-                        color: Color(0xFF1E293B),
-                      ),
-                      onPressed: () {
-                        Navigator.pop(context);
-                      },
-                    ),
-                  ),
+    return ValueListenableBuilder<ThemeMode>(
+      valueListenable: ThemeService.themeModeNotifier,
+      builder: (context, themeMode, _) {
+        final isDark = themeMode == ThemeMode.dark;
 
-                  // JUDUL
-                  const Expanded(
-                    child: Center(
-                      child: Text(
-                        "Pilih Jadwal",
-                        style: TextStyle(
-                          fontSize: 21,
-                          fontWeight: FontWeight.bold,
-                          color: Color(0xFF0F172A),
+        return Scaffold(
+          backgroundColor: isDark ? const Color(0xFF0F172A) : Colors.white,
+          body: SafeArea(
+            child: Column(
+              children: [
+                // ==================================================
+                // HEADER
+                // ==================================================
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(20, 16, 20, 12),
+                  child: Row(
+                    children: [
+                      // TOMBOL KEMBALI BUNDAR
+                      Container(
+                        width: 40,
+                        height: 40,
+                        decoration: BoxDecoration(
+                          color: isDark ? const Color(0xFF1E293B) : const Color(0xFFF1F3F6),
+                          shape: BoxShape.circle,
+                        ),
+                        child: IconButton(
+                          padding: EdgeInsets.zero,
+                          icon: Icon(
+                            Icons.chevron_left,
+                            size: 28,
+                            color: isDark ? Colors.white : const Color(0xFF1E293B),
+                          ),
+                          onPressed: () {
+                            Navigator.pop(context);
+                          },
                         ),
                       ),
-                    ),
-                  ),
 
-                  // PENYEIMBANG KANAN
-                  const SizedBox(width: 40),
-                ],
-              ),
-            ),
-
-            // ==================================================
-            // CONTENT PEMILIHAN JADWAL
-            // ==================================================
-            Expanded(
-              child: SingleChildScrollView(
-                padding: const EdgeInsets.fromLTRB(22, 10, 22, 24),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    // BULAN & TAHUN
-                    const Text(
-                      "September 2026",
-                      style: TextStyle(
-                        fontSize: 13.5,
-                        fontWeight: FontWeight.w600,
-                        color: Color(0xFF334155),
+                      // JUDUL
+                      Expanded(
+                        child: Center(
+                          child: Text(
+                            "Pilih Jadwal",
+                            style: TextStyle(
+                              fontSize: 21,
+                              fontWeight: FontWeight.bold,
+                              color: isDark ? Colors.white : const Color(0xFF0F172A),
+                            ),
+                          ),
+                        ),
                       ),
-                    ),
 
-                    const SizedBox(height: 12),
+                      // PENYEIMBANG KANAN
+                      const SizedBox(width: 40),
+                    ],
+                  ),
+                ),
 
-                    // BARIS 7 KAPSUL HARI (Sen 1 - Min 7)
-                    Row(
-                      children: dates.map((item) {
-                        final int day = int.parse(item["date"]!);
-                        final bool isSelected = selectedDay == day;
+                // ==================================================
+                // CONTENT PEMILIHAN JADWAL
+                // ==================================================
+                Expanded(
+                  child: SingleChildScrollView(
+                    padding: const EdgeInsets.fromLTRB(22, 10, 22, 24),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        // BULAN & TAHUN
+                        Text(
+                          "September 2026",
+                          style: TextStyle(
+                            fontSize: 13.5,
+                            fontWeight: FontWeight.w600,
+                            color: isDark ? const Color(0xFF94A3B8) : const Color(0xFF334155),
+                          ),
+                        ),
 
-                        return Expanded(
-                          child: Padding(
-                            padding: const EdgeInsets.symmetric(horizontal: 2.5),
-                            child: Material(
-                              color: Colors.transparent,
-                              child: InkWell(
-                                onTap: () {
-                                  setState(() {
-                                    selectedDay = day;
-                                    selectedDayName = item["day"]!;
-                                  });
-                                },
-                                borderRadius: BorderRadius.circular(14),
-                                child: Container(
-                                  height: 68,
-                                  decoration: BoxDecoration(
-                                    color: isSelected
-                                        ? brandTeal
-                                        : Colors.white,
+                        const SizedBox(height: 12),
+
+                        // BARIS 7 KAPSUL HARI (Sen 1 - Min 7)
+                        Row(
+                          children: dates.map((item) {
+                            final int day = int.parse(item["date"]!);
+                            final bool isSelected = selectedDay == day;
+
+                            return Expanded(
+                              child: Padding(
+                                padding: const EdgeInsets.symmetric(horizontal: 2.5),
+                                child: Material(
+                                  color: Colors.transparent,
+                                  child: InkWell(
+                                    onTap: () {
+                                      setState(() {
+                                        selectedDay = day;
+                                        selectedDayName = item["day"]!;
+                                      });
+                                    },
                                     borderRadius: BorderRadius.circular(14),
-                                    border: Border.all(
-                                      color: isSelected
-                                          ? brandTeal
-                                          : const Color(0xFFE2E8F0),
-                                      width: 1.2,
-                                    ),
-                                    boxShadow: isSelected
-                                        ? [
-                                            BoxShadow(
-                                              color: brandTeal
-                                                  .withValues(alpha: 0.25),
-                                              blurRadius: 8,
-                                              offset: const Offset(0, 3),
+                                    child: Container(
+                                      height: 68,
+                                      decoration: BoxDecoration(
+                                        color: isSelected
+                                            ? brandTeal
+                                            : (isDark ? const Color(0xFF1E293B) : Colors.white),
+                                        borderRadius: BorderRadius.circular(14),
+                                        border: Border.all(
+                                          color: isSelected
+                                              ? brandTeal
+                                              : (isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0)),
+                                          width: 1.2,
+                                        ),
+                                        boxShadow: isSelected
+                                            ? [
+                                                BoxShadow(
+                                                  color: brandTeal.withValues(alpha: 0.25),
+                                                  blurRadius: 8,
+                                                  offset: const Offset(0, 3),
+                                                ),
+                                              ]
+                                            : null,
+                                      ),
+                                      child: Column(
+                                        mainAxisAlignment: MainAxisAlignment.center,
+                                        children: [
+                                          Text(
+                                            item["day"]!,
+                                            style: TextStyle(
+                                              fontSize: 11.5,
+                                              fontWeight: FontWeight.w500,
+                                              color: isSelected
+                                                  ? Colors.white
+                                                  : (isDark ? const Color(0xFF94A3B8) : const Color(0xFF475569)),
                                             ),
-                                          ]
-                                        : null,
-                                  ),
-                                  child: Column(
-                                    mainAxisAlignment:
-                                        MainAxisAlignment.center,
-                                    children: [
-                                      Text(
-                                        item["day"]!,
-                                        style: TextStyle(
-                                          fontSize: 11.5,
-                                          fontWeight: FontWeight.w500,
-                                          color: isSelected
-                                              ? Colors.white
-                                              : const Color(0xFF475569),
-                                        ),
+                                          ),
+                                          const SizedBox(height: 3),
+                                          Text(
+                                            item["date"]!,
+                                            style: TextStyle(
+                                              fontSize: 16.5,
+                                              fontWeight: FontWeight.bold,
+                                              color: isSelected
+                                                  ? Colors.white
+                                                  : (isDark ? Colors.white : const Color(0xFF0F172A)),
+                                            ),
+                                          ),
+                                        ],
                                       ),
-                                      const SizedBox(height: 3),
-                                      Text(
-                                        item["date"]!,
-                                        style: TextStyle(
-                                          fontSize: 16.5,
-                                          fontWeight: FontWeight.bold,
-                                          color: isSelected
-                                              ? Colors.white
-                                              : const Color(0xFF0F172A),
-                                        ),
-                                      ),
-                                    ],
+                                    ),
                                   ),
                                 ),
                               ),
+                            );
+                          }).toList(),
+                        ),
+
+                        const SizedBox(height: 28),
+
+                        // PAGI
+                        _timeSection(
+                          isDark: isDark,
+                          title: "Pagi",
+                          times: morningTimes,
+                        ),
+
+                        const SizedBox(height: 24),
+
+                        // SIANG
+                        _timeSection(
+                          isDark: isDark,
+                          title: "Siang",
+                          times: afternoonTimes,
+                        ),
+
+                        const SizedBox(height: 24),
+
+                        // SORE
+                        _timeSection(
+                          isDark: isDark,
+                          title: "Sore",
+                          times: eveningTimes,
+                        ),
+
+                        const SizedBox(height: 36),
+
+                        // TOMBOL KONFIRMASI JADWAL
+                        SizedBox(
+                          width: double.infinity,
+                          height: 48,
+                          child: ElevatedButton(
+                            onPressed: selectedTime == null
+                                ? null
+                                : _onConfirmSchedule,
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: brandTeal,
+                              disabledBackgroundColor: isDark ? const Color(0xFF1E293B) : const Color(0xFFB4E3EE),
+                              foregroundColor: Colors.white,
+                              elevation: 0,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(10),
+                              ),
+                            ),
+                            child: const Text(
+                              "Konfirmasi Jadwal",
+                              style: TextStyle(
+                                fontSize: 15,
+                                fontWeight: FontWeight.bold,
+                              ),
                             ),
                           ),
-                        );
-                      }).toList(),
-                    ),
-
-                    const SizedBox(height: 28),
-
-                    // ==================================================
-                    // PAGI
-                    // ==================================================
-                    _timeSection(
-                      title: "Pagi",
-                      times: morningTimes,
-                    ),
-
-                    const SizedBox(height: 24),
-
-                    // ==================================================
-                    // SIANG
-                    // ==================================================
-                    _timeSection(
-                      title: "Siang",
-                      times: afternoonTimes,
-                    ),
-
-                    const SizedBox(height: 24),
-
-                    // ==================================================
-                    // SORE
-                    // ==================================================
-                    _timeSection(
-                      title: "Sore",
-                      times: eveningTimes,
-                    ),
-
-                    const SizedBox(height: 36),
-
-                    // ==================================================
-                    // TOMBOL KONFIRMASI JADWAL (TEAL)
-                    // ==================================================
-                    SizedBox(
-                      width: double.infinity,
-                      height: 48,
-                      child: ElevatedButton(
-                        onPressed: selectedTime == null
-                            ? null
-                            : _onConfirmSchedule,
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: brandTeal,
-                          disabledBackgroundColor: const Color(0xFFB4E3EE),
-                          foregroundColor: Colors.white,
-                          elevation: 0,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(10),
-                          ),
                         ),
-                        child: const Text(
-                          "Konfirmasi Jadwal",
-                          style: TextStyle(
-                            fontSize: 15,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ),
-                    ),
 
-                    const SizedBox(height: 12),
-                  ],
+                        const SizedBox(height: 12),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+
+          // BOTTOM NAVIGATION
+          bottomNavigationBar: SafeArea(
+            top: false,
+            child: Container(
+              height: 62,
+              decoration: BoxDecoration(
+                color: isDark ? const Color(0xFF0F172A) : Colors.white,
+                border: Border(
+                  top: BorderSide(
+                    color: isDark ? const Color(0xFF1E293B) : const Color(0xFFE2E8F0),
+                    width: 0.8,
+                  ),
                 ),
               ),
-            ),
-          ],
-        ),
-      ),
-
-      // ==================================================
-      // BOTTOM NAVIGATION (SESUAI GAMBAR)
-      // ==================================================
-      bottomNavigationBar: SafeArea(
-        top: false,
-        child: Container(
-          height: 62,
-          decoration: const BoxDecoration(
-            color: Colors.white,
-            border: Border(
-              top: BorderSide(
-                color: Color(0xFFE2E8F0),
-                width: 0.8,
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceAround,
+                children: [
+                  _bottomNavItem(
+                    isDark: isDark,
+                    icon: Icons.home_outlined,
+                    label: "Home",
+                    active: false,
+                    onTap: () {
+                      Navigator.pushAndRemoveUntil(
+                        context,
+                        MaterialPageRoute(builder: (context) => const HomePage()),
+                        (route) => false,
+                      );
+                    },
+                  ),
+                  _bottomNavItem(
+                    isDark: isDark,
+                    icon: Icons.favorite_border,
+                    label: "Skrining",
+                    active: false,
+                    onTap: () {
+                      Navigator.pop(context);
+                    },
+                  ),
+                  _bottomNavItem(
+                    isDark: isDark,
+                    icon: Icons.medical_services_outlined,
+                    label: "Dokter",
+                    active: true,
+                    onTap: () {
+                      Navigator.pop(context);
+                    },
+                  ),
+                  _bottomNavItem(
+                    isDark: isDark,
+                    icon: Icons.description_outlined,
+                    label: "Riwayat",
+                    active: false,
+                  ),
+                  _bottomNavItem(
+                    isDark: isDark,
+                    icon: Icons.person_outline,
+                    label: "Profil",
+                    active: false,
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const ProfilPage(),
+                        ),
+                      );
+                    },
+                  ),
+                ],
               ),
             ),
           ),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceAround,
-            children: [
-              _bottomNavItem(
-                icon: Icons.home_outlined,
-                label: "Home",
-                active: false,
-                onTap: () {
-                  Navigator.pushAndRemoveUntil(
-                    context,
-                    MaterialPageRoute(builder: (context) => const HomePage()),
-                    (route) => false,
-                  );
-                },
-              ),
-              _bottomNavItem(
-                icon: Icons.favorite_border,
-                label: "Skrining",
-                active: false,
-                onTap: () {
-                  Navigator.pop(context);
-                },
-              ),
-              _bottomNavItem(
-                icon: Icons.medical_services_outlined,
-                label: "Dokter",
-                active: true,
-                onTap: () {
-                  Navigator.pop(context);
-                },
-              ),
-              _bottomNavItem(
-                icon: Icons.description_outlined,
-                label: "Riwayat",
-                active: false,
-              ),
-              _bottomNavItem(
-                icon: Icons.person_outline,
-                label: "Profil",
-                active: false,
-                onTap: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => const ProfilPage(),
-                    ),
-                  );
-                },
-              ),
-            ],
-          ),
-        ),
-      ),
+        );
+      },
     );
   }
 
-  // ==========================================================
-  // WIDGET KELOMPOK WAKTU (PAGI / SIANG / SORE)
-  // ==========================================================
   Widget _timeSection({
+    required bool isDark,
     required String title,
     required List<String> times,
   }) {
@@ -366,10 +368,10 @@ class _PilihJadwalPageState extends State<PilihJadwalPage> {
       children: [
         Text(
           title,
-          style: const TextStyle(
+          style: TextStyle(
             fontSize: 14,
             fontWeight: FontWeight.w600,
-            color: Color(0xFF334155),
+            color: isDark ? Colors.white : const Color(0xFF334155),
           ),
         ),
         const SizedBox(height: 10),
@@ -394,12 +396,14 @@ class _PilihJadwalPageState extends State<PilihJadwalPage> {
                     vertical: 8,
                   ),
                   decoration: BoxDecoration(
-                    color: isSelected ? brandTeal : Colors.white,
+                    color: isSelected
+                        ? brandTeal
+                        : (isDark ? const Color(0xFF1E293B) : Colors.white),
                     borderRadius: BorderRadius.circular(8),
                     border: Border.all(
                       color: isSelected
                           ? brandTeal
-                          : const Color(0xFFE2E8F0),
+                          : (isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0)),
                       width: 1.2,
                     ),
                     boxShadow: isSelected
@@ -420,7 +424,7 @@ class _PilihJadwalPageState extends State<PilihJadwalPage> {
                           isSelected ? FontWeight.bold : FontWeight.w500,
                       color: isSelected
                           ? Colors.white
-                          : const Color(0xFF475569),
+                          : (isDark ? const Color(0xFFCBD5E1) : const Color(0xFF475569)),
                     ),
                   ),
                 ),
@@ -432,9 +436,6 @@ class _PilihJadwalPageState extends State<PilihJadwalPage> {
     );
   }
 
-  // ==========================================================
-  // AKSI KONFIRMASI: MEMBUKA HALAMAN BARU (BUKAN POP-UP)
-  // ==========================================================
   void _onConfirmSchedule() {
     if (selectedTime == null) return;
 
@@ -454,15 +455,16 @@ class _PilihJadwalPageState extends State<PilihJadwalPage> {
     );
   }
 
-  // ==========================================================
-  // BOTTOM NAVIGATION ITEM
-  // ==========================================================
   Widget _bottomNavItem({
+    required bool isDark,
     required IconData icon,
     required String label,
     required bool active,
     VoidCallback? onTap,
   }) {
+    final activeColor = isDark ? const Color(0xFF38BDF8) : brandTeal;
+    final inactiveColor = isDark ? const Color(0xFF64748B) : const Color(0xFF64748B);
+
     return GestureDetector(
       onTap: onTap,
       behavior: HitTestBehavior.opaque,
@@ -475,7 +477,7 @@ class _PilihJadwalPageState extends State<PilihJadwalPage> {
             Icon(
               icon,
               size: 23,
-              color: active ? brandTeal : const Color(0xFF64748B),
+              color: active ? activeColor : inactiveColor,
             ),
             const SizedBox(height: 2),
             Text(
@@ -485,7 +487,7 @@ class _PilihJadwalPageState extends State<PilihJadwalPage> {
               style: TextStyle(
                 fontSize: 10.5,
                 fontWeight: active ? FontWeight.bold : FontWeight.normal,
-                color: active ? brandTeal : const Color(0xFF64748B),
+                color: active ? activeColor : inactiveColor,
               ),
             ),
           ],
