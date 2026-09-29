@@ -44,7 +44,7 @@ class ArticleDetailPage extends StatelessWidget {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: const [
                             Text(
-                              'Edukasi Kesehatan',
+                              'Artikel Kesehatan',
                               style: TextStyle(
                                 fontSize: 20,
                                 fontWeight: FontWeight.bold,
@@ -52,7 +52,7 @@ class ArticleDetailPage extends StatelessWidget {
                             ),
                             SizedBox(height: 2),
                             Text(
-                              'Belajar informasi kesehatan jantung agar hidup\n'
+                              'Kumpulan artikel kesehatan jantung agar hidup\n'
                               'lebih sehat.',
                               style: TextStyle(
                                 fontSize: 8,

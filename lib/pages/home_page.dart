@@ -370,16 +370,16 @@ class _HomePageState extends State<HomePage> {
                         const SizedBox(width: 10),
 
                         // ==================================================
-                        // EDUKASI KESEHATAN
+                        // ARTIKEL KESEHATAN
                         // ==================================================
 
                         Expanded(
                           child: _serviceCard(
                             icon:
                                 Icons.menu_book_outlined,
-                            title: 'Edukasi Kesehatan',
+                            title: 'Artikel Kesehatan',
                             description:
-                                'Dapatkan informasi dan tips menjaga kesehatan Anda.',
+                                'Baca artikel dan tips untuk menjaga kesehatan Anda.',
                             iconColor:
                                 const Color(0xFF237BEA),
 
