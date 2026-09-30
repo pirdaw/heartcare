@@ -10,12 +10,14 @@ class ChatItem {
   final String time;
   final bool isDoctor;
   final String? attachmentType;
+  final String? imagePath;
 
   ChatItem({
     required this.message,
     required this.time,
     required this.isDoctor,
     this.attachmentType,
+    this.imagePath,
   });
 }
 
@@ -50,10 +52,15 @@ class _KonsultasiDokterPageState
   @override
   void initState() {
     super.initState();
-    final profile = UserProfileService.instance.currentProfile;
-    final firstName = profile.nama.trim().isNotEmpty
-        ? profile.nama.trim().split(' ').first
-        : 'Pasien';
+    String firstName = 'Pasien';
+    try {
+      final profile = UserProfileService.instance.currentProfile;
+      if (profile.nama.trim().isNotEmpty) {
+        firstName = profile.nama.trim().split(' ').first;
+      }
+    } catch (_) {
+      firstName = 'Pasien';
+    }
     _messages = [
       ChatItem(
         message: "Halo $firstName, Selamat datang!\nAda yang bisa saya bantu?",
@@ -65,6 +72,12 @@ class _KonsultasiDokterPageState
             "Dok, saya tadi melakukan skrining,\nhasilnya risiko tinggi.\nApa yang harus saya lakukan?",
         time: "14.01",
         isDoctor: false,
+      ),
+      ChatItem(
+        message: "",
+        time: "14.01",
+        isDoctor: false,
+        imagePath: "assets/images/screening_jantung.png",
       ),
       ChatItem(
         message:
@@ -589,17 +602,22 @@ class _KonsultasiDokterPageState
                                 return Padding(
                                   padding:
                                       const EdgeInsets.only(bottom: 16),
-                                  child: item.isDoctor
-                                      ? _doctorMessage(
-                                          item.message,
+                                  child: item.imagePath != null
+                                      ? _userImageMessage(
+                                          item.imagePath!,
                                           item.time,
-                                          isDark,
                                         )
-                                      : _userMessage(
-                                          item.message,
-                                          item.time,
-                                          isDark,
-                                        ),
+                                      : (item.isDoctor
+                                          ? _doctorMessage(
+                                              item.message,
+                                              item.time,
+                                              isDark,
+                                            )
+                                          : _userMessage(
+                                              item.message,
+                                              item.time,
+                                              isDark,
+                                            )),
                                 );
                               }
 
@@ -773,8 +791,8 @@ class _KonsultasiDokterPageState
       children: [
 
         _doctorImage(
-          width: 28,
-          height: 28,
+          width: 30,
+          height: 30,
         ),
 
         const SizedBox(width: 8),
@@ -786,7 +804,7 @@ class _KonsultasiDokterPageState
             ),
             padding: const EdgeInsets.fromLTRB(
               12,
-              9,
+              10,
               10,
               6,
             ),
@@ -805,7 +823,7 @@ class _KonsultasiDokterPageState
                   child: Text(
                     message,
                     style: TextStyle(
-                      fontSize: 13.5,
+                      fontSize: 13,
                       height: 1.35,
                       color: isDark ? Colors.white : const Color(0xFF0F172A),
                     ),
@@ -817,7 +835,7 @@ class _KonsultasiDokterPageState
                 Text(
                   time,
                   style: TextStyle(
-                    fontSize: 10,
+                    fontSize: 9.5,
                     color: isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B),
                     fontWeight: FontWeight.w500,
                   ),
@@ -847,7 +865,7 @@ class _KonsultasiDokterPageState
         ),
         padding: const EdgeInsets.fromLTRB(
           12,
-          9,
+          10,
           10,
           6,
         ),
@@ -866,7 +884,7 @@ class _KonsultasiDokterPageState
               child: Text(
                 message,
                 style: TextStyle(
-                  fontSize: 13.5,
+                  fontSize: 13,
                   height: 1.35,
                   color: isDark ? Colors.white : const Color(0xFF0F172A),
                 ),
@@ -878,9 +896,65 @@ class _KonsultasiDokterPageState
             Text(
               time,
               style: TextStyle(
-                fontSize: 10,
+                fontSize: 9.5,
                 color: isDark ? const Color(0xFFBAE6FD) : const Color(0xFF164E63),
                 fontWeight: FontWeight.w600,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // ==========================================================
+  // PESAN GAMBAR USER
+  // ==========================================================
+
+  Widget _userImageMessage(
+    String imagePath,
+    String time,
+  ) {
+    return Align(
+      alignment: Alignment.centerRight,
+      child: Container(
+        constraints: const BoxConstraints(maxWidth: 210),
+        padding: const EdgeInsets.all(4),
+        decoration: BoxDecoration(
+          color: doctorBlue,
+          borderRadius: BorderRadius.circular(10),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.end,
+          children: [
+            ClipRRect(
+              borderRadius: BorderRadius.circular(8),
+              child: Image.asset(
+                imagePath,
+                fit: BoxFit.cover,
+                errorBuilder: (context, error, stackTrace) {
+                  return Container(
+                    height: 120,
+                    color: Colors.white24,
+                    alignment: Alignment.center,
+                    child: const Icon(
+                      Icons.image_outlined,
+                      color: Colors.white,
+                      size: 36,
+                    ),
+                  );
+                },
+              ),
+            ),
+            const SizedBox(height: 3),
+            Padding(
+              padding: const EdgeInsets.only(right: 6, bottom: 2),
+              child: Text(
+                time,
+                style: const TextStyle(
+                  fontSize: 9.5,
+                  color: Color(0xFF397080),
+                ),
               ),
             ),
           ],
@@ -906,13 +980,27 @@ class _KonsultasiDokterPageState
       ),
       clipBehavior: Clip.antiAlias,
       child: Image.asset(
-        widget.doctorPhoto,
+        widget.doctorPhoto.isNotEmpty
+            ? widget.doctorPhoto
+            : "assets/images/dokter_nurlitta.png",
         fit: BoxFit.cover,
         errorBuilder: (context, error, stackTrace) {
-          return const Icon(
-            Icons.person,
-            color: Colors.grey,
-            size: 25,
+          return Image.asset(
+            "assets/images/dokter_nurlitta.png",
+            fit: BoxFit.cover,
+            errorBuilder: (context, error, stackTrace) {
+              return Image.asset(
+                "assets/images/profile_woman.png",
+                fit: BoxFit.cover,
+                errorBuilder: (context, error, stackTrace) {
+                  return Icon(
+                    Icons.person,
+                    color: Colors.grey,
+                    size: width * 0.6,
+                  );
+                },
+              );
+            },
           );
         },
       ),
@@ -1029,7 +1117,7 @@ class _KonsultasiDokterPageState
             Text(
               text,
               style: TextStyle(
-                fontSize: 10.5,
+                fontSize: 9.5,
                 color: active ? activeColor : inactiveColor,
                 fontWeight: active
                     ? FontWeight.w600

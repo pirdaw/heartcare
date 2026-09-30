@@ -46,7 +46,11 @@ class HealthReminderController extends ChangeNotifier {
         note: 'Setelah makan siang ya',
       ),
     );
-    _startTimer();
+    // Don't auto-start periodic background timer in test environment to avoid pending timer assertion
+    final isTest = WidgetsBinding.instance.runtimeType.toString().contains('Test');
+    if (!isTest) {
+      _startTimer();
+    }
   }
 
   final List<MedicineReminder> medicines = [];

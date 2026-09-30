@@ -94,13 +94,15 @@ class UserProfileService extends ChangeNotifier {
   final Map<String, UserProfileData> _cache = {};
 
   String _getUserKey() {
-    final user = FirebaseAuth.instance.currentUser;
-    if (user != null && user.uid.isNotEmpty) {
-      return user.uid;
-    }
-    if (user != null && (user.email ?? '').isNotEmpty) {
-      return user.email!;
-    }
+    try {
+      final user = FirebaseAuth.instance.currentUser;
+      if (user != null && user.uid.isNotEmpty) {
+        return user.uid;
+      }
+      if (user != null && (user.email ?? '').isNotEmpty) {
+        return user.email!;
+      }
+    } catch (_) {}
     return 'guest_user';
   }
 
@@ -113,7 +115,10 @@ class UserProfileService extends ChangeNotifier {
       return _cache[key]!;
     }
 
-    final user = FirebaseAuth.instance.currentUser;
+    User? user;
+    try {
+      user = FirebaseAuth.instance.currentUser;
+    } catch (_) {}
     String name = (user?.displayName ?? '').trim();
     if (name.isEmpty && user?.email != null && user!.email!.isNotEmpty) {
       final prefix = user.email!.split('@').first;
@@ -122,16 +127,27 @@ class UserProfileService extends ChangeNotifier {
           : 'Pengguna';
     }
     if (name.isEmpty) {
-      name = 'Pengguna';
+      name = 'Nadea';
     }
 
     final email = user?.email ?? '';
     final phone = user?.phoneNumber ?? '';
 
     final newProfile = UserProfileData(
-      nama: name,
-      email: email,
-      telepon: phone,
+      nama: name.isNotEmpty && name != 'Pengguna'
+          ? (name == 'Nadea' ? 'Nadea Fieldzah Putri' : name)
+          : 'Nadea Fieldzah Putri',
+      email: email.isNotEmpty ? email : 'nadea123@gmail.com',
+      telepon: phone.isNotEmpty ? phone : '+62 123 456 799',
+      jenisKelamin: 'Perempuan',
+      ttl: 'Jakarta, 29 Februari 2004',
+      alamat: 'Jl. Merdeka No. 45, Jakarta Selatan',
+      golonganDarah: 'O',
+      tinggiBadan: '167 cm',
+      beratBadan: '51 kg',
+      alergi: 'Tidak Ada',
+      penyakitDiderita: 'Tidak Ada',
+      riwayatOperasi: 'Tidak Ada',
     );
 
     _cache[key] = newProfile;

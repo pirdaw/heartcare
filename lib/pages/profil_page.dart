@@ -152,7 +152,7 @@ class _ProfilPageState extends State<ProfilPage> {
                       shape: BoxShape.circle,
                     ),
                     child: const Icon(
-                      Icons.camera_alt_rounded,
+                      Icons.camera_alt_outlined,
                       color: Color(0xFF0098B9),
                       size: 22,
                     ),
@@ -516,7 +516,7 @@ class _ProfilPageState extends State<ProfilPage> {
                                   ],
                                 ),
                                 child: const Icon(
-                                  Icons.camera_alt_rounded,
+                                  Icons.camera_alt_outlined,
                                   size: 18,
                                   color: Colors.white,
                                 ),

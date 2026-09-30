@@ -369,68 +369,77 @@ class _PilihJadwalPageState extends State<PilihJadwalPage> {
         Text(
           title,
           style: TextStyle(
-            fontSize: 14,
+            fontSize: 12,
             fontWeight: FontWeight.w600,
-            color: isDark ? Colors.white : const Color(0xFF334155),
+            color: isDark ? Colors.white : const Color(0xFF333333),
           ),
         ),
         const SizedBox(height: 10),
-        Wrap(
-          spacing: 8,
-          runSpacing: 8,
-          children: times.map((time) {
-            final bool isSelected = selectedTime == time;
+        LayoutBuilder(
+          builder: (context, constraints) {
+            const int crossAxisCount = 5;
+            const double spacing = 8;
+            final double itemWidth =
+                (constraints.maxWidth - (spacing * (crossAxisCount - 1))) /
+                    crossAxisCount;
 
-            return Material(
-              color: Colors.transparent,
-              child: InkWell(
-                onTap: () {
-                  setState(() {
-                    selectedTime = time;
-                  });
-                },
-                borderRadius: BorderRadius.circular(8),
-                child: Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 14,
-                    vertical: 8,
-                  ),
-                  decoration: BoxDecoration(
-                    color: isSelected
-                        ? brandTeal
-                        : (isDark ? const Color(0xFF1E293B) : Colors.white),
+            return Wrap(
+              spacing: spacing,
+              runSpacing: 10,
+              children: times.map((time) {
+                final bool isSelected = selectedTime == time;
+
+                return Material(
+                  color: Colors.transparent,
+                  child: InkWell(
+                    onTap: () {
+                      setState(() {
+                        selectedTime = time;
+                      });
+                    },
                     borderRadius: BorderRadius.circular(8),
-                    border: Border.all(
-                      color: isSelected
-                          ? brandTeal
-                          : (isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0)),
-                      width: 1.2,
+                    child: Container(
+                      width: itemWidth,
+                      height: 32,
+                      alignment: Alignment.center,
+                      decoration: BoxDecoration(
+                        color: isSelected
+                            ? brandTeal
+                            : (isDark ? const Color(0xFF1E293B) : const Color(0xFFF4F6F8)),
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(
+                          color: isSelected
+                              ? brandTeal
+                              : (isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0)),
+                          width: 1.2,
+                        ),
+                        boxShadow: isSelected
+                            ? [
+                                BoxShadow(
+                                  color: brandTeal.withValues(alpha: 0.20),
+                                  blurRadius: 6,
+                                  offset: const Offset(0, 2),
+                                ),
+                              ]
+                            : null,
+                      ),
+                      child: Text(
+                        time,
+                        style: TextStyle(
+                          fontSize: 11,
+                          fontWeight:
+                              isSelected ? FontWeight.w600 : FontWeight.w500,
+                          color: isSelected
+                              ? Colors.white
+                              : (isDark ? const Color(0xFFCBD5E1) : const Color(0xFF4B5563)),
+                        ),
+                      ),
                     ),
-                    boxShadow: isSelected
-                        ? [
-                            BoxShadow(
-                              color: brandTeal.withValues(alpha: 0.20),
-                              blurRadius: 6,
-                              offset: const Offset(0, 2),
-                            ),
-                          ]
-                        : null,
                   ),
-                  child: Text(
-                    time,
-                    style: TextStyle(
-                      fontSize: 13,
-                      fontWeight:
-                          isSelected ? FontWeight.bold : FontWeight.w500,
-                      color: isSelected
-                          ? Colors.white
-                          : (isDark ? const Color(0xFFCBD5E1) : const Color(0xFF475569)),
-                    ),
-                  ),
-                ),
-              ),
+                );
+              }).toList(),
             );
-          }).toList(),
+          },
         ),
       ],
     );
