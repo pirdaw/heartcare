@@ -4,6 +4,7 @@ import 'screening_intro_page.dart';
 import 'dokter_page.dart';
 import 'emergency_page.dart';
 import 'education_page.dart';
+import 'artikel_kesehatan_page.dart';
 import 'article_detail_page.dart';
 import 'pengingat_kesehatan_page.dart';
 import 'riwayat_page.dart';
@@ -1393,7 +1394,8 @@ class _HomePageState extends State<HomePage> {
                                 Navigator.push(
                                   context,
                                   MaterialPageRoute(
-                                    builder: (context) => const EducationPage(),
+                                    builder: (context) =>
+                                        const ArtikelKesehatanPage(),
                                   ),
                                 );
                               },
