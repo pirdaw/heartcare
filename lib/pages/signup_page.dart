@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import '../services/auth_service.dart';
+<<<<<<< HEAD
 import 'login_page.dart';
+=======
+>>>>>>> a00283c708b1bbb7d146aabf5e55656be1c38c85
 import 'success_page.dart';
 
 class SignupPage extends StatefulWidget {
@@ -26,6 +29,8 @@ class _SignupPageState extends State<SignupPage> {
   final TextEditingController _confirmPasswordController =
       TextEditingController();
 
+  bool _isLoading = false;
+
   @override
   void dispose() {
     _namaController.dispose();
@@ -35,6 +40,7 @@ class _SignupPageState extends State<SignupPage> {
     super.dispose();
   }
 
+<<<<<<< HEAD
   bool _isLoading = false;
 
   Future<void> _daftar() async {
@@ -54,36 +60,75 @@ class _SignupPageState extends State<SignupPage> {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('Kata sandi terlalu lemah (minimal 6 karakter)'),
+=======
+  Future<void> _daftar() async {
+    if (_isLoading) return;
+
+    if (_passwordController.text != _confirmPasswordController.text) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Konfirmasi kata sandi tidak sama.'),
+>>>>>>> a00283c708b1bbb7d146aabf5e55656be1c38c85
         ),
       );
       return;
     }
 
+<<<<<<< HEAD
     if (password != confirmPassword) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Konfirmasi kata sandi tidak cocok')),
+=======
+    if (_namaController.text.trim().isEmpty ||
+        _emailController.text.trim().isEmpty ||
+        _passwordController.text.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Mohon lengkapi semua data.'),
+        ),
+>>>>>>> a00283c708b1bbb7d146aabf5e55656be1c38c85
       );
       return;
     }
 
+<<<<<<< HEAD
     setState(() => _isLoading = true);
 
     final error = await AuthService.instance.signUp(
       name: nama,
       email: email,
       password: password,
+=======
+    setState(() {
+      _isLoading = true;
+    });
+
+    final error = await AuthService.instance.signUp(
+      name: _namaController.text,
+      email: _emailController.text,
+      password: _passwordController.text,
+>>>>>>> a00283c708b1bbb7d146aabf5e55656be1c38c85
     );
 
     if (!mounted) return;
 
+<<<<<<< HEAD
     if (error != null) {
       setState(() => _isLoading = false);
+=======
+    setState(() {
+      _isLoading = false;
+    });
+
+    if (error != null) {
+>>>>>>> a00283c708b1bbb7d146aabf5e55656be1c38c85
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(error)),
       );
       return;
     }
 
+<<<<<<< HEAD
     // Keluar dari sesi otomatis Firebase agar pengguna harus login terlebih dahulu
     await AuthService.instance.signOut();
 
@@ -91,6 +136,9 @@ class _SignupPageState extends State<SignupPage> {
     setState(() => _isLoading = false);
 
     Navigator.push(
+=======
+    Navigator.pushReplacement(
+>>>>>>> a00283c708b1bbb7d146aabf5e55656be1c38c85
       context,
       MaterialPageRoute(
         builder: (context) => SuccessPage(
@@ -112,17 +160,42 @@ class _SignupPageState extends State<SignupPage> {
 
   @override
   Widget build(BuildContext context) {
+    final screenHeight = MediaQuery.of(context).size.height;
+
     return Scaffold(
       backgroundColor: Colors.white,
 
-      body: SafeArea(
-        child: SingleChildScrollView(
-          child: Padding(
-            padding: const EdgeInsets.symmetric(
-              horizontal: 28,
+      body: SizedBox.expand(
+        child: Stack(
+          clipBehavior: Clip.none,
+          children: [
+            // ==========================================
+            // DEKORASI BIRU MUDA DI KIRI BAWAH
+            // ==========================================
+            Positioned(
+              left: -135,
+              top: screenHeight - 285,
+              child: Container(
+                width: 390,
+                height: 390,
+                decoration: BoxDecoration(
+                  color: const Color(0xFFB8DCEE),
+                  borderRadius: BorderRadius.circular(200),
+                ),
+              ),
             ),
-            child: Column(
-              children: [
+
+            // ==========================================
+            // ISI HALAMAN
+            // ==========================================
+            SafeArea(
+              child: SingleChildScrollView(
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 28,
+                  ),
+                  child: Column(
+                    children: [
                 // =====================================
                 // LOGO
                 // =====================================
@@ -277,6 +350,8 @@ class _SignupPageState extends State<SignupPage> {
                       backgroundColor:
                           const Color(0xFF0B9AC1),
                       foregroundColor: Colors.white,
+                      disabledBackgroundColor:
+                          const Color(0xFF0B9AC1).withValues(alpha: 0.6),
                       elevation: 0,
                       shape: RoundedRectangleBorder(
                         borderRadius:
@@ -285,8 +360,13 @@ class _SignupPageState extends State<SignupPage> {
                     ),
                     child: _isLoading
                         ? const SizedBox(
+<<<<<<< HEAD
                             width: 22,
                             height: 22,
+=======
+                            width: 24,
+                            height: 24,
+>>>>>>> a00283c708b1bbb7d146aabf5e55656be1c38c85
                             child: CircularProgressIndicator(
                               color: Colors.white,
                               strokeWidth: 2.5,
@@ -342,6 +422,9 @@ class _SignupPageState extends State<SignupPage> {
           ),
         ),
       ),
+    ],
+  ),
+),
     );
   }
 

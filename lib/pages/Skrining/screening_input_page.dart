@@ -1,7 +1,16 @@
 import 'package:flutter/material.dart';
 import 'custom_bottom_nav_bar.dart';
+<<<<<<< HEAD
 
 /// Halaman Skrining - Input Data dengan Stepper bertahap (1/3 s/d 3/3)
+=======
+import 'screening_model.dart';
+import 'screening_review_page.dart';
+import '../../services/theme_service.dart';
+
+/// Halaman Skrining - Input Data dengan Stepper bertahap (1/5 s/d 5/5)
+/// Sesuai dengan desain Figma (11 Pertanyaan lengkap + Data Diri)
+>>>>>>> a00283c708b1bbb7d146aabf5e55656be1c38c85
 class ScreeningInputPage extends StatefulWidget {
   const ScreeningInputPage({super.key});
 
@@ -10,19 +19,30 @@ class ScreeningInputPage extends StatefulWidget {
 }
 
 class _ScreeningInputPageState extends State<ScreeningInputPage> {
+<<<<<<< HEAD
   static const Color primaryTeal = Color(0xFF0098B9);
 
   int _currentStep = 1;
   final int _totalSteps = 3;
+=======
+  static const Color primaryTeal = Color(0xFF079BC1);
+
+  int _currentStep = 1;
+  final int _totalSteps = 5;
+>>>>>>> a00283c708b1bbb7d146aabf5e55656be1c38c85
 
   // ============================================================
   // FORM STEP 1 - DATA DIRI
   // ============================================================
+<<<<<<< HEAD
 
+=======
+>>>>>>> a00283c708b1bbb7d146aabf5e55656be1c38c85
   final TextEditingController _ageController = TextEditingController();
   String? _selectedGender;
 
   // ============================================================
+<<<<<<< HEAD
   // FORM STEP 2 - KONDISI KESEHATAN
   // ============================================================
 
@@ -40,23 +60,58 @@ class _ScreeningInputPageState extends State<ScreeningInputPage> {
   String? _restingEcg;
   final TextEditingController _maxHeartRateController =
       TextEditingController();
+=======
+  // FORM STEP 2 - KONDISI KESEHATAN (Pertanyaan 1, 2, 3)
+  // ============================================================
+  String? _selectedChestPain;
+  final TextEditingController _systolicController = TextEditingController();
+  final TextEditingController _cholesterolController = TextEditingController();
+
+  // ============================================================
+  // FORM STEP 3 - KONDISI KESEHATAN (Pertanyaan 4, 5, 6)
+  // ============================================================
+  String? _fastingBloodSugar;
+  String? _restingEcg;
+  final TextEditingController _maxHeartRateController = TextEditingController();
+
+  // ============================================================
+  // FORM STEP 4 - KONDISI KESEHATAN (Pertanyaan 7, 8, 9)
+  // ============================================================
+  String? _exerciseAngina;
+  final TextEditingController _oldpeakController = TextEditingController();
+  String? _stSlope;
+
+  // ============================================================
+  // FORM STEP 5 - KONDISI KESEHATAN (Pertanyaan 10, 11)
+  // ============================================================
+  int? _majorVessels;
+  String? _thal;
+>>>>>>> a00283c708b1bbb7d146aabf5e55656be1c38c85
 
   // ============================================================
   // DISPOSE
   // ============================================================
+<<<<<<< HEAD
 
+=======
+>>>>>>> a00283c708b1bbb7d146aabf5e55656be1c38c85
   @override
   void dispose() {
     _ageController.dispose();
     _systolicController.dispose();
     _cholesterolController.dispose();
     _maxHeartRateController.dispose();
+<<<<<<< HEAD
+=======
+    _oldpeakController.dispose();
+>>>>>>> a00283c708b1bbb7d146aabf5e55656be1c38c85
     super.dispose();
   }
 
   // ============================================================
   // NAVIGASI STEP
   // ============================================================
+<<<<<<< HEAD
 
   void _onNextStep() {
     if (_currentStep == 1) {
@@ -66,12 +121,48 @@ class _ScreeningInputPageState extends State<ScreeningInputPage> {
       }
     }
 
+=======
+  Future<void> _onNextStep() async {
+>>>>>>> a00283c708b1bbb7d146aabf5e55656be1c38c85
     if (_currentStep < _totalSteps) {
       setState(() {
         _currentStep++;
       });
     } else {
+<<<<<<< HEAD
       _showResultDialog();
+=======
+      // Selesai Pertanyaan 11 -> Navigasi ke Halaman Review Jawaban
+      final data = ScreeningData(
+        age: _ageController.text.trim(),
+        gender: _selectedGender,
+        chestPainType: _selectedChestPain,
+        restingBloodPressure: _systolicController.text.trim(),
+        cholesterol: _cholesterolController.text.trim(),
+        fastingBloodSugar: _fastingBloodSugar,
+        restingEcg: _restingEcg,
+        maxHeartRate: _maxHeartRateController.text.trim(),
+        exerciseAngina: _exerciseAngina,
+        oldpeak: _oldpeakController.text.trim(),
+        stSlope: _stSlope,
+        majorVessels: _majorVessels,
+        thal: _thal,
+      );
+
+      final selectedStep = await Navigator.push<int>(
+        context,
+        MaterialPageRoute(
+          builder: (context) => ScreeningReviewPage(data: data),
+        ),
+      );
+
+      // Jika user memilih untuk mengoreksi step tertentu dari Halaman Review
+      if (selectedStep != null && mounted) {
+        setState(() {
+          _currentStep = selectedStep;
+        });
+      }
+>>>>>>> a00283c708b1bbb7d146aabf5e55656be1c38c85
     }
   }
 
@@ -86,6 +177,7 @@ class _ScreeningInputPageState extends State<ScreeningInputPage> {
   }
 
   // ============================================================
+<<<<<<< HEAD
   // HASIL ANALISIS
   // ============================================================
 
@@ -255,16 +347,150 @@ class _ScreeningInputPageState extends State<ScreeningInputPage> {
           ],
         ),
       ),
+=======
+  // BUILD UTAMA
+  // ============================================================
+  @override
+  Widget build(BuildContext context) {
+    return ValueListenableBuilder<ThemeMode>(
+      valueListenable: ThemeService.themeModeNotifier,
+      builder: (context, themeMode, child) {
+        final isDark = themeMode == ThemeMode.dark;
+
+        return Scaffold(
+          backgroundColor: isDark ? const Color(0xFF0F172A) : Colors.white,
+          body: SafeArea(
+            child: Column(
+              children: [
+                // ----------------------------------------------------
+                // TOP APP BAR
+                // ----------------------------------------------------
+                Padding(
+                  padding: const EdgeInsets.only(
+                    left: 16,
+                    right: 16,
+                    top: 12,
+                    bottom: 8,
+                  ),
+                  child: Stack(
+                    alignment: Alignment.center,
+                    children: [
+                      Align(
+                        alignment: Alignment.centerLeft,
+                        child: Container(
+                          width: 42,
+                          height: 42,
+                          decoration: BoxDecoration(
+                            color: isDark ? const Color(0xFF1E293B) : const Color(0xFFF1F3F6),
+                            shape: BoxShape.circle,
+                          ),
+                          child: IconButton(
+                            icon: Icon(
+                              Icons.chevron_left,
+                              color: isDark ? Colors.white : const Color(0xFF1E293B),
+                              size: 26,
+                            ),
+                            onPressed: _onPreviousStep,
+                          ),
+                        ),
+                      ),
+                      Center(
+                        child: Text(
+                          'Skrining - Input Data ($_currentStep/$_totalSteps)',
+                          style: TextStyle(
+                            fontSize: 17,
+                            fontWeight: FontWeight.bold,
+                            color: isDark ? Colors.white : const Color(0xFF111827),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+
+                const SizedBox(height: 14),
+
+                // ----------------------------------------------------
+                // STEPPER (5 LANGKAH)
+                // ----------------------------------------------------
+                Center(
+                  child: _buildStepper(isDark),
+                ),
+
+                const SizedBox(height: 24),
+
+                // ----------------------------------------------------
+                // FORM CONTENT
+                // ----------------------------------------------------
+                Expanded(
+                  child: SingleChildScrollView(
+                    padding: const EdgeInsets.symmetric(horizontal: 24),
+                    child: _buildCurrentStepContent(isDark),
+                  ),
+                ),
+
+                // ----------------------------------------------------
+                // BUTTON LANJUTKAN
+                // ----------------------------------------------------
+                Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 24,
+                    vertical: 14,
+                  ),
+                  child: SizedBox(
+                    width: double.infinity,
+                    height: 50,
+                    child: ElevatedButton(
+                      onPressed: _onNextStep,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: primaryTeal,
+                        foregroundColor: Colors.white,
+                        elevation: 0,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
+                      child: const Text(
+                        'Lanjutkan',
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+
+                // ----------------------------------------------------
+                // BOTTOM NAVIGATION
+                // ----------------------------------------------------
+                const HeartCareBottomNavBar(
+                  currentIndex: 1,
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+>>>>>>> a00283c708b1bbb7d146aabf5e55656be1c38c85
     );
   }
 
   // ============================================================
+<<<<<<< HEAD
   // STEPPER
   // ============================================================
 
   Widget _buildStepper() {
     return SizedBox(
       width: 215,
+=======
+  // STEPPER (1 sampai 5)
+  // ============================================================
+  Widget _buildStepper(bool isDark) {
+    return SizedBox(
+      width: 270,
+>>>>>>> a00283c708b1bbb7d146aabf5e55656be1c38c85
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: List.generate(
@@ -279,7 +505,11 @@ class _ScreeningInputPageState extends State<ScreeningInputPage> {
                   height: 1.8,
                   color: isPassed
                       ? primaryTeal
+<<<<<<< HEAD
                       : const Color(0xFFD1D5DB),
+=======
+                      : (isDark ? const Color(0xFF334155) : const Color(0xFFD1D5DB)),
+>>>>>>> a00283c708b1bbb7d146aabf5e55656be1c38c85
                 ),
               );
             } else {
@@ -294,7 +524,11 @@ class _ScreeningInputPageState extends State<ScreeningInputPage> {
                   shape: BoxShape.circle,
                   color: (isActive || isCompleted)
                       ? primaryTeal
+<<<<<<< HEAD
                       : const Color(0xFFE5E7EB),
+=======
+                      : (isDark ? const Color(0xFF1E293B) : const Color(0xFFE5E7EB)),
+>>>>>>> a00283c708b1bbb7d146aabf5e55656be1c38c85
                 ),
                 child: Center(
                   child: Text(
@@ -304,7 +538,11 @@ class _ScreeningInputPageState extends State<ScreeningInputPage> {
                       fontWeight: FontWeight.bold,
                       color: (isActive || isCompleted)
                           ? Colors.white
+<<<<<<< HEAD
                           : const Color(0xFF6B7280),
+=======
+                          : (isDark ? const Color(0xFF94A3B8) : const Color(0xFF6B7280)),
+>>>>>>> a00283c708b1bbb7d146aabf5e55656be1c38c85
                     ),
                   ),
                 ),
@@ -319,6 +557,7 @@ class _ScreeningInputPageState extends State<ScreeningInputPage> {
   // ============================================================
   // MENENTUKAN KONTEN STEP
   // ============================================================
+<<<<<<< HEAD
 
   Widget _buildCurrentStepContent() {
     switch (_currentStep) {
@@ -333,34 +572,70 @@ class _ScreeningInputPageState extends State<ScreeningInputPage> {
 
       default:
         return _buildStep1DataDiri();
+=======
+  Widget _buildCurrentStepContent(bool isDark) {
+    switch (_currentStep) {
+      case 1:
+        return _buildStep1DataDiri(isDark);
+      case 2:
+        return _buildStep2Vital(isDark);
+      case 3:
+        return _buildStep3KondisiKesehatan(isDark);
+      case 4:
+        return _buildStep4KondisiKesehatan(isDark);
+      case 5:
+        return _buildStep5KondisiKesehatan(isDark);
+      default:
+        return _buildStep1DataDiri(isDark);
+>>>>>>> a00283c708b1bbb7d146aabf5e55656be1c38c85
     }
   }
 
   // ============================================================
   // STEP 1 - DATA DIRI
   // ============================================================
+<<<<<<< HEAD
 
   Widget _buildStep1DataDiri() {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         const Text(
+=======
+  Widget _buildStep1DataDiri(bool isDark) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+>>>>>>> a00283c708b1bbb7d146aabf5e55656be1c38c85
           'Data Diri',
           style: TextStyle(
             fontSize: 16,
             fontWeight: FontWeight.bold,
+<<<<<<< HEAD
             color: Color(0xFF111827),
+=======
+            color: isDark ? Colors.white : const Color(0xFF111827),
+>>>>>>> a00283c708b1bbb7d146aabf5e55656be1c38c85
           ),
         ),
 
         const SizedBox(height: 12),
 
+<<<<<<< HEAD
         const Text(
+=======
+        Text(
+>>>>>>> a00283c708b1bbb7d146aabf5e55656be1c38c85
           'Usia',
           style: TextStyle(
             fontSize: 14,
             fontWeight: FontWeight.w500,
+<<<<<<< HEAD
             color: Color(0xFF1E293B),
+=======
+            color: isDark ? const Color(0xFFCBD5E1) : const Color(0xFF1E293B),
+>>>>>>> a00283c708b1bbb7d146aabf5e55656be1c38c85
           ),
         ),
 
@@ -369,10 +644,17 @@ class _ScreeningInputPageState extends State<ScreeningInputPage> {
         Container(
           height: 48,
           decoration: BoxDecoration(
+<<<<<<< HEAD
             color: Colors.white,
             borderRadius: BorderRadius.circular(10),
             border: Border.all(
               color: const Color(0xFF8BB5CE),
+=======
+            color: isDark ? const Color(0xFF1E293B) : Colors.white,
+            borderRadius: BorderRadius.circular(10),
+            border: Border.all(
+              color: isDark ? const Color(0xFF334155) : const Color(0xFF8BB5CE),
+>>>>>>> a00283c708b1bbb7d146aabf5e55656be1c38c85
               width: 1.2,
             ),
           ),
@@ -380,6 +662,7 @@ class _ScreeningInputPageState extends State<ScreeningInputPage> {
           child: TextField(
             controller: _ageController,
             keyboardType: TextInputType.number,
+<<<<<<< HEAD
             style: const TextStyle(
               fontSize: 15,
               color: Color(0xFF111827),
@@ -388,18 +671,40 @@ class _ScreeningInputPageState extends State<ScreeningInputPage> {
               border: InputBorder.none,
               isDense: true,
               contentPadding: EdgeInsets.symmetric(vertical: 14),
+=======
+            style: TextStyle(
+              fontSize: 15,
+              color: isDark ? Colors.white : const Color(0xFF111827),
+            ),
+            decoration: InputDecoration(
+              border: InputBorder.none,
+              isDense: true,
+              hintText: 'Contoh: 25',
+              hintStyle: TextStyle(
+                color: isDark ? const Color(0xFF64748B) : const Color(0xFF94A3B8),
+              ),
+              contentPadding: const EdgeInsets.symmetric(vertical: 14),
+>>>>>>> a00283c708b1bbb7d146aabf5e55656be1c38c85
             ),
           ),
         ),
 
         const SizedBox(height: 24),
 
+<<<<<<< HEAD
         const Text(
+=======
+        Text(
+>>>>>>> a00283c708b1bbb7d146aabf5e55656be1c38c85
           'Jenis Kelamin',
           style: TextStyle(
             fontSize: 14,
             fontWeight: FontWeight.w500,
+<<<<<<< HEAD
             color: Color(0xFF1E293B),
+=======
+            color: isDark ? const Color(0xFFCBD5E1) : const Color(0xFF1E293B),
+>>>>>>> a00283c708b1bbb7d146aabf5e55656be1c38c85
           ),
         ),
 
@@ -407,16 +712,26 @@ class _ScreeningInputPageState extends State<ScreeningInputPage> {
 
         Row(
           children: [
+<<<<<<< HEAD
             _buildRadioOption('Laki-laki'),
             const SizedBox(width: 50),
             _buildRadioOption('Perempuan'),
+=======
+            _buildRadioOption('Laki-laki', isDark),
+            const SizedBox(width: 50),
+            _buildRadioOption('Perempuan', isDark),
+>>>>>>> a00283c708b1bbb7d146aabf5e55656be1c38c85
           ],
         ),
       ],
     );
   }
 
+<<<<<<< HEAD
   Widget _buildRadioOption(String value) {
+=======
+  Widget _buildRadioOption(String value, bool isDark) {
+>>>>>>> a00283c708b1bbb7d146aabf5e55656be1c38c85
     final bool isSelected = _selectedGender == value;
 
     return InkWell(
@@ -436,12 +751,19 @@ class _ScreeningInputPageState extends State<ScreeningInputPage> {
             decoration: BoxDecoration(
               shape: BoxShape.circle,
               border: Border.all(
+<<<<<<< HEAD
                 color: isSelected
                     ? primaryTeal
                     : const Color(0xFF94A3B8),
                 width: 1.5,
               ),
               color: Colors.white,
+=======
+                color: isSelected ? primaryTeal : (isDark ? const Color(0xFF64748B) : const Color(0xFF94A3B8)),
+                width: 1.5,
+              ),
+              color: isDark ? const Color(0xFF1E293B) : Colors.white,
+>>>>>>> a00283c708b1bbb7d146aabf5e55656be1c38c85
             ),
             child: isSelected
                 ? Center(
@@ -459,9 +781,15 @@ class _ScreeningInputPageState extends State<ScreeningInputPage> {
           const SizedBox(width: 8),
           Text(
             value,
+<<<<<<< HEAD
             style: const TextStyle(
               fontSize: 14,
               color: Color(0xFF1E293B),
+=======
+            style: TextStyle(
+              fontSize: 14,
+              color: isDark ? const Color(0xFFE2E8F0) : const Color(0xFF1E293B),
+>>>>>>> a00283c708b1bbb7d146aabf5e55656be1c38c85
               fontWeight: FontWeight.w400,
             ),
           ),
@@ -471,6 +799,7 @@ class _ScreeningInputPageState extends State<ScreeningInputPage> {
   }
 
   // ============================================================
+<<<<<<< HEAD
   // STEP 2 - KONDISI KESEHATAN
   // ============================================================
 
@@ -479,34 +808,65 @@ class _ScreeningInputPageState extends State<ScreeningInputPage> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         const Text(
+=======
+  // STEP 2 - KONDISI KESEHATAN (Pertanyaan 1, 2, 3)
+  // ============================================================
+  Widget _buildStep2Vital(bool isDark) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+>>>>>>> a00283c708b1bbb7d146aabf5e55656be1c38c85
           'Kondisi Kesehatan',
           style: TextStyle(
             fontSize: 16,
             fontWeight: FontWeight.bold,
+<<<<<<< HEAD
             color: Color(0xFF111827),
+=======
+            color: isDark ? Colors.white : const Color(0xFF111827),
+>>>>>>> a00283c708b1bbb7d146aabf5e55656be1c38c85
           ),
         ),
 
         const SizedBox(height: 12),
 
+<<<<<<< HEAD
         Container(
           decoration: BoxDecoration(
             color: Colors.white,
             borderRadius: BorderRadius.circular(14),
             border: Border.all(
               color: const Color(0xFFE2E8F0),
+=======
+        // Pertanyaan 1
+        Container(
+          decoration: BoxDecoration(
+            color: isDark ? const Color(0xFF1E293B) : Colors.white,
+            borderRadius: BorderRadius.circular(14),
+            border: Border.all(
+              color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0),
+>>>>>>> a00283c708b1bbb7d146aabf5e55656be1c38c85
             ),
           ),
           padding: const EdgeInsets.all(14),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+<<<<<<< HEAD
               const Text(
+=======
+              Text(
+>>>>>>> a00283c708b1bbb7d146aabf5e55656be1c38c85
                 '1. Bagaimana nyeri dada yang anda rasakan?',
                 style: TextStyle(
                   fontSize: 14,
                   fontWeight: FontWeight.bold,
+<<<<<<< HEAD
                   color: Color(0xFF111827),
+=======
+                  color: isDark ? Colors.white : const Color(0xFF111827),
+>>>>>>> a00283c708b1bbb7d146aabf5e55656be1c38c85
                   height: 1.35,
                 ),
               ),
@@ -517,6 +877,10 @@ class _ScreeningInputPageState extends State<ScreeningInputPage> {
                 title: 'Typical Angina',
                 description:
                     'Rasa tertekan atau tidak nyaman di dada yang biasanya muncul saat beraktivitas dan dapat berkurang saat beristirahat.',
+<<<<<<< HEAD
+=======
+                isDark: isDark,
+>>>>>>> a00283c708b1bbb7d146aabf5e55656be1c38c85
               ),
 
               const SizedBox(height: 12),
@@ -525,6 +889,10 @@ class _ScreeningInputPageState extends State<ScreeningInputPage> {
                 title: 'Atypical Angina',
                 description:
                     'Rasa tidak nyaman di dada yang mungkin muncul dengan cara berbeda, misalnya tidak selalu terasa tertekan atau tidak selalu muncul saat beraktivitas.',
+<<<<<<< HEAD
+=======
+                isDark: isDark,
+>>>>>>> a00283c708b1bbb7d146aabf5e55656be1c38c85
               ),
 
               const SizedBox(height: 12),
@@ -533,14 +901,23 @@ class _ScreeningInputPageState extends State<ScreeningInputPage> {
                 title: 'Non-anginal Pain',
                 description:
                     'Nyeri dada yang lebih terasa seperti nyeri pada bagian tertentu, misalnya sakit saat disentuh, atau terasa seperti nyeri terbakar dari kerongkongan.',
+<<<<<<< HEAD
+=======
+                isDark: isDark,
+>>>>>>> a00283c708b1bbb7d146aabf5e55656be1c38c85
               ),
 
               const SizedBox(height: 12),
 
               _buildChestPainOption(
                 title: 'Asymptomatic',
+<<<<<<< HEAD
                 description:
                     'Tidak mengalami gejala atau nyeri dada.',
+=======
+                description: 'Tidak mengalami gejala atau nyeri dada.',
+                isDark: isDark,
+>>>>>>> a00283c708b1bbb7d146aabf5e55656be1c38c85
               ),
             ],
           ),
@@ -548,12 +925,21 @@ class _ScreeningInputPageState extends State<ScreeningInputPage> {
 
         const SizedBox(height: 18),
 
+<<<<<<< HEAD
         const Text(
+=======
+        // Pertanyaan 2
+        Text(
+>>>>>>> a00283c708b1bbb7d146aabf5e55656be1c38c85
           '2. Berapa tekanan darah anda saat pemeriksaan?',
           style: TextStyle(
             fontSize: 14,
             fontWeight: FontWeight.bold,
+<<<<<<< HEAD
             color: Color(0xFF111827),
+=======
+            color: isDark ? Colors.white : const Color(0xFF111827),
+>>>>>>> a00283c708b1bbb7d146aabf5e55656be1c38c85
           ),
         ),
 
@@ -562,26 +948,47 @@ class _ScreeningInputPageState extends State<ScreeningInputPage> {
         _buildMeasurementInput(
           controller: _systolicController,
           unit: 'mmHg',
+<<<<<<< HEAD
+=======
+          isDark: isDark,
+>>>>>>> a00283c708b1bbb7d146aabf5e55656be1c38c85
         ),
 
         const SizedBox(height: 4),
 
+<<<<<<< HEAD
         const Text(
           '(Masukkan nilai sistolik, contoh: 130)',
           style: TextStyle(
             fontSize: 11.5,
             color: Color(0xFF64748B),
+=======
+        Text(
+          '(Masukkan nilai sistolik, contoh: 120)',
+          style: TextStyle(
+            fontSize: 11.5,
+            color: isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B),
+>>>>>>> a00283c708b1bbb7d146aabf5e55656be1c38c85
           ),
         ),
 
         const SizedBox(height: 18),
 
+<<<<<<< HEAD
         const Text(
+=======
+        // Pertanyaan 3
+        Text(
+>>>>>>> a00283c708b1bbb7d146aabf5e55656be1c38c85
           '3. Berapa kadar kolestrol anda berdasarkan hasil pemeriksaan?',
           style: TextStyle(
             fontSize: 14,
             fontWeight: FontWeight.bold,
+<<<<<<< HEAD
             color: Color(0xFF111827),
+=======
+            color: isDark ? Colors.white : const Color(0xFF111827),
+>>>>>>> a00283c708b1bbb7d146aabf5e55656be1c38c85
           ),
         ),
 
@@ -590,6 +997,20 @@ class _ScreeningInputPageState extends State<ScreeningInputPage> {
         _buildMeasurementInput(
           controller: _cholesterolController,
           unit: 'mg/dL',
+<<<<<<< HEAD
+=======
+          isDark: isDark,
+        ),
+
+        const SizedBox(height: 4),
+
+        Text(
+          '(contoh: 200)',
+          style: TextStyle(
+            fontSize: 11.5,
+            color: isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B),
+          ),
+>>>>>>> a00283c708b1bbb7d146aabf5e55656be1c38c85
         ),
 
         const SizedBox(height: 16),
@@ -600,6 +1021,10 @@ class _ScreeningInputPageState extends State<ScreeningInputPage> {
   Widget _buildChestPainOption({
     required String title,
     required String description,
+<<<<<<< HEAD
+=======
+    required bool isDark,
+>>>>>>> a00283c708b1bbb7d146aabf5e55656be1c38c85
   }) {
     final bool isSelected = _selectedChestPain == title;
 
@@ -622,12 +1047,19 @@ class _ScreeningInputPageState extends State<ScreeningInputPage> {
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
                 border: Border.all(
+<<<<<<< HEAD
                   color: isSelected
                       ? primaryTeal
                       : const Color(0xFFCBD5E1),
                   width: 1.5,
                 ),
                 color: Colors.white,
+=======
+                  color: isSelected ? primaryTeal : (isDark ? const Color(0xFF64748B) : const Color(0xFFCBD5E1)),
+                  width: 1.5,
+                ),
+                color: isDark ? const Color(0xFF0F172A) : Colors.white,
+>>>>>>> a00283c708b1bbb7d146aabf5e55656be1c38c85
               ),
               child: isSelected
                   ? Center(
@@ -652,6 +1084,7 @@ class _ScreeningInputPageState extends State<ScreeningInputPage> {
               children: [
                 Text(
                   title,
+<<<<<<< HEAD
                   style: const TextStyle(
                     fontSize: 13.5,
                     fontWeight: FontWeight.bold,
@@ -666,6 +1099,20 @@ class _ScreeningInputPageState extends State<ScreeningInputPage> {
                   style: const TextStyle(
                     fontSize: 11.5,
                     color: Color(0xFF475569),
+=======
+                  style: TextStyle(
+                    fontSize: 13.5,
+                    fontWeight: FontWeight.bold,
+                    color: isDark ? Colors.white : const Color(0xFF111827),
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  description,
+                  style: TextStyle(
+                    fontSize: 11.5,
+                    color: isDark ? const Color(0xFF94A3B8) : const Color(0xFF475569),
+>>>>>>> a00283c708b1bbb7d146aabf5e55656be1c38c85
                     height: 1.35,
                   ),
                 ),
@@ -677,6 +1124,7 @@ class _ScreeningInputPageState extends State<ScreeningInputPage> {
     );
   }
 
+<<<<<<< HEAD
   Widget _buildMeasurementInput({
     required TextEditingController controller,
     required String unit,
@@ -732,16 +1180,31 @@ class _ScreeningInputPageState extends State<ScreeningInputPage> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         const Text(
+=======
+  // ============================================================
+  // STEP 3 - KONDISI KESEHATAN (Pertanyaan 4, 5, 6)
+  // ============================================================
+  Widget _buildStep3KondisiKesehatan(bool isDark) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+>>>>>>> a00283c708b1bbb7d146aabf5e55656be1c38c85
           'Kondisi Kesehatan',
           style: TextStyle(
             fontSize: 16,
             fontWeight: FontWeight.bold,
+<<<<<<< HEAD
             color: Color(0xFF111827),
+=======
+            color: isDark ? Colors.white : const Color(0xFF111827),
+>>>>>>> a00283c708b1bbb7d146aabf5e55656be1c38c85
           ),
         ),
 
         const SizedBox(height: 12),
 
+<<<<<<< HEAD
         Container(
           width: double.infinity,
           decoration: BoxDecoration(
@@ -749,18 +1212,36 @@ class _ScreeningInputPageState extends State<ScreeningInputPage> {
             borderRadius: BorderRadius.circular(14),
             border: Border.all(
               color: const Color(0xFFE2E8F0),
+=======
+        // Pertanyaan 4
+        Container(
+          width: double.infinity,
+          decoration: BoxDecoration(
+            color: isDark ? const Color(0xFF1E293B) : Colors.white,
+            borderRadius: BorderRadius.circular(14),
+            border: Border.all(
+              color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0),
+>>>>>>> a00283c708b1bbb7d146aabf5e55656be1c38c85
             ),
           ),
           padding: const EdgeInsets.all(14),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+<<<<<<< HEAD
               const Text(
+=======
+              Text(
+>>>>>>> a00283c708b1bbb7d146aabf5e55656be1c38c85
                 '4. Apakah kadar gula darah puasa anda lebih dari 120 mg/dL?',
                 style: TextStyle(
                   fontSize: 13.5,
                   fontWeight: FontWeight.bold,
+<<<<<<< HEAD
                   color: Color(0xFF111827),
+=======
+                  color: isDark ? Colors.white : const Color(0xFF111827),
+>>>>>>> a00283c708b1bbb7d146aabf5e55656be1c38c85
                   height: 1.35,
                 ),
               ),
@@ -772,18 +1253,30 @@ class _ScreeningInputPageState extends State<ScreeningInputPage> {
                   _buildYesNoChoiceButton(
                     label: 'Tidak',
                     isSelected: _fastingBloodSugar == 'Tidak',
+<<<<<<< HEAD
+=======
+                    isDark: isDark,
+>>>>>>> a00283c708b1bbb7d146aabf5e55656be1c38c85
                     onTap: () {
                       setState(() {
                         _fastingBloodSugar = 'Tidak';
                       });
                     },
                   ),
+<<<<<<< HEAD
 
                   const SizedBox(width: 14),
 
                   _buildYesNoChoiceButton(
                     label: 'Ya',
                     isSelected: _fastingBloodSugar == 'Ya',
+=======
+                  const SizedBox(width: 14),
+                  _buildYesNoChoiceButton(
+                    label: 'Ya',
+                    isSelected: _fastingBloodSugar == 'Ya',
+                    isDark: isDark,
+>>>>>>> a00283c708b1bbb7d146aabf5e55656be1c38c85
                     onTap: () {
                       setState(() {
                         _fastingBloodSugar = 'Ya';
@@ -798,6 +1291,7 @@ class _ScreeningInputPageState extends State<ScreeningInputPage> {
 
         const SizedBox(height: 16),
 
+<<<<<<< HEAD
         Container(
           width: double.infinity,
           decoration: BoxDecoration(
@@ -805,24 +1299,43 @@ class _ScreeningInputPageState extends State<ScreeningInputPage> {
             borderRadius: BorderRadius.circular(14),
             border: Border.all(
               color: const Color(0xFFE2E8F0),
+=======
+        // Pertanyaan 5
+        Container(
+          width: double.infinity,
+          decoration: BoxDecoration(
+            color: isDark ? const Color(0xFF1E293B) : Colors.white,
+            borderRadius: BorderRadius.circular(14),
+            border: Border.all(
+              color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0),
+>>>>>>> a00283c708b1bbb7d146aabf5e55656be1c38c85
             ),
           ),
           padding: const EdgeInsets.all(14),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+<<<<<<< HEAD
               const Text(
+=======
+              Text(
+>>>>>>> a00283c708b1bbb7d146aabf5e55656be1c38c85
                 '5. Bagaimana hasil pemeriksaan EKG saat istirahat?',
                 style: TextStyle(
                   fontSize: 13.5,
                   fontWeight: FontWeight.bold,
+<<<<<<< HEAD
                   color: Color(0xFF111827),
+=======
+                  color: isDark ? Colors.white : const Color(0xFF111827),
+>>>>>>> a00283c708b1bbb7d146aabf5e55656be1c38c85
                   height: 1.35,
                 ),
               ),
 
               const SizedBox(height: 12),
 
+<<<<<<< HEAD
               _buildEcgRadioOption('Normal'),
 
               const SizedBox(height: 10),
@@ -836,12 +1349,20 @@ class _ScreeningInputPageState extends State<ScreeningInputPage> {
               _buildEcgRadioOption(
                 'Kemungkinan hipertrofi vertikal kiri',
               ),
+=======
+              _buildEcgRadioOption('Normal', isDark),
+              const SizedBox(height: 10),
+              _buildEcgRadioOption('Terdapat kelainan gelombang ST-T', isDark),
+              const SizedBox(height: 10),
+              _buildEcgRadioOption('Kemungkinan hipertrofi vertikal kiri', isDark),
+>>>>>>> a00283c708b1bbb7d146aabf5e55656be1c38c85
             ],
           ),
         ),
 
         const SizedBox(height: 16),
 
+<<<<<<< HEAD
         Container(
           width: double.infinity,
           decoration: BoxDecoration(
@@ -849,18 +1370,36 @@ class _ScreeningInputPageState extends State<ScreeningInputPage> {
             borderRadius: BorderRadius.circular(14),
             border: Border.all(
               color: const Color(0xFFE2E8F0),
+=======
+        // Pertanyaan 6
+        Container(
+          width: double.infinity,
+          decoration: BoxDecoration(
+            color: isDark ? const Color(0xFF1E293B) : Colors.white,
+            borderRadius: BorderRadius.circular(14),
+            border: Border.all(
+              color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0),
+>>>>>>> a00283c708b1bbb7d146aabf5e55656be1c38c85
             ),
           ),
           padding: const EdgeInsets.all(14),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+<<<<<<< HEAD
               const Text(
+=======
+              Text(
+>>>>>>> a00283c708b1bbb7d146aabf5e55656be1c38c85
                 '6. Berapa detak jantung maksimum yang tercatat saat pemeriksaan?',
                 style: TextStyle(
                   fontSize: 13.5,
                   fontWeight: FontWeight.bold,
+<<<<<<< HEAD
                   color: Color(0xFF111827),
+=======
+                  color: isDark ? Colors.white : const Color(0xFF111827),
+>>>>>>> a00283c708b1bbb7d146aabf5e55656be1c38c85
                   height: 1.35,
                 ),
               ),
@@ -870,15 +1409,27 @@ class _ScreeningInputPageState extends State<ScreeningInputPage> {
               _buildMeasurementInput(
                 controller: _maxHeartRateController,
                 unit: 'bpm',
+<<<<<<< HEAD
+=======
+                isDark: isDark,
+>>>>>>> a00283c708b1bbb7d146aabf5e55656be1c38c85
               ),
 
               const SizedBox(height: 4),
 
+<<<<<<< HEAD
               const Text(
                 '(contoh: 150)',
                 style: TextStyle(
                   fontSize: 11.5,
                   color: Color(0xFF64748B),
+=======
+              Text(
+                '(contoh: 150)',
+                style: TextStyle(
+                  fontSize: 11.5,
+                  color: isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B),
+>>>>>>> a00283c708b1bbb7d146aabf5e55656be1c38c85
                 ),
               ),
             ],
@@ -890,10 +1441,438 @@ class _ScreeningInputPageState extends State<ScreeningInputPage> {
     );
   }
 
+<<<<<<< HEAD
+=======
+  // ============================================================
+  // STEP 4 - KONDISI KESEHATAN (Pertanyaan 7, 8, 9)
+  // Sesuai Figma Layar 1
+  // ============================================================
+  Widget _buildStep4KondisiKesehatan(bool isDark) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'Kondisi Kesehatan',
+          style: TextStyle(
+            fontSize: 16,
+            fontWeight: FontWeight.bold,
+            color: isDark ? Colors.white : const Color(0xFF111827),
+          ),
+        ),
+
+        const SizedBox(height: 12),
+
+        // Pertanyaan 7: Nyeri dada saat aktivitas
+        Container(
+          width: double.infinity,
+          decoration: BoxDecoration(
+            color: isDark ? const Color(0xFF1E293B) : Colors.white,
+            borderRadius: BorderRadius.circular(14),
+            border: Border.all(
+              color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0),
+            ),
+          ),
+          padding: const EdgeInsets.all(14),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                '7. Apakah anda mengalami nyeri dada saat melakukan aktivitas atau olahraga?',
+                style: TextStyle(
+                  fontSize: 13.5,
+                  fontWeight: FontWeight.bold,
+                  color: isDark ? Colors.white : const Color(0xFF111827),
+                  height: 1.35,
+                ),
+              ),
+
+              const SizedBox(height: 14),
+
+              Row(
+                children: [
+                  _buildYesNoChoiceButton(
+                    label: 'Tidak',
+                    isSelected: _exerciseAngina == 'Tidak',
+                    isDark: isDark,
+                    onTap: () {
+                      setState(() {
+                        _exerciseAngina = 'Tidak';
+                      });
+                    },
+                  ),
+                  const SizedBox(width: 14),
+                  _buildYesNoChoiceButton(
+                    label: 'Ya',
+                    isSelected: _exerciseAngina == 'Ya',
+                    isDark: isDark,
+                    onTap: () {
+                      setState(() {
+                        _exerciseAngina = 'Ya';
+                      });
+                    },
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+
+        const SizedBox(height: 16),
+
+        // Pertanyaan 8: Oldpeak
+        Container(
+          width: double.infinity,
+          decoration: BoxDecoration(
+            color: isDark ? const Color(0xFF1E293B) : Colors.white,
+            borderRadius: BorderRadius.circular(14),
+            border: Border.all(
+              color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0),
+            ),
+          ),
+          padding: const EdgeInsets.all(14),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                '8. Berapa nilai perubahan segmen ST (oldpeak) dari hasil pemeriksaan?',
+                style: TextStyle(
+                  fontSize: 13.5,
+                  fontWeight: FontWeight.bold,
+                  color: isDark ? Colors.white : const Color(0xFF111827),
+                  height: 1.35,
+                ),
+              ),
+
+              const SizedBox(height: 10),
+
+              _buildMeasurementInput(
+                controller: _oldpeakController,
+                unit: '(mm)',
+                hintText: 'Contoh: 1.0',
+                isDark: isDark,
+              ),
+
+              const SizedBox(height: 4),
+
+              Text(
+                '(Masukkan nilai depresi ST, contoh: 1.0)',
+                style: TextStyle(
+                  fontSize: 11.5,
+                  color: isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B),
+                ),
+              ),
+            ],
+          ),
+        ),
+
+        const SizedBox(height: 16),
+
+        // Pertanyaan 9: Kemiringan ST
+        Container(
+          width: double.infinity,
+          decoration: BoxDecoration(
+            color: isDark ? const Color(0xFF1E293B) : Colors.white,
+            borderRadius: BorderRadius.circular(14),
+            border: Border.all(
+              color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0),
+            ),
+          ),
+          padding: const EdgeInsets.all(14),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                '9. Bagaimana kemiringan segmen ST saat pemeriksaan aktivitas?',
+                style: TextStyle(
+                  fontSize: 13.5,
+                  fontWeight: FontWeight.bold,
+                  color: isDark ? Colors.white : const Color(0xFF111827),
+                  height: 1.35,
+                ),
+              ),
+
+              const SizedBox(height: 12),
+
+              _buildSlopeRadioOption('Upsloping (Meningkat)', isDark),
+              const SizedBox(height: 10),
+              _buildSlopeRadioOption('Flat (Datar)', isDark),
+              const SizedBox(height: 10),
+              _buildSlopeRadioOption('Downsloping (Menurun)', isDark),
+            ],
+          ),
+        ),
+
+        const SizedBox(height: 16),
+      ],
+    );
+  }
+
+  // ============================================================
+  // STEP 5 - KONDISI KESEHATAN (Pertanyaan 10, 11)
+  // Sesuai Figma Layar 2
+  // ============================================================
+  Widget _buildStep5KondisiKesehatan(bool isDark) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'Kondisi Kesehatan',
+          style: TextStyle(
+            fontSize: 16,
+            fontWeight: FontWeight.bold,
+            color: isDark ? Colors.white : const Color(0xFF111827),
+          ),
+        ),
+
+        const SizedBox(height: 12),
+
+        // Pertanyaan 10: Pembuluh darah utama (ca: 0 - 4)
+        Container(
+          width: double.infinity,
+          decoration: BoxDecoration(
+            color: isDark ? const Color(0xFF1E293B) : Colors.white,
+            borderRadius: BorderRadius.circular(14),
+            border: Border.all(
+              color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0),
+            ),
+          ),
+          padding: const EdgeInsets.all(14),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                '10. Berapa jumlah pembuluh darah yang terlihat pada pemeriksaan',
+                style: TextStyle(
+                  fontSize: 13.5,
+                  fontWeight: FontWeight.bold,
+                  color: isDark ? Colors.white : const Color(0xFF111827),
+                  height: 1.35,
+                ),
+              ),
+
+              const SizedBox(height: 16),
+
+              // Pilihan angka melingkar: 0, 1, 2, 3, 4
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceAround,
+                children: [
+                  _buildMajorVesselOption(0, isDark),
+                  _buildMajorVesselOption(1, isDark),
+                  _buildMajorVesselOption(2, isDark),
+                  _buildMajorVesselOption(3, isDark),
+                  _buildMajorVesselOption(4, isDark),
+                ],
+              ),
+            ],
+          ),
+        ),
+
+        const SizedBox(height: 16),
+
+        // Pertanyaan 11: Hasil pemeriksaan thal
+        Container(
+          width: double.infinity,
+          decoration: BoxDecoration(
+            color: isDark ? const Color(0xFF1E293B) : Colors.white,
+            borderRadius: BorderRadius.circular(14),
+            border: Border.all(
+              color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0),
+            ),
+          ),
+          padding: const EdgeInsets.all(14),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                '11. Bagaimana hasil pemeriksaan thal?',
+                style: TextStyle(
+                  fontSize: 13.5,
+                  fontWeight: FontWeight.bold,
+                  color: isDark ? Colors.white : const Color(0xFF111827),
+                  height: 1.35,
+                ),
+              ),
+
+              const SizedBox(height: 12),
+
+              _buildThalRadioOption('Normal', isDark),
+              const SizedBox(height: 10),
+              _buildThalRadioOption('Fixed defect (Kelainan Menetap)', isDark),
+              const SizedBox(height: 10),
+              _buildThalRadioOption(
+                  'Reversible defect (Kelainan dapat diperbaiki)', isDark),
+            ],
+          ),
+        ),
+
+        const SizedBox(height: 16),
+      ],
+    );
+  }
+
+  // ============================================================
+  // HELPER WIDGETS
+  // ============================================================
+
+  Widget _buildMajorVesselOption(int value, bool isDark) {
+    final bool isSelected = _majorVessels == value;
+
+    return InkWell(
+      onTap: () {
+        setState(() {
+          _majorVessels = value;
+        });
+      },
+      borderRadius: BorderRadius.circular(25),
+      child: Container(
+        width: 44,
+        height: 44,
+        decoration: BoxDecoration(
+          shape: BoxShape.circle,
+          color: isSelected ? primaryTeal : (isDark ? const Color(0xFF0F172A) : Colors.white),
+          border: Border.all(
+            color: isSelected ? primaryTeal : (isDark ? const Color(0xFF334155) : const Color(0xFFCBD5E1)),
+            width: isSelected ? 2 : 1.2,
+          ),
+          boxShadow: isSelected
+              ? [
+                  BoxShadow(
+                    color: primaryTeal.withValues(alpha: 0.3),
+                    blurRadius: 6,
+                    offset: const Offset(0, 2),
+                  ),
+                ]
+              : null,
+        ),
+        child: Center(
+          child: Text(
+            '$value',
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+              color: isSelected ? Colors.white : (isDark ? Colors.white : const Color(0xFF0F172A)),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildSlopeRadioOption(String value, bool isDark) {
+    final bool isSelected = _stSlope == value;
+
+    return InkWell(
+      onTap: () {
+        setState(() {
+          _stSlope = value;
+        });
+      },
+      splashColor: Colors.transparent,
+      highlightColor: Colors.transparent,
+      child: Row(
+        children: [
+          Container(
+            width: 22,
+            height: 22,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              border: Border.all(
+                color: isSelected ? primaryTeal : (isDark ? const Color(0xFF64748B) : const Color(0xFFCBD5E1)),
+                width: 1.5,
+              ),
+              color: isDark ? const Color(0xFF0F172A) : Colors.white,
+            ),
+            child: isSelected
+                ? Center(
+                    child: Container(
+                      width: 11,
+                      height: 11,
+                      decoration: const BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: primaryTeal,
+                      ),
+                    ),
+                  )
+                : null,
+          ),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Text(
+              value,
+              style: TextStyle(
+                fontSize: 13,
+                color: isDark ? const Color(0xFFE2E8F0) : const Color(0xFF1E293B),
+                fontWeight: FontWeight.w400,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildThalRadioOption(String value, bool isDark) {
+    final bool isSelected = _thal == value;
+
+    return InkWell(
+      onTap: () {
+        setState(() {
+          _thal = value;
+        });
+      },
+      splashColor: Colors.transparent,
+      highlightColor: Colors.transparent,
+      child: Row(
+        children: [
+          Container(
+            width: 22,
+            height: 22,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              border: Border.all(
+                color: isSelected ? primaryTeal : (isDark ? const Color(0xFF64748B) : const Color(0xFFCBD5E1)),
+                width: 1.5,
+              ),
+              color: isDark ? const Color(0xFF0F172A) : Colors.white,
+            ),
+            child: isSelected
+                ? Center(
+                    child: Container(
+                      width: 11,
+                      height: 11,
+                      decoration: const BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: primaryTeal,
+                      ),
+                    ),
+                  )
+                : null,
+          ),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Text(
+              value,
+              style: TextStyle(
+                fontSize: 13,
+                color: isDark ? const Color(0xFFE2E8F0) : const Color(0xFF1E293B),
+                fontWeight: FontWeight.w400,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+>>>>>>> a00283c708b1bbb7d146aabf5e55656be1c38c85
   Widget _buildYesNoChoiceButton({
     required String label,
     required bool isSelected,
     required VoidCallback onTap,
+<<<<<<< HEAD
+=======
+    required bool isDark,
+>>>>>>> a00283c708b1bbb7d146aabf5e55656be1c38c85
   }) {
     return Expanded(
       child: InkWell(
@@ -902,6 +1881,7 @@ class _ScreeningInputPageState extends State<ScreeningInputPage> {
         child: Container(
           height: 42,
           decoration: BoxDecoration(
+<<<<<<< HEAD
             color: isSelected
                 ? primaryTeal
                 : Colors.white,
@@ -910,6 +1890,12 @@ class _ScreeningInputPageState extends State<ScreeningInputPage> {
               color: isSelected
                   ? primaryTeal
                   : const Color(0xFFCBD5E1),
+=======
+            color: isSelected ? primaryTeal : (isDark ? const Color(0xFF0F172A) : Colors.white),
+            borderRadius: BorderRadius.circular(10),
+            border: Border.all(
+              color: isSelected ? primaryTeal : (isDark ? const Color(0xFF334155) : const Color(0xFFCBD5E1)),
+>>>>>>> a00283c708b1bbb7d146aabf5e55656be1c38c85
               width: 1.2,
             ),
           ),
@@ -918,12 +1904,17 @@ class _ScreeningInputPageState extends State<ScreeningInputPage> {
               label,
               style: TextStyle(
                 fontSize: 14,
+<<<<<<< HEAD
                 fontWeight: isSelected
                     ? FontWeight.bold
                     : FontWeight.w600,
                 color: isSelected
                     ? Colors.white
                     : const Color(0xFF1E293B),
+=======
+                fontWeight: isSelected ? FontWeight.bold : FontWeight.w600,
+                color: isSelected ? Colors.white : (isDark ? const Color(0xFFCBD5E1) : const Color(0xFF1E293B)),
+>>>>>>> a00283c708b1bbb7d146aabf5e55656be1c38c85
               ),
             ),
           ),
@@ -932,7 +1923,11 @@ class _ScreeningInputPageState extends State<ScreeningInputPage> {
     );
   }
 
+<<<<<<< HEAD
   Widget _buildEcgRadioOption(String value) {
+=======
+  Widget _buildEcgRadioOption(String value, bool isDark) {
+>>>>>>> a00283c708b1bbb7d146aabf5e55656be1c38c85
     final bool isSelected = _restingEcg == value;
 
     return InkWell(
@@ -951,12 +1946,19 @@ class _ScreeningInputPageState extends State<ScreeningInputPage> {
             decoration: BoxDecoration(
               shape: BoxShape.circle,
               border: Border.all(
+<<<<<<< HEAD
                 color: isSelected
                     ? primaryTeal
                     : const Color(0xFFCBD5E1),
                 width: 1.5,
               ),
               color: Colors.white,
+=======
+                color: isSelected ? primaryTeal : (isDark ? const Color(0xFF64748B) : const Color(0xFFCBD5E1)),
+                width: 1.5,
+              ),
+              color: isDark ? const Color(0xFF0F172A) : Colors.white,
+>>>>>>> a00283c708b1bbb7d146aabf5e55656be1c38c85
             ),
             child: isSelected
                 ? Center(
@@ -971,6 +1973,7 @@ class _ScreeningInputPageState extends State<ScreeningInputPage> {
                   )
                 : null,
           ),
+<<<<<<< HEAD
 
           const SizedBox(width: 10),
 
@@ -980,6 +1983,15 @@ class _ScreeningInputPageState extends State<ScreeningInputPage> {
               style: const TextStyle(
                 fontSize: 13,
                 color: Color(0xFF1E293B),
+=======
+          const SizedBox(width: 10),
+          Expanded(
+            child: Text(
+              value,
+              style: TextStyle(
+                fontSize: 13,
+                color: isDark ? const Color(0xFFE2E8F0) : const Color(0xFF1E293B),
+>>>>>>> a00283c708b1bbb7d146aabf5e55656be1c38c85
                 fontWeight: FontWeight.w400,
               ),
             ),
@@ -988,4 +2000,60 @@ class _ScreeningInputPageState extends State<ScreeningInputPage> {
       ),
     );
   }
+<<<<<<< HEAD
+=======
+
+  Widget _buildMeasurementInput({
+    required TextEditingController controller,
+    required String unit,
+    String? hintText,
+    required bool isDark,
+  }) {
+    return Container(
+      height: 48,
+      decoration: BoxDecoration(
+        color: isDark ? const Color(0xFF0F172A) : Colors.white,
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(
+          color: isDark ? const Color(0xFF334155) : const Color(0xFF8BB5CE),
+          width: 1.2,
+        ),
+      ),
+      padding: const EdgeInsets.symmetric(horizontal: 14),
+      child: Row(
+        children: [
+          Expanded(
+            child: TextField(
+              controller: controller,
+              keyboardType: const TextInputType.numberWithOptions(
+                decimal: true,
+              ),
+              style: TextStyle(
+                fontSize: 15,
+                color: isDark ? Colors.white : const Color(0xFF111827),
+              ),
+              decoration: InputDecoration(
+                border: InputBorder.none,
+                isDense: true,
+                hintText: hintText,
+                hintStyle: TextStyle(
+                  color: isDark ? const Color(0xFF64748B) : const Color(0xFF94A3B8),
+                ),
+                contentPadding: const EdgeInsets.symmetric(vertical: 14),
+              ),
+            ),
+          ),
+          Text(
+            unit,
+            style: TextStyle(
+              fontSize: 15,
+              fontWeight: FontWeight.w500,
+              color: isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+>>>>>>> a00283c708b1bbb7d146aabf5e55656be1c38c85
 }
