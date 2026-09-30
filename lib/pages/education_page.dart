@@ -1,9 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:heartcare/services/theme_service.dart';
-import 'article_detail_page.dart';
 
+// ============================================================================
+// HALAMAN UTAMA: EDUKASI KESEHATAN
+// ============================================================================
 class EducationPage extends StatelessWidget {
   const EducationPage({super.key});
+
+  static const Color primaryTeal = Color(0xFF0098B9);
+  static const Color darkSlate = Color(0xFF0F172A);
+  static const Color subSlate = Color(0xFF475569);
+  static const Color lightBg = Color(0xFFF8FAFC);
+  static const Color cardBorder = Color(0xFFE2E8F0);
 
   @override
   Widget build(BuildContext context) {
@@ -17,226 +25,267 @@ class EducationPage extends StatelessWidget {
           body: SafeArea(
             child: Column(
               children: [
+                // HEADER BAR
+                Padding(
+                  padding: const EdgeInsets.only(left: 16, right: 16, top: 12),
+                  child: Row(
+                    children: [
+                      _buildBackButton(context, isDark: isDark),
+                      const SizedBox(width: 14),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Edukasi Kesehatan',
+                              style: TextStyle(
+                                fontSize: 19,
+                                fontWeight: FontWeight.w700,
+                                color: isDark ? Colors.white : darkSlate,
+                                letterSpacing: -0.2,
+                              ),
+                            ),
+                            const SizedBox(height: 2),
+                            Text(
+                              'Panduan hidup sehat untuk mendukung kesehatan jantung',
+                              style: TextStyle(
+                                fontSize: 11.5,
+                                color: isDark ? const Color(0xFF94A3B8) : subSlate,
+                                fontWeight: FontWeight.w400,
+                              ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+
+                const SizedBox(height: 14),
+
+                // KONTEN UTAMA
                 Expanded(
                   child: SingleChildScrollView(
-                    padding: const EdgeInsets.fromLTRB(20, 18, 20, 25),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 20,
+                      vertical: 6,
+                    ),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        // HEADER
-                        Row(
-                          children: [
-                            Container(
-                              width: 35,
-                              height: 35,
-                              decoration: BoxDecoration(
-                                color: isDark ? const Color(0xFF1E293B) : const Color(0xFFF1F1F1),
-                                shape: BoxShape.circle,
-                              ),
-                              child: IconButton(
-                                padding: EdgeInsets.zero,
-                                onPressed: () {
-                                  Navigator.pop(context);
-                                },
-                                icon: Icon(
-                                  Icons.arrow_back_ios_new,
-                                  size: 17,
-                                  color: isDark ? Colors.white : Colors.black87,
-                                ),
-                              ),
-                            ),
-                            const SizedBox(width: 18),
-                            Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  'Edukasi Kesehatan',
-                                  style: TextStyle(
-                                    fontSize: 20,
-                                    fontWeight: FontWeight.bold,
-                                    color: isDark ? Colors.white : const Color(0xFF0F172A),
-                                  ),
-                                ),
-                                const SizedBox(height: 2),
-                                Text(
-                                  'Belajar informasi kesehatan jantung agar hidup\nlebih sehat.',
-                                  style: TextStyle(
-                                    fontSize: 8,
-                                    color: isDark ? const Color(0xFF94A3B8) : Colors.grey,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ],
-                        ),
-
-                        const SizedBox(height: 18),
-
-                        // SEARCH
+                        // BANNER PENGANTAR
                         Container(
-                          height: 36,
+                          width: double.infinity,
+                          padding: const EdgeInsets.all(16),
                           decoration: BoxDecoration(
-                            color: isDark ? const Color(0xFF1E293B) : Colors.white,
+                            gradient: LinearGradient(
+                              begin: Alignment.topLeft,
+                              end: Alignment.bottomRight,
+                              colors: isDark
+                                  ? const [Color(0xFF1E293B), Color(0xFF0F2B3B)]
+                                  : const [Color(0xFFE3F7FB), Color(0xFFD0F0F7)],
+                            ),
+                            borderRadius: BorderRadius.circular(16),
                             border: Border.all(
-                              color: isDark ? const Color(0xFF334155) : const Color(0xFFBDBDBD),
+                              color: isDark
+                                  ? const Color(0xFF0098B9).withValues(alpha: 0.3)
+                                  : const Color(0xFFB8E6F0),
+                              width: 1,
                             ),
-                            borderRadius: BorderRadius.circular(8),
                           ),
-                          child: TextField(
-                            style: TextStyle(
-                              fontSize: 12,
-                              color: isDark ? Colors.white : Colors.black87,
-                            ),
-                            decoration: InputDecoration(
-                              hintText: 'Cari artikel kesehatan...',
-                              hintStyle: TextStyle(
-                                fontSize: 12,
-                                color: isDark ? const Color(0xFF64748B) : Colors.grey,
+                          child: Row(
+                            children: [
+                              Container(
+                                width: 48,
+                                height: 48,
+                                decoration: BoxDecoration(
+                                  color: isDark ? const Color(0xFF0F172A) : Colors.white,
+                                  borderRadius: BorderRadius.circular(12),
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: primaryTeal.withValues(alpha: 0.12),
+                                      blurRadius: 8,
+                                      offset: const Offset(0, 2),
+                                    ),
+                                  ],
+                                ),
+                                child: const Center(
+                                  child: Icon(
+                                    Icons.favorite_rounded,
+                                    color: primaryTeal,
+                                    size: 26,
+                                  ),
+                                ),
                               ),
-                              prefixIcon: Icon(
-                                Icons.search,
+                              const SizedBox(width: 14),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      'Jaga Jantung Tetap Prima',
+                                      style: TextStyle(
+                                        fontSize: 14.5,
+                                        fontWeight: FontWeight.w700,
+                                        color: isDark ? Colors.white : darkSlate,
+                                      ),
+                                    ),
+                                    const SizedBox(height: 3),
+                                    Text(
+                                      'Pahami langkah penting sehari-hari untuk mendukung pemulihan dan kualitas hidup optimal.',
+                                      style: TextStyle(
+                                        fontSize: 11.5,
+                                        color: isDark ? const Color(0xFF94A3B8) : subSlate,
+                                        height: 1.35,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+
+                        const SizedBox(height: 22),
+
+                        Text(
+                          'Pilihan Topik Edukasi',
+                          style: TextStyle(
+                            fontSize: 15,
+                            fontWeight: FontWeight.w700,
+                            color: isDark ? Colors.white : darkSlate,
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          'Pilih materi yang ingin Anda pelajari di bawah ini:',
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B),
+                          ),
+                        ),
+
+                        const SizedBox(height: 14),
+
+                        // CARD 1: POLA MAKAN SEHAT
+                        _buildMenuCard(
+                          context,
+                          title: 'Pola Makan Sehat',
+                          description:
+                              'Panduan nutrisi tepat, pemilihan bahan makanan bergizi, dan pembatasan garam serta lemak untuk penderita penyakit jantung.',
+                          tag: 'Nutrisi & Makanan',
+                          icon: Icons.restaurant_rounded,
+                          iconBgColor: isDark
+                              ? const Color(0xFF0098B9).withValues(alpha: 0.2)
+                              : const Color(0xFFE0F7FA),
+                          iconColor: const Color(0xFF0098B9),
+                          isDark: isDark,
+                          onTap: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => const PolaMakanSehatPage(),
+                              ),
+                            );
+                          },
+                        ),
+
+                        const SizedBox(height: 14),
+
+                        // CARD 2: AKTIVITAS FISIK
+                        _buildMenuCard(
+                          context,
+                          title: 'Aktivitas Fisik',
+                          description:
+                              'Aktivitas fisik yang aman, terukur, dan bertahap sesuai kemampuan serta kondisi kesehatan jantung masing-masing.',
+                          tag: 'Latihan & Gerak',
+                          icon: Icons.directions_walk_rounded,
+                          iconBgColor: isDark
+                              ? const Color(0xFF0284C7).withValues(alpha: 0.2)
+                              : const Color(0xFFE0F2FE),
+                          iconColor: const Color(0xFF0284C7),
+                          isDark: isDark,
+                          onTap: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => const AktivitasFisikPage(),
+                              ),
+                            );
+                          },
+                        ),
+
+                        const SizedBox(height: 14),
+
+                        // CARD 3: KEBIASAAN SEHAT
+                        _buildMenuCard(
+                          context,
+                          title: 'Kebiasaan Sehat',
+                          description:
+                              'Menjaga pola istirahat yang cukup, menghindari rokok, mengelola stres emosional, dan kepatuhan dalam perawatan medis.',
+                          tag: 'Gaya Hidup',
+                          icon: Icons.spa_rounded,
+                          iconBgColor: isDark
+                              ? const Color(0xFF16A34A).withValues(alpha: 0.2)
+                              : const Color(0xFFDCFCE7),
+                          iconColor: const Color(0xFF16A34A),
+                          isDark: isDark,
+                          onTap: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => const KebiasaanSehatPage(),
+                              ),
+                            );
+                          },
+                        ),
+
+                        const SizedBox(height: 24),
+
+                        // CATATAN KAKI INFORMASI
+                        Container(
+                          width: double.infinity,
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 14,
+                            vertical: 12,
+                          ),
+                          decoration: BoxDecoration(
+                            color: isDark ? const Color(0xFF1E293B) : lightBg,
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(
+                              color: isDark ? const Color(0xFF334155) : cardBorder,
+                            ),
+                          ),
+                          child: Row(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Icon(
+                                Icons.info_outline_rounded,
                                 size: 18,
-                                color: isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B),
+                                color: isDark
+                                    ? const Color(0xFF38BDF8)
+                                    : const Color(0xFF64748B),
                               ),
-                              border: InputBorder.none,
-                              contentPadding: const EdgeInsets.symmetric(vertical: 8),
-                            ),
+                              const SizedBox(width: 10),
+                              Expanded(
+                                child: Text(
+                                  'Informasi dalam edukasi ini bertujuan sebagai panduan umum. Selalu konsultasikan kondisi dan kebutuhan spesifik Anda dengan tenaga kesehatan.',
+                                  style: TextStyle(
+                                    fontSize: 11,
+                                    height: 1.4,
+                                    color: isDark
+                                        ? const Color(0xFF94A3B8)
+                                        : const Color(0xFF64748B),
+                                  ),
+                                ),
+                              ),
+                            ],
                           ),
                         ),
 
-                        const SizedBox(height: 12),
-
-                        // FILTER
-                        Row(
-                          children: [
-                            _filter('Semua', true, isDark),
-                            _filter('Penyakit Jantung', false, isDark),
-                            _filter('Pola Hidup', false, isDark),
-                          ],
-                        ),
-
-                        const SizedBox(height: 14),
-
-                        // ARTIKEL 1
-                        _articleCard(
-                          context,
-                          isDark: isDark,
-                          image: 'https://images.unsplash.com/photo-1530026405186-ed1f139313f8?w=500',
-                          category: 'Penyakit Jantung',
-                          title: 'Mengenal Penyakit\nJantung Koroner',
-                          description:
-                              'Penyakit jantung koroner merupakan salah satu '
-                              'penyakit yang perlu diwaspadai karena dapat '
-                              'mengganggu fungsi jantung.',
-                          onTap: () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (context) => const ArticleDetailPage(
-                                  image: 'https://images.unsplash.com/photo-1530026405186-ed1f139313f8?w=800',
-                                  category: 'Penyakit Jantung',
-                                  title: 'Mengenal Penyakit Jantung Koroner',
-                                  description:
-                                      'Penyakit jantung koroner merupakan salah satu penyakit '
-                                      'yang perlu diwaspadai karena dapat memengaruhi fungsi '
-                                      'jantung dalam memompa darah ke seluruh tubuh.',
-                                  date: '08 September 2026',
-                                  content:
-                                      'Penyakit jantung koroner adalah kondisi ketika pembuluh '
-                                      'darah yang berfungsi mengalirkan darah dan oksigen ke '
-                                      'otot jantung mengalami penyempitan atau penyumbatan. '
-                                      'Kondisi ini dapat menyebabkan aliran darah menuju '
-                                      'jantung menjadi berkurang.\n\n'
-                                      'Penyempitan pembuluh darah umumnya terjadi akibat '
-                                      'penumpukan lemak atau plak pada dinding pembuluh darah.\n\n'
-                                      'Beberapa faktor dapat meningkatkan risiko penyakit '
-                                      'jantung, antara lain tekanan darah tinggi, kolesterol '
-                                      'tinggi, kurang aktivitas fisik, dan pola makan kurang sehat.',
-                                ),
-                              ),
-                            );
-                          },
-                        ),
-
-                        const SizedBox(height: 14),
-
-                        // ARTIKEL 2
-                        _articleCard(
-                          context,
-                          isDark: isDark,
-                          image: 'https://images.unsplash.com/photo-1490645935967-10de6ba17061?w=500',
-                          category: 'Pola Hidup',
-                          title: 'Makanan Sehat\nuntuk Jantung',
-                          description:
-                              'Menjaga kesehatan jantung dapat dimulai dari '
-                              'pilihan makanan sehari-hari.',
-                          onTap: () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (context) => const ArticleDetailPage(
-                                  image: 'https://images.unsplash.com/photo-1490645935967-10de6ba17061?w=800',
-                                  category: 'Pola Hidup',
-                                  title: 'Makanan Sehat untuk Jantung',
-                                  description:
-                                      'Menjaga kesehatan jantung dapat dimulai dari pilihan '
-                                      'makanan sehari-hari.',
-                                  date: '08 September 2026',
-                                  content:
-                                      'Pola makan yang sehat merupakan salah satu bagian penting '
-                                      'dalam menjaga kesehatan jantung. Pemilihan makanan yang '
-                                      'tepat dapat membantu mendukung kesehatan tubuh secara '
-                                      'keseluruhan.\n\n'
-                                      'Beberapa pilihan makanan yang dapat dikonsumsi antara '
-                                      'lain sayuran, buah-buahan, biji-bijian, dan makanan yang '
-                                      'memiliki kandungan gizi seimbang.\n\n'
-                                      'Selain memilih makanan yang sehat, penting juga untuk '
-                                      'memperhatikan jumlah dan pola makan sehari-hari.',
-                                ),
-                              ),
-                            );
-                          },
-                        ),
-
-                        const SizedBox(height: 14),
-
-                        // ARTIKEL 3
-                        _articleCard(
-                          context,
-                          isDark: isDark,
-                          image: 'https://images.unsplash.com/photo-1552674605-db6ffd4facb5?w=500',
-                          category: 'Pola Hidup',
-                          title: 'Olahraga yang Baik\nuntuk Kesehatan Jantung',
-                          description:
-                              'Aktivitas fisik secara rutin dapat membantu '
-                              'menjaga kebugaran tubuh dan mendukung kesehatan.',
-                          onTap: () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (context) => const ArticleDetailPage(
-                                  image: 'https://images.unsplash.com/photo-1552674605-db6ffd4facb5?w=800',
-                                  category: 'Pola Hidup',
-                                  title: 'Olahraga yang Baik untuk Kesehatan Jantung',
-                                  description:
-                                      'Aktivitas fisik secara rutin dapat membantu menjaga '
-                                      'kebugaran tubuh dan mendukung kesehatan.',
-                                  date: '08 September 2026',
-                                  content:
-                                      'Aktivitas fisik secara rutin dapat membantu menjaga '
-                                      'kebugaran tubuh dan mendukung kesehatan jantung. Olahraga '
-                                      'juga dapat menjadi bagian dari pola hidup sehat apabila '
-                                      'dilakukan secara teratur.\n\n'
-                                      'Beberapa aktivitas fisik yang dapat dilakukan antara lain '
-                                      'berjalan kaki, bersepeda, dan aktivitas fisik lainnya '
-                                      'sesuai dengan kemampuan tubuh.\n\n'
-                                      'Yang penting adalah melakukan aktivitas secara rutin dan '
-                                      'menyesuaikannya dengan kondisi masing-masing.',
-                                ),
-                              ),
-                            );
-                          },
-                        ),
+                        const SizedBox(height: 20),
                       ],
                     ),
                   ),
@@ -249,85 +298,887 @@ class EducationPage extends StatelessWidget {
     );
   }
 
-  Widget _filter(String text, bool active, bool isDark) {
+  static Widget _buildBackButton(BuildContext context, {bool isDark = false}) {
     return Container(
-      margin: const EdgeInsets.only(right: 8),
-      padding: const EdgeInsets.symmetric(
-        horizontal: 11,
-        vertical: 4,
-      ),
+      width: 38,
+      height: 38,
       decoration: BoxDecoration(
-        color: active
-            ? const Color(0xFF159BC2)
-            : (isDark ? const Color(0xFF1E293B) : Colors.white),
-        border: Border.all(
-          color: active
-              ? const Color(0xFF159BC2)
-              : (isDark ? const Color(0xFF334155) : const Color(0xFFBBBBBB)),
-        ),
-        borderRadius: BorderRadius.circular(15),
+        color: isDark ? const Color(0xFF1E293B) : const Color(0xFFF1F5F9),
+        shape: BoxShape.circle,
       ),
-      child: Text(
-        text,
-        style: TextStyle(
-          fontSize: 8,
-          color: active
-              ? Colors.white
-              : (isDark ? const Color(0xFF94A3B8) : Colors.black87),
+      child: IconButton(
+        padding: EdgeInsets.zero,
+        onPressed: () => Navigator.pop(context),
+        icon: Icon(
+          Icons.arrow_back_ios_new_rounded,
+          size: 16,
+          color: isDark ? Colors.white : const Color(0xFF1E293B),
         ),
       ),
     );
   }
 
-  Widget _articleCard(
+  Widget _buildMenuCard(
     BuildContext context, {
-    required bool isDark,
-    required String image,
-    required String category,
     required String title,
     required String description,
-    VoidCallback? onTap,
+    required String tag,
+    required IconData icon,
+    required Color iconBgColor,
+    required Color iconColor,
+    required VoidCallback onTap,
+    bool isDark = false,
   }) {
-    return GestureDetector(
+    return InkWell(
       onTap: onTap,
+      borderRadius: BorderRadius.circular(16),
       child: Container(
-        height: 119,
-        padding: const EdgeInsets.all(7),
+        width: double.infinity,
+        padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
           color: isDark ? const Color(0xFF1E293B) : Colors.white,
+          borderRadius: BorderRadius.circular(16),
           border: Border.all(
-            color: isDark ? const Color(0xFF334155) : const Color(0xFFBDBDBD),
+            color: isDark ? const Color(0xFF334155) : cardBorder,
+            width: 1.2,
           ),
-          borderRadius: BorderRadius.circular(8),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: isDark ? 0.2 : 0.02),
+              blurRadius: 8,
+              offset: const Offset(0, 2),
+            ),
+          ],
         ),
-        child: Row(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // GAMBAR
-            ClipRRect(
-              borderRadius: BorderRadius.circular(6),
-              child: Image.network(
-                image,
-                width: 96,
-                height: 95,
-                fit: BoxFit.cover,
-                errorBuilder: (context, error, stackTrace) {
-                  return Container(
-                    width: 96,
-                    height: 95,
-                    color: isDark ? const Color(0xFF334155) : const Color(0xFFE7F6FF),
-                    child: const Icon(
-                      Icons.favorite,
-                      color: Colors.red,
-                      size: 40,
+            Row(
+              children: [
+                Container(
+                  width: 44,
+                  height: 44,
+                  decoration: BoxDecoration(
+                    color: iconBgColor,
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Center(child: Icon(icon, color: iconColor, size: 24)),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 2.5,
+                        ),
+                        decoration: BoxDecoration(
+                          color: iconBgColor,
+                          borderRadius: BorderRadius.circular(6),
+                        ),
+                        child: Text(
+                          tag,
+                          style: TextStyle(
+                            fontSize: 10,
+                            fontWeight: FontWeight.w700,
+                            color: iconColor,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        title,
+                        style: TextStyle(
+                          fontSize: 15.5,
+                          fontWeight: FontWeight.w700,
+                          color: isDark ? Colors.white : darkSlate,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                Container(
+                  width: 32,
+                  height: 32,
+                  decoration: BoxDecoration(
+                    color: isDark ? const Color(0xFF0F172A) : lightBg,
+                    shape: BoxShape.circle,
+                  ),
+                  child: Center(
+                    child: Icon(
+                      Icons.chevron_right_rounded,
+                      color: isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B),
+                      size: 20,
                     ),
-                  );
-                },
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 10),
+            Text(
+              description,
+              style: TextStyle(
+                fontSize: 12,
+                color: isDark ? const Color(0xFF94A3B8) : const Color(0xFF475569),
+                height: 1.4,
               ),
             ),
+          ],
+        ),
+      ),
+    );
+  }
+}
 
-            const SizedBox(width: 8),
+// ============================================================================
+// 1. DETAIL PAGE: POLA MAKAN SEHAT
+// ============================================================================
+class PolaMakanSehatPage extends StatelessWidget {
+  const PolaMakanSehatPage({super.key});
 
-            // TEKS
+  @override
+  Widget build(BuildContext context) {
+    return ValueListenableBuilder<ThemeMode>(
+      valueListenable: ThemeService.themeModeNotifier,
+      builder: (context, themeMode, _) {
+        final isDark = themeMode == ThemeMode.dark;
+
+        return Scaffold(
+          backgroundColor: isDark ? const Color(0xFF0F172A) : Colors.white,
+          body: SafeArea(
+            child: Column(
+              children: [
+                // HEADER BAR
+                Padding(
+                  padding: const EdgeInsets.only(left: 16, right: 16, top: 12),
+                  child: Row(
+                    children: [
+                      EducationPage._buildBackButton(context, isDark: isDark),
+                      const SizedBox(width: 14),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Pola Makan Sehat',
+                              style: TextStyle(
+                                fontSize: 18,
+                                fontWeight: FontWeight.w700,
+                                color: isDark ? Colors.white : const Color(0xFF0F172A),
+                              ),
+                            ),
+                            const SizedBox(height: 2),
+                            Text(
+                              'Panduan makanan bergizi untuk kesehatan jantung',
+                              style: TextStyle(
+                                fontSize: 11,
+                                color: isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+
+                const SizedBox(height: 12),
+
+                Expanded(
+                  child: SingleChildScrollView(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 20,
+                      vertical: 8,
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        // BANNER RINGKASAN
+                        _buildOverviewCard(
+                          icon: Icons.restaurant_menu_rounded,
+                          title: 'Pola Makan Bagi Pasien Jantung',
+                          description:
+                              'Membahas pola makan sehat untuk orang yang sudah memiliki penyakit jantung, berfokus pada pemilihan makanan alami berkualitas dan pembiasaan waktu makan yang mendukung kerja jantung.',
+                          color: const Color(0xFF0098B9),
+                          bgColor: const Color(0xFFE0F7FA),
+                          isDark: isDark,
+                        ),
+
+                        const SizedBox(height: 20),
+
+                        Text(
+                          'Materi Edukasi Nutrisi',
+                          style: TextStyle(
+                            fontSize: 15,
+                            fontWeight: FontWeight.w700,
+                            color: isDark ? Colors.white : const Color(0xFF0F172A),
+                          ),
+                        ),
+                        const SizedBox(height: 12),
+
+                        // MATERI A: Perbanyak Makanan Sehat
+                        _buildDetailCard(
+                          label: 'A',
+                          title: 'Perbanyak Makanan Sehat',
+                          tag: 'Direkomendasikan',
+                          tagColor: const Color(0xFF15803D),
+                          tagBgColor: const Color(0xFFDCFCE7),
+                          icon: Icons.eco_rounded,
+                          iconColor: const Color(0xFF16A34A),
+                          iconBgColor: const Color(0xFFDCFCE7),
+                          summary:
+                              'Penuhi kebutuhan harian dengan makanan segar kaya serat, antioksidan, dan lemak baik yang menjaga elastisitas pembuluh darah.',
+                          points: const [
+                            'Memperbanyak buah dan sayuran segar aneka warna sebagai sumber serat larut dan vitamin.',
+                            'Memilih ikan berlemak sehat kaya asam lemak Omega-3 (seperti salmon, kembung, tuna, tongkol).',
+                            'Memilih kacang-kacangan dan biji-bijian utuh (seperti oatmeal, kedelai, kacang almond) untuk menekan kolesterol LDL.',
+                            'Menjaga menu makanan tetap beragam dan seimbang agar kebutuhan nutrisi harian tercukupi.',
+                          ],
+                          isDark: isDark,
+                        ),
+
+                        const SizedBox(height: 14),
+
+                        // MATERI B: Batasi Lemak, Gula, dan Garam
+                        _buildDetailCard(
+                          label: 'B',
+                          title: 'Batasi Lemak, Gula, dan Garam',
+                          tag: 'Perlu Dibatasi',
+                          tagColor: const Color(0xFFB45309),
+                          tagBgColor: const Color(0xFFFEF3C7),
+                          icon: Icons.tune_rounded,
+                          iconColor: const Color(0xFFD97706),
+                          iconBgColor: const Color(0xFFFEF3C7),
+                          summary:
+                              'Konsumsi lemak jenuh, gula, dan natrium berlebih berpotensi menaikkan tekanan darah serta memperberat beban pompa jantung.',
+                          points: const [
+                            'Membatasi makanan tinggi lemak jenuh dan lemak trans yang dapat mempersempit rongga pembuluh darah.',
+                            'Membatasi makanan dan minuman tinggi gula untuk mengontrol berat badan serta mencegah risiko diabetes.',
+                            'Membatasi makanan tinggi garam (natrium maksimal 1 sendok teh atau 2.000 mg/hari) demi menjaga kestabilan tekanan darah.',
+                            'Menghindari konsumsi camilan atau bumbu penyedap instan secara berlebihan.',
+                          ],
+                          isDark: isDark,
+                        ),
+
+                        const SizedBox(height: 14),
+
+                        // MATERI C: Kurangi Makanan yang Kurang Sehat
+                        _buildDetailCard(
+                          label: 'C',
+                          title: 'Kurangi Makanan yang Kurang Sehat',
+                          tag: 'Hindari / Kurangi',
+                          tagColor: const Color(0xFFB91C1C),
+                          tagBgColor: const Color(0xFFFEE2E2),
+                          icon: Icons.no_food_outlined,
+                          iconColor: const Color(0xFFDC2626),
+                          iconBgColor: const Color(0xFFFEE2E2),
+                          summary:
+                              'Beberapa jenis olahan makanan memicu peradangan pada pembuluh darah dan menaikkan kolesterol jahat dalam darah.',
+                          points: const [
+                            'Makanan yang digoreng (deep fried): Minyak goreng yang dipanaskan berulang kali menghasilkan lemak trans berbahaya.',
+                            'Makanan tinggi lemak hewani: Daging merah berlemak tebal dan jeroan memicu penumpukan plak koroner.',
+                            'Makanan bersantan kental: Masakan santan yang dihangatkan berulang dapat meningkatkan kadar kolesterol darah.',
+                            'Makanan siap saji & olahan (ultra-processed): Mengandung kadar garam, pengawet, dan lemak tersembunyi yang tinggi.',
+                          ],
+                          isDark: isDark,
+                        ),
+
+                        const SizedBox(height: 14),
+
+                        // MATERI D: Atur Waktu Makan
+                        _buildDetailCard(
+                          label: 'D',
+                          title: 'Atur Waktu Makan',
+                          tag: 'Kebiasaan Rutin',
+                          tagColor: const Color(0xFF0369A1),
+                          tagBgColor: const Color(0xFFE0F2FE),
+                          icon: Icons.access_time_rounded,
+                          iconColor: const Color(0xFF0284C7),
+                          iconBgColor: const Color(0xFFE0F2FE),
+                          summary:
+                              'Jadwal makan yang tertata baik menjaga ritme metabolisme tubuh dan stabilitas energi jantung secara teratur.',
+                          points: const [
+                            'Menjaga waktu makan tetap teratur setiap hari (sarapan, makan siang, dan makan malam).',
+                            'Tidak membiasakan makan dengan waktu yang tidak teratur atau sering melewatkan jam makan utama.',
+                            'Menjaga pola makan secara konsisten agar tubuh tidak mengalami stres metabolisme.',
+                            'Memberi jeda minimal 2-3 jam antara makan malam dan waktu tidur agar lambung tidak tertekan.',
+                          ],
+                          isDark: isDark,
+                        ),
+
+                        const SizedBox(height: 24),
+
+                        // TOMBOL KEMBALI
+                        _buildBackButtonBottom(context, isDark: isDark),
+
+                        const SizedBox(height: 20),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+}
+
+// ============================================================================
+// 2. DETAIL PAGE: AKTIVITAS FISIK
+// ============================================================================
+class AktivitasFisikPage extends StatelessWidget {
+  const AktivitasFisikPage({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return ValueListenableBuilder<ThemeMode>(
+      valueListenable: ThemeService.themeModeNotifier,
+      builder: (context, themeMode, _) {
+        final isDark = themeMode == ThemeMode.dark;
+
+        return Scaffold(
+          backgroundColor: isDark ? const Color(0xFF0F172A) : Colors.white,
+          body: SafeArea(
+            child: Column(
+              children: [
+                // HEADER BAR
+                Padding(
+                  padding: const EdgeInsets.only(left: 16, right: 16, top: 12),
+                  child: Row(
+                    children: [
+                      EducationPage._buildBackButton(context, isDark: isDark),
+                      const SizedBox(width: 14),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Aktivitas Fisik',
+                              style: TextStyle(
+                                fontSize: 18,
+                                fontWeight: FontWeight.w700,
+                                color: isDark ? Colors.white : const Color(0xFF0F172A),
+                              ),
+                            ),
+                            const SizedBox(height: 2),
+                            Text(
+                              'Panduan latihan fisik yang aman bagi jantung',
+                              style: TextStyle(
+                                fontSize: 11,
+                                color: isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+
+                const SizedBox(height: 12),
+
+                Expanded(
+                  child: SingleChildScrollView(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 20,
+                      vertical: 8,
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        // BANNER RINGKASAN
+                        _buildOverviewCard(
+                          icon: Icons.directions_walk_rounded,
+                          title: 'Aktivitas Fisik Aman & Terukur',
+                          description:
+                              'Aktivitas fisik sangat bermanfaat menjaga kekuatan pompa jantung dan kebugaran tubuh, asalkan dilakukan secara sederhana, bertahap, dan disesuaikan dengan kapasitas tubuh masing-masing.',
+                          color: const Color(0xFF0284C7),
+                          bgColor: const Color(0xFFE0F2FE),
+                          isDark: isDark,
+                        ),
+
+                        const SizedBox(height: 20),
+
+                        Text(
+                          'Pilihan Bentuk Aktivitas',
+                          style: TextStyle(
+                            fontSize: 15,
+                            fontWeight: FontWeight.w700,
+                            color: isDark ? Colors.white : const Color(0xFF0F172A),
+                          ),
+                        ),
+                        const SizedBox(height: 12),
+
+                        // MATERI A: Jalan Kaki
+                        _buildDetailCard(
+                          label: 'A',
+                          title: 'Jalan Kaki',
+                          tag: 'Aktivitas Dasar',
+                          tagColor: const Color(0xFF0369A1),
+                          tagBgColor: const Color(0xFFE0F2FE),
+                          icon: Icons.directions_walk_rounded,
+                          iconColor: const Color(0xFF0284C7),
+                          iconBgColor: const Color(0xFFE0F2FE),
+                          summary:
+                              'Salah satu aktivitas fisik terbaik, minim risiko cedera, serta sangat mudah dilakukan untuk menjaga kelancaran aliran darah.',
+                          points: const [
+                            'Dilakukan secara bertahap mulai dari 10-15 menit per hari dengan langkah santai di lintasan yang rata.',
+                            'Dapat ditingkatkan secara perlahan hingga 20-30 menit jika tidak ada keluhan sesak napas atau lelah berlebih.',
+                            'Dianjurkan berjalan santai di waktu pagi atau sore hari saat suhu lingkungan sejuk dan segar.',
+                            'Gunakan alas kaki yang nyaman dan tetap terhidrasi dengan air putih secukupnya.',
+                          ],
+                          isDark: isDark,
+                        ),
+
+                        const SizedBox(height: 14),
+
+                        // MATERI B: Latihan Pernapasan
+                        _buildDetailCard(
+                          label: 'B',
+                          title: 'Latihan Pernapasan',
+                          tag: 'Relaksasi Jantung',
+                          tagColor: const Color(0xFF0098B9),
+                          tagBgColor: const Color(0xFFE0F7FA),
+                          icon: Icons.air_rounded,
+                          iconColor: const Color(0xFF0098B9),
+                          iconBgColor: const Color(0xFFE0F7FA),
+                          summary:
+                              'Latihan pernapasan dalam (deep breathing) yang tenang dan teratur membantu menstabilkan detak jantung serta meredakan ketegangan tubuh.',
+                          points: const [
+                            'Duduk dalam posisi tegak dan rileks di kursi yang nyaman, letakkan tangan di perut.',
+                            'Tarik napas perlahan melalui hidung selama 3-4 detik hingga rongga dada dan perut mengembang.',
+                            'Hembuskan napas perlahan melalui mulut secara tenang selama 4-6 detik.',
+                            'Lakukan secara teratur 5-10 menit setiap hari atau saat merasa cemas dan tegang.',
+                          ],
+                          isDark: isDark,
+                        ),
+
+                        const SizedBox(height: 14),
+
+                        // MATERI C: Mobilisasi Bertahap
+                        _buildDetailCard(
+                          label: 'C',
+                          title: 'Mobilisasi Bertahap',
+                          tag: 'Latihan Mandiri',
+                          tagColor: const Color(0xFF15803D),
+                          tagBgColor: const Color(0xFFDCFCE7),
+                          icon: Icons.accessibility_new_rounded,
+                          iconColor: const Color(0xFF16A34A),
+                          iconBgColor: const Color(0xFFDCFCE7),
+                          summary:
+                              'Latihan peregangan ringan dan mobilitas sendi menjaga otot tetap lentur tanpa membebani frekuensi detak jantung.',
+                          points: const [
+                            'Melakukan peregangan ringan pada area leher, bahu, lengan, dan pergelangan kaki setiap pagi.',
+                            'Hindari gerakan menghentak mendadak, menahan napas saat mengangkat beban, atau membungkuk secara ekstrem.',
+                            'Lakukan gerakan berdiri dan duduk perlahan untuk melatih kekuatan otot kaki.',
+                            'Bagi pasien pasca perawatan, lakukan mobilisasi di dalam ruangan secara teratur di bawah pengawasan pendamping.',
+                          ],
+                          isDark: isDark,
+                        ),
+
+                        const SizedBox(height: 18),
+
+                        // KOTAK PERINGATAN PENTING
+                        Container(
+                          width: double.infinity,
+                          padding: const EdgeInsets.all(14),
+                          decoration: BoxDecoration(
+                            color: isDark ? const Color(0xFF2E1C0C) : const Color(0xFFFFFBEB),
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(
+                              color: isDark ? const Color(0xFF78350F) : const Color(0xFFFDE68A),
+                              width: 1,
+                            ),
+                          ),
+                          child: Row(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Container(
+                                padding: const EdgeInsets.all(6),
+                                decoration: const BoxDecoration(
+                                  color: Color(0xFFF59E0B),
+                                  shape: BoxShape.circle,
+                                ),
+                                child: const Icon(
+                                  Icons.health_and_safety_rounded,
+                                  color: Colors.white,
+                                  size: 18,
+                                ),
+                              ),
+                              const SizedBox(width: 12),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      'PENTING DIPERHATIKAN',
+                                      style: TextStyle(
+                                        fontSize: 12,
+                                        fontWeight: FontWeight.w800,
+                                        color: isDark
+                                            ? const Color(0xFFFDE68A)
+                                            : const Color(0xFF92400E),
+                                        letterSpacing: 0.3,
+                                      ),
+                                    ),
+                                    const SizedBox(height: 4),
+                                    Text(
+                                      'Orang dengan penyakit jantung perlu menyesuaikan intensitas dan durasi aktivitas fisik dengan kondisi masing-masing serta selalu mengikuti anjuran dan rekomendasi dari dokter atau tenaga kesehatan yang merawat.',
+                                      style: TextStyle(
+                                        fontSize: 11.5,
+                                        height: 1.45,
+                                        color: isDark
+                                            ? const Color(0xFFFCD34D)
+                                            : const Color(0xFF78350F),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+
+                        const SizedBox(height: 24),
+
+                        // TOMBOL KEMBALI
+                        _buildBackButtonBottom(context, isDark: isDark),
+
+                        const SizedBox(height: 20),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+}
+
+// ============================================================================
+// 3. DETAIL PAGE: KEBIASAAN SEHAT
+// ============================================================================
+class KebiasaanSehatPage extends StatelessWidget {
+  const KebiasaanSehatPage({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return ValueListenableBuilder<ThemeMode>(
+      valueListenable: ThemeService.themeModeNotifier,
+      builder: (context, themeMode, _) {
+        final isDark = themeMode == ThemeMode.dark;
+
+        return Scaffold(
+          backgroundColor: isDark ? const Color(0xFF0F172A) : Colors.white,
+          body: SafeArea(
+            child: Column(
+              children: [
+                // HEADER BAR
+                Padding(
+                  padding: const EdgeInsets.only(left: 16, right: 16, top: 12),
+                  child: Row(
+                    children: [
+                      EducationPage._buildBackButton(context, isDark: isDark),
+                      const SizedBox(width: 14),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Kebiasaan Sehat',
+                              style: TextStyle(
+                                fontSize: 18,
+                                fontWeight: FontWeight.w700,
+                                color: isDark ? Colors.white : const Color(0xFF0F172A),
+                              ),
+                            ),
+                            const SizedBox(height: 2),
+                            Text(
+                              'Pola hidup sehari-hari untuk menjaga kondisi jantung',
+                              style: TextStyle(
+                                fontSize: 11,
+                                color: isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+
+                const SizedBox(height: 12),
+
+                Expanded(
+                  child: SingleChildScrollView(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 20,
+                      vertical: 8,
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        // BANNER RINGKASAN
+                        _buildOverviewCard(
+                          icon: Icons.spa_rounded,
+                          title: 'Kebiasaan Baik Setiap Hari',
+                          description:
+                              'Membahas kebiasaan sehari-hari yang dapat membantu menjaga kondisi jantung tetap stabil, seperti menjaga pola istirahat, menghindari rokok, mengelola stres, dan mengikuti perawatan medis yang dianjurkan.',
+                          color: const Color(0xFF16A34A),
+                          bgColor: const Color(0xFFDCFCE7),
+                          isDark: isDark,
+                        ),
+
+                        const SizedBox(height: 20),
+
+                        Text(
+                          'Pilar Kebiasaan Sehat',
+                          style: TextStyle(
+                            fontSize: 15,
+                            fontWeight: FontWeight.w700,
+                            color: isDark ? Colors.white : const Color(0xFF0F172A),
+                          ),
+                        ),
+                        const SizedBox(height: 12),
+
+                        // MATERI A: Hindari Rokok
+                        _buildDetailCard(
+                          label: 'A',
+                          title: 'Hindari Rokok',
+                          tag: 'Wajib Dihindari',
+                          tagColor: const Color(0xFFB91C1C),
+                          tagBgColor: const Color(0xFFFEE2E2),
+                          icon: Icons.smoke_free_rounded,
+                          iconColor: const Color(0xFFDC2626),
+                          iconBgColor: const Color(0xFFFEE2E2),
+                          summary:
+                              'Menghindari kebiasaan merokok dan paparan asap rokok adalah langkah paling efektif untuk mencegah kerusakan pembuluh darah koroner.',
+                          points: const [
+                            'Zat beracun dan nikotin dalam rokok merusak dinding arteri dan mempercepat penumpukan plak aterosklerosis.',
+                            'Merokok menyempitkan pembuluh darah, menaikkan denyut nadi, serta menurunkan kadar oksigen yang dibawa ke otot jantung.',
+                            'Hindari pula paparan sebagai perokok pasif karena memiliki dampak bahaya yang sama tingginya.',
+                            'Berhenti merokok memberikan dampak perbaikan sirkulasi darah jantung secara signifikan dalam waktu singkat.',
+                          ],
+                          isDark: isDark,
+                        ),
+
+                        const SizedBox(height: 14),
+
+                        // MATERI B: Istirahat yang Cukup
+                        _buildDetailCard(
+                          label: 'B',
+                          title: 'Istirahat yang Cukup',
+                          tag: 'Pemulihan Organ',
+                          tagColor: const Color(0xFF0369A1),
+                          tagBgColor: const Color(0xFFE0F2FE),
+                          icon: Icons.bedtime_rounded,
+                          iconColor: const Color(0xFF0284C7),
+                          iconBgColor: const Color(0xFFE0F2FE),
+                          summary:
+                              'Waktu tidur yang berkualitas dan cukup memberi kesempatan bagi organ jantung untuk beristirahat dan menstabilkan tekanan darah.',
+                          points: const [
+                            'Menjaga kecukupan waktu istirahat dan tidur berkualitas selama 7-8 jam setiap malam.',
+                            'Menjaga jam tidur dan bangun secara teratur setiap hari untuk keselarasan ritme sirkadian tubuh.',
+                            'Kurang tidur kronis terbukti meningkatkan hormon stres dan memicu kenaikan tekanan darah tinggi.',
+                            'Ciptakan suasana kamar tidur yang tenang, sejuk, dan hindari paparan layar gawai menjelang tidur.',
+                          ],
+                          isDark: isDark,
+                        ),
+
+                        const SizedBox(height: 14),
+
+                        // MATERI C: Kelola Stres
+                        _buildDetailCard(
+                          label: 'C',
+                          title: 'Kelola Stres',
+                          tag: 'Kesehatan Emosional',
+                          tagColor: const Color(0xFF15803D),
+                          tagBgColor: const Color(0xFFDCFCE7),
+                          icon: Icons.self_improvement_rounded,
+                          iconColor: const Color(0xFF16A34A),
+                          iconBgColor: const Color(0xFFDCFCE7),
+                          summary:
+                              'Kondisi emosional yang terkendali melindungi jantung dari lonjakan hormon adrenalin dan kortisol yang memicu hipertensi.',
+                          points: const [
+                            'Mengenali pemicu stres harian dan meluangkan waktu untuk relaksasi, ibadah, meditasi, atau hobi santai.',
+                            'Membiasakan berbincang dan berbagi cerita dengan keluarga atau sahabat saat menghadapi rasa cemas.',
+                            'Mengatur ritme kerja dan beban pikiran agar tidak mengalami kelelahan mental yang berlebihan.',
+                            'Menjaga pikiran positif dan menghindari reaksi kemarahan mendadak yang membebani kinerja pompa jantung.',
+                          ],
+                          isDark: isDark,
+                        ),
+
+                        const SizedBox(height: 14),
+
+                        // MATERI D: Ikuti Perawatan
+                        _buildDetailCard(
+                          label: 'D',
+                          title: 'Ikuti Perawatan',
+                          tag: 'Kepatuhan Medis',
+                          tagColor: const Color(0xFF0098B9),
+                          tagBgColor: const Color(0xFFE0F7FA),
+                          icon: Icons.medical_services_rounded,
+                          iconColor: const Color(0xFF0098B9),
+                          iconBgColor: const Color(0xFFE0F7FA),
+                          summary:
+                              'Kepatuhan terhadap rencana terapi dokter dan pemeriksaan berkala adalah jaminan terbaik untuk kestabilan kesehatan jantung.',
+                          points: const [
+                            'Meminum obat-obatan yang diresepkan oleh dokter secara teratur sesuai dosis dan jadwal yang telah ditentukan.',
+                            'Melakukan kontrol atau pemeriksaan kesehatan berkala sesuai anjuran untuk memantau fungsi jantung.',
+                            'Memantau parameter penting seperti tekanan darah dan denyut nadi secara mandiri di rumah jika dianjurkan.',
+                            'Segera berkonsultasi kembali kepada dokter jika merasakan perubahan kondisi atau gejala baru yang mengganggu.',
+                          ],
+                          isDark: isDark,
+                        ),
+
+                        const SizedBox(height: 24),
+
+                        // TOMBOL KEMBALI
+                        _buildBackButtonBottom(context, isDark: isDark),
+
+                        const SizedBox(height: 20),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+}
+
+// ============================================================================
+// HELPER WIDGETS DETAIL PAGES
+// ============================================================================
+Widget _buildOverviewCard({
+  required IconData icon,
+  required String title,
+  required String description,
+  required Color color,
+  required Color bgColor,
+  bool isDark = false,
+}) {
+  return Container(
+    width: double.infinity,
+    padding: const EdgeInsets.all(16),
+    decoration: BoxDecoration(
+      color: isDark ? const Color(0xFF1E293B) : bgColor,
+      borderRadius: BorderRadius.circular(16),
+      border: Border.all(
+        color: isDark ? const Color(0xFF334155) : color.withValues(alpha: 0.25),
+        width: 1.2,
+      ),
+    ),
+    child: Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Container(
+          width: 44,
+          height: 44,
+          decoration: BoxDecoration(
+            color: isDark ? const Color(0xFF0F172A) : Colors.white,
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: Center(
+            child: Icon(
+              icon,
+              color: isDark ? const Color(0xFF38BDF8) : color,
+              size: 24,
+            ),
+          ),
+        ),
+        const SizedBox(width: 14),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                title,
+                style: TextStyle(
+                  fontSize: 14.5,
+                  fontWeight: FontWeight.w700,
+                  color: isDark ? Colors.white : const Color(0xFF0F172A),
+                ),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                description,
+                style: TextStyle(
+                  fontSize: 12,
+                  color: isDark ? const Color(0xFF94A3B8) : const Color(0xFF334155),
+                  height: 1.4,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
+    ),
+  );
+}
+
+Widget _buildDetailCard({
+  required String label,
+  required String title,
+  required String tag,
+  required Color tagColor,
+  required Color tagBgColor,
+  required IconData icon,
+  required Color iconColor,
+  required Color iconBgColor,
+  required String summary,
+  required List<String> points,
+  bool isDark = false,
+}) {
+  return Container(
+    width: double.infinity,
+    padding: const EdgeInsets.all(16),
+    decoration: BoxDecoration(
+      color: isDark ? const Color(0xFF1E293B) : Colors.white,
+      borderRadius: BorderRadius.circular(16),
+      border: Border.all(
+        color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0),
+        width: 1.2,
+      ),
+      boxShadow: [
+        BoxShadow(
+          color: Colors.black.withValues(alpha: isDark ? 0.2 : 0.02),
+          blurRadius: 8,
+          offset: const Offset(0, 2),
+        ),
+      ],
+    ),
+    child: Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            Container(
+              width: 36,
+              height: 36,
+              decoration: BoxDecoration(
+                color: isDark ? const Color(0xFF0F172A) : iconBgColor,
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: Center(
+                child: Icon(
+                  icon,
+                  color: isDark ? const Color(0xFF38BDF8) : iconColor,
+                  size: 20,
+                ),
+              ),
+            ),
+            const SizedBox(width: 10),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -335,60 +1186,108 @@ class EducationPage extends StatelessWidget {
                   Container(
                     padding: const EdgeInsets.symmetric(
                       horizontal: 7,
-                      vertical: 3,
+                      vertical: 2,
                     ),
                     decoration: BoxDecoration(
-                      color: isDark
-                          ? const Color(0xFF079BC1).withValues(alpha: 0.25)
-                          : const Color(0xFFD9F5FF),
-                      borderRadius: BorderRadius.circular(10),
+                      color: isDark ? tagColor.withValues(alpha: 0.2) : tagBgColor,
+                      borderRadius: BorderRadius.circular(5),
                     ),
                     child: Text(
-                      category,
+                      tag,
                       style: TextStyle(
-                        fontSize: 7,
-                        color: isDark ? const Color(0xFF38BDF8) : const Color(0xFF168BB2),
+                        fontSize: 9.5,
+                        fontWeight: FontWeight.w700,
+                        color: isDark ? const Color(0xFF38BDF8) : tagColor,
                       ),
                     ),
                   ),
-
-                  const SizedBox(height: 4),
-
+                  const SizedBox(height: 3),
                   Text(
                     title,
                     style: TextStyle(
-                      fontSize: 12,
-                      fontWeight: FontWeight.bold,
+                      fontSize: 15,
+                      fontWeight: FontWeight.w700,
                       color: isDark ? Colors.white : const Color(0xFF0F172A),
-                    ),
-                  ),
-
-                  const SizedBox(height: 3),
-
-                  Expanded(
-                    child: Text(
-                      description,
-                      maxLines: 3,
-                      overflow: TextOverflow.ellipsis,
-                      style: TextStyle(
-                        fontSize: 8,
-                        height: 1.2,
-                        color: isDark ? const Color(0xFF94A3B8) : Colors.black87,
-                      ),
                     ),
                   ),
                 ],
               ),
             ),
-
-            Icon(
-              Icons.chevron_right,
-              size: 20,
-              color: isDark ? const Color(0xFF64748B) : Colors.grey,
-            ),
           ],
         ),
+        const SizedBox(height: 10),
+        Text(
+          summary,
+          style: TextStyle(
+            fontSize: 12,
+            color: isDark ? const Color(0xFF94A3B8) : const Color(0xFF475569),
+            height: 1.4,
+          ),
+        ),
+        const SizedBox(height: 12),
+        Divider(
+          height: 1,
+          color: isDark ? const Color(0xFF334155) : const Color(0xFFF1F5F9),
+        ),
+        const SizedBox(height: 10),
+        ...points.map((point) {
+          return Padding(
+            padding: const EdgeInsets.only(bottom: 8),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Padding(
+                  padding: const EdgeInsets.only(top: 4),
+                  child: Icon(
+                    Icons.check_circle_rounded,
+                    size: 14,
+                    color: isDark ? const Color(0xFF38BDF8) : const Color(0xFF0098B9),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    point,
+                    style: TextStyle(
+                      fontSize: 11.5,
+                      color: isDark ? const Color(0xFFE2E8F0) : const Color(0xFF334155),
+                      height: 1.35,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          );
+        }),
+      ],
+    ),
+  );
+}
+
+Widget _buildBackButtonBottom(BuildContext context, {bool isDark = false}) {
+  final accentColor = isDark ? const Color(0xFF38BDF8) : const Color(0xFF0098B9);
+  return SizedBox(
+    width: double.infinity,
+    height: 46,
+    child: OutlinedButton.icon(
+      onPressed: () => Navigator.pop(context),
+      icon: Icon(
+        Icons.arrow_back_rounded,
+        size: 18,
+        color: accentColor,
       ),
-    );
-  }
+      label: Text(
+        'Kembali ke Edukasi Kesehatan',
+        style: TextStyle(
+          fontSize: 13.5,
+          fontWeight: FontWeight.w700,
+          color: accentColor,
+        ),
+      ),
+      style: OutlinedButton.styleFrom(
+        side: BorderSide(color: accentColor, width: 1.2),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      ),
+    ),
+  );
 }
