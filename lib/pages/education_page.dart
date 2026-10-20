@@ -84,17 +84,17 @@ class _EducationPageState extends State<EducationPage> {
           begin: Alignment.topCenter,
           end: Alignment.bottomCenter,
           colors: [
-            Color(0xFFB8E6F5), // Gradasi atas cyan-teal jelas dan segar
-            Color(0xFFD4EFF8),
-            Color(0xFFE8F6FA),
-            Color(0xFFF4FAFC),
+            Color(0xFFE2F4FA), // Soft sky teal mist
+            Color(0xFFF1F8FB),
+            Color(0xFFF8FAFC),
+            Color(0xFFFFFFFF),
           ],
-          stops: [0.0, 0.28, 0.65, 1.0],
+          stops: [0.0, 0.25, 0.65, 1.0],
         ),
       ),
       child: Stack(
         children: [
-          // Ambient decorative glowing orbs untuk memperjelas kedalaman gradasi
+          // Ambient decorative glowing orbs (Multi-color yang lembut & harmonis)
           Positioned(
             top: -60,
             right: -50,
@@ -103,7 +103,7 @@ class _EducationPageState extends State<EducationPage> {
               height: 220,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                color: const Color(0xFF0098B9).withValues(alpha: 0.15),
+                color: const Color(0xFF0098B9).withValues(alpha: 0.10), // Cyan-teal
               ),
             ),
           ),
@@ -115,7 +115,19 @@ class _EducationPageState extends State<EducationPage> {
               height: 200,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                color: const Color(0xFF0284C7).withValues(alpha: 0.08),
+                color: const Color(0xFF10B981).withValues(alpha: 0.07), // Fresh Emerald Green
+              ),
+            ),
+          ),
+          Positioned(
+            bottom: 80,
+            right: -60,
+            child: Container(
+              width: 180,
+              height: 180,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: const Color(0xFF8B5CF6).withValues(alpha: 0.06), // Serene Lavender
               ),
             ),
           ),
@@ -190,7 +202,7 @@ class _EducationPageState extends State<EducationPage> {
 
                           const SizedBox(height: 14),
 
-                          // DAFTAR KARTU TOPIK EDUKASI
+                          // DAFTAR KARTU TOPIK EDUKASI (Palet Warna Khas Sesuai Topik)
                           _buildTopicCard(
                             context,
                             number: '01',
@@ -206,6 +218,11 @@ class _EducationPageState extends State<EducationPage> {
                               'Rendah Natrium',
                               'Jadwal Makan Teratur',
                             ],
+                            primaryColor: const Color(0xFF059669), // Emerald Green
+                            secondaryColor: const Color(0xFF10B981),
+                            softBgColor: const Color(0xFFECFDF5),
+                            borderHighlightColor: const Color(0xFFA7F3D0),
+                            tagTextColor: const Color(0xFF047857),
                             onTap: () {
                               Navigator.push(
                                 context,
@@ -232,6 +249,11 @@ class _EducationPageState extends State<EducationPage> {
                               'Latihan Pernapasan',
                               'Prinsip "Talk Test"',
                             ],
+                            primaryColor: const Color(0xFF0284C7), // Dynamic Azure Blue
+                            secondaryColor: const Color(0xFF2563EB),
+                            softBgColor: const Color(0xFFEFF6FF),
+                            borderHighlightColor: const Color(0xFFBFDBFE),
+                            tagTextColor: const Color(0xFF1D4ED8),
                             onTap: () {
                               Navigator.push(
                                 context,
@@ -247,7 +269,7 @@ class _EducationPageState extends State<EducationPage> {
                             context,
                             number: '03',
                             title: 'Kebiasaan Sehat',
-                            categoryTag: 'Gaya Hidup',
+                            categoryTag: 'Gaya Hidup & Relaksasi',
                             readTime: '⏱ 4 Menit Baca',
                             pointsCount: 4,
                             icon: Icons.spa_rounded,
@@ -258,6 +280,11 @@ class _EducationPageState extends State<EducationPage> {
                               'Tidur Berkualitas',
                               'Disiplin Obat & Terapi',
                             ],
+                            primaryColor: const Color(0xFF7C3AED), // Serene Royal Violet
+                            secondaryColor: const Color(0xFF9333EA),
+                            softBgColor: const Color(0xFFF5F3FF),
+                            borderHighlightColor: const Color(0xFFDDD6FE),
+                            tagTextColor: const Color(0xFF6D28D9),
                             onTap: () {
                               Navigator.push(
                                 context,
@@ -287,6 +314,7 @@ class _EducationPageState extends State<EducationPage> {
   }
 
   // HERO BANNER PENGANTAR
+  // HERO BANNER PENGANTAR (Deep Teal & Sapphire dengan Ruby Heart dan Golden Accent)
   Widget _buildHeroBanner() {
     return Container(
       width: double.infinity,
@@ -295,15 +323,15 @@ class _EducationPageState extends State<EducationPage> {
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
           colors: [
-            Color(0xFF0089A5),
-            Color(0xFF0098B9),
-            Color(0xFF0284C7),
+            Color(0xFF00758F), // Deep teal
+            Color(0xFF0098B9), // Vibrant cyan-teal
+            Color(0xFF1D4ED8), // Rich royal sapphire blue
           ],
         ),
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
-            color: const Color(0xFF0098B9).withValues(alpha: 0.3),
+            color: const Color(0xFF0098B9).withValues(alpha: 0.28),
             blurRadius: 16,
             offset: const Offset(0, 6),
           ),
@@ -360,7 +388,7 @@ class _EducationPageState extends State<EducationPage> {
                       child: const Center(
                         child: Icon(
                           Icons.favorite_rounded,
-                          color: Color(0xFFE11D48),
+                          color: Color(0xFFE11D48), // Ruby rose heart
                           size: 26,
                         ),
                       ),
@@ -394,21 +422,21 @@ class _EducationPageState extends State<EducationPage> {
                   ],
                 ),
                 const SizedBox(height: 14),
-                // Kolom Topik Edukasi Jantung (1 kolom terpadu tanpa 12 materi & panduan medis)
+                // Kolom Topik Edukasi Jantung (1 kolom terpadu dengan aksen emas yang elegan)
                 Container(
                   padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 12),
                   decoration: BoxDecoration(
-                    color: Colors.white.withValues(alpha: 0.16),
+                    color: Colors.white.withValues(alpha: 0.18),
                     borderRadius: BorderRadius.circular(10),
                     border: Border.all(
-                      color: Colors.white.withValues(alpha: 0.25),
+                      color: Colors.white.withValues(alpha: 0.3),
                       width: 0.8,
                     ),
                   ),
                   child: const Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      Icon(Icons.library_books_rounded, size: 13, color: Colors.white),
+                      Icon(Icons.auto_awesome_rounded, size: 13, color: Color(0xFFFDE047)),
                       SizedBox(width: 6),
                       Text(
                         'Pilihan Topik Edukasi Jantung',
@@ -429,7 +457,7 @@ class _EducationPageState extends State<EducationPage> {
     );
   }
 
-  // KARTU INTERAKTIF: TIPS DOKTER HARI INI
+  // KARTU INTERAKTIF: TIPS DOKTER HARI INI (Aksen Hangat Emas / Amber)
   Widget _buildDailyTipCard() {
     final tip = _quickTips[_currentTipIndex];
     return Container(
@@ -438,10 +466,10 @@ class _EducationPageState extends State<EducationPage> {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: const Color(0xFFD2EDF5), width: 1.2),
+        border: Border.all(color: const Color(0xFFFDE68A), width: 1.2), // Soft golden border
         boxShadow: [
           BoxShadow(
-            color: const Color(0xFF0098B9).withValues(alpha: 0.06),
+            color: const Color(0xFFF59E0B).withValues(alpha: 0.08), // Warm golden glow
             blurRadius: 14,
             offset: const Offset(0, 4),
           ),
@@ -453,32 +481,55 @@ class _EducationPageState extends State<EducationPage> {
           Row(
             children: [
               Container(
-                padding: const EdgeInsets.all(6),
+                padding: const EdgeInsets.all(7),
                 decoration: BoxDecoration(
-                  color: const Color(0xFFE0F4FB),
-                  borderRadius: BorderRadius.circular(8),
+                  color: const Color(0xFFFEF3C7), // Warm golden background
+                  borderRadius: BorderRadius.circular(9),
                 ),
                 child: const Icon(
                   Icons.lightbulb_rounded,
-                  color: Color(0xFF0089A5),
+                  color: Color(0xFFD97706), // Warm amber gold
                   size: 16,
                 ),
               ),
-              const SizedBox(width: 8),
-              Text(
-                tip['title']!,
-                style: const TextStyle(
-                  fontSize: 13,
-                  fontWeight: FontWeight.w700,
-                  color: Color(0xFF0F172A),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      tip['title']!,
+                      style: const TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w700,
+                        color: Color(0xFF0F172A),
+                      ),
+                    ),
+                    const SizedBox(height: 1),
+                    Text(
+                      tip['tag']!,
+                      style: const TextStyle(
+                        fontSize: 10.5,
+                        fontWeight: FontWeight.w600,
+                        color: Color(0xFFB45309), // Amber tag
+                      ),
+                    ),
+                  ],
                 ),
               ),
-              const Spacer(),
               InkWell(
                 onTap: _nextTip,
                 borderRadius: BorderRadius.circular(12),
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFFFFBEB),
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(
+                      color: const Color(0xFFFDE68A),
+                      width: 0.8,
+                    ),
+                  ),
                   child: Row(
                     children: [
                       Text(
@@ -486,14 +537,14 @@ class _EducationPageState extends State<EducationPage> {
                         style: const TextStyle(
                           fontSize: 10.5,
                           fontWeight: FontWeight.w600,
-                          color: Color(0xFF0089A5),
+                          color: Color(0xFFB45309),
                         ),
                       ),
-                      const SizedBox(width: 2),
+                      const SizedBox(width: 3),
                       const Icon(
                         Icons.refresh_rounded,
                         size: 12,
-                        color: Color(0xFF0089A5),
+                        color: Color(0xFFB45309),
                       ),
                     ],
                   ),
@@ -501,7 +552,7 @@ class _EducationPageState extends State<EducationPage> {
               ),
             ],
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: 10),
           Text(
             tip['desc']!,
             style: const TextStyle(
@@ -541,7 +592,7 @@ class _EducationPageState extends State<EducationPage> {
     );
   }
 
-  // KARTU TOPIK EDUKASI (Harmonis, Kaya Informasi, Tidak Monoton)
+  // KARTU TOPIK EDUKASI (Harmonis, Kaya Warna, Tidak Monoton)
   Widget _buildTopicCard(
     BuildContext context, {
     required String number,
@@ -553,6 +604,11 @@ class _EducationPageState extends State<EducationPage> {
     required String description,
     required List<String> keyHighlights,
     required VoidCallback onTap,
+    required Color primaryColor,
+    required Color secondaryColor,
+    required Color softBgColor,
+    required Color borderHighlightColor,
+    required Color tagTextColor,
   }) {
     return InkWell(
       onTap: onTap,
@@ -564,12 +620,12 @@ class _EducationPageState extends State<EducationPage> {
           color: Colors.white,
           borderRadius: BorderRadius.circular(18),
           border: Border.all(
-            color: const Color(0xFFD2EDF5),
+            color: borderHighlightColor.withValues(alpha: 0.7),
             width: 1.2,
           ),
           boxShadow: [
             BoxShadow(
-              color: const Color(0xFF0098B9).withValues(alpha: 0.07),
+              color: primaryColor.withValues(alpha: 0.08),
               blurRadius: 14,
               offset: const Offset(0, 4),
             ),
@@ -580,20 +636,20 @@ class _EducationPageState extends State<EducationPage> {
           children: [
             Row(
               children: [
-                // Icon Container Brand Unified (Teal)
+                // Icon Container dengan Gradient Khas Topik
                 Container(
                   width: 48,
                   height: 48,
                   decoration: BoxDecoration(
-                    gradient: const LinearGradient(
-                      colors: [Color(0xFF0089A5), Color(0xFF0284C7)],
+                    gradient: LinearGradient(
+                      colors: [primaryColor, secondaryColor],
                       begin: Alignment.topLeft,
                       end: Alignment.bottomRight,
                     ),
                     borderRadius: BorderRadius.circular(14),
                     boxShadow: [
                       BoxShadow(
-                        color: const Color(0xFF0098B9).withValues(alpha: 0.25),
+                        color: primaryColor.withValues(alpha: 0.28),
                         blurRadius: 8,
                         offset: const Offset(0, 3),
                       ),
@@ -620,15 +676,15 @@ class _EducationPageState extends State<EducationPage> {
                               vertical: 3,
                             ),
                             decoration: BoxDecoration(
-                              color: const Color(0xFFE0F4FB),
+                              color: softBgColor,
                               borderRadius: BorderRadius.circular(6),
                             ),
                             child: Text(
                               categoryTag,
-                              style: const TextStyle(
+                              style: TextStyle(
                                 fontSize: 10.5,
                                 fontWeight: FontWeight.w700,
-                                color: Color(0xFF00758F),
+                                color: tagTextColor,
                               ),
                             ),
                           ),
@@ -655,23 +711,23 @@ class _EducationPageState extends State<EducationPage> {
                     ],
                   ),
                 ),
-                // Number Badge Sleek
+                // Number Badge Selaras
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                   decoration: BoxDecoration(
-                    color: const Color(0xFFF1F9FC),
+                    color: softBgColor,
                     borderRadius: BorderRadius.circular(8),
                     border: Border.all(
-                      color: const Color(0xFFD2EDF5),
+                      color: borderHighlightColor,
                       width: 1,
                     ),
                   ),
                   child: Text(
                     number,
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 12,
                       fontWeight: FontWeight.w800,
-                      color: Color(0xFF0089A5),
+                      color: primaryColor,
                     ),
                   ),
                 ),
@@ -687,7 +743,7 @@ class _EducationPageState extends State<EducationPage> {
               ),
             ),
             const SizedBox(height: 12),
-            // Key Highlight Pills (Menghilangkan rasa monoton)
+            // Key Highlight Pills
             Wrap(
               spacing: 6,
               runSpacing: 6,
@@ -695,20 +751,20 @@ class _EducationPageState extends State<EducationPage> {
                 return Container(
                   padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                   decoration: BoxDecoration(
-                    color: const Color(0xFFF4FBFC),
+                    color: softBgColor.withValues(alpha: 0.5),
                     borderRadius: BorderRadius.circular(16),
                     border: Border.all(
-                      color: const Color(0xFFD5EFF5),
+                      color: borderHighlightColor.withValues(alpha: 0.8),
                       width: 0.9,
                     ),
                   ),
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      const Icon(
+                      Icon(
                         Icons.check_circle_outline_rounded,
                         size: 12,
-                        color: Color(0xFF0098B9),
+                        color: primaryColor,
                       ),
                       const SizedBox(width: 4),
                       Text(
@@ -728,7 +784,7 @@ class _EducationPageState extends State<EducationPage> {
             // Separator & Action Row
             Container(
               height: 1,
-              color: const Color(0xFFEDF5F8),
+              color: const Color(0xFFF1F5F9),
             ),
             const SizedBox(height: 10),
             Row(
@@ -736,24 +792,24 @@ class _EducationPageState extends State<EducationPage> {
               children: [
                 Text(
                   'Lihat panduan lengkap ($pointsCount materi)',
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 11.5,
                     fontWeight: FontWeight.w600,
-                    color: Color(0xFF0089A5),
+                    color: primaryColor,
                   ),
                 ),
                 Container(
                   width: 30,
                   height: 30,
-                  decoration: const BoxDecoration(
-                    color: Color(0xFFE0F4FB),
+                  decoration: BoxDecoration(
+                    color: softBgColor,
                     shape: BoxShape.circle,
                   ),
-                  child: const Center(
+                  child: Center(
                     child: Icon(
                       Icons.arrow_forward_rounded,
                       size: 15,
-                      color: Color(0xFF0089A5),
+                      color: primaryColor,
                     ),
                   ),
                 ),
@@ -832,12 +888,12 @@ class PolaMakanSehatPage extends StatelessWidget {
           begin: Alignment.topCenter,
           end: Alignment.bottomCenter,
           colors: [
-            Color(0xFFB8E6F5),
-            Color(0xFFD4EFF8),
-            Color(0xFFE8F6FA),
-            Color(0xFFF4FAFC),
+            Color(0xFFD1FAE5), // Soft fresh emerald mint
+            Color(0xFFE8F9F1),
+            Color(0xFFF6FCF9),
+            Color(0xFFFFFFFF),
           ],
-          stops: [0.0, 0.28, 0.65, 1.0],
+          stops: [0.0, 0.25, 0.65, 1.0],
         ),
       ),
       child: Scaffold(
@@ -890,7 +946,7 @@ class PolaMakanSehatPage extends StatelessWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      // BANNER RINGKASAN
+                      // BANNER RINGKASAN (Fresh Emerald Green)
                       _buildOverviewCard(
                         icon: Icons.restaurant_menu_rounded,
                         title: 'Pola Makan Bagi Pasien Jantung',
@@ -898,6 +954,12 @@ class PolaMakanSehatPage extends StatelessWidget {
                         readDuration: '4 Menit Baca',
                         description:
                             'Membahas pola makan sehat untuk orang yang sudah memiliki penyakit jantung, berfokus pada pemilihan makanan alami berkualitas dan pembiasaan waktu makan yang mendukung kerja jantung.',
+                        gradientColors: const [
+                          Color(0xFF047857),
+                          Color(0xFF059669),
+                          Color(0xFF10B981),
+                        ],
+                        iconColor: const Color(0xFF059669),
                       ),
 
                       const SizedBox(height: 20),
@@ -912,7 +974,7 @@ class PolaMakanSehatPage extends StatelessWidget {
                       ),
                       const SizedBox(height: 12),
 
-                      // MATERI A: Perbanyak Makanan Sehat
+                      // MATERI A: Perbanyak Makanan Sehat (Emerald / Rekomendasi Hijau)
                       _buildDetailCard(
                         label: 'A',
                         title: 'Perbanyak Makanan Sehat',
@@ -926,11 +988,16 @@ class PolaMakanSehatPage extends StatelessWidget {
                           'Memilih kacang-kacangan dan biji-bijian utuh (seperti oatmeal, kedelai, kacang almond) untuk menekan kolesterol LDL.',
                           'Menjaga menu makanan tetap beragam dan seimbang agar kebutuhan nutrisi harian tercukupi.',
                         ],
+                        primaryColor: const Color(0xFF059669),
+                        secondaryColor: const Color(0xFF10B981),
+                        softBgColor: const Color(0xFFECFDF5),
+                        borderHighlightColor: const Color(0xFFA7F3D0),
+                        tagTextColor: const Color(0xFF047857),
                       ),
 
                       const SizedBox(height: 14),
 
-                      // MATERI B: Batasi Lemak, Gula, dan Garam
+                      // MATERI B: Batasi Lemak, Gula, dan Garam (Amber / Peringatan Waspada)
                       _buildDetailCard(
                         label: 'B',
                         title: 'Batasi Lemak, Gula, dan Garam',
@@ -944,11 +1011,16 @@ class PolaMakanSehatPage extends StatelessWidget {
                           'Membatasi makanan tinggi garam (natrium maksimal 1 sendok teh atau 2.000 mg/hari) demi menjaga kestabilan tekanan darah.',
                           'Menghindari konsumsi camilan atau bumbu penyedap instan secara berlebihan.',
                         ],
+                        primaryColor: const Color(0xFFD97706),
+                        secondaryColor: const Color(0xFFF59E0B),
+                        softBgColor: const Color(0xFFFFFBEB),
+                        borderHighlightColor: const Color(0xFFFDE68A),
+                        tagTextColor: const Color(0xFFB45309),
                       ),
 
                       const SizedBox(height: 14),
 
-                      // MATERI C: Kurangi Makanan yang Kurang Sehat
+                      // MATERI C: Kurangi Makanan yang Kurang Sehat (Rose / Hindari)
                       _buildDetailCard(
                         label: 'C',
                         title: 'Kurangi Makanan yang Kurang Sehat',
@@ -962,11 +1034,16 @@ class PolaMakanSehatPage extends StatelessWidget {
                           'Makanan bersantan kental: Masakan santan yang dihangatkan berulang dapat meningkatkan kadar kolesterol darah.',
                           'Makanan siap saji & olahan (ultra-processed): Mengandung kadar garam, pengawet, dan lemak tersembunyi yang tinggi.',
                         ],
+                        primaryColor: const Color(0xFFE11D48),
+                        secondaryColor: const Color(0xFFF43F5E),
+                        softBgColor: const Color(0xFFFFF1F2),
+                        borderHighlightColor: const Color(0xFFFECDD3),
+                        tagTextColor: const Color(0xFFBE123C),
                       ),
 
                       const SizedBox(height: 14),
 
-                      // MATERI D: Atur Waktu Makan
+                      // MATERI D: Atur Waktu Makan (Teal / Rutin Seimbang)
                       _buildDetailCard(
                         label: 'D',
                         title: 'Atur Waktu Makan',
@@ -980,6 +1057,11 @@ class PolaMakanSehatPage extends StatelessWidget {
                           'Menjaga pola makan secara konsisten agar tubuh tidak mengalami stres metabolisme.',
                           'Memberi jeda minimal 2-3 jam antara makan malam dan waktu tidur agar lambung tidak tertekan.',
                         ],
+                        primaryColor: const Color(0xFF0089A5),
+                        secondaryColor: const Color(0xFF0284C7),
+                        softBgColor: const Color(0xFFE0F4FB),
+                        borderHighlightColor: const Color(0xFFD2EDF5),
+                        tagTextColor: const Color(0xFF00758F),
                       ),
 
                       const SizedBox(height: 20),
@@ -987,12 +1069,18 @@ class PolaMakanSehatPage extends StatelessWidget {
                       // CATATAN KHUSUS EDUKASI MEDIS
                       _buildMedicalNoteBox(
                         'Pola makan merupakan pilar utama kestabilan tekanan darah dan kolesterol. Selalu diskusikan rencana diet Anda bila memiliki kondisi penyerta seperti diabetes atau penyakit ginjal.',
+                        primaryColor: const Color(0xFF059669),
+                        softBgColor: const Color(0xFFECFDF5),
+                        borderColor: const Color(0xFFA7F3D0),
                       ),
 
                       const SizedBox(height: 24),
 
                       // TOMBOL KEMBALI
-                      _buildBackButtonBottom(context),
+                      _buildBackButtonBottom(
+                        context,
+                        gradientColors: const [Color(0xFF059669), Color(0xFF10B981)],
+                      ),
 
                       const SizedBox(height: 20),
                     ],
@@ -1021,12 +1109,12 @@ class AktivitasFisikPage extends StatelessWidget {
           begin: Alignment.topCenter,
           end: Alignment.bottomCenter,
           colors: [
-            Color(0xFFB8E6F5),
-            Color(0xFFD4EFF8),
-            Color(0xFFE8F6FA),
-            Color(0xFFF4FAFC),
+            Color(0xFFC8E6FB), // Soft azure sky
+            Color(0xFFE0F0FE),
+            Color(0xFFF4F9FF),
+            Color(0xFFFFFFFF),
           ],
-          stops: [0.0, 0.28, 0.65, 1.0],
+          stops: [0.0, 0.25, 0.65, 1.0],
         ),
       ),
       child: Scaffold(
@@ -1079,7 +1167,7 @@ class AktivitasFisikPage extends StatelessWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      // BANNER RINGKASAN
+                      // BANNER RINGKASAN (Ocean Azure & Royal Blue)
                       _buildOverviewCard(
                         icon: Icons.directions_walk_rounded,
                         title: 'Aktivitas Fisik Aman & Terukur',
@@ -1087,6 +1175,12 @@ class AktivitasFisikPage extends StatelessWidget {
                         readDuration: '3 Menit Baca',
                         description:
                             'Aktivitas fisik sangat bermanfaat menjaga kekuatan pompa jantung dan kebugaran tubuh, asalkan dilakukan secara sederhana, bertahap, dan disesuaikan dengan kapasitas tubuh masing-masing.',
+                        gradientColors: const [
+                          Color(0xFF0369A1),
+                          Color(0xFF0284C7),
+                          Color(0xFF2563EB),
+                        ],
+                        iconColor: const Color(0xFF0284C7),
                       ),
 
                       const SizedBox(height: 20),
@@ -1101,7 +1195,7 @@ class AktivitasFisikPage extends StatelessWidget {
                       ),
                       const SizedBox(height: 12),
 
-                      // MATERI A: Jalan Kaki
+                      // MATERI A: Jalan Kaki (Ocean Azure)
                       _buildDetailCard(
                         label: 'A',
                         title: 'Jalan Kaki',
@@ -1115,11 +1209,16 @@ class AktivitasFisikPage extends StatelessWidget {
                           'Dianjurkan berjalan santai di waktu pagi atau sore hari saat suhu lingkungan sejuk dan segar.',
                           'Gunakan alas kaki yang nyaman dan tetap terhidrasi dengan air putih secukupnya.',
                         ],
+                        primaryColor: const Color(0xFF0284C7),
+                        secondaryColor: const Color(0xFF2563EB),
+                        softBgColor: const Color(0xFFEFF6FF),
+                        borderHighlightColor: const Color(0xFFBFDBFE),
+                        tagTextColor: const Color(0xFF1D4ED8),
                       ),
 
                       const SizedBox(height: 14),
 
-                      // MATERI B: Latihan Pernapasan
+                      // MATERI B: Latihan Pernapasan (Fresh Teal / Cyan)
                       _buildDetailCard(
                         label: 'B',
                         title: 'Latihan Pernapasan',
@@ -1133,11 +1232,16 @@ class AktivitasFisikPage extends StatelessWidget {
                           'Hembuskan napas perlahan melalui mulut secara tenang selama 4-6 detik.',
                           'Lakukan secara teratur 5-10 menit setiap hari atau saat merasa cemas dan tegang.',
                         ],
+                        primaryColor: const Color(0xFF0D9488),
+                        secondaryColor: const Color(0xFF14B8A6),
+                        softBgColor: const Color(0xFFF0FDFA),
+                        borderHighlightColor: const Color(0xFF99F6E4),
+                        tagTextColor: const Color(0xFF0F766E),
                       ),
 
                       const SizedBox(height: 14),
 
-                      // MATERI C: Mobilisasi Bertahap
+                      // MATERI C: Mobilisasi Bertahap (Indigo / Gerak Terarah)
                       _buildDetailCard(
                         label: 'C',
                         title: 'Mobilisasi Bertahap',
@@ -1151,11 +1255,16 @@ class AktivitasFisikPage extends StatelessWidget {
                           'Lakukan tugas harian ringan di rumah secara bertahap tanpa mengangkat beban berat.',
                           'Selalu beristirahat sejenak di antara aktivitas jika napas mulai terasa berat.',
                         ],
+                        primaryColor: const Color(0xFF4F46E5),
+                        secondaryColor: const Color(0xFF6366F1),
+                        softBgColor: const Color(0xFFEEF2FF),
+                        borderHighlightColor: const Color(0xFFC7D2FE),
+                        tagTextColor: const Color(0xFF3730A3),
                       ),
 
                       const SizedBox(height: 14),
 
-                      // MATERI D: Aktivitas Aerobik
+                      // MATERI D: Aktivitas Aerobik (Vibrant Azure)
                       _buildDetailCard(
                         label: 'D',
                         title: 'Aktivitas Aerobik',
@@ -1169,6 +1278,11 @@ class AktivitasFisikPage extends StatelessWidget {
                           'Awali selalu dengan pemanasan 5 menit dan akhiri dengan pendinginan 5 menit.',
                           'Hindari olahraga kompetitif atau latihan yang menahan napas (manuver valsalva).',
                         ],
+                        primaryColor: const Color(0xFF0284C7),
+                        secondaryColor: const Color(0xFF2563EB),
+                        softBgColor: const Color(0xFFEFF6FF),
+                        borderHighlightColor: const Color(0xFFBFDBFE),
+                        tagTextColor: const Color(0xFF1D4ED8),
                       ),
 
                       const SizedBox(height: 18),
@@ -1176,12 +1290,18 @@ class AktivitasFisikPage extends StatelessWidget {
                       // CATATAN KHUSUS TENAGA KESEHATAN
                       _buildMedicalNoteBox(
                         'PENTING: Orang dengan penyakit jantung perlu menyesuaikan intensitas dan durasi aktivitas fisik dengan kondisi masing-masing serta selalu mengikuti rekomendasi dokter atau fisioterapis yang merawat.',
+                        primaryColor: const Color(0xFF0284C7),
+                        softBgColor: const Color(0xFFEFF6FF),
+                        borderColor: const Color(0xFFBFDBFE),
                       ),
 
                       const SizedBox(height: 24),
 
                       // TOMBOL KEMBALI
-                      _buildBackButtonBottom(context),
+                      _buildBackButtonBottom(
+                        context,
+                        gradientColors: const [Color(0xFF0284C7), Color(0xFF2563EB)],
+                      ),
 
                       const SizedBox(height: 20),
                     ],
@@ -1210,12 +1330,12 @@ class KebiasaanSehatPage extends StatelessWidget {
           begin: Alignment.topCenter,
           end: Alignment.bottomCenter,
           colors: [
-            Color(0xFFB8E6F5),
-            Color(0xFFD4EFF8),
-            Color(0xFFE8F6FA),
-            Color(0xFFF4FAFC),
+            Color(0xFFE9D8FD), // Soft serene lavender
+            Color(0xFFF3E8FF),
+            Color(0xFFFAF5FF),
+            Color(0xFFFFFFFF),
           ],
-          stops: [0.0, 0.28, 0.65, 1.0],
+          stops: [0.0, 0.25, 0.65, 1.0],
         ),
       ),
       child: Scaffold(
@@ -1268,14 +1388,20 @@ class KebiasaanSehatPage extends StatelessWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      // BANNER RINGKASAN
+                      // BANNER RINGKASAN (Royal Violet & Purple)
                       _buildOverviewCard(
                         icon: Icons.spa_rounded,
                         title: 'Kebiasaan Baik Setiap Hari',
-                        tag: 'Gaya Hidup',
+                        tag: 'Gaya Hidup & Relaksasi',
                         readDuration: '4 Menit Baca',
                         description:
                             'Membahas kebiasaan sehari-hari yang dapat membantu menjaga kondisi jantung tetap stabil, seperti menjaga pola istirahat, menghindari rokok, mengelola stres, dan mengikuti perawatan medis yang dianjurkan.',
+                        gradientColors: const [
+                          Color(0xFF6D28D9),
+                          Color(0xFF7C3AED),
+                          Color(0xFF9333EA),
+                        ],
+                        iconColor: const Color(0xFF7C3AED),
                       ),
 
                       const SizedBox(height: 20),
@@ -1290,7 +1416,7 @@ class KebiasaanSehatPage extends StatelessWidget {
                       ),
                       const SizedBox(height: 12),
 
-                      // MATERI A: Hindari Rokok
+                      // MATERI A: Hindari Rokok (Crimson Rose / Larangan Keras)
                       _buildDetailCard(
                         label: 'A',
                         title: 'Hindari Rokok',
@@ -1304,11 +1430,16 @@ class KebiasaanSehatPage extends StatelessWidget {
                           'Hindari pula paparan sebagai perokok pasif karena memiliki dampak bahaya yang sama tingginya.',
                           'Berhenti merokok memberikan dampak perbaikan sirkulasi darah jantung secara signifikan dalam waktu singkat.',
                         ],
+                        primaryColor: const Color(0xFFE11D48),
+                        secondaryColor: const Color(0xFFF43F5E),
+                        softBgColor: const Color(0xFFFFF1F2),
+                        borderHighlightColor: const Color(0xFFFECDD3),
+                        tagTextColor: const Color(0xFFBE123C),
                       ),
 
                       const SizedBox(height: 14),
 
-                      // MATERI B: Istirahat yang Cukup
+                      // MATERI B: Istirahat yang Cukup (Royal Violet / Pemulihan Tidur)
                       _buildDetailCard(
                         label: 'B',
                         title: 'Istirahat yang Cukup',
@@ -1322,11 +1453,16 @@ class KebiasaanSehatPage extends StatelessWidget {
                           'Kurang tidur kronis terbukti meningkatkan hormon stres dan memicu kenaikan tekanan darah tinggi.',
                           'Ciptakan suasana kamar tidur yang tenang, sejuk, dan hindari paparan layar gawai menjelang tidur.',
                         ],
+                        primaryColor: const Color(0xFF7C3AED),
+                        secondaryColor: const Color(0xFF8B5CF6),
+                        softBgColor: const Color(0xFFF5F3FF),
+                        borderHighlightColor: const Color(0xFFDDD6FE),
+                        tagTextColor: const Color(0xFF6D28D9),
                       ),
 
                       const SizedBox(height: 14),
 
-                      // MATERI C: Kelola Stres
+                      // MATERI C: Kelola Stres (Warm Amber / Ketenangan Emosi)
                       _buildDetailCard(
                         label: 'C',
                         title: 'Kelola Stres',
@@ -1340,11 +1476,16 @@ class KebiasaanSehatPage extends StatelessWidget {
                           'Mengatur ritme kerja dan beban pikiran agar tidak mengalami kelelahan mental yang berlebihan.',
                           'Menjaga pikiran positif dan menghindari reaksi kemarahan mendadak yang membebani kinerja pompa jantung.',
                         ],
+                        primaryColor: const Color(0xFFD97706),
+                        secondaryColor: const Color(0xFFF59E0B),
+                        softBgColor: const Color(0xFFFFFBEB),
+                        borderHighlightColor: const Color(0xFFFDE68A),
+                        tagTextColor: const Color(0xFFB45309),
                       ),
 
                       const SizedBox(height: 14),
 
-                      // MATERI D: Ikuti Perawatan
+                      // MATERI D: Ikuti Perawatan (Teal / Kepatuhan Terapi)
                       _buildDetailCard(
                         label: 'D',
                         title: 'Ikuti Perawatan',
@@ -1358,6 +1499,11 @@ class KebiasaanSehatPage extends StatelessWidget {
                           'Memantau parameter penting seperti tekanan darah dan denyut nadi secara mandiri di rumah jika dianjurkan.',
                           'Segera berkonsultasi kembali kepada dokter jika merasakan perubahan kondisi atau gejala baru yang mengganggu.',
                         ],
+                        primaryColor: const Color(0xFF0089A5),
+                        secondaryColor: const Color(0xFF0284C7),
+                        softBgColor: const Color(0xFFE0F4FB),
+                        borderHighlightColor: const Color(0xFFD2EDF5),
+                        tagTextColor: const Color(0xFF00758F),
                       ),
 
                       const SizedBox(height: 20),
@@ -1365,12 +1511,18 @@ class KebiasaanSehatPage extends StatelessWidget {
                       // CATATAN KHUSUS
                       _buildMedicalNoteBox(
                         'Kepatuhan terhadap pengobatan dan rutinitas kontrol kesehatan merupakan kunci utama mencegah komplikasi penyakit jantung. Jangan menghentikan atau mengubah dosis obat tanpa anjuran dokter.',
+                        primaryColor: const Color(0xFF7C3AED),
+                        softBgColor: const Color(0xFFF5F3FF),
+                        borderColor: const Color(0xFFDDD6FE),
                       ),
 
                       const SizedBox(height: 24),
 
                       // TOMBOL KEMBALI
-                      _buildBackButtonBottom(context),
+                      _buildBackButtonBottom(
+                        context,
+                        gradientColors: const [Color(0xFF7C3AED), Color(0xFF9333EA)],
+                      ),
 
                       const SizedBox(height: 20),
                     ],
@@ -1395,23 +1547,25 @@ Widget _buildOverviewCard({
   required String tag,
   required String readDuration,
   required String description,
+  List<Color> gradientColors = const [
+    Color(0xFF0089A5),
+    Color(0xFF0098B9),
+    Color(0xFF0284C7),
+  ],
+  Color iconColor = const Color(0xFF0089A5),
 }) {
   return Container(
     width: double.infinity,
     decoration: BoxDecoration(
-      gradient: const LinearGradient(
+      gradient: LinearGradient(
         begin: Alignment.topLeft,
         end: Alignment.bottomRight,
-        colors: [
-          Color(0xFF0089A5),
-          Color(0xFF0098B9),
-          Color(0xFF0284C7),
-        ],
+        colors: gradientColors,
       ),
       borderRadius: BorderRadius.circular(20),
       boxShadow: [
         BoxShadow(
-          color: const Color(0xFF0098B9).withValues(alpha: 0.28),
+          color: gradientColors[0].withValues(alpha: 0.28),
           blurRadius: 16,
           offset: const Offset(0, 5),
         ),
@@ -1468,7 +1622,7 @@ Widget _buildOverviewCard({
                     child: Center(
                       child: Icon(
                         icon,
-                        color: const Color(0xFF0089A5),
+                        color: iconColor,
                         size: 26,
                       ),
                     ),
@@ -1548,6 +1702,11 @@ Widget _buildDetailCard({
   required IconData icon,
   required String summary,
   required List<String> points,
+  Color primaryColor = const Color(0xFF0089A5),
+  Color secondaryColor = const Color(0xFF0284C7),
+  Color softBgColor = const Color(0xFFE0F4FB),
+  Color borderHighlightColor = const Color(0xFFD2EDF5),
+  Color tagTextColor = const Color(0xFF00758F),
 }) {
   return Container(
     width: double.infinity,
@@ -1556,12 +1715,12 @@ Widget _buildDetailCard({
       color: Colors.white,
       borderRadius: BorderRadius.circular(18),
       border: Border.all(
-        color: const Color(0xFFD2EDF5),
+        color: borderHighlightColor.withValues(alpha: 0.7),
         width: 1.2,
       ),
       boxShadow: [
         BoxShadow(
-          color: const Color(0xFF0098B9).withValues(alpha: 0.06),
+          color: primaryColor.withValues(alpha: 0.06),
           blurRadius: 14,
           offset: const Offset(0, 4),
         ),
@@ -1576,15 +1735,15 @@ Widget _buildDetailCard({
               width: 44,
               height: 44,
               decoration: BoxDecoration(
-                gradient: const LinearGradient(
-                  colors: [Color(0xFF0089A5), Color(0xFF0284C7)],
+                gradient: LinearGradient(
+                  colors: [primaryColor, secondaryColor],
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
                 ),
                 borderRadius: BorderRadius.circular(13),
                 boxShadow: [
                   BoxShadow(
-                    color: const Color(0xFF0098B9).withValues(alpha: 0.22),
+                    color: primaryColor.withValues(alpha: 0.22),
                     blurRadius: 7,
                     offset: const Offset(0, 3),
                   ),
@@ -1607,19 +1766,19 @@ Widget _buildDetailCard({
                           vertical: 2,
                         ),
                         decoration: BoxDecoration(
-                          color: const Color(0xFFF1F9FC),
+                          color: softBgColor.withValues(alpha: 0.6),
                           borderRadius: BorderRadius.circular(6),
                           border: Border.all(
-                            color: const Color(0xFFD2EDF5),
+                            color: borderHighlightColor,
                             width: 0.8,
                           ),
                         ),
                         child: Text(
                           'Poin $label',
-                          style: const TextStyle(
+                          style: TextStyle(
                             fontSize: 10,
                             fontWeight: FontWeight.w800,
-                            color: Color(0xFF0089A5),
+                            color: primaryColor,
                           ),
                         ),
                       ),
@@ -1630,15 +1789,15 @@ Widget _buildDetailCard({
                           vertical: 2.5,
                         ),
                         decoration: BoxDecoration(
-                          color: const Color(0xFFE0F4FB),
+                          color: softBgColor,
                           borderRadius: BorderRadius.circular(6),
                         ),
                         child: Text(
                           categoryTag,
-                          style: const TextStyle(
+                          style: TextStyle(
                             fontSize: 10.5,
                             fontWeight: FontWeight.w700,
-                            color: Color(0xFF00758F),
+                            color: tagTextColor,
                           ),
                         ),
                       ),
@@ -1664,10 +1823,10 @@ Widget _buildDetailCard({
           width: double.infinity,
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 9),
           decoration: BoxDecoration(
-            color: const Color(0xFFF6FCFD),
+            color: softBgColor.withValues(alpha: 0.35),
             borderRadius: BorderRadius.circular(10),
             border: Border.all(
-              color: const Color(0xFFE2F4FA),
+              color: borderHighlightColor.withValues(alpha: 0.6),
               width: 1,
             ),
           ),
@@ -1683,7 +1842,7 @@ Widget _buildDetailCard({
         const SizedBox(height: 12),
         Container(
           height: 1,
-          color: const Color(0xFFEDF5F8),
+          color: const Color(0xFFF1F5F9),
         ),
         const SizedBox(height: 12),
         ...points.map((point) {
@@ -1697,15 +1856,15 @@ Widget _buildDetailCard({
                   child: Container(
                     width: 18,
                     height: 18,
-                    decoration: const BoxDecoration(
-                      color: Color(0xFFE0F4FB),
+                    decoration: BoxDecoration(
+                      color: softBgColor,
                       shape: BoxShape.circle,
                     ),
-                    child: const Center(
+                    child: Center(
                       child: Icon(
                         Icons.check_rounded,
                         size: 13,
-                        color: Color(0xFF0089A5),
+                        color: primaryColor,
                       ),
                     ),
                   ),
@@ -1730,7 +1889,12 @@ Widget _buildDetailCard({
   );
 }
 
-Widget _buildMedicalNoteBox(String content) {
+Widget _buildMedicalNoteBox(
+  String content, {
+  Color primaryColor = const Color(0xFF0098B9),
+  Color softBgColor = const Color(0xFFE0F4FB),
+  Color borderColor = const Color(0xFFCCE8F0),
+}) {
   return Container(
     width: double.infinity,
     padding: const EdgeInsets.all(15),
@@ -1738,12 +1902,12 @@ Widget _buildMedicalNoteBox(String content) {
       color: Colors.white,
       borderRadius: BorderRadius.circular(16),
       border: Border.all(
-        color: const Color(0xFFCCE8F0),
+        color: borderColor,
         width: 1.2,
       ),
       boxShadow: [
         BoxShadow(
-          color: const Color(0xFF0098B9).withValues(alpha: 0.06),
+          color: primaryColor.withValues(alpha: 0.06),
           blurRadius: 12,
           offset: const Offset(0, 4),
         ),
@@ -1754,13 +1918,13 @@ Widget _buildMedicalNoteBox(String content) {
       children: [
         Container(
           padding: const EdgeInsets.all(8),
-          decoration: const BoxDecoration(
-            color: Color(0xFFE0F4FB),
+          decoration: BoxDecoration(
+            color: softBgColor,
             shape: BoxShape.circle,
           ),
-          child: const Icon(
+          child: Icon(
             Icons.health_and_safety_rounded,
-            color: Color(0xFF0089A5),
+            color: primaryColor,
             size: 20,
           ),
         ),
@@ -1769,12 +1933,12 @@ Widget _buildMedicalNoteBox(String content) {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Text(
+              Text(
                 'CATATAN TIM MEDIS',
                 style: TextStyle(
                   fontSize: 12,
                   fontWeight: FontWeight.w800,
-                  color: Color(0xFF00758F),
+                  color: primaryColor,
                   letterSpacing: 0.4,
                 ),
               ),
@@ -1796,20 +1960,23 @@ Widget _buildMedicalNoteBox(String content) {
   );
 }
 
-Widget _buildBackButtonBottom(BuildContext context) {
+Widget _buildBackButtonBottom(
+  BuildContext context, {
+  List<Color> gradientColors = const [Color(0xFF0089A5), Color(0xFF0284C7)],
+}) {
   return Container(
     width: double.infinity,
     height: 48,
     decoration: BoxDecoration(
-      gradient: const LinearGradient(
-        colors: [Color(0xFF0089A5), Color(0xFF0284C7)],
+      gradient: LinearGradient(
+        colors: gradientColors,
         begin: Alignment.centerLeft,
         end: Alignment.centerRight,
       ),
       borderRadius: BorderRadius.circular(14),
       boxShadow: [
         BoxShadow(
-          color: const Color(0xFF0098B9).withValues(alpha: 0.3),
+          color: gradientColors[0].withValues(alpha: 0.3),
           blurRadius: 12,
           offset: const Offset(0, 4),
         ),
