@@ -27,7 +27,7 @@ class DetailDokterPage extends StatelessWidget {
     this.isOnline = true,
   });
 
-  static const Color brandTeal = Color(0xFF0098B9);
+  static const Color brandPrimary = Color(0xFF0284C7);
   static const Color onlineGreen = Color(0xFF10B981);
 
   @override
@@ -126,12 +126,12 @@ class DetailDokterPage extends StatelessWidget {
                                     decoration: BoxDecoration(
                                       shape: BoxShape.circle,
                                       border: Border.all(
-                                        color: brandTeal.withValues(alpha: 0.25),
+                                        color: brandPrimary.withValues(alpha: 0.25),
                                         width: 3.5,
                                       ),
                                       boxShadow: [
                                         BoxShadow(
-                                          color: brandTeal.withValues(alpha: 0.15),
+                                          color: brandPrimary.withValues(alpha: 0.15),
                                           blurRadius: 14,
                                           offset: const Offset(0, 4),
                                         ),
@@ -147,7 +147,7 @@ class DetailDokterPage extends StatelessWidget {
                                             child: Icon(
                                               Icons.person,
                                               size: 65,
-                                              color: isDark ? Colors.white70 : brandTeal,
+                                              color: isDark ? Colors.white70 : brandPrimary,
                                             ),
                                           );
                                         },
@@ -197,8 +197,8 @@ class DetailDokterPage extends StatelessWidget {
                                 ),
                                 decoration: BoxDecoration(
                                   color: isDark
-                                      ? const Color(0xFF0098B9).withValues(alpha: 0.25)
-                                      : const Color(0xFFE8F7FB),
+                                      ? const Color(0xFF0284C7).withValues(alpha: 0.25)
+                                      : const Color(0xFFE0F2FE),
                                   borderRadius: BorderRadius.circular(20),
                                 ),
                                 child: Text(
@@ -206,7 +206,7 @@ class DetailDokterPage extends StatelessWidget {
                                   style: TextStyle(
                                     fontSize: 12,
                                     fontWeight: FontWeight.w600,
-                                    color: isDark ? const Color(0xFF38BDF8) : brandTeal,
+                                    color: isDark ? const Color(0xFF38BDF8) : brandPrimary,
                                   ),
                                 ),
                               ),
@@ -269,7 +269,7 @@ class DetailDokterPage extends StatelessWidget {
                                 children: [
                                   const Icon(
                                     Icons.badge_outlined,
-                                    color: brandTeal,
+                                    color: brandPrimary,
                                     size: 20,
                                   ),
                                   const SizedBox(width: 8),
@@ -335,7 +335,7 @@ class DetailDokterPage extends StatelessWidget {
                                 children: [
                                   const Icon(
                                     Icons.info_outline_rounded,
-                                    color: brandTeal,
+                                    color: brandPrimary,
                                     size: 20,
                                   ),
                                   const SizedBox(width: 8),
@@ -367,46 +367,59 @@ class DetailDokterPage extends StatelessWidget {
                         // ==================================================
                         // TOMBOL PILIH JADWAL
                         // ==================================================
-                        SizedBox(
+                        Container(
                           width: double.infinity,
                           height: 50,
-                          child: ElevatedButton(
-                            onPressed: () {
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (context) => PilihJadwalPage(
-                                    doctorName: nama,
-                                    doctorSpecialty: spesialis,
-                                    doctorPhoto: imagePath,
-                                  ),
-                                ),
-                              );
-                            },
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: brandTeal,
-                              foregroundColor: Colors.white,
-                              elevation: 0,
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(14),
-                              ),
+                          decoration: BoxDecoration(
+                            gradient: const LinearGradient(
+                              colors: [Color(0xFF0EA5E9), Color(0xFF0284C7)],
+                              begin: Alignment.topLeft,
+                              end: Alignment.bottomRight,
                             ),
-                            child: const Row(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                Icon(
-                                  Icons.calendar_month_rounded,
-                                  size: 20,
-                                ),
-                                SizedBox(width: 8),
-                                Text(
-                                  'Pilih Jadwal Konsultasi',
-                                  style: TextStyle(
-                                    fontSize: 15,
-                                    fontWeight: FontWeight.bold,
+                            borderRadius: BorderRadius.circular(14),
+                            boxShadow: [
+                              BoxShadow(
+                                color: const Color(0xFF0284C7).withValues(alpha: 0.35),
+                                blurRadius: 10,
+                                offset: const Offset(0, 4),
+                              ),
+                            ],
+                          ),
+                          child: Material(
+                            color: Colors.transparent,
+                            child: InkWell(
+                              borderRadius: BorderRadius.circular(14),
+                              onTap: () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) => PilihJadwalPage(
+                                      doctorName: nama,
+                                      doctorSpecialty: spesialis,
+                                      doctorPhoto: imagePath,
+                                    ),
                                   ),
-                                ),
-                              ],
+                                );
+                              },
+                              child: const Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Icon(
+                                    Icons.calendar_month_rounded,
+                                    color: Colors.white,
+                                    size: 20,
+                                  ),
+                                  SizedBox(width: 8),
+                                  Text(
+                                    'Pilih Jadwal Konsultasi',
+                                    style: TextStyle(
+                                      fontSize: 15,
+                                      fontWeight: FontWeight.bold,
+                                      color: Colors.white,
+                                    ),
+                                  ),
+                                ],
+                              ),
                             ),
                           ),
                         ),
@@ -548,7 +561,7 @@ class DetailDokterPage extends StatelessWidget {
     required bool active,
     VoidCallback? onTap,
   }) {
-    final activeColor = isDark ? const Color(0xFF38BDF8) : brandTeal;
+    final activeColor = isDark ? const Color(0xFF38BDF8) : const Color(0xFF1479F5);
     final inactiveColor = isDark ? const Color(0xFF64748B) : const Color(0xFF64748B);
 
     return GestureDetector(

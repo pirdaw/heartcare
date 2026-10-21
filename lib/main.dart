@@ -35,7 +35,7 @@ class HeartCareApp extends StatelessWidget {
             brightness: Brightness.light,
             scaffoldBackgroundColor: const Color(0xFFF8FAFC),
             colorScheme: ColorScheme.fromSeed(
-              seedColor: const Color(0xFF0098B9),
+              seedColor: const Color(0xFF0284C7),
               brightness: Brightness.light,
             ),
             useMaterial3: true,
@@ -44,7 +44,7 @@ class HeartCareApp extends StatelessWidget {
             brightness: Brightness.dark,
             scaffoldBackgroundColor: const Color(0xFF0F172A),
             colorScheme: ColorScheme.fromSeed(
-              seedColor: const Color(0xFF0098B9),
+              seedColor: const Color(0xFF0284C7),
               brightness: Brightness.dark,
             ),
             useMaterial3: true,

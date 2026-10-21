@@ -19,7 +19,8 @@ class KonfirmasiJadwalPage extends StatelessWidget {
     this.selectedTime = '09.00',
   });
 
-  static const Color brandTeal = Color(0xFF0098B9);
+  static const Color brandPrimary = Color(0xFF0284C7);
+  static const Color brandSky = Color(0xFF0EA5E9);
 
   @override
   Widget build(BuildContext context) {
@@ -71,26 +72,29 @@ class KonfirmasiJadwalPage extends StatelessWidget {
                   // ICON SUKSES TERKONFIRMASI
                   // ==========================================
                   Container(
-                    width: 76,
-                    height: 76,
+                    width: 78,
+                    height: 78,
                     decoration: BoxDecoration(
-                      color: isDark ? const Color(0xFF0098B9).withValues(alpha: 0.25) : const Color(0xFFE8F7FB),
-                      shape: BoxShape.circle,
-                      border: Border.all(
-                        color: isDark ? const Color(0xFF0098B9) : const Color(0xFFB4E3EE),
-                        width: 2,
+                      gradient: const LinearGradient(
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                        colors: [
+                          Color(0xFF38BDF8),
+                          Color(0xFF0284C7),
+                        ],
                       ),
+                      shape: BoxShape.circle,
                       boxShadow: [
                         BoxShadow(
-                          color: brandTeal.withValues(alpha: 0.15),
-                          blurRadius: 16,
-                          offset: const Offset(0, 4),
+                          color: const Color(0xFF0284C7).withValues(alpha: 0.35),
+                          blurRadius: 18,
+                          offset: const Offset(0, 6),
                         ),
                       ],
                     ),
                     child: const Icon(
-                      Icons.check_circle_rounded,
-                      color: brandTeal,
+                      Icons.check_rounded,
+                      color: Colors.white,
                       size: 46,
                     ),
                   ),
@@ -131,12 +135,17 @@ class KonfirmasiJadwalPage extends StatelessWidget {
                     decoration: BoxDecoration(
                       color: isDark ? const Color(0xFF1E293B) : Colors.white,
                       borderRadius: BorderRadius.circular(20),
-                      border: Border.all(color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0)),
+                      border: Border.all(
+                        color: isDark
+                            ? const Color(0xFF334155)
+                            : const Color(0xFFE2E8F0),
+                      ),
                       boxShadow: [
                         BoxShadow(
-                          color: Colors.black.withValues(alpha: isDark ? 0.2 : 0.03),
-                          blurRadius: 10,
-                          offset: const Offset(0, 3),
+                          color: (isDark ? Colors.black : const Color(0xFF0284C7))
+                              .withValues(alpha: isDark ? 0.2 : 0.04),
+                          blurRadius: 12,
+                          offset: const Offset(0, 4),
                         ),
                       ],
                     ),
@@ -151,7 +160,7 @@ class KonfirmasiJadwalPage extends StatelessWidget {
                               decoration: BoxDecoration(
                                 shape: BoxShape.circle,
                                 border: Border.all(
-                                  color: brandTeal.withValues(alpha: 0.3),
+                                  color: const Color(0xFF0284C7).withValues(alpha: 0.35),
                                   width: 1.5,
                                 ),
                               ),
@@ -162,7 +171,7 @@ class KonfirmasiJadwalPage extends StatelessWidget {
                                   errorBuilder: (context, error, stackTrace) =>
                                       const Icon(
                                     Icons.person,
-                                    color: brandTeal,
+                                    color: brandPrimary,
                                     size: 30,
                                   ),
                                 ),
@@ -171,27 +180,27 @@ class KonfirmasiJadwalPage extends StatelessWidget {
                             const SizedBox(width: 14),
                             Expanded(
                               child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    doctorName,
-                                    style: TextStyle(
-                                      fontSize: 15,
-                                      fontWeight: FontWeight.bold,
-                                      color: isDark ? Colors.white : const Color(0xFF0F172A),
-                                    ),
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  doctorName,
+                                  style: TextStyle(
+                                    fontSize: 15,
+                                    fontWeight: FontWeight.bold,
+                                    color: isDark ? Colors.white : const Color(0xFF0F172A),
                                   ),
-                                  const SizedBox(height: 2),
-                                  Text(
-                                    doctorSpecialty,
-                                    style: TextStyle(
-                                      fontSize: 12,
-                                      fontWeight: FontWeight.w600,
-                                      color: isDark ? const Color(0xFF38BDF8) : brandTeal,
-                                    ),
+                                ),
+                                const SizedBox(height: 2),
+                                Text(
+                                  doctorSpecialty,
+                                  style: TextStyle(
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.w600,
+                                    color: isDark ? const Color(0xFF38BDF8) : brandPrimary,
                                   ),
-                                ],
-                              ),
+                                ),
+                              ],
+                            ),
                             ),
                           ],
                         ),
@@ -242,43 +251,62 @@ class KonfirmasiJadwalPage extends StatelessWidget {
                   SizedBox(
                     width: double.infinity,
                     height: 50,
-                    child: ElevatedButton(
-                      onPressed: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => KonsultasiDokterPage(
-                              doctorName: doctorName,
-                              doctorPhoto: doctorPhoto,
-                              doctorSpecialty: doctorSpecialty,
-                            ),
-                          ),
-                        );
-                      },
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: brandTeal,
-                        foregroundColor: Colors.white,
-                        elevation: 0,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(14),
+                    child: DecoratedBox(
+                      decoration: BoxDecoration(
+                        gradient: const LinearGradient(
+                          colors: [
+                            Color(0xFF0EA5E9),
+                            Color(0xFF0284C7),
+                          ],
                         ),
-                      ),
-                      child: const Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Icon(
-                            Icons.chat_bubble_rounded,
-                            size: 19,
-                          ),
-                          SizedBox(width: 8),
-                          Text(
-                            'Konsultasi Dokter Lewat Chat',
-                            style: TextStyle(
-                              fontSize: 14.5,
-                              fontWeight: FontWeight.bold,
-                            ),
+                        borderRadius: BorderRadius.circular(14),
+                        boxShadow: [
+                          BoxShadow(
+                            color: const Color(0xFF0284C7).withValues(alpha: 0.30),
+                            blurRadius: 10,
+                            offset: const Offset(0, 3),
                           ),
                         ],
+                      ),
+                      child: ElevatedButton(
+                        onPressed: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => KonsultasiDokterPage(
+                                doctorName: doctorName,
+                                doctorPhoto: doctorPhoto,
+                                doctorSpecialty: doctorSpecialty,
+                              ),
+                            ),
+                          );
+                        },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.transparent,
+                          shadowColor: Colors.transparent,
+                          foregroundColor: Colors.white,
+                          elevation: 0,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(14),
+                          ),
+                        ),
+                        child: const Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(
+                              Icons.chat_bubble_rounded,
+                              size: 19,
+                            ),
+                            SizedBox(width: 8),
+                            Text(
+                              'Konsultasi Dokter Lewat Chat',
+                              style: TextStyle(
+                                fontSize: 14.5,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
                     ),
                   ),
@@ -302,7 +330,10 @@ class KonfirmasiJadwalPage extends StatelessWidget {
                       style: OutlinedButton.styleFrom(
                         foregroundColor: isDark ? Colors.white : const Color(0xFF334155),
                         backgroundColor: isDark ? const Color(0xFF1E293B) : Colors.white,
-                        side: BorderSide(color: isDark ? const Color(0xFF334155) : const Color(0xFFCBD5E1), width: 1.2),
+                        side: BorderSide(
+                          color: isDark ? const Color(0xFF334155) : const Color(0xFFBAE6FD),
+                          width: 1.2,
+                        ),
                         elevation: 0,
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(14),
@@ -314,7 +345,7 @@ class KonfirmasiJadwalPage extends StatelessWidget {
                           Icon(
                             Icons.home_rounded,
                             size: 20,
-                            color: isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B),
+                            color: isDark ? const Color(0xFF38BDF8) : const Color(0xFF0284C7),
                           ),
                           const SizedBox(width: 8),
                           Text(

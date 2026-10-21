@@ -1,10 +1,9 @@
-import 'dart:io';
 import 'package:flutter/material.dart';
 import 'screening_intro_page.dart';
 import 'dokter_page.dart';
-import 'detail_dokter_page.dart';
 import 'emergency_page.dart';
 import 'education_page.dart';
+import 'artikel_kesehatan_page.dart';
 import 'article_detail_page.dart';
 import 'pengingat_kesehatan_page.dart';
 import 'riwayat_page.dart';
@@ -21,6 +20,7 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
+  static const Color brandPrimary = Color(0xFF0284C7);
   int _selectedIndex = 0;
   final HealthReminderController _reminderController =
       HealthReminderController();
@@ -108,252 +108,6 @@ class _HomePageState extends State<HomePage> {
     }
   }
 
-  void _showProgramModal() {
-    final isDark = ThemeService.isDarkMode;
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (context) => Container(
-        padding: const EdgeInsets.fromLTRB(22, 16, 22, 28),
-        decoration: BoxDecoration(
-          color: isDark ? const Color(0xFF1E293B) : Colors.white,
-          borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Center(
-              child: Container(
-                width: 42,
-                height: 4,
-                margin: const EdgeInsets.only(bottom: 18),
-                decoration: BoxDecoration(
-                  color: isDark
-                      ? const Color(0xFF475569)
-                      : const Color(0xFFCBD5E1),
-                  borderRadius: BorderRadius.circular(2),
-                ),
-              ),
-            ),
-            Row(
-              children: [
-                Container(
-                  width: 50,
-                  height: 50,
-                  decoration: BoxDecoration(
-                    gradient: const LinearGradient(
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                      colors: [
-                        Color(0xFF06B6D4),
-                        Color(0xFF0891B2),
-                      ],
-                    ),
-                    borderRadius: BorderRadius.circular(14),
-                    boxShadow: [
-                      BoxShadow(
-                        color: const Color(0xFF0891B2).withValues(alpha: 0.3),
-                        blurRadius: 8,
-                        offset: const Offset(0, 3),
-                      ),
-                    ],
-                  ),
-                  child: const Icon(
-                    Icons.monitor_heart_rounded,
-                    color: Colors.white,
-                    size: 26,
-                  ),
-                ),
-                const SizedBox(width: 14),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Program Kesehatan Jantung',
-                        style: TextStyle(
-                          fontSize: 16.5,
-                          fontWeight: FontWeight.bold,
-                          color: isDark ? Colors.white : const Color(0xFF0F172A),
-                        ),
-                      ),
-                      const SizedBox(height: 3),
-                      Text(
-                        'Panduan 30 hari untuk jantung sehat & prima',
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: isDark
-                              ? const Color(0xFF94A3B8)
-                              : const Color(0xFF64748B),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 20),
-            _programBenefitItem(
-              Icons.restaurant_rounded,
-              'Panduan Gizi Rendah Garam & Kolesterol',
-              'Menu harian terstruktur ramah kardiovaskular.',
-              isDark: isDark,
-            ),
-            const SizedBox(height: 12),
-            _programBenefitItem(
-              Icons.directions_walk_rounded,
-              'Target Aktivitas Fisik Ringan 30 Menit/Hari',
-              'Latihan aerobik santai menjaga kelenturan pembuluh darah.',
-              isDark: isDark,
-            ),
-            const SizedBox(height: 12),
-            _programBenefitItem(
-              Icons.fact_check_outlined,
-              'Evaluasi Risiko Berkala dengan AI',
-              'Pantau progres kesehatan jantung Anda secara berkelanjutan.',
-              isDark: isDark,
-            ),
-            const SizedBox(height: 22),
-            Row(
-              children: [
-                Expanded(
-                  child: OutlinedButton(
-                    onPressed: () {
-                      Navigator.pop(context);
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => const EducationPage(),
-                        ),
-                      );
-                    },
-                    style: OutlinedButton.styleFrom(
-                      foregroundColor: isDark
-                          ? const Color(0xFF38BDF8)
-                          : const Color(0xFF079BC1),
-                      side: BorderSide(
-                        color: isDark
-                            ? const Color(0xFF38BDF8)
-                            : const Color(0xFF079BC1),
-                      ),
-                      padding: const EdgeInsets.symmetric(vertical: 12),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                    ),
-                    child: const Text(
-                      'Buka Edukasi',
-                      style: TextStyle(fontWeight: FontWeight.bold),
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: DecoratedBox(
-                    decoration: BoxDecoration(
-                      gradient: const LinearGradient(
-                        colors: [
-                          Color(0xFF0EA5E9),
-                          Color(0xFF0284C7),
-                        ],
-                      ),
-                      borderRadius: BorderRadius.circular(10),
-                      boxShadow: [
-                        BoxShadow(
-                          color: const Color(0xFF0284C7).withValues(alpha: 0.28),
-                          blurRadius: 6,
-                          offset: const Offset(0, 2),
-                        ),
-                      ],
-                    ),
-                    child: ElevatedButton(
-                      onPressed: () {
-                        Navigator.pop(context);
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => const ScreeningIntroPage(),
-                          ),
-                        );
-                      },
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.transparent,
-                        shadowColor: Colors.transparent,
-                        foregroundColor: Colors.white,
-                        elevation: 0,
-                        padding: const EdgeInsets.symmetric(vertical: 12),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(10),
-                        ),
-                      ),
-                      child: const Text(
-                        'Mulai Skrining',
-                        style: TextStyle(fontWeight: FontWeight.bold),
-                      ),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _programBenefitItem(
-      IconData icon, String title, String subtitle,
-      {bool isDark = false}) {
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Container(
-          width: 34,
-          height: 34,
-          decoration: BoxDecoration(
-            color: isDark
-                ? const Color(0xFF0F2B3E)
-                : const Color(0xFFE8F7FB),
-            borderRadius: BorderRadius.circular(8),
-          ),
-          child: Icon(
-            icon,
-            size: 18,
-            color: isDark ? const Color(0xFF38BDF8) : const Color(0xFF079BC1),
-          ),
-        ),
-        const SizedBox(width: 12),
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                title,
-                style: TextStyle(
-                  fontSize: 13,
-                  fontWeight: FontWeight.w600,
-                  color: isDark ? Colors.white : const Color(0xFF1E293B),
-                ),
-              ),
-              const SizedBox(height: 1),
-              Text(
-                subtitle,
-                style: TextStyle(
-                  fontSize: 11,
-                  color: isDark
-                      ? const Color(0xFF94A3B8)
-                      : const Color(0xFF64748B),
-                ),
-              ),
-            ],
-          ),
-        ),
-      ],
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     return ValueListenableBuilder<ThemeMode>(
@@ -365,33 +119,76 @@ class _HomePageState extends State<HomePage> {
           backgroundColor: isDark ? const Color(0xFF0F172A) : const Color(0xFFF8FAFC),
           body: Container(
             decoration: BoxDecoration(
-              color: isDark ? const Color(0xFF0F172A) : const Color(0xFFF8FAFC),
               gradient: LinearGradient(
                 begin: Alignment.topCenter,
                 end: Alignment.bottomCenter,
-                stops: const [0.0, 0.22, 0.55],
+                stops: const [0.0, 0.28, 0.65, 1.0],
                 colors: isDark
                     ? const [
                         Color(0xFF1E293B),
-                        Color(0xFF131D2E),
+                        Color(0xFF162032),
+                        Color(0xFF111927),
                         Color(0xFF0F172A),
                       ]
                     : const [
-                        Color(0xFFE8F6FA),
-                        Color(0xFFF4FAFC),
+                        Color(0xFFE0F2FE),
+                        Color(0xFFEDF6FD),
+                        Color(0xFFF3F8FD),
                         Color(0xFFF8FAFC),
                       ],
               ),
             ),
             child: SafeArea(
-              child: Column(
+              child: Stack(
                 children: [
-                  Expanded(
-                    child: SingleChildScrollView(
-                      padding: const EdgeInsets.fromLTRB(20, 18, 20, 20),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
+                  // Ornamen ambient glow lembut agar layar tidak monoton putih
+                  Positioned(
+                    top: -40,
+                    right: -30,
+                    child: Container(
+                      width: 220,
+                      height: 220,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: const Color(0xFF38BDF8)
+                            .withValues(alpha: isDark ? 0.04 : 0.16),
+                      ),
+                    ),
+                  ),
+                  Positioned(
+                    top: 280,
+                    left: -60,
+                    child: Container(
+                      width: 200,
+                      height: 200,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: const Color(0xFF0EA5E9)
+                            .withValues(alpha: isDark ? 0.03 : 0.08),
+                      ),
+                    ),
+                  ),
+                  Positioned(
+                    bottom: 140,
+                    right: -50,
+                    child: Container(
+                      width: 200,
+                      height: 200,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: const Color(0xFF0284C7)
+                            .withValues(alpha: isDark ? 0.03 : 0.06),
+                      ),
+                    ),
+                  ),
+                  Column(
+                    children: [
+                      Expanded(
+                        child: SingleChildScrollView(
+                          padding: const EdgeInsets.fromLTRB(20, 18, 20, 20),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
                         // 1. HEADER (PROFIL & EMERGENCY SOS)
                         Row(
                           crossAxisAlignment: CrossAxisAlignment.center,
@@ -426,10 +223,11 @@ class _HomePageState extends State<HomePage> {
                                     valueListenable:
                                         ProfileService.profileImageNotifier,
                                     builder: (context, imagePath, _) {
-                                      if (imagePath != null &&
-                                          File(imagePath).existsSync()) {
-                                        return Image.file(
-                                          File(imagePath),
+                                      final provider =
+                                          ProfileService.getImageProvider(imagePath);
+                                      if (provider != null) {
+                                        return Image(
+                                          image: provider,
                                           fit: BoxFit.cover,
                                           errorBuilder:
                                               (context, error, stackTrace) {
@@ -986,40 +784,22 @@ class _HomePageState extends State<HomePage> {
 
                         const SizedBox(height: 10),
 
-                        // BARIS 2 LAYANAN
-                        Row(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Expanded(
-                              child: _serviceCard(
-                                icon: Icons.monitor_heart_rounded,
-                                title: 'Program Kesehatan Jantung',
-                                description:
-                                    'Ikuti program untuk menjaga kesehatan jantung Anda.',
-                                isDark: isDark,
-                                onTap: _showProgramModal,
+                        // BARIS 2 LAYANAN: SATU CARD EDUKASI KESEHATAN
+                        _horizontalServiceCard(
+                          icon: Icons.menu_book_rounded,
+                          title: 'Edukasi Kesehatan',
+                          description:
+                              'Dapatkan informasi dan tips menjaga kesehatan Anda.',
+                          isDark: isDark,
+                          onTap: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) =>
+                                    const EducationPage(),
                               ),
-                            ),
-                            const SizedBox(width: 10),
-                            Expanded(
-                              child: _serviceCard(
-                                icon: Icons.menu_book_rounded,
-                                title: 'Edukasi Kesehatan',
-                                description:
-                                    'Dapatkan informasi dan tips menjaga kesehatan Anda.',
-                                isDark: isDark,
-                                onTap: () {
-                                  Navigator.push(
-                                    context,
-                                    MaterialPageRoute(
-                                      builder: (context) =>
-                                          const EducationPage(),
-                                    ),
-                                  );
-                                },
-                              ),
-                            ),
-                          ],
+                            );
+                          },
                         ),
                         const SizedBox(height: 22),
 
@@ -1055,7 +835,7 @@ class _HomePageState extends State<HomePage> {
                                 style: TextStyle(
                                   fontSize: 12,
                                   fontWeight: FontWeight.w600,
-                                  color: isDark ? const Color(0xFF38BDF8) : const Color(0xFF0098B9),
+                                  color: isDark ? const Color(0xFF38BDF8) : const Color(0xFF0284C7),
                                 ),
                               ),
                             ),
@@ -1066,410 +846,33 @@ class _HomePageState extends State<HomePage> {
 
                     Builder(
                       builder: (context) {
-                        final hasReminder =
-                            _reminderController.medicines.isNotEmpty;
-                        final nextMed = hasReminder
-                            ? _reminderController.medicines.first
-                            : null;
-                        final timeRaw = (nextMed != null &&
-                                nextMed.reminderTimes.isNotEmpty)
-                            ? nextMed.reminderTimes.first
-                            : '';
-                        final timeFormatted = timeRaw.isNotEmpty
-                            ? (timeRaw.contains('WIB')
-                                ? timeRaw
-                                : '$timeRaw WIB')
-                            : '';
-
-                        return Container(
-                          padding: const EdgeInsets.all(14),
-                          decoration: BoxDecoration(
-                            gradient: LinearGradient(
-                              begin: Alignment.topLeft,
-                              end: Alignment.bottomRight,
-                              colors: isDark
-                                  ? const [
-                                      Color(0xFF1E293B),
-                                      Color(0xFF0E2536),
-                                    ]
-                                  : const [
-                                      Color(0xFFE2F7FB),
-                                      Color(0xFFC7EBF4),
-                                    ],
-                            ),
-                            borderRadius: BorderRadius.circular(16),
-                            border: Border.all(
-                              color: isDark
-                                  ? const Color(0xFF1E3A5F)
-                                  : const Color(0xFFBCE7F2),
-                              width: 1.2,
-                            ),
-                            boxShadow: [
-                              BoxShadow(
-                                color: (isDark
-                                        ? const Color(0xFF38BDF8)
-                                        : const Color(0xFF0098B9))
-                                    .withValues(alpha: 0.08),
-                                blurRadius: 10,
-                                offset: const Offset(0, 3),
-                              ),
-                            ],
-                          ),
-                          child: hasReminder && nextMed != null
-                              ? Row(
-                                  children: [
-                                    Container(
-                                      width: 44,
-                                      height: 44,
-                                      decoration: BoxDecoration(
-                                        gradient: const LinearGradient(
-                                          begin: Alignment.topLeft,
-                                          end: Alignment.bottomRight,
-                                          colors: [
-                                            Color(0xFF38BDF8),
-                                            Color(0xFF0284C7),
-                                          ],
-                                        ),
-                                        borderRadius: BorderRadius.circular(12),
-                                        boxShadow: [
-                                          BoxShadow(
-                                            color: const Color(0xFF0284C7)
-                                                .withValues(alpha: 0.28),
-                                            blurRadius: 6,
-                                            offset: const Offset(0, 2),
-                                          ),
-                                        ],
-                                      ),
-                                      child: const Icon(
-                                        Icons.medication_rounded,
-                                        color: Colors.white,
-                                        size: 24,
-                                      ),
-                                    ),
-                                    const SizedBox(width: 12),
-                                    Expanded(
-                                      child: Column(
-                                        crossAxisAlignment:
-                                            CrossAxisAlignment.start,
-                                        children: [
-                                          Row(
-                                            children: [
-                                              Flexible(
-                                                child: Text(
-                                                  nextMed.name,
-                                                  maxLines: 1,
-                                                  overflow:
-                                                      TextOverflow.ellipsis,
-                                                  style: TextStyle(
-                                                    fontSize: 13.5,
-                                                    fontWeight:
-                                                        FontWeight.bold,
-                                                    color: isDark
-                                                        ? Colors.white
-                                                        : const Color(
-                                                            0xFF0F172A),
-                                                  ),
-                                                ),
-                                              ),
-                                              if (timeFormatted
-                                                  .isNotEmpty) ...[
-                                                const SizedBox(width: 6),
-                                                Text(
-                                                  '• $timeFormatted',
-                                                  style: TextStyle(
-                                                    fontSize: 11,
-                                                    fontWeight:
-                                                        FontWeight.w600,
-                                                    color: isDark
-                                                        ? const Color(
-                                                            0xFF38BDF8)
-                                                        : const Color(
-                                                            0xFF0284C7),
-                                                  ),
-                                                ),
-                                              ],
-                                            ],
-                                          ),
-                                          const SizedBox(height: 2),
-                                          Text(
-                                            nextMed.schedule.isNotEmpty
-                                                ? '${nextMed.amount} ${nextMed.unit} ${nextMed.schedule}'
-                                                : (nextMed.note.isNotEmpty
-                                                    ? nextMed.note
-                                                    : '${nextMed.amount} ${nextMed.unit}'),
-                                            maxLines: 1,
-                                            overflow: TextOverflow.ellipsis,
-                                            style: TextStyle(
-                                              fontSize: 11,
-                                              color: isDark
-                                                  ? const Color(0xFF94A3B8)
-                                                  : const Color(0xFF475569),
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                    ),
-                                    DecoratedBox(
-                                      decoration: BoxDecoration(
-                                        gradient: const LinearGradient(
-                                          colors: [
-                                            Color(0xFF0098B9),
-                                            Color(0xFF0284C7),
-                                          ],
-                                        ),
-                                        borderRadius: BorderRadius.circular(8),
-                                        boxShadow: [
-                                          BoxShadow(
-                                            color: const Color(0xFF0098B9)
-                                                .withValues(alpha: 0.25),
-                                            blurRadius: 6,
-                                            offset: const Offset(0, 2),
-                                          ),
-                                        ],
-                                      ),
-                                      child: ElevatedButton(
-                                        onPressed: () {
-                                          Navigator.push(
-                                            context,
-                                            MaterialPageRoute(
-                                              builder: (context) =>
-                                                  const PengingatKesehatanPage(),
-                                            ),
-                                          );
-                                        },
-                                        style: ElevatedButton.styleFrom(
-                                          backgroundColor: Colors.transparent,
-                                          shadowColor: Colors.transparent,
-                                          foregroundColor: Colors.white,
-                                          elevation: 0,
-                                          padding: const EdgeInsets.symmetric(
-                                            horizontal: 14,
-                                            vertical: 8,
-                                          ),
-                                          minimumSize: Size.zero,
-                                          tapTargetSize: MaterialTapTargetSize
-                                              .shrinkWrap,
-                                          shape: RoundedRectangleBorder(
-                                            borderRadius:
-                                                BorderRadius.circular(8),
-                                          ),
-                                        ),
-                                        child: const Text(
-                                          'Jadwal',
-                                          style: TextStyle(
-                                            fontSize: 11.5,
-                                            fontWeight: FontWeight.bold,
-                                          ),
-                                        ),
-                                      ),
-                                    ),
-                                  ],
-                                )
-                              : Row(
-                                  children: [
-                                    Container(
-                                      width: 44,
-                                      height: 44,
-                                      decoration: BoxDecoration(
-                                        color: isDark
-                                            ? const Color(0xFF1E293B)
-                                            : const Color(0xFF0098B9)
-                                                .withValues(alpha: 0.12),
-                                        borderRadius:
-                                            BorderRadius.circular(11),
-                                      ),
-                                      child: Icon(
-                                        Icons.alarm_off_rounded,
-                                        color: isDark
-                                            ? const Color(0xFF38BDF8)
-                                            : const Color(0xFF0098B9),
-                                        size: 24,
-                                      ),
-                                    ),
-                                    const SizedBox(width: 12),
-                                    Expanded(
-                                      child: Column(
-                                        crossAxisAlignment:
-                                            CrossAxisAlignment.start,
-                                        children: [
-                                          Text(
-                                            'Belum ada jadwal obat',
-                                            style: TextStyle(
-                                              fontSize: 13.5,
-                                              fontWeight: FontWeight.bold,
-                                              color: isDark
-                                                  ? Colors.white
-                                                  : const Color(0xFF1E293B),
-                                            ),
-                                          ),
-                                          const SizedBox(height: 2),
-                                          Text(
-                                            'Atur pengingat agar minum obat tepat waktu',
-                                            style: TextStyle(
-                                              fontSize: 11,
-                                              color: isDark
-                                                  ? const Color(0xFF94A3B8)
-                                                  : const Color(0xFF64748B),
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                    ),
-                                    DecoratedBox(
-                                      decoration: BoxDecoration(
-                                        gradient: const LinearGradient(
-                                          colors: [
-                                            Color(0xFF0098B9),
-                                            Color(0xFF0284C7),
-                                          ],
-                                        ),
-                                        borderRadius: BorderRadius.circular(8),
-                                        boxShadow: [
-                                          BoxShadow(
-                                            color: const Color(0xFF0098B9)
-                                                .withValues(alpha: 0.25),
-                                            blurRadius: 6,
-                                            offset: const Offset(0, 2),
-                                          ),
-                                        ],
-                                      ),
-                                      child: ElevatedButton(
-                                        onPressed: () {
-                                          Navigator.push(
-                                            context,
-                                            MaterialPageRoute(
-                                              builder: (context) =>
-                                                  const PengingatKesehatanPage(),
-                                            ),
-                                          );
-                                        },
-                                        style: ElevatedButton.styleFrom(
-                                          backgroundColor: Colors.transparent,
-                                          shadowColor: Colors.transparent,
-                                          foregroundColor: Colors.white,
-                                          elevation: 0,
-                                          padding: const EdgeInsets.symmetric(
-                                            horizontal: 14,
-                                            vertical: 8,
-                                          ),
-                                          minimumSize: Size.zero,
-                                          tapTargetSize: MaterialTapTargetSize
-                                              .shrinkWrap,
-                                          shape: RoundedRectangleBorder(
-                                            borderRadius:
-                                                BorderRadius.circular(8),
-                                          ),
-                                        ),
-                                        child: const Text(
-                                          'Atur',
-                                          style: TextStyle(
-                                            fontSize: 11.5,
-                                            fontWeight: FontWeight.bold,
-                                          ),
-                                        ),
-                                      ),
-                                    ),
-                                  ],
+                        if (_reminderController.medicines.isEmpty) {
+                          return _buildEmptyReminderCard(isDark);
+                        }
+                        return Column(
+                          children: [
+                            for (int i = 0;
+                                i < _reminderController.medicines.length;
+                                i++)
+                              Padding(
+                                padding: EdgeInsets.only(
+                                  bottom: i == _reminderController.medicines.length - 1
+                                      ? 0
+                                      : 10,
                                 ),
+                                child: _buildReminderItemCard(
+                                  _reminderController.medicines[i],
+                                  isDark,
+                                ),
+                              ),
+                          ],
                         );
                       },
                     ),
 
                     const SizedBox(height: 22),
 
-                    // 7. DOKTER SPESIALIS REKOMENDASI (CAROUSEL)
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Text(
-                          'Dokter Spesialis Rekomendasi',
-                          style: TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.bold,
-                            color: isDark ? Colors.white : const Color(0xFF0F172A),
-                          ),
-                        ),
-                        TextButton(
-                          onPressed: () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (context) => const PilihDokterPage(),
-                              ),
-                            );
-                          },
-                          style: TextButton.styleFrom(
-                            padding: EdgeInsets.zero,
-                            minimumSize: Size.zero,
-                            tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                          ),
-                          child: Text(
-                            'Lihat Semua',
-                            style: TextStyle(
-                              fontSize: 12,
-                              fontWeight: FontWeight.w600,
-                              color: isDark ? const Color(0xFF38BDF8) : const Color(0xFF0098B9),
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                        const SizedBox(height: 10),
-
-                        SizedBox(
-                          height: 148,
-                          child: ListView(
-                            scrollDirection: Axis.horizontal,
-                            clipBehavior: Clip.none,
-                            children: [
-                              _doctorCard(
-                                context,
-                                name: 'dr. Andi Pratama',
-                                specialty: 'Spesialis Jantung',
-                                photo: 'assets/images/dokter_andi.jpg',
-                                experience: '10 tahun',
-                                sip: '1823/SIP/2021',
-                                location: 'Klinik Jantung Sejahtera, Jember',
-                                about:
-                                    'Fokus pada prevensi dan penanganan penyakit jantung koroner serta aritmia dengan pendekatan preventif dan rehabilitasi kardiovaskular.',
-                                isOnline: true,
-                                isDark: isDark,
-                              ),
-                              const SizedBox(width: 12),
-                              _doctorCard(
-                                context,
-                                name: 'dr. Sinta Maharani',
-                                specialty: 'Spesialis Jantung',
-                                photo: 'assets/images/dokter_sinta.jpg',
-                                experience: '8 tahun',
-                                sip: '2105/SIP/2022',
-                                location: 'RS Graha Medika, Jember',
-                                about:
-                                    'Berpengalaman dalam ekokardiografi, diagnosis gagal jantung dini, dan konsultasi gaya hidup sehat untuk penderita hipertensi.',
-                                isOnline: true,
-                                isDark: isDark,
-                              ),
-                              const SizedBox(width: 12),
-                              _doctorCard(
-                                context,
-                                name: 'dr. Nurlitta Dwi',
-                                specialty: 'Spesialis Jantung',
-                                photo: 'assets/images/dokter_nurlitta.jpg',
-                                experience: '12 tahun',
-                                sip: '2406/SIP/2023',
-                                location: 'RS Mitra Sehat, Jember',
-                                about:
-                                    'Berpengalaman dalam memberikan pemeriksaan dan penanganan komprehensif terhadap berbagai kondisi jantung dan kardiovaskular.',
-                                isOnline: true,
-                                isDark: isDark,
-                              ),
-                            ],
-                          ),
-                        ),
-
-                        const SizedBox(height: 22),
-
-                        // 8. EDUKASI & ARTIKEL KESEHATAN JANTUNG
+                    // 8. EDUKASI & ARTIKEL KESEHATAN JANTUNG
                         Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
@@ -1486,7 +889,8 @@ class _HomePageState extends State<HomePage> {
                                 Navigator.push(
                                   context,
                                   MaterialPageRoute(
-                                    builder: (context) => const EducationPage(),
+                                    builder: (context) =>
+                                        const ArtikelKesehatanPage(),
                                   ),
                                 );
                               },
@@ -1500,7 +904,7 @@ class _HomePageState extends State<HomePage> {
                                 style: TextStyle(
                                   fontSize: 12,
                                   fontWeight: FontWeight.w600,
-                                  color: isDark ? const Color(0xFF38BDF8) : const Color(0xFF0098B9),
+                                  color: isDark ? const Color(0xFF38BDF8) : const Color(0xFF0284C7),
                                 ),
                               ),
                             ),
@@ -1697,14 +1101,286 @@ class _HomePageState extends State<HomePage> {
                 ),
               ],
             ),
-          ),
+          ],
         ),
+      ),
+    ),
       );
     },
   );
 }
 
-  // WIDGET HELPER: 4 SERVICE CARDS (SERAGAM BIRU MUDA C7EBF4 GRADIENT)
+  // ==============================================================
+  // WIDGET HELPER: PENGINGAT KESEHATAN (KONSISTEN DENGAN TEMA BIRU UTAMA)
+  // ==============================================================
+
+  BoxDecoration _reminderCardDecoration(bool isDark) {
+    return BoxDecoration(
+      gradient: LinearGradient(
+        begin: Alignment.topLeft,
+        end: Alignment.bottomRight,
+        colors: isDark
+            ? const [
+                Color(0xFF1E293B),
+                Color(0xFF0E2536),
+              ]
+            : const [
+                Color(0xFFEBF6FE),
+                Color(0xFFD4ECFC),
+              ],
+      ),
+      borderRadius: BorderRadius.circular(16),
+      border: Border.all(
+        color: isDark ? const Color(0xFF1E3A5F) : const Color(0xFFBAE6FD),
+        width: 1.2,
+      ),
+      boxShadow: [
+        BoxShadow(
+          color: (isDark ? Colors.black : brandPrimary)
+              .withValues(alpha: isDark ? 0.25 : 0.10),
+          blurRadius: 8,
+          offset: const Offset(0, 3),
+        ),
+      ],
+    );
+  }
+
+  Widget _reminderIconContainer({
+    required IconData icon,
+    required bool isDark,
+  }) {
+    return Container(
+      width: 44,
+      height: 44,
+      decoration: BoxDecoration(
+        color: isDark ? const Color(0xFF0F172A) : Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        boxShadow: [
+          BoxShadow(
+            color: (isDark ? Colors.black : brandPrimary)
+                .withValues(alpha: isDark ? 0.3 : 0.12),
+            blurRadius: 6,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Icon(
+        icon,
+        size: 22,
+        color: isDark ? const Color(0xFF38BDF8) : brandPrimary,
+      ),
+    );
+  }
+
+  Widget _buildReminderItemCard(MedicineReminder med, bool isDark) {
+    final timeRaw = med.reminderTimes.isNotEmpty ? med.reminderTimes.first : '';
+    final timeFormatted = timeRaw.isNotEmpty
+        ? (timeRaw.contains('WIB') ? timeRaw : ' WIB')
+        : '';
+
+    return Container(
+      padding: const EdgeInsets.all(14),
+      decoration: _reminderCardDecoration(isDark),
+      child: Row(
+        children: [
+          _reminderIconContainer(
+            icon: Icons.medication_rounded,
+            isDark: isDark,
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Flexible(
+                      child: Text(
+                        med.name,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(
+                          fontSize: 13.5,
+                          fontWeight: FontWeight.bold,
+                          color: isDark ? Colors.white : const Color(0xFF0F172A),
+                        ),
+                      ),
+                    ),
+                    if (timeFormatted.isNotEmpty) ...[
+                      const SizedBox(width: 6),
+                      Text(
+                        '• ',
+                        style: TextStyle(
+                          fontSize: 11,
+                          fontWeight: FontWeight.w600,
+                          color: isDark ? const Color(0xFF38BDF8) : brandPrimary,
+                        ),
+                      ),
+                    ],
+                  ],
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  med.schedule.isNotEmpty
+                      ? '  '
+                      : (med.note.isNotEmpty
+                          ? med.note
+                          : ' '),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    fontSize: 11,
+                    color: isDark ? const Color(0xFF94A3B8) : const Color(0xFF475569),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          DecoratedBox(
+            decoration: BoxDecoration(
+              gradient: const LinearGradient(
+                colors: [
+                  Color(0xFF0EA5E9),
+                  Color(0xFF0284C7),
+                ],
+              ),
+              borderRadius: BorderRadius.circular(8),
+              boxShadow: [
+                BoxShadow(
+                  color: const Color(0xFF0284C7).withValues(alpha: 0.25),
+                  blurRadius: 6,
+                  offset: const Offset(0, 2),
+                ),
+              ],
+            ),
+            child: ElevatedButton(
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const PengingatKesehatanPage(),
+                  ),
+                );
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.transparent,
+                shadowColor: Colors.transparent,
+                foregroundColor: Colors.white,
+                elevation: 0,
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 14,
+                  vertical: 8,
+                ),
+                minimumSize: Size.zero,
+                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
+              ),
+              child: const Text(
+                'Jadwal',
+                style: TextStyle(
+                  fontSize: 11.5,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildEmptyReminderCard(bool isDark) {
+    return Container(
+      padding: const EdgeInsets.all(14),
+      decoration: _reminderCardDecoration(isDark),
+      child: Row(
+        children: [
+          _reminderIconContainer(
+            icon: Icons.alarm_off_rounded,
+            isDark: isDark,
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Belum ada jadwal obat',
+                  style: TextStyle(
+                    fontSize: 13.5,
+                    fontWeight: FontWeight.bold,
+                    color: isDark ? Colors.white : const Color(0xFF1E293B),
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  'Atur pengingat agar minum obat tepat waktu',
+                  style: TextStyle(
+                    fontSize: 11,
+                    color: isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          DecoratedBox(
+            decoration: BoxDecoration(
+              gradient: const LinearGradient(
+                colors: [
+                  Color(0xFF0EA5E9),
+                  Color(0xFF0284C7),
+                ],
+              ),
+              borderRadius: BorderRadius.circular(8),
+              boxShadow: [
+                BoxShadow(
+                  color: const Color(0xFF0284C7).withValues(alpha: 0.25),
+                  blurRadius: 6,
+                  offset: const Offset(0, 2),
+                ),
+              ],
+            ),
+            child: ElevatedButton(
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const PengingatKesehatanPage(),
+                  ),
+                );
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.transparent,
+                shadowColor: Colors.transparent,
+                foregroundColor: Colors.white,
+                elevation: 0,
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 14,
+                  vertical: 8,
+                ),
+                minimumSize: Size.zero,
+                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
+              ),
+              child: const Text(
+                'Atur',
+                style: TextStyle(
+                  fontSize: 11.5,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // WIDGET HELPER: SERVICE CARDS (GRADASI BIRU ELEGAN)
   Widget _serviceCard({
     required IconData icon,
     required String title,
@@ -1712,8 +1388,7 @@ class _HomePageState extends State<HomePage> {
     VoidCallback? onTap,
     bool isDark = false,
   }) {
-    const Color brandTeal = Color(0xFF0098B9);
-    final Color borderColor = isDark ? const Color(0xFF1E3A5F) : const Color(0xFFBCE7F2);
+final Color borderColor = isDark ? const Color(0xFF1E3A5F) : const Color(0xFFBAE6FD);
     final LinearGradient cardGradient = isDark
         ? const LinearGradient(
             begin: Alignment.topLeft,
@@ -1727,8 +1402,8 @@ class _HomePageState extends State<HomePage> {
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
             colors: [
-              Color(0xFFE2F7FB),
-              Color(0xFFC7EBF4),
+              Color(0xFFEBF6FE),
+              Color(0xFFD4ECFC),
             ],
           );
 
@@ -1737,7 +1412,6 @@ class _HomePageState extends State<HomePage> {
       behavior: HitTestBehavior.opaque,
       child: Container(
         height: 172,
-        padding: const EdgeInsets.all(13),
         decoration: BoxDecoration(
           gradient: cardGradient,
           borderRadius: BorderRadius.circular(16),
@@ -1747,173 +1421,104 @@ class _HomePageState extends State<HomePage> {
           ),
           boxShadow: [
             BoxShadow(
-              color: (isDark ? const Color(0xFF38BDF8) : brandTeal).withValues(alpha: 0.08),
+              color: (isDark ? const Color(0xFF38BDF8) : brandPrimary).withValues(alpha: 0.10),
               blurRadius: 10,
               offset: const Offset(0, 3),
             ),
           ],
         ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Container(
-                  width: 48,
-                  height: 48,
-                  decoration: BoxDecoration(
-                    color: isDark ? const Color(0xFF0F172A) : Colors.white,
-                    borderRadius: BorderRadius.circular(13),
-                    boxShadow: [
-                      BoxShadow(
-                        color: (isDark ? Colors.black : brandTeal).withValues(alpha: 0.12),
-                        blurRadius: 6,
-                        offset: const Offset(0, 2),
-                      ),
-                    ],
-                  ),
-                  child: Icon(
-                    icon,
-                    size: 25,
-                    color: isDark ? const Color(0xFF38BDF8) : brandTeal,
-                  ),
-                ),
-                Container(
-                  width: 24,
-                  height: 24,
-                  decoration: BoxDecoration(
-                    color: isDark
-                        ? const Color(0xFF0F172A)
-                        : Colors.white.withValues(alpha: 0.9),
-                    shape: BoxShape.circle,
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withValues(alpha: 0.04),
-                        blurRadius: 4,
-                        offset: const Offset(0, 1),
-                      ),
-                    ],
-                  ),
-                  child: Icon(
-                    Icons.arrow_forward_rounded,
-                    size: 13,
-                    color: isDark ? const Color(0xFF38BDF8) : brandTeal,
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 11),
-            Text(
-              title,
-              maxLines: 2,
-              overflow: TextOverflow.ellipsis,
-              style: TextStyle(
-                fontSize: 13,
-                fontWeight: FontWeight.bold,
-                height: 1.22,
-                color: isDark ? Colors.white : const Color(0xFF0F172A),
-              ),
-            ),
-            const SizedBox(height: 4),
-            Expanded(
-              child: Text(
-                description,
-                maxLines: 3,
-                overflow: TextOverflow.ellipsis,
-                style: TextStyle(
-                  fontSize: 11,
-                  height: 1.3,
-                  color: isDark ? const Color(0xFF94A3B8) : const Color(0xFF334155),
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  // WIDGET HELPER: DOCTOR CARD
-  Widget _doctorCard(
-    BuildContext context, {
-    required String name,
-    required String specialty,
-    required String photo,
-    required String experience,
-    required String sip,
-    required String location,
-    required String about,
-    required bool isOnline,
-    bool isDark = false,
-  }) {
-    return Container(
-      width: 185,
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: isDark ? const Color(0xFF1E293B) : Colors.white,
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(
-          color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0),
-          width: 1,
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: isDark ? 0.2 : 0.03),
-            blurRadius: 6,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(16),
+          child: Stack(
             children: [
-              Container(
-                width: 40,
-                height: 40,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  border: Border.all(
-                    color: const Color(0xFF0098B9).withValues(alpha: 0.25),
-                    width: 1.5,
-                  ),
-                ),
-                child: ClipOval(
-                  child: Image.asset(
-                    photo,
-                    fit: BoxFit.cover,
-                    errorBuilder: (context, error, stackTrace) => const Icon(
-                      Icons.person,
-                      color: Color(0xFF079BC1),
-                    ),
+              // Ornamen aksen lingkaran lembut di sudut kartu
+              Positioned(
+                right: -12,
+                bottom: -12,
+                child: Container(
+                  width: 66,
+                  height: 66,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: Colors.white.withValues(alpha: isDark ? 0.03 : 0.38),
                   ),
                 ),
               ),
-              const SizedBox(width: 8),
-              Expanded(
+              Padding(
+                padding: const EdgeInsets.all(13),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Container(
+                          width: 48,
+                          height: 48,
+                          decoration: BoxDecoration(
+                            color: isDark ? const Color(0xFF0F172A) : Colors.white,
+                            borderRadius: BorderRadius.circular(13),
+                            boxShadow: [
+                              BoxShadow(
+                                color: (isDark ? Colors.black : brandPrimary).withValues(alpha: 0.12),
+                                blurRadius: 6,
+                                offset: const Offset(0, 2),
+                              ),
+                            ],
+                          ),
+                          child: Icon(
+                            icon,
+                            size: 25,
+                            color: isDark ? const Color(0xFF38BDF8) : brandPrimary,
+                          ),
+                        ),
+                        Container(
+                          width: 26,
+                          height: 26,
+                          decoration: BoxDecoration(
+                            color: isDark
+                                ? const Color(0xFF0F172A)
+                                : Colors.white.withValues(alpha: 0.95),
+                            shape: BoxShape.circle,
+                            boxShadow: [
+                              BoxShadow(
+                                color: brandPrimary.withValues(alpha: 0.12),
+                                blurRadius: 4,
+                                offset: const Offset(0, 1),
+                              ),
+                            ],
+                          ),
+                          child: Icon(
+                            Icons.arrow_forward_rounded,
+                            size: 14,
+                            color: isDark ? const Color(0xFF38BDF8) : brandPrimary,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 11),
                     Text(
-                      name,
-                      maxLines: 1,
+                      title,
+                      maxLines: 2,
                       overflow: TextOverflow.ellipsis,
                       style: TextStyle(
-                        fontSize: 12.5,
+                        fontSize: 13,
                         fontWeight: FontWeight.bold,
+                        height: 1.22,
                         color: isDark ? Colors.white : const Color(0xFF0F172A),
                       ),
                     ),
-                    Text(
-                      specialty,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: TextStyle(
-                        fontSize: 10,
-                        color: isDark ? const Color(0xFF38BDF8) : const Color(0xFF0098B9),
-                        fontWeight: FontWeight.w600,
+                    const SizedBox(height: 4),
+                    Expanded(
+                      child: Text(
+                        description,
+                        maxLines: 3,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(
+                          fontSize: 11,
+                          height: 1.3,
+                          color: isDark ? const Color(0xFF94A3B8) : const Color(0xFF334155),
+                        ),
                       ),
                     ),
                   ],
@@ -1921,65 +1526,157 @@ class _HomePageState extends State<HomePage> {
               ),
             ],
           ),
-          const Spacer(),
-          Row(
+        ),
+      ),
+    );
+  }
+
+
+
+  // WIDGET HELPER: HORIZONTAL SERVICE CARD (FULL WIDTH)
+  Widget _horizontalServiceCard({
+    required IconData icon,
+    required String title,
+    required String description,
+    required bool isDark,
+    required VoidCallback onTap,
+  }) {
+    final Color borderColor = isDark ? const Color(0xFF1E3A5F) : const Color(0xFFBAE6FD);
+    final LinearGradient cardGradient = isDark
+        ? const LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [
+              Color(0xFF1E293B),
+              Color(0xFF0E2536),
+            ],
+          )
+        : const LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [
+              Color(0xFFEBF6FE),
+              Color(0xFFD4ECFC),
+            ],
+          );
+
+    return GestureDetector(
+      onTap: onTap,
+      behavior: HitTestBehavior.opaque,
+      child: Container(
+        decoration: BoxDecoration(
+          gradient: cardGradient,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(
+            color: borderColor,
+            width: 1.2,
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: (isDark ? const Color(0xFF38BDF8) : brandPrimary).withValues(alpha: 0.10),
+              blurRadius: 10,
+              offset: const Offset(0, 3),
+            ),
+          ],
+        ),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(16),
+          child: Stack(
             children: [
-              Icon(
-                Icons.work_outline_rounded,
-                size: 13,
-                color: isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B),
+              // Ornamen aksen lingkaran lembut di sudut kartu
+              Positioned(
+                right: -15,
+                bottom: -20,
+                child: Container(
+                  width: 80,
+                  height: 80,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: Colors.white.withValues(alpha: isDark ? 0.03 : 0.38),
+                  ),
+                ),
               ),
-              const SizedBox(width: 4),
-              Text(
-                experience,
-                style: TextStyle(
-                  fontSize: 10.5,
-                  color: isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
+                child: Row(
+                  children: [
+                    Container(
+                      width: 48,
+                      height: 48,
+                      decoration: BoxDecoration(
+                        color: isDark ? const Color(0xFF0F172A) : Colors.white,
+                        borderRadius: BorderRadius.circular(13),
+                        boxShadow: [
+                          BoxShadow(
+                            color: (isDark ? Colors.black : brandPrimary).withValues(alpha: 0.12),
+                            blurRadius: 6,
+                            offset: const Offset(0, 2),
+                          ),
+                        ],
+                      ),
+                      child: Icon(
+                        icon,
+                        size: 25,
+                        color: isDark ? const Color(0xFF38BDF8) : brandPrimary,
+                      ),
+                    ),
+                    const SizedBox(width: 14),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(
+                            title,
+                            style: TextStyle(
+                              fontSize: 14,
+                              fontWeight: FontWeight.bold,
+                              color: isDark ? Colors.white : const Color(0xFF0F172A),
+                            ),
+                          ),
+                          const SizedBox(height: 3),
+                          Text(
+                            description,
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                            style: TextStyle(
+                              fontSize: 11.5,
+                              height: 1.3,
+                              color: isDark ? const Color(0xFF94A3B8) : const Color(0xFF334155),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(width: 10),
+                    Container(
+                      width: 28,
+                      height: 28,
+                      decoration: BoxDecoration(
+                        color: isDark
+                            ? const Color(0xFF0F172A)
+                            : Colors.white.withValues(alpha: 0.95),
+                        shape: BoxShape.circle,
+                        boxShadow: [
+                          BoxShadow(
+                            color: brandPrimary.withValues(alpha: 0.12),
+                            blurRadius: 4,
+                            offset: const Offset(0, 1),
+                          ),
+                        ],
+                      ),
+                      child: Icon(
+                        Icons.arrow_forward_rounded,
+                        size: 15,
+                        color: isDark ? const Color(0xFF38BDF8) : brandPrimary,
+                      ),
+                    ),
+                  ],
                 ),
               ),
             ],
           ),
-          const SizedBox(height: 8),
-          SizedBox(
-            width: double.infinity,
-            height: 30,
-            child: ElevatedButton(
-              onPressed: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => DetailDokterPage(
-                      nama: name,
-                      spesialis: specialty,
-                      imagePath: photo,
-                      pengalaman: experience,
-                      sip: sip,
-                      lokasi: location,
-                      tentang: about,
-                      isOnline: isOnline,
-                    ),
-                  ),
-                );
-              },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFF0098B9),
-                foregroundColor: Colors.white,
-                elevation: 0,
-                padding: EdgeInsets.zero,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(8),
-                ),
-              ),
-              child: const Text(
-                'Konsultasi',
-                style: TextStyle(
-                  fontSize: 11.5,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-            ),
-          ),
-        ],
+        ),
       ),
     );
   }

@@ -10,12 +10,14 @@ class ChatItem {
   final String time;
   final bool isDoctor;
   final String? attachmentType;
+  final String? imagePath;
 
   ChatItem({
     required this.message,
     required this.time,
     required this.isDoctor,
     this.attachmentType,
+    this.imagePath,
   });
 }
 
@@ -50,10 +52,15 @@ class _KonsultasiDokterPageState
   @override
   void initState() {
     super.initState();
-    final profile = UserProfileService.instance.currentProfile;
-    final firstName = profile.nama.trim().isNotEmpty
-        ? profile.nama.trim().split(' ').first
-        : 'Pasien';
+    String firstName = 'Pasien';
+    try {
+      final profile = UserProfileService.instance.currentProfile;
+      if (profile.nama.trim().isNotEmpty) {
+        firstName = profile.nama.trim().split(' ').first;
+      }
+    } catch (_) {
+      firstName = 'Pasien';
+    }
     _messages = [
       ChatItem(
         message: "Halo $firstName, Selamat datang!\nAda yang bisa saya bantu?",
@@ -65,6 +72,12 @@ class _KonsultasiDokterPageState
             "Dok, saya tadi melakukan skrining,\nhasilnya risiko tinggi.\nApa yang harus saya lakukan?",
         time: "14.01",
         isDoctor: false,
+      ),
+      ChatItem(
+        message: "",
+        time: "14.01",
+        isDoctor: false,
+        imagePath: "assets/images/screening_jantung.png",
       ),
       ChatItem(
         message:
@@ -92,10 +105,9 @@ class _KonsultasiDokterPageState
   // WARNA SESUAI DESAIN
   // ==========================================================
 
-  static const Color primaryBlue = Color(0xFF079BC0);
-  static const Color lightBlue = Color(0xFFD0ECF4);
-  static const Color doctorBlue = Color(0xFF5BBBD4);
-  static const Color onlineGreen = Color(0xFF55C900);
+  static const Color primaryBlue = Color(0xFF0284C7);
+  static const Color lightBlue = Color(0xFFE0F2FE);
+  static const Color onlineGreen = Color(0xFF10B981);
 
   // ==========================================================
   // LOGIKA NAVIGASI KEMBALI KE BERANDA
@@ -395,7 +407,7 @@ class _KonsultasiDokterPageState
             }
           },
           child: Scaffold(
-            backgroundColor: isDark ? const Color(0xFF0F172A) : Colors.white,
+            backgroundColor: isDark ? const Color(0xFF0F172A) : const Color(0xFFF8FAFC),
 
             body: SafeArea(
               child: Column(
@@ -428,16 +440,16 @@ class _KonsultasiDokterPageState
                           width: 38,
                           height: 38,
                           decoration: BoxDecoration(
-                            color: isDark ? const Color(0xFF0F172A) : const Color(0xFFF1F1F1),
-                            shape: BoxShape.circle,
+                            color: isDark ? const Color(0xFF0F172A) : const Color(0xFFF1F5F9),
+                            borderRadius: BorderRadius.circular(12),
                           ),
                           child: IconButton(
                             padding: EdgeInsets.zero,
                             onPressed: _backToHome,
                             icon: Icon(
-                              Icons.chevron_left,
-                              size: 28,
-                              color: isDark ? Colors.white : Colors.black87,
+                              Icons.arrow_back_ios_new_rounded,
+                              size: 18,
+                              color: isDark ? Colors.white : const Color(0xFF0F172A),
                             ),
                           ),
                         ),
@@ -556,24 +568,36 @@ class _KonsultasiDokterPageState
                                   children: [
                                     Center(
                                       child: Container(
-                                        padding:
-                                            const EdgeInsets.symmetric(
-                                          horizontal: 12,
-                                          vertical: 5,
+                                        padding: const EdgeInsets.symmetric(
+                                          horizontal: 14,
+                                          vertical: 6,
                                         ),
                                         decoration: BoxDecoration(
-                                          color: isDark ? const Color(0xFF1E293B) : lightBlue,
-                                          borderRadius:
-                                              BorderRadius.circular(10),
-                                        ),
-                                        child: Text(
-                                          "Hari ini",
-                                          style: TextStyle(
-                                            fontSize: 11,
-                                            color: isDark ? const Color(0xFF38BDF8) : const Color(0xFF397A8A),
-                                            fontWeight:
-                                                FontWeight.w600,
+                                          color: isDark ? const Color(0xFF1E293B) : const Color(0xFFE0F2FE),
+                                          borderRadius: BorderRadius.circular(20),
+                                          border: Border.all(
+                                            color: isDark ? const Color(0xFF334155) : const Color(0xFFBAE6FD),
+                                            width: 1,
                                           ),
+                                        ),
+                                        child: Row(
+                                          mainAxisSize: MainAxisSize.min,
+                                          children: [
+                                            Icon(
+                                              Icons.calendar_today_rounded,
+                                              size: 12,
+                                              color: isDark ? const Color(0xFF38BDF8) : const Color(0xFF0284C7),
+                                            ),
+                                            const SizedBox(width: 6),
+                                            Text(
+                                              "Hari ini",
+                                              style: TextStyle(
+                                                fontSize: 11,
+                                                color: isDark ? const Color(0xFF38BDF8) : const Color(0xFF0284C7),
+                                                fontWeight: FontWeight.bold,
+                                              ),
+                                            ),
+                                          ],
                                         ),
                                       ),
                                     ),
@@ -589,17 +613,23 @@ class _KonsultasiDokterPageState
                                 return Padding(
                                   padding:
                                       const EdgeInsets.only(bottom: 16),
-                                  child: item.isDoctor
-                                      ? _doctorMessage(
-                                          item.message,
+                                  child: item.imagePath != null
+                                      ? _userImageMessage(
+                                          item.imagePath!,
                                           item.time,
                                           isDark,
                                         )
-                                      : _userMessage(
-                                          item.message,
-                                          item.time,
-                                          isDark,
-                                        ),
+                                      : (item.isDoctor
+                                          ? _doctorMessage(
+                                              item.message,
+                                              item.time,
+                                              isDark,
+                                            )
+                                          : _userMessage(
+                                              item.message,
+                                              item.time,
+                                              isDark,
+                                            )),
                                 );
                               }
 
@@ -617,25 +647,32 @@ class _KonsultasiDokterPageState
                                     ),
                                     const SizedBox(width: 8),
                                     Container(
-                                      padding:
-                                          const EdgeInsets.fromLTRB(
-                                        12,
-                                        9,
-                                        12,
-                                        9,
-                                      ),
+                                      padding: const EdgeInsets.fromLTRB(14, 10, 14, 10),
                                       decoration: BoxDecoration(
-                                        color: isDark ? const Color(0xFF1E293B) : const Color(0xFFE2E8F0),
-                                        borderRadius:
-                                            BorderRadius.circular(8),
+                                        color: isDark ? const Color(0xFF1E293B) : Colors.white,
+                                        borderRadius: const BorderRadius.only(
+                                          topLeft: Radius.circular(4),
+                                          topRight: Radius.circular(16),
+                                          bottomLeft: Radius.circular(16),
+                                          bottomRight: Radius.circular(16),
+                                        ),
+                                        border: Border.all(
+                                          color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0),
+                                        ),
+                                        boxShadow: [
+                                          BoxShadow(
+                                            color: Colors.black.withValues(alpha: isDark ? 0.2 : 0.03),
+                                            blurRadius: 6,
+                                            offset: const Offset(0, 2),
+                                          ),
+                                        ],
                                       ),
                                       child: Text(
                                         "${widget.doctorName} sedang mengetik...",
                                         style: TextStyle(
-                                          fontSize: 11.5,
-                                          fontStyle:
-                                              FontStyle.italic,
-                                          color: isDark ? const Color(0xFF94A3B8) : const Color(0xFF475569),
+                                          fontSize: 12,
+                                          fontStyle: FontStyle.italic,
+                                          color: isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B),
                                         ),
                                       ),
                                     ),
@@ -654,7 +691,7 @@ class _KonsultasiDokterPageState
                           padding: const EdgeInsets.fromLTRB(
                             14,
                             10,
-                            10,
+                            12,
                             10,
                           ),
                           decoration: BoxDecoration(
@@ -664,75 +701,83 @@ class _KonsultasiDokterPageState
                                 color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0),
                               ),
                             ),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withValues(alpha: isDark ? 0.2 : 0.03),
+                                blurRadius: 10,
+                                offset: const Offset(0, -3),
+                              ),
+                            ],
                           ),
                           child: Row(
                             children: [
-
                               Expanded(
                                 child: Container(
-                                  height: 42,
+                                  height: 44,
                                   decoration: BoxDecoration(
-                                    color: isDark ? const Color(0xFF0F172A) : Colors.white,
+                                    color: isDark ? const Color(0xFF0F172A) : const Color(0xFFF8FAFC),
                                     border: Border.all(
-                                      color: isDark ? const Color(0xFF334155) : const Color(0xFFCBD5E1),
+                                      color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0),
                                     ),
-                                    borderRadius:
-                                        BorderRadius.circular(22),
+                                    borderRadius: BorderRadius.circular(24),
                                   ),
                                   child: TextField(
-                                    controller:
-                                        messageController,
-                                    textInputAction:
-                                        TextInputAction.send,
-                                    onSubmitted: (_) =>
-                                        _sendMessage(),
+                                    controller: messageController,
+                                    textInputAction: TextInputAction.send,
+                                    onSubmitted: (_) => _sendMessage(),
                                     style: TextStyle(
                                       fontSize: 13.5,
                                       color: isDark ? Colors.white : const Color(0xFF0F172A),
                                     ),
                                     decoration: InputDecoration(
-                                      hintText:
-                                          "Ketik pesan....",
+                                      hintText: "Ketik pesan....",
                                       hintStyle: TextStyle(
                                         fontSize: 13.5,
                                         color: isDark ? const Color(0xFF64748B) : const Color(0xFF94A3B8),
                                       ),
                                       border: InputBorder.none,
-                                      contentPadding:
-                                          const EdgeInsets.symmetric(
+                                      contentPadding: const EdgeInsets.symmetric(
                                         horizontal: 16,
-                                        vertical: 10,
+                                        vertical: 12,
                                       ),
                                       suffixIcon: GestureDetector(
-                                        onTap:
-                                            _showAttachmentOptions,
+                                        onTap: _showAttachmentOptions,
                                         child: Icon(
                                           Icons.camera_alt_outlined,
                                           size: 22,
-                                          color: isDark ? const Color(0xFF94A3B8) : const Color(0xFF475569),
+                                          color: isDark ? const Color(0xFF94A3B8) : const Color(0xFF0284C7),
                                         ),
                                       ),
                                     ),
                                   ),
                                 ),
                               ),
-
                               const SizedBox(width: 8),
 
                               // TOMBOL KIRIM
                               Container(
-                                width: 40,
-                                height: 40,
-                                decoration:
-                                    const BoxDecoration(
-                                  color: primaryBlue,
+                                width: 44,
+                                height: 44,
+                                decoration: BoxDecoration(
+                                  gradient: const LinearGradient(
+                                    colors: [Color(0xFF0EA5E9), Color(0xFF0284C7)],
+                                    begin: Alignment.topLeft,
+                                    end: Alignment.bottomRight,
+                                  ),
                                   shape: BoxShape.circle,
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: const Color(0xFF0284C7).withValues(alpha: 0.35),
+                                      blurRadius: 8,
+                                      offset: const Offset(0, 3),
+                                    ),
+                                  ],
                                 ),
                                 child: IconButton(
                                   padding: EdgeInsets.zero,
                                   onPressed: _sendMessage,
                                   icon: const Icon(
-                                    Icons.send,
+                                    Icons.send_rounded,
                                     size: 20,
                                     color: Colors.white,
                                   ),
@@ -769,57 +814,60 @@ class _KonsultasiDokterPageState
     bool isDark,
   ) {
     return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
+      crossAxisAlignment: CrossAxisAlignment.end,
       children: [
-
         _doctorImage(
-          width: 28,
-          height: 28,
+          width: 32,
+          height: 32,
         ),
-
         const SizedBox(width: 8),
-
         Flexible(
           child: Container(
             constraints: BoxConstraints(
-              maxWidth: MediaQuery.of(context).size.width * 0.72,
+              maxWidth: MediaQuery.of(context).size.width * 0.74,
             ),
-            padding: const EdgeInsets.fromLTRB(
-              12,
-              9,
-              10,
-              6,
-            ),
+            padding: const EdgeInsets.fromLTRB(14, 12, 14, 8),
             decoration: BoxDecoration(
-              color: isDark ? const Color(0xFF1E293B) : const Color(0xFFE2E8F0),
-              borderRadius:
-                  BorderRadius.circular(8),
+              color: isDark ? const Color(0xFF1E293B) : Colors.white,
+              borderRadius: const BorderRadius.only(
+                topLeft: Radius.circular(4),
+                topRight: Radius.circular(18),
+                bottomLeft: Radius.circular(18),
+                bottomRight: Radius.circular(18),
+              ),
+              border: Border.all(
+                color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0),
+                width: 1,
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: isDark ? 0.2 : 0.04),
+                  blurRadius: 8,
+                  offset: const Offset(0, 2),
+                ),
+              ],
             ),
             child: Column(
-              crossAxisAlignment:
-                  CrossAxisAlignment.end,
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-
-                Align(
-                  alignment: Alignment.centerLeft,
-                  child: Text(
-                    message,
-                    style: TextStyle(
-                      fontSize: 13.5,
-                      height: 1.35,
-                      color: isDark ? Colors.white : const Color(0xFF0F172A),
-                    ),
+                Text(
+                  message,
+                  style: TextStyle(
+                    fontSize: 13.5,
+                    height: 1.45,
+                    color: isDark ? Colors.white : const Color(0xFF0F172A),
                   ),
                 ),
-
-                const SizedBox(height: 3),
-
-                Text(
-                  time,
-                  style: TextStyle(
-                    fontSize: 10,
-                    color: isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B),
-                    fontWeight: FontWeight.w500,
+                const SizedBox(height: 5),
+                Align(
+                  alignment: Alignment.bottomRight,
+                  child: Text(
+                    time,
+                    style: TextStyle(
+                      fontSize: 10,
+                      color: isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B),
+                      fontWeight: FontWeight.w500,
+                    ),
                   ),
                 ),
               ],
@@ -845,42 +893,185 @@ class _KonsultasiDokterPageState
         constraints: BoxConstraints(
           maxWidth: MediaQuery.of(context).size.width * 0.75,
         ),
-        padding: const EdgeInsets.fromLTRB(
-          12,
-          9,
-          10,
-          6,
-        ),
+        padding: const EdgeInsets.fromLTRB(14, 12, 14, 8),
         decoration: BoxDecoration(
-          color: isDark ? const Color(0xFF0284C7) : doctorBlue,
-          borderRadius:
-              BorderRadius.circular(8),
+          gradient: const LinearGradient(
+            colors: [Color(0xFF0EA5E9), Color(0xFF0284C7)],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
+          borderRadius: const BorderRadius.only(
+            topLeft: Radius.circular(18),
+            topRight: Radius.circular(18),
+            bottomLeft: Radius.circular(18),
+            bottomRight: Radius.circular(4),
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: const Color(0xFF0284C7).withValues(alpha: 0.28),
+              blurRadius: 10,
+              offset: const Offset(0, 3),
+            ),
+          ],
         ),
         child: Column(
-          crossAxisAlignment:
-              CrossAxisAlignment.end,
+          crossAxisAlignment: CrossAxisAlignment.end,
           children: [
-
             Align(
               alignment: Alignment.centerLeft,
               child: Text(
                 message,
-                style: TextStyle(
+                style: const TextStyle(
                   fontSize: 13.5,
-                  height: 1.35,
-                  color: isDark ? Colors.white : const Color(0xFF0F172A),
+                  height: 1.45,
+                  color: Colors.white,
+                  fontWeight: FontWeight.w400,
                 ),
               ),
             ),
+            const SizedBox(height: 5),
+            Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  time,
+                  style: TextStyle(
+                    fontSize: 10,
+                    color: Colors.white.withValues(alpha: 0.85),
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+                const SizedBox(width: 4),
+                Icon(
+                  Icons.done_all_rounded,
+                  size: 14,
+                  color: Colors.white.withValues(alpha: 0.85),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
 
-            const SizedBox(height: 3),
+  // ==========================================================
+  // PESAN GAMBAR USER
+  // ==========================================================
 
-            Text(
-              time,
-              style: TextStyle(
-                fontSize: 10,
-                color: isDark ? const Color(0xFFBAE6FD) : const Color(0xFF164E63),
-                fontWeight: FontWeight.w600,
+  Widget _userImageMessage(
+    String imagePath,
+    String time,
+    bool isDark,
+  ) {
+    return Align(
+      alignment: Alignment.centerRight,
+      child: Container(
+        constraints: BoxConstraints(
+          maxWidth: MediaQuery.of(context).size.width * 0.72,
+        ),
+        decoration: BoxDecoration(
+          color: isDark ? const Color(0xFF1E293B) : Colors.white,
+          borderRadius: const BorderRadius.only(
+            topLeft: Radius.circular(18),
+            topRight: Radius.circular(18),
+            bottomLeft: Radius.circular(18),
+            bottomRight: Radius.circular(4),
+          ),
+          border: Border.all(
+            color: isDark ? const Color(0xFF334155) : const Color(0xFFBAE6FD),
+            width: 1.5,
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: const Color(0xFF0284C7).withValues(alpha: isDark ? 0.2 : 0.12),
+              blurRadius: 10,
+              offset: const Offset(0, 3),
+            ),
+          ],
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.end,
+          children: [
+            // Header tag inside card
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+              decoration: BoxDecoration(
+                color: isDark ? const Color(0xFF0F172A) : const Color(0xFFF0F9FF),
+                borderRadius: const BorderRadius.only(
+                  topLeft: Radius.circular(16),
+                  topRight: Radius.circular(16),
+                ),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Icon(
+                    Icons.monitor_heart_rounded,
+                    size: 16,
+                    color: Color(0xFF0284C7),
+                  ),
+                  const SizedBox(width: 6),
+                  Text(
+                    "Lampiran Skrining AI",
+                    style: TextStyle(
+                      fontSize: 11.5,
+                      fontWeight: FontWeight.bold,
+                      color: isDark ? const Color(0xFF38BDF8) : const Color(0xFF0284C7),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            // Image Preview
+            Padding(
+              padding: const EdgeInsets.fromLTRB(10, 8, 10, 4),
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(12),
+                child: Container(
+                  color: isDark ? const Color(0xFF0F172A) : const Color(0xFFF8FAFC),
+                  child: Image.asset(
+                    imagePath,
+                    width: double.infinity,
+                    height: 180,
+                    fit: BoxFit.contain,
+                    errorBuilder: (context, error, stackTrace) {
+                      return Container(
+                        height: 140,
+                        color: isDark ? const Color(0xFF334155) : const Color(0xFFE0F2FE),
+                        alignment: Alignment.center,
+                        child: const Icon(
+                          Icons.image_outlined,
+                          color: Color(0xFF0284C7),
+                          size: 40,
+                        ),
+                      );
+                    },
+                  ),
+                ),
+              ),
+            ),
+            // Footer Timestamp & Status
+            Padding(
+              padding: const EdgeInsets.fromLTRB(12, 4, 12, 8),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    time,
+                    style: TextStyle(
+                      fontSize: 10,
+                      fontWeight: FontWeight.w500,
+                      color: isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B),
+                    ),
+                  ),
+                  const SizedBox(width: 4),
+                  const Icon(
+                    Icons.done_all_rounded,
+                    size: 14,
+                    color: Color(0xFF0284C7),
+                  ),
+                ],
               ),
             ),
           ],
@@ -906,13 +1097,27 @@ class _KonsultasiDokterPageState
       ),
       clipBehavior: Clip.antiAlias,
       child: Image.asset(
-        widget.doctorPhoto,
+        widget.doctorPhoto.isNotEmpty
+            ? widget.doctorPhoto
+            : "assets/images/dokter_nurlitta.png",
         fit: BoxFit.cover,
         errorBuilder: (context, error, stackTrace) {
-          return const Icon(
-            Icons.person,
-            color: Colors.grey,
-            size: 25,
+          return Image.asset(
+            "assets/images/dokter_nurlitta.png",
+            fit: BoxFit.cover,
+            errorBuilder: (context, error, stackTrace) {
+              return Image.asset(
+                "assets/images/profile_woman.png",
+                fit: BoxFit.cover,
+                errorBuilder: (context, error, stackTrace) {
+                  return Icon(
+                    Icons.person,
+                    color: Colors.grey,
+                    size: width * 0.6,
+                  );
+                },
+              );
+            },
           );
         },
       ),
@@ -1005,7 +1210,7 @@ class _KonsultasiDokterPageState
     bool active, {
     VoidCallback? onTap,
   }) {
-    final activeColor = isDark ? const Color(0xFF38BDF8) : const Color(0xFF087EFF);
+    final activeColor = isDark ? const Color(0xFF38BDF8) : const Color(0xFF1479F5);
     final inactiveColor = isDark ? const Color(0xFF64748B) : Colors.black87;
 
     return GestureDetector(
@@ -1029,7 +1234,7 @@ class _KonsultasiDokterPageState
             Text(
               text,
               style: TextStyle(
-                fontSize: 10.5,
+                fontSize: 9.5,
                 color: active ? activeColor : inactiveColor,
                 fontWeight: active
                     ? FontWeight.w600
@@ -1208,7 +1413,7 @@ class _KonsultasiDokterPageState
                                         Icons.calendar_today,
                                         size: 11,
                                         color:
-                                            Color(0xFF458B9A),
+                                            Color(0xFF0284C7),
                                       ),
                                       SizedBox(width: 4),
                                       Text(
@@ -1228,7 +1433,7 @@ class _KonsultasiDokterPageState
                                         Icons.access_time,
                                         size: 11,
                                         color:
-                                            Color(0xFF458B9A),
+                                            Color(0xFF0284C7),
                                       ),
                                       SizedBox(width: 4),
                                       Text(
@@ -1619,7 +1824,7 @@ class _KonsultasiDokterPageState
                                   Icons.calendar_today,
                                   size: 11,
                                   color:
-                                      Color(0xFF458B9A),
+                                      Color(0xFF0284C7),
                                 ),
                                 SizedBox(width: 4),
                                 Text(
@@ -1639,7 +1844,7 @@ class _KonsultasiDokterPageState
                                   Icons.access_time,
                                   size: 11,
                                   color:
-                                      Color(0xFF458B9A),
+                                      Color(0xFF0284C7),
                                 ),
                                 SizedBox(width: 4),
                                 Text(

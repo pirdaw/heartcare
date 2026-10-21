@@ -4,6 +4,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'profile_service.dart';
 
 class UserProfileData {
   String nama;
@@ -21,6 +22,9 @@ class UserProfileData {
   String penyakitDiderita;
   String riwayatOperasi;
 
+  // Foto Profil (bisa berupa path file lokal atau string data Base64)
+  String fotoProfil;
+
   UserProfileData({
     required this.nama,
     required this.email,
@@ -34,6 +38,7 @@ class UserProfileData {
     this.alergi = '',
     this.penyakitDiderita = '',
     this.riwayatOperasi = '',
+    this.fotoProfil = '',
   });
 
   Map<String, dynamic> toJson() => {
@@ -50,6 +55,7 @@ class UserProfileData {
         'alergi': alergi,
         'penyakitDiderita': penyakitDiderita,
         'riwayatOperasi': riwayatOperasi,
+        'fotoProfil': fotoProfil,
       };
 
   factory UserProfileData.fromJson(Map<String, dynamic> json) {
@@ -69,6 +75,11 @@ class UserProfileData {
         '';
     final resolvedTtl = rawTtl.isNotEmpty ? rawTtl : rawTanggalLahir;
 
+    final rawFoto = (json['fotoProfil'] as String?)?.trim() ??
+        (json['photoUrl'] as String?)?.trim() ??
+        (json['profileImage'] as String?)?.trim() ??
+        '';
+
     return UserProfileData(
       nama: resolvedNama,
       email: (json['email'] as String?)?.trim() ?? '',
@@ -84,6 +95,7 @@ class UserProfileData {
       alergi: (json['alergi'] as String?)?.trim() ?? '',
       penyakitDiderita: (json['penyakitDiderita'] as String?)?.trim() ?? '',
       riwayatOperasi: (json['riwayatOperasi'] as String?)?.trim() ?? '',
+      fotoProfil: rawFoto,
     );
   }
 
@@ -137,13 +149,15 @@ class UserProfileService extends ChangeNotifier {
   static UserProfileService get instance => _instance;
 
   String _getUserKey() {
-    final user = _auth.currentUser;
-    if (user != null && user.uid.isNotEmpty) {
-      return user.uid;
-    }
-    if (user != null && (user.email ?? '').isNotEmpty) {
-      return user.email!;
-    }
+    try {
+      final user = _auth.currentUser;
+      if (user != null && user.uid.isNotEmpty) {
+        return user.uid;
+      }
+      if (user != null && (user.email ?? '').isNotEmpty) {
+        return user.email!;
+      }
+    } catch (_) {}
     return 'guest_user';
   }
 
@@ -152,7 +166,10 @@ class UserProfileService extends ChangeNotifier {
   /// Field data pribadi & data kesehatan lainnya berstatus kosong (belum diisi) agar diisi sendiri.
   UserProfileData get currentProfile {
     final key = _getUserKey();
-    final user = _auth.currentUser;
+    User? user;
+    try {
+      user = _auth.currentUser;
+    } catch (_) {}
 
     if (user != null && user.uid.isNotEmpty && _subscribedUid != user.uid) {
       _subscribeToFirestore(user.uid);
@@ -170,16 +187,28 @@ class UserProfileService extends ChangeNotifier {
           : 'Pengguna';
     }
     if (name.isEmpty) {
-      name = 'Pengguna';
+      name = 'Nadea';
     }
 
     final email = user?.email ?? '';
     final phone = user?.phoneNumber ?? '';
 
     final newProfile = UserProfileData(
-      nama: name,
-      email: email,
-      telepon: phone,
+      nama: name.isNotEmpty && name != 'Pengguna'
+          ? (name == 'Nadea' ? 'Nadea Fieldzah Putri' : name)
+          : 'Nadea Fieldzah Putri',
+      email: email.isNotEmpty ? email : 'nadea123@gmail.com',
+      telepon: phone.isNotEmpty ? phone : '+62 123 456 799',
+      jenisKelamin: 'Perempuan',
+      ttl: 'Jakarta, 29 Februari 2004',
+      alamat: 'Jl. Merdeka No. 45, Jakarta Selatan',
+      golonganDarah: 'O',
+      tinggiBadan: '167 cm',
+      beratBadan: '51 kg',
+      alergi: 'Tidak Ada',
+      penyakitDiderita: 'Tidak Ada',
+      riwayatOperasi: 'Tidak Ada',
+      fotoProfil: '',
     );
 
     _cache[key] = newProfile;
@@ -217,6 +246,12 @@ class UserProfileService extends ChangeNotifier {
 
             _cache[uid] = loaded;
             _saveToPrefs(uid, loaded);
+
+            // Sinkronkan foto profil dengan ProfileService jika tersedia
+            if (loaded.fotoProfil.isNotEmpty) {
+              ProfileService.instance.syncFromProfile(loaded.fotoProfil);
+            }
+
             notifyListeners();
           } else {
             // Jika dokumen belum ada di Firestore, buat dokumen awal
@@ -254,6 +289,12 @@ class UserProfileService extends ChangeNotifier {
           loaded.email = user!.email!;
         }
         _cache[key] = loaded;
+
+        // Sinkronkan foto profil jika tersimpan di prefs
+        if (loaded.fotoProfil.isNotEmpty) {
+          ProfileService.instance.syncFromProfile(loaded.fotoProfil);
+        }
+
         notifyListeners();
       }
     } catch (_) {}
@@ -300,6 +341,12 @@ class UserProfileService extends ChangeNotifier {
     if (user != null && user.uid.isNotEmpty) {
       await _saveToFirestore(user.uid, profile);
     }
+  }
+
+  Future<void> updateFotoProfil(String fotoProfil) async {
+    final profile = currentProfile;
+    profile.fotoProfil = fotoProfil;
+    await saveProfile(profile);
   }
 
   Future<void> updateDataPribadi({
