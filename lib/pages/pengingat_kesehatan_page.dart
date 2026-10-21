@@ -203,16 +203,16 @@ class _PengingatKesehatanPageState extends State<PengingatKesehatanPage> {
               gradient: LinearGradient(
                 begin: Alignment.topCenter,
                 end: Alignment.bottomCenter,
-                stops: const [0.0, 0.45, 1.0],
+                stops: const [0.0, 0.35, 1.0],
                 colors: isDark
                     ? const [
-                        Color(0xFF1E293B),
+                        Color(0xFF11263C),
                         Color(0xFF131D2E),
                         Color(0xFF0F172A),
                       ]
                     : const [
-                        Color(0xFFE8F6FA),
-                        Color(0xFFF4FAFC),
+                        Color(0xFFDBF2F8),
+                        Color(0xFFEDF8FB),
                         Color(0xFFF8FAFC),
                       ],
               ),
@@ -347,69 +347,135 @@ class _PengingatKesehatanPageState extends State<PengingatKesehatanPage> {
   }
 
 
-  // Banner Biru Muda: Pengingat Hari Ini
+  // Banner Biru Muda: Pengingat Hari Ini dengan Gradasi Halus & Segar
   Widget _buildTopBannerCard(bool isDark) {
     final count = _controller.activeRemindersCount;
     final titleText = count > 0 ? '$count Pengingat Hari Ini' : 'Belum Ada Pengingat Hari Ini';
 
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
       decoration: BoxDecoration(
-        color: isDark ? const Color(0xFF0098B9).withValues(alpha: 0.25) : const Color(0xFFC7EBF4),
-        borderRadius: BorderRadius.circular(16),
-      ),
-      child: Row(
-        children: [
-          // Icon Obat / Medis Konsisten
-          Container(
-            width: 46,
-            height: 46,
-            decoration: BoxDecoration(
-              color: isDark ? const Color(0xFF1E293B) : Colors.white,
-              borderRadius: BorderRadius.circular(12),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withValues(alpha: isDark ? 0.2 : 0.04),
-                  blurRadius: 6,
-                  offset: const Offset(0, 2),
-                ),
-              ],
-            ),
-            child: const Center(
-              child: Icon(
-                Icons.medication_rounded,
-                color: PengingatKesehatanPage.primaryTeal,
-                size: 26,
+        gradient: isDark
+            ? const LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [
+                  Color(0xFF0C384B),
+                  Color(0xFF134E64),
+                  Color(0xFF0A2B3B),
+                ],
+              )
+            : const LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [
+                  Color(0xFFBAE8F5), // Soft fresh sky cyan
+                  Color(0xFFB4EBF2), // Gentle aqua
+                  Color(0xFFC5F2EC), // Soft mint-aqua
+                ],
+                stops: [0.0, 0.5, 1.0],
               ),
-            ),
-          ),
-          const SizedBox(width: 14),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  titleText,
-                  style: TextStyle(
-                    fontSize: 15,
-                    fontWeight: FontWeight.w700,
-                    color: isDark ? Colors.white : const Color(0xFF1E293B),
-                  ),
-                ),
-                const SizedBox(height: 3),
-                Text(
-                  'Jangan lewatkan pengingat minum obatmu.',
-                  style: TextStyle(
-                    fontSize: 11.5,
-                    color: isDark ? const Color(0xFFCBD5E1) : const Color(0xFF475569),
-                    fontWeight: FontWeight.w400,
-                  ),
-                ),
-              ],
-            ),
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(
+          color: isDark
+              ? const Color(0xFF0891B2).withValues(alpha: 0.45)
+              : const Color(0xFF8CD4E8),
+          width: 1.2,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: const Color(0xFF0098B9).withValues(alpha: isDark ? 0.3 : 0.12),
+            blurRadius: 14,
+            offset: const Offset(0, 4),
           ),
         ],
+      ),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(18),
+        child: Stack(
+          children: [
+            // Ambient soft decorative circles
+            Positioned(
+              right: -20,
+              top: -20,
+              child: Container(
+                width: 90,
+                height: 90,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: Colors.white.withValues(alpha: isDark ? 0.05 : 0.25),
+                ),
+              ),
+            ),
+            Positioned(
+              right: 40,
+              bottom: -25,
+              child: Container(
+                width: 70,
+                height: 70,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: Colors.white.withValues(alpha: isDark ? 0.04 : 0.16),
+                ),
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+              child: Row(
+                children: [
+                  // Icon Obat / Medis Konsisten
+                  Container(
+                    width: 46,
+                    height: 46,
+                    decoration: BoxDecoration(
+                      color: isDark ? const Color(0xFF1E293B) : Colors.white,
+                      borderRadius: BorderRadius.circular(12),
+                      boxShadow: [
+                        BoxShadow(
+                          color: const Color(0xFF007A99).withValues(alpha: isDark ? 0.25 : 0.12),
+                          blurRadius: 6,
+                          offset: const Offset(0, 2),
+                        ),
+                      ],
+                    ),
+                    child: const Center(
+                      child: Icon(
+                        Icons.medication_rounded,
+                        color: PengingatKesehatanPage.primaryTeal,
+                        size: 26,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 14),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          titleText,
+                          style: TextStyle(
+                            fontSize: 15,
+                            fontWeight: FontWeight.w700,
+                            color: isDark ? Colors.white : const Color(0xFF083344),
+                          ),
+                        ),
+                        const SizedBox(height: 3),
+                        Text(
+                          'Jangan lewatkan pengingat minum obatmu.',
+                          style: TextStyle(
+                            fontSize: 11.5,
+                            color: isDark ? const Color(0xFFCBD5E1) : const Color(0xFF164E63),
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -434,15 +500,28 @@ class _PengingatKesehatanPageState extends State<PengingatKesehatanPage> {
             color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0),
             width: 1,
           ),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: isDark ? 0.2 : 0.035),
+              blurRadius: 8,
+              offset: const Offset(0, 2),
+            ),
+          ],
         ),
         child: Row(
           children: [
-            // Icon Lingkaran Biru Lembut
+            // Icon Lingkaran Biru Lembut dengan Gradasi Elegan
             Container(
               width: 44,
               height: 44,
               decoration: BoxDecoration(
-                color: isDark ? const Color(0xFF0F172A) : const Color(0xFFE3F7FB),
+                gradient: LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: isDark
+                      ? const [Color(0xFF1E3A4B), Color(0xFF102836)]
+                      : const [Color(0xFFE3F7FB), Color(0xFFCEF1F8)],
+                ),
                 shape: BoxShape.circle,
               ),
               child: Center(child: iconWidget),
@@ -497,87 +576,155 @@ class _PengingatKesehatanPageState extends State<PengingatKesehatanPage> {
   Widget _buildNextReminderCard(bool isDark) {
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
       decoration: BoxDecoration(
-        color: isDark ? const Color(0xFF0098B9).withValues(alpha: 0.25) : const Color(0xFFC7EBF4),
-        borderRadius: BorderRadius.circular(16),
+        gradient: isDark
+            ? const LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [
+                  Color(0xFF0C384B),
+                  Color(0xFF134E64),
+                  Color(0xFF0A2B3B),
+                ],
+              )
+            : const LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [
+                  Color(0xFFBAE8F5),
+                  Color(0xFFB4EBF2),
+                  Color(0xFFC5F2EC),
+                ],
+                stops: [0.0, 0.5, 1.0],
+              ),
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(
+          color: isDark
+              ? const Color(0xFF0891B2).withValues(alpha: 0.45)
+              : const Color(0xFF8CD4E8),
+          width: 1.2,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: const Color(0xFF0098B9).withValues(alpha: isDark ? 0.3 : 0.12),
+            blurRadius: 14,
+            offset: const Offset(0, 4),
+          ),
+        ],
       ),
-      child: Row(
-        children: [
-          Container(
-            width: 44,
-            height: 44,
-            decoration: BoxDecoration(
-              color: isDark ? const Color(0xFF1E293B) : Colors.white.withValues(alpha: 0.9),
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: const Center(
-              child: Icon(
-                Icons.alarm_rounded,
-                color: PengingatKesehatanPage.primaryTeal,
-                size: 26,
-              ),
-            ),
-          ),
-          const SizedBox(width: 14),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'Pengingat Berikutnya',
-                  style: TextStyle(
-                    fontSize: 14.5,
-                    fontWeight: FontWeight.w700,
-                    color: isDark ? Colors.white : const Color(0xFF1E293B),
-                  ),
-                ),
-                const SizedBox(height: 2),
-                Text(
-                  _controller.nextReminderSummary,
-                  style: TextStyle(
-                    fontSize: 11.5,
-                    color: isDark ? const Color(0xFFCBD5E1) : const Color(0xFF475569),
-                    fontWeight: FontWeight.w400,
-                  ),
-                ),
-              ],
-            ),
-          ),
-          InkWell(
-            onTap: () => AlarmService.openAlarmApp(),
-            borderRadius: BorderRadius.circular(10),
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(10),
-                border: Border.all(
-                  color: PengingatKesehatanPage.primaryTeal.withValues(alpha: 0.3),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(18),
+        child: Stack(
+          children: [
+            Positioned(
+              right: -15,
+              top: -20,
+              child: Container(
+                width: 80,
+                height: 80,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: Colors.white.withValues(alpha: isDark ? 0.05 : 0.22),
                 ),
               ),
+            ),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
               child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: const [
-                  Icon(
-                    Icons.alarm_on_rounded,
-                    color: PengingatKesehatanPage.primaryTeal,
-                    size: 15,
+                children: [
+                  Container(
+                    width: 44,
+                    height: 44,
+                    decoration: BoxDecoration(
+                      color: isDark ? const Color(0xFF1E293B) : Colors.white,
+                      borderRadius: BorderRadius.circular(12),
+                      boxShadow: [
+                        BoxShadow(
+                          color: const Color(0xFF007A99).withValues(alpha: isDark ? 0.25 : 0.12),
+                          blurRadius: 6,
+                          offset: const Offset(0, 2),
+                        ),
+                      ],
+                    ),
+                    child: const Center(
+                      child: Icon(
+                        Icons.alarm_rounded,
+                        color: PengingatKesehatanPage.primaryTeal,
+                        size: 26,
+                      ),
+                    ),
                   ),
-                  SizedBox(width: 4),
-                  Text(
-                    'Jam HP',
-                    style: TextStyle(
-                      fontSize: 11,
-                      fontWeight: FontWeight.w700,
-                      color: PengingatKesehatanPage.primaryTeal,
+                  const SizedBox(width: 14),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Pengingat Berikutnya',
+                          style: TextStyle(
+                            fontSize: 14.5,
+                            fontWeight: FontWeight.w700,
+                            color: isDark ? Colors.white : const Color(0xFF083344),
+                          ),
+                        ),
+                        const SizedBox(height: 2),
+                        Text(
+                          _controller.nextReminderSummary,
+                          style: TextStyle(
+                            fontSize: 11.5,
+                            color: isDark ? const Color(0xFFCBD5E1) : const Color(0xFF164E63),
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  InkWell(
+                    onTap: () => AlarmService.openAlarmApp(),
+                    borderRadius: BorderRadius.circular(10),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 6.5),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(10),
+                        border: Border.all(
+                          color: PengingatKesehatanPage.primaryTeal.withValues(alpha: 0.35),
+                          width: 1.1,
+                        ),
+                        boxShadow: [
+                          BoxShadow(
+                            color: const Color(0xFF007A99).withValues(alpha: 0.08),
+                            blurRadius: 5,
+                            offset: const Offset(0, 2),
+                          ),
+                        ],
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: const [
+                          Icon(
+                            Icons.alarm_on_rounded,
+                            color: PengingatKesehatanPage.primaryTeal,
+                            size: 15,
+                          ),
+                          SizedBox(width: 4),
+                          Text(
+                            'Jam HP',
+                            style: TextStyle(
+                              fontSize: 11,
+                              fontWeight: FontWeight.w700,
+                              color: PengingatKesehatanPage.primaryTeal,
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
                   ),
                 ],
               ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -587,9 +734,29 @@ class _PengingatKesehatanPageState extends State<PengingatKesehatanPage> {
     return Container(
       width: double.infinity,
       decoration: BoxDecoration(
-        color: isDark ? const Color(0xFF1E293B) : const Color(0xFFF8FAFC),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0)),
+        gradient: isDark
+            ? null
+            : const LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [
+                  Color(0xFFFFFFFF),
+                  Color(0xFFF2FAFD),
+                ],
+              ),
+        color: isDark ? const Color(0xFF1E293B) : null,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(
+          color: isDark ? const Color(0xFF334155) : const Color(0xFFCFEAF2),
+          width: 1,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: const Color(0xFF0098B9).withValues(alpha: isDark ? 0.15 : 0.04),
+            blurRadius: 6,
+            offset: const Offset(0, 2),
+          ),
+        ],
       ),
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
       child: Row(
@@ -681,16 +848,16 @@ class TambahObatEmptyPage extends StatelessWidget {
               gradient: LinearGradient(
                 begin: Alignment.topCenter,
                 end: Alignment.bottomCenter,
-                stops: const [0.0, 0.45, 1.0],
+                stops: const [0.0, 0.35, 1.0],
                 colors: isDark
                     ? const [
-                        Color(0xFF1E293B),
+                        Color(0xFF11263C),
                         Color(0xFF131D2E),
                         Color(0xFF0F172A),
                       ]
                     : const [
-                        Color(0xFFE8F6FA),
-                        Color(0xFFF4FAFC),
+                        Color(0xFFDBF2F8),
+                        Color(0xFFEDF8FB),
                         Color(0xFFF8FAFC),
                       ],
               ),
@@ -763,9 +930,27 @@ class TambahObatEmptyPage extends StatelessWidget {
                   // Tombol "+ Tambah Obat"
                   Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-                    child: SizedBox(
+                    child: Container(
                       width: double.infinity,
                       height: 48,
+                      decoration: BoxDecoration(
+                        gradient: const LinearGradient(
+                          begin: Alignment.centerLeft,
+                          end: Alignment.centerRight,
+                          colors: [
+                            Color(0xFF0098B9),
+                            Color(0xFF0284C7),
+                          ],
+                        ),
+                        borderRadius: BorderRadius.circular(24),
+                        boxShadow: [
+                          BoxShadow(
+                            color: const Color(0xFF0098B9).withValues(alpha: 0.32),
+                            blurRadius: 10,
+                            offset: const Offset(0, 3),
+                          ),
+                        ],
+                      ),
                       child: ElevatedButton(
                         onPressed: () {
                           Navigator.push(
@@ -776,9 +961,9 @@ class TambahObatEmptyPage extends StatelessWidget {
                           );
                         },
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0xFF0098B9),
+                          backgroundColor: Colors.transparent,
+                          shadowColor: Colors.transparent,
                           foregroundColor: Colors.white,
-                          elevation: 0,
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(24),
                           ),
@@ -1106,16 +1291,16 @@ class _TambahObatFormPageState extends State<TambahObatFormPage> {
               gradient: LinearGradient(
                 begin: Alignment.topCenter,
                 end: Alignment.bottomCenter,
-                stops: const [0.0, 0.45, 1.0],
+                stops: const [0.0, 0.35, 1.0],
                 colors: isDark
                     ? const [
-                        Color(0xFF1E293B),
+                        Color(0xFF11263C),
                         Color(0xFF131D2E),
                         Color(0xFF0F172A),
                       ]
                     : const [
-                        Color(0xFFE8F6FA),
-                        Color(0xFFF4FAFC),
+                        Color(0xFFDBF2F8),
+                        Color(0xFFEDF8FB),
                         Color(0xFFF8FAFC),
                       ],
               ),
@@ -1155,8 +1340,33 @@ class _TambahObatFormPageState extends State<TambahObatFormPage> {
                       width: double.infinity,
                       height: 80,
                       decoration: BoxDecoration(
-                        color: const Color(0xFFE9F8FB),
+                        gradient: isDark
+                            ? const LinearGradient(
+                                colors: [Color(0xFF133246), Color(0xFF0E2536)],
+                              )
+                            : const LinearGradient(
+                                begin: Alignment.topLeft,
+                                end: Alignment.bottomRight,
+                                colors: [
+                                  Color(0xFFBAE8F5),
+                                  Color(0xFFB4EBF2),
+                                  Color(0xFFC5F2EC),
+                                ],
+                              ),
                         borderRadius: BorderRadius.circular(16),
+                        border: Border.all(
+                          color: isDark
+                              ? const Color(0xFF0891B2).withValues(alpha: 0.3)
+                              : const Color(0xFF8CD4E8),
+                          width: 1,
+                        ),
+                        boxShadow: [
+                          BoxShadow(
+                            color: const Color(0xFF0098B9).withValues(alpha: isDark ? 0.2 : 0.08),
+                            blurRadius: 8,
+                            offset: const Offset(0, 2),
+                          ),
+                        ],
                       ),
                       child: const Center(
                         child: MiniMedicineBannerIllustration(),
@@ -1392,15 +1602,33 @@ class _TambahObatFormPageState extends State<TambahObatFormPage> {
                     const SizedBox(height: 24),
 
                     // TOMBOL SIMPAN
-                    SizedBox(
+                    Container(
                       width: double.infinity,
                       height: 48,
+                      decoration: BoxDecoration(
+                        gradient: const LinearGradient(
+                          begin: Alignment.centerLeft,
+                          end: Alignment.centerRight,
+                          colors: [
+                            Color(0xFF0098B9),
+                            Color(0xFF0284C7),
+                          ],
+                        ),
+                        borderRadius: BorderRadius.circular(24),
+                        boxShadow: [
+                          BoxShadow(
+                            color: const Color(0xFF0098B9).withValues(alpha: 0.32),
+                            blurRadius: 10,
+                            offset: const Offset(0, 3),
+                          ),
+                        ],
+                      ),
                       child: ElevatedButton(
                         onPressed: _saveMedicine,
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0xFF0098B9),
+                          backgroundColor: Colors.transparent,
+                          shadowColor: Colors.transparent,
                           foregroundColor: Colors.white,
-                          elevation: 0,
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(24),
                           ),
@@ -1592,16 +1820,16 @@ class _DaftarObatPageState extends State<DaftarObatPage> {
               gradient: LinearGradient(
                 begin: Alignment.topCenter,
                 end: Alignment.bottomCenter,
-                stops: const [0.0, 0.45, 1.0],
+                stops: const [0.0, 0.35, 1.0],
                 colors: isDark
                     ? const [
-                        Color(0xFF1E293B),
+                        Color(0xFF11263C),
                         Color(0xFF131D2E),
                         Color(0xFF0F172A),
                       ]
                     : const [
-                        Color(0xFFE8F6FA),
-                        Color(0xFFF4FAFC),
+                        Color(0xFFDBF2F8),
+                        Color(0xFFEDF8FB),
                         Color(0xFFF8FAFC),
                       ],
               ),
@@ -1690,9 +1918,27 @@ class _DaftarObatPageState extends State<DaftarObatPage> {
                     child: Column(
                       children: [
                         // Tombol Simpan / Kembali
-                        SizedBox(
+                        Container(
                           width: double.infinity,
                           height: 48,
+                          decoration: BoxDecoration(
+                            gradient: const LinearGradient(
+                              begin: Alignment.centerLeft,
+                              end: Alignment.centerRight,
+                              colors: [
+                                Color(0xFF0098B9),
+                                Color(0xFF0284C7),
+                              ],
+                            ),
+                            borderRadius: BorderRadius.circular(24),
+                            boxShadow: [
+                              BoxShadow(
+                                color: const Color(0xFF0098B9).withValues(alpha: 0.32),
+                                blurRadius: 10,
+                                offset: const Offset(0, 3),
+                              ),
+                            ],
+                          ),
                           child: ElevatedButton(
                             onPressed: () {
                               ScaffoldMessenger.of(context).showSnackBar(
@@ -1707,9 +1953,9 @@ class _DaftarObatPageState extends State<DaftarObatPage> {
                               Navigator.popUntil(context, (route) => route.isFirst);
                             },
                             style: ElevatedButton.styleFrom(
-                              backgroundColor: const Color(0xFF0098B9),
+                              backgroundColor: Colors.transparent,
+                              shadowColor: Colors.transparent,
                               foregroundColor: Colors.white,
-                              elevation: 0,
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(24),
                               ),
@@ -1773,18 +2019,32 @@ class _DaftarObatPageState extends State<DaftarObatPage> {
         color: Colors.white,
         borderRadius: BorderRadius.circular(14),
         border: Border.all(
-          color: const Color(0xFFD1D5DB),
+          color: const Color(0xFFE2E8F0),
           width: 1,
         ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.035),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
       ),
       child: Row(
         children: [
-          // Ikon Kapsul Biru Putih
+          // Ikon Kapsul Biru Putih dengan Gradasi
           Container(
             width: 46,
             height: 46,
             decoration: BoxDecoration(
-              color: const Color(0xFFE9F8FB),
+              gradient: const LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [
+                  Color(0xFFE5F7FB),
+                  Color(0xFFCEF1F8),
+                ],
+              ),
               borderRadius: BorderRadius.circular(12),
             ),
             child: const Center(
@@ -1833,20 +2093,34 @@ class _DaftarObatPageState extends State<DaftarObatPage> {
         color: Colors.white,
         borderRadius: BorderRadius.circular(14),
         border: Border.all(
-          color: const Color(0xFFD1D5DB),
+          color: const Color(0xFFE2E8F0),
           width: 1,
         ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.035),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
       ),
       child: Column(
         children: [
           Row(
             children: [
-              // Ikon Jam
+              // Ikon Jam dengan Gradasi
               Container(
                 width: 46,
                 height: 46,
                 decoration: BoxDecoration(
-                  color: const Color(0xFFE0F7FA),
+                  gradient: const LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    colors: [
+                      Color(0xFFE0F7FA),
+                      Color(0xFFCEF1F8),
+                    ],
+                  ),
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: const Center(
@@ -2002,18 +2276,32 @@ class _DaftarObatPageState extends State<DaftarObatPage> {
         color: Colors.white,
         borderRadius: BorderRadius.circular(14),
         border: Border.all(
-          color: const Color(0xFFD1D5DB),
+          color: const Color(0xFFE2E8F0),
           width: 1,
         ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.035),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
       ),
       child: Row(
         children: [
-          // Ikon Catatan & Pensil
+          // Ikon Catatan & Pensil dengan Gradasi Lembut
           Container(
             width: 46,
             height: 46,
             decoration: BoxDecoration(
-              color: const Color(0xFFF1F5F9),
+              gradient: const LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [
+                  Color(0xFFF1F5F9),
+                  Color(0xFFE2E8F0),
+                ],
+              ),
               borderRadius: BorderRadius.circular(12),
             ),
             child: const Center(
@@ -2168,10 +2456,28 @@ void showMedicineReminderDialog(
 
               const SizedBox(height: 22),
 
-              // Tombol "Sudah Minum" (Cyan)
-              SizedBox(
+              // Tombol "Sudah Minum" (Cyan Gradient)
+              Container(
                 width: double.infinity,
                 height: 44,
+                decoration: BoxDecoration(
+                  gradient: const LinearGradient(
+                    begin: Alignment.centerLeft,
+                    end: Alignment.centerRight,
+                    colors: [
+                      Color(0xFF0098B9),
+                      Color(0xFF0284C7),
+                    ],
+                  ),
+                  borderRadius: BorderRadius.circular(12),
+                  boxShadow: [
+                    BoxShadow(
+                      color: const Color(0xFF0098B9).withValues(alpha: 0.28),
+                      blurRadius: 8,
+                      offset: const Offset(0, 3),
+                    ),
+                  ],
+                ),
                 child: ElevatedButton(
                   onPressed: () {
                     HealthReminderController().markAsTaken(reminder.id);
@@ -2187,9 +2493,9 @@ void showMedicineReminderDialog(
                     );
                   },
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF0098B9),
+                    backgroundColor: Colors.transparent,
+                    shadowColor: Colors.transparent,
                     foregroundColor: Colors.white,
-                    elevation: 0,
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(12),
                     ),
@@ -2206,7 +2512,7 @@ void showMedicineReminderDialog(
 
               const SizedBox(height: 10),
 
-              // Tombol "Tunda" (Biru Muda)
+              // Tombol "Tunda" (Soft Aqua Tint)
               SizedBox(
                 width: double.infinity,
                 height: 44,
@@ -2223,11 +2529,15 @@ void showMedicineReminderDialog(
                     );
                   },
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFFC7EBF4),
+                    backgroundColor: const Color(0xFFDEF4FA),
                     foregroundColor: const Color(0xFF0098B9),
                     elevation: 0,
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(12),
+                      side: const BorderSide(
+                        color: Color(0xFF8CD4E8),
+                        width: 1,
+                      ),
                     ),
                   ),
                   child: const Text(
