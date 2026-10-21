@@ -275,9 +275,8 @@ class _LoginPageState extends State<LoginPage> {
                                 onTap: () {
                                   setState(() {
                                     _isDoctorMode = true;
-                                    emailController.text =
-                                        'dokter.andi@heartcare.com';
-                                    passwordController.text = 'dokter123';
+                                    emailController.clear();
+                                    passwordController.clear();
                                   });
                                 },
                                 borderRadius: BorderRadius.circular(9),
@@ -316,68 +315,15 @@ class _LoginPageState extends State<LoginPage> {
                         ),
                       ),
 
-                      if (_isDoctorMode) ...[
-                        const SizedBox(height: 16),
-                        const Text(
-                          'Pilih Cepat Akun Dokter:',
-                          style: TextStyle(
-                            fontSize: 12,
-                            fontWeight: FontWeight.bold,
-                            color: Color(0xFF0284C7),
-                          ),
-                        ),
-                        const SizedBox(height: 8),
-                        SingleChildScrollView(
-                          scrollDirection: Axis.horizontal,
-                          child: Row(
-                            children: AuthService.predefinedDoctors.map((doc) {
-                              final isSelected =
-                                  emailController.text.toLowerCase() ==
-                                      doc['email']?.toLowerCase();
-                              return Padding(
-                                padding: const EdgeInsets.only(right: 8),
-                                child: ChoiceChip(
-                                  label: Text(
-                                    doc['nama'] ?? '',
-                                    style: TextStyle(
-                                      fontSize: 11.5,
-                                      fontWeight: isSelected
-                                          ? FontWeight.bold
-                                          : FontWeight.normal,
-                                      color: isSelected
-                                          ? Colors.white
-                                          : const Color(0xFF0F172A),
-                                    ),
-                                  ),
-                                  selected: isSelected,
-                                  selectedColor: const Color(0xFF0284C7),
-                                  backgroundColor: const Color(0xFFE0F2FE),
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(20),
-                                  ),
-                                  onSelected: (_) {
-                                    setState(() {
-                                      emailController.text = doc['email']!;
-                                      passwordController.text =
-                                          doc['password']!;
-                                    });
-                                  },
-                                ),
-                              );
-                            }).toList(),
-                          ),
-                        ),
-                      ],
-
-                      const SizedBox(height: 24),
+                      const SizedBox(height: 28),
 
                       // ==========================================
                       // EMAIL / NO HP
                       // ==========================================
 
-                      const Text(
-                        'Email atau No. HP',
-                        style: TextStyle(
+                      Text(
+                        _isDoctorMode ? 'Email Dokter' : 'Email atau No. HP',
+                        style: const TextStyle(
                           fontSize: 14,
                           fontWeight: FontWeight.w600,
                           color: Colors.black,
@@ -398,8 +344,9 @@ class _LoginPageState extends State<LoginPage> {
                             color: Colors.black,
                           ),
                           decoration: InputDecoration(
-                            hintText:
-                                'Masukkan email atau no. HP',
+                            hintText: _isDoctorMode
+                                ? 'Masukkan email dokter Anda'
+                                : 'Masukkan email atau no. HP',
                             hintStyle: const TextStyle(
                               fontSize: 14,
                               color: Colors.grey,
@@ -608,8 +555,10 @@ class _LoginPageState extends State<LoginPage> {
                               color: Colors.black,
                             ),
                             children: [
-                              const TextSpan(
-                                text: 'Belum punya akun? ',
+                              TextSpan(
+                                text: _isDoctorMode
+                                    ? 'Belum punya akun dokter? '
+                                    : 'Belum punya akun? ',
                               ),
 
                               WidgetSpan(
@@ -618,19 +567,22 @@ class _LoginPageState extends State<LoginPage> {
                                     Navigator.push(
                                       context,
                                       MaterialPageRoute(
-                                        builder: (context) =>
-                                            const SignupPage(),
+                                        builder: (context) => SignupPage(
+                                          initialRole: _isDoctorMode
+                                              ? 'doctor'
+                                              : 'patient',
+                                        ),
                                       ),
                                     );
                                   },
-                                  child: const Text(
-                                    'Daftar di sini',
-                                    style: TextStyle(
+                                  child: Text(
+                                    _isDoctorMode
+                                        ? 'Daftar Akun Dokter'
+                                        : 'Daftar di sini',
+                                    style: const TextStyle(
                                       fontSize: 13,
-                                      color:
-                                          Color(0xFF0077CC),
-                                      fontWeight:
-                                          FontWeight.w600,
+                                      color: Color(0xFF0077CC),
+                                      fontWeight: FontWeight.w600,
                                     ),
                                   ),
                                 ),

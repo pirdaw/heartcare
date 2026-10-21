@@ -309,7 +309,8 @@ class ChatService {
   }
 
   /// Real-time stream daftar chat untuk dokter tertentu (inbox dokter)
-  Stream<List<ChatRoom>> getDoctorChatsStream(String doctorName) {
+  Stream<List<ChatRoom>> getDoctorChatsStream(String doctorName,
+      {String? doctorId}) {
     return _firestore
         .collection('chats')
         .snapshots()
@@ -317,6 +318,11 @@ class ChatService {
       final list = snapshot.docs
           .map((doc) => ChatRoom.fromFirestore(doc))
           .where((room) {
+        if (doctorId != null &&
+            doctorId.isNotEmpty &&
+            room.doctorId == doctorId) {
+          return true;
+        }
         final dName = room.doctorName.toLowerCase();
         final target = doctorName.toLowerCase();
         return dName.contains(target) || target.contains(dName);

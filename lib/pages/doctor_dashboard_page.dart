@@ -71,7 +71,8 @@ class _DoctorDashboardPageState extends State<DoctorDashboardPage> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('Batal', style: TextStyle(color: Color(0xFF64748B))),
+            child:
+                const Text('Batal', style: TextStyle(color: Color(0xFF64748B))),
           ),
           ElevatedButton(
             onPressed: () async {
@@ -97,6 +98,25 @@ class _DoctorDashboardPageState extends State<DoctorDashboardPage> {
     );
   }
 
+  Widget _buildDoctorAvatarImage(String photo) {
+    if (photo.startsWith('assets/')) {
+      return Image.asset(
+        photo,
+        fit: BoxFit.cover,
+        errorBuilder: (context, error, stackTrace) => const Icon(
+          Icons.medical_services_rounded,
+          size: 32,
+          color: Colors.white,
+        ),
+      );
+    }
+    return const Icon(
+      Icons.person_rounded,
+      size: 36,
+      color: Colors.white,
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final isDark = ThemeService.isDarkMode;
@@ -106,6 +126,7 @@ class _DoctorDashboardPageState extends State<DoctorDashboardPage> {
     final doctorPhoto =
         _doctorProfile?['foto'] ?? 'assets/images/dokter_nurlitta.jpg';
     final doctorSip = _doctorProfile?['sip'] ?? '1823/SIP/2021';
+    final doctorUid = _doctorProfile?['uid'];
 
     return Scaffold(
       backgroundColor:
@@ -114,16 +135,21 @@ class _DoctorDashboardPageState extends State<DoctorDashboardPage> {
         backgroundColor:
             isDark ? const Color(0xFF1E293B) : const Color(0xFF0284C7),
         elevation: 0,
+        titleSpacing: 16,
         title: const Row(
+          mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(Icons.health_and_safety_rounded, color: Colors.white, size: 22),
+            Icon(Icons.health_and_safety_rounded, color: Colors.white, size: 20),
             SizedBox(width: 8),
-            Text(
-              'Portal Dokter HeartCare',
-              style: TextStyle(
-                color: Colors.white,
-                fontWeight: FontWeight.bold,
-                fontSize: 18,
+            Flexible(
+              child: Text(
+                'Portal Dokter',
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 17,
+                ),
               ),
             ),
           ],
@@ -152,13 +178,14 @@ class _DoctorDashboardPageState extends State<DoctorDashboardPage> {
               onRefresh: _loadDoctorProfile,
               child: SingleChildScrollView(
                 physics: const AlwaysScrollableScrollPhysics(),
-                padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 16),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     // KARTU PROFIL DOKTER
                     Container(
-                      padding: const EdgeInsets.all(18),
+                      padding: const EdgeInsets.all(16),
                       decoration: BoxDecoration(
                         gradient: LinearGradient(
                           begin: Alignment.topLeft,
@@ -167,12 +194,12 @@ class _DoctorDashboardPageState extends State<DoctorDashboardPage> {
                               ? const [Color(0xFF1E293B), Color(0xFF0F172A)]
                               : const [Color(0xFF0284C7), Color(0xFF0369A1)],
                         ),
-                        borderRadius: BorderRadius.circular(20),
+                        borderRadius: BorderRadius.circular(18),
                         boxShadow: [
                           BoxShadow(
-                            color: const Color(0xFF0284C7).withValues(alpha: 0.35),
-                            blurRadius: 14,
-                            offset: const Offset(0, 5),
+                            color: const Color(0xFF0284C7).withValues(alpha: 0.3),
+                            blurRadius: 12,
+                            offset: const Offset(0, 4),
                           ),
                         ],
                       ),
@@ -184,34 +211,26 @@ class _DoctorDashboardPageState extends State<DoctorDashboardPage> {
                               Stack(
                                 children: [
                                   Container(
-                                    width: 68,
-                                    height: 68,
+                                    width: 62,
+                                    height: 62,
                                     decoration: BoxDecoration(
                                       shape: BoxShape.circle,
+                                      color: const Color(0xFF0369A1),
                                       border: Border.all(
                                         color: Colors.white,
-                                        width: 2.5,
+                                        width: 2.2,
                                       ),
                                     ),
                                     clipBehavior: Clip.antiAlias,
-                                    child: Image.asset(
-                                      doctorPhoto,
-                                      fit: BoxFit.cover,
-                                      errorBuilder: (context, error, stackTrace) {
-                                        return const Icon(
-                                          Icons.person,
-                                          size: 40,
-                                          color: Colors.white,
-                                        );
-                                      },
-                                    ),
+                                    child:
+                                        _buildDoctorAvatarImage(doctorPhoto),
                                   ),
                                   Positioned(
-                                    right: 2,
-                                    bottom: 2,
+                                    right: 1,
+                                    bottom: 1,
                                     child: Container(
-                                      width: 16,
-                                      height: 16,
+                                      width: 15,
+                                      height: 15,
                                       decoration: BoxDecoration(
                                         color: _isOnline
                                             ? const Color(0xFF10B981)
@@ -226,15 +245,17 @@ class _DoctorDashboardPageState extends State<DoctorDashboardPage> {
                                   ),
                                 ],
                               ),
-                              const SizedBox(width: 14),
+                              const SizedBox(width: 12),
                               Expanded(
                                 child: Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
                                     Text(
                                       doctorName,
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
                                       style: const TextStyle(
-                                        fontSize: 17,
+                                        fontSize: 16,
                                         fontWeight: FontWeight.bold,
                                         color: Colors.white,
                                       ),
@@ -242,14 +263,18 @@ class _DoctorDashboardPageState extends State<DoctorDashboardPage> {
                                     const SizedBox(height: 3),
                                     Text(
                                       doctorSpecialty,
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
                                       style: const TextStyle(
-                                        fontSize: 12.5,
+                                        fontSize: 12,
                                         color: Color(0xFFE0F2FE),
                                       ),
                                     ),
                                     const SizedBox(height: 2),
                                     Text(
                                       "SIP: $doctorSip",
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
                                       style: const TextStyle(
                                         fontSize: 11,
                                         color: Color(0xFFBAE6FD),
@@ -260,43 +285,51 @@ class _DoctorDashboardPageState extends State<DoctorDashboardPage> {
                               ),
                             ],
                           ),
-                          const SizedBox(height: 14),
-                          const Divider(color: Colors.white24, height: 1),
                           const SizedBox(height: 12),
+                          const Divider(color: Colors.white24, height: 1),
+                          const SizedBox(height: 10),
                           Row(
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
-                              Row(
-                                children: [
-                                  Icon(
-                                    _isOnline
-                                        ? Icons.check_circle_rounded
-                                        : Icons.pause_circle_filled_rounded,
-                                    color: _isOnline
-                                        ? const Color(0xFF4ADE80)
-                                        : const Color(0xFFCBD5E1),
-                                    size: 18,
-                                  ),
-                                  const SizedBox(width: 6),
-                                  Text(
-                                    _isOnline
-                                        ? "Status: Siap Konsultasi"
-                                        : "Status: Sedang Offline",
-                                    style: const TextStyle(
-                                      color: Colors.white,
-                                      fontSize: 12.5,
-                                      fontWeight: FontWeight.w600,
+                              Expanded(
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Icon(
+                                      _isOnline
+                                          ? Icons.check_circle_rounded
+                                          : Icons.pause_circle_filled_rounded,
+                                      color: _isOnline
+                                          ? const Color(0xFF4ADE80)
+                                          : const Color(0xFFCBD5E1),
+                                      size: 16,
                                     ),
-                                  ),
-                                ],
+                                    const SizedBox(width: 6),
+                                    Flexible(
+                                      child: Text(
+                                        _isOnline
+                                            ? "Siap Konsultasi"
+                                            : "Sedang Offline",
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
+                                        style: const TextStyle(
+                                          color: Colors.white,
+                                          fontSize: 12,
+                                          fontWeight: FontWeight.w600,
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ),
                               ),
+                              const SizedBox(width: 8),
                               InkWell(
                                 onTap: _toggleOnlineStatus,
                                 borderRadius: BorderRadius.circular(20),
                                 child: Container(
                                   padding: const EdgeInsets.symmetric(
-                                    horizontal: 12,
-                                    vertical: 6,
+                                    horizontal: 10,
+                                    vertical: 5,
                                   ),
                                   decoration: BoxDecoration(
                                     color: Colors.white.withValues(alpha: 0.18),
@@ -307,10 +340,10 @@ class _DoctorDashboardPageState extends State<DoctorDashboardPage> {
                                     ),
                                   ),
                                   child: Text(
-                                    _isOnline ? "Ubah ke Offline" : "Online-kan",
+                                    _isOnline ? "Ubah Offline" : "Online-kan",
                                     style: const TextStyle(
                                       color: Colors.white,
-                                      fontSize: 11.5,
+                                      fontSize: 11,
                                       fontWeight: FontWeight.bold,
                                     ),
                                   ),
@@ -322,7 +355,7 @@ class _DoctorDashboardPageState extends State<DoctorDashboardPage> {
                       ),
                     ),
 
-                    const SizedBox(height: 20),
+                    const SizedBox(height: 16),
 
                     // STATISTIK KILAT
                     Row(
@@ -336,7 +369,7 @@ class _DoctorDashboardPageState extends State<DoctorDashboardPage> {
                             value: 'Real-Time',
                           ),
                         ),
-                        const SizedBox(width: 12),
+                        const SizedBox(width: 10),
                         Expanded(
                           child: _statCard(
                             isDark: isDark,
@@ -349,35 +382,43 @@ class _DoctorDashboardPageState extends State<DoctorDashboardPage> {
                       ],
                     ),
 
-                    const SizedBox(height: 24),
+                    const SizedBox(height: 20),
 
                     // JUDUL DAFTAR CHAT PASIEN
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        Row(
-                          children: [
-                            Container(
-                              width: 4,
-                              height: 18,
-                              decoration: BoxDecoration(
-                                color: const Color(0xFF0284C7),
-                                borderRadius: BorderRadius.circular(2),
+                        Expanded(
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Container(
+                                width: 4,
+                                height: 16,
+                                decoration: BoxDecoration(
+                                  color: const Color(0xFF0284C7),
+                                  borderRadius: BorderRadius.circular(2),
+                                ),
                               ),
-                            ),
-                            const SizedBox(width: 8),
-                            Text(
-                              "Konsultasi Pasien (Real-Time)",
-                              style: TextStyle(
-                                fontSize: 16,
-                                fontWeight: FontWeight.bold,
-                                color: isDark
-                                    ? Colors.white
-                                    : const Color(0xFF0F172A),
+                              const SizedBox(width: 8),
+                              Flexible(
+                                child: Text(
+                                  "Konsultasi Pasien",
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: TextStyle(
+                                    fontSize: 15,
+                                    fontWeight: FontWeight.bold,
+                                    color: isDark
+                                        ? Colors.white
+                                        : const Color(0xFF0F172A),
+                                  ),
+                                ),
                               ),
-                            ),
-                          ],
+                            ],
+                          ),
                         ),
+                        const SizedBox(width: 8),
                         Container(
                           padding: const EdgeInsets.symmetric(
                             horizontal: 8,
@@ -388,18 +429,19 @@ class _DoctorDashboardPageState extends State<DoctorDashboardPage> {
                             borderRadius: BorderRadius.circular(8),
                           ),
                           child: const Row(
+                            mainAxisSize: MainAxisSize.min,
                             children: [
                               Icon(
                                 Icons.fiber_manual_record_rounded,
                                 color: Color(0xFF10B981),
-                                size: 10,
+                                size: 8,
                               ),
                               SizedBox(width: 4),
                               Text(
                                 "Live Stream",
                                 style: TextStyle(
                                   color: Color(0xFF10B981),
-                                  fontSize: 11,
+                                  fontSize: 10.5,
                                   fontWeight: FontWeight.bold,
                                 ),
                               ),
@@ -413,9 +455,13 @@ class _DoctorDashboardPageState extends State<DoctorDashboardPage> {
 
                     // STREAM DAFTAR CHAT PASIEN
                     StreamBuilder<List<ChatRoom>>(
-                      stream: ChatService.instance.getDoctorChatsStream(doctorName),
+                      stream: ChatService.instance.getDoctorChatsStream(
+                        doctorName,
+                        doctorId: doctorUid,
+                      ),
                       builder: (context, snapshot) {
-                        if (snapshot.connectionState == ConnectionState.waiting) {
+                        if (snapshot.connectionState ==
+                            ConnectionState.waiting) {
                           return const Padding(
                             padding: EdgeInsets.symmetric(vertical: 40),
                             child: Center(child: CircularProgressIndicator()),
@@ -429,7 +475,7 @@ class _DoctorDashboardPageState extends State<DoctorDashboardPage> {
                             width: double.infinity,
                             padding: const EdgeInsets.symmetric(
                               horizontal: 20,
-                              vertical: 36,
+                              vertical: 32,
                             ),
                             decoration: BoxDecoration(
                               color: isDark
@@ -446,34 +492,34 @@ class _DoctorDashboardPageState extends State<DoctorDashboardPage> {
                               mainAxisAlignment: MainAxisAlignment.center,
                               children: [
                                 Container(
-                                  padding: const EdgeInsets.all(16),
-                                  decoration: BoxDecoration(
-                                    color: const Color(0xFFE0F2FE),
+                                  padding: const EdgeInsets.all(14),
+                                  decoration: const BoxDecoration(
+                                    color: Color(0xFFE0F2FE),
                                     shape: BoxShape.circle,
                                   ),
                                   child: const Icon(
                                     Icons.chat_bubble_outline_rounded,
-                                    size: 36,
+                                    size: 32,
                                     color: Color(0xFF0284C7),
                                   ),
                                 ),
-                                const SizedBox(height: 14),
+                                const SizedBox(height: 12),
                                 Text(
                                   "Belum Ada Konsultasi Pasien",
                                   style: TextStyle(
-                                    fontSize: 15,
+                                    fontSize: 14.5,
                                     fontWeight: FontWeight.bold,
                                     color: isDark
                                         ? Colors.white
                                         : const Color(0xFF0F172A),
                                   ),
                                 ),
-                                const SizedBox(height: 6),
+                                const SizedBox(height: 5),
                                 Text(
                                   "Saat pasien memilih $doctorName dan mengirim pesan, ruang konsultasi real-time akan langsung muncul di sini.",
                                   textAlign: TextAlign.center,
                                   style: TextStyle(
-                                    fontSize: 12.5,
+                                    fontSize: 12,
                                     color: isDark
                                         ? const Color(0xFF94A3B8)
                                         : const Color(0xFF64748B),
@@ -524,21 +570,21 @@ class _DoctorDashboardPageState extends State<DoctorDashboardPage> {
                               child: ListTile(
                                 contentPadding: const EdgeInsets.symmetric(
                                   horizontal: 14,
-                                  vertical: 8,
+                                  vertical: 6,
                                 ),
                                 leading: Stack(
                                   children: [
                                     Container(
-                                      width: 48,
-                                      height: 48,
-                                      decoration: BoxDecoration(
-                                        color: const Color(0xFFE0F2FE),
+                                      width: 44,
+                                      height: 44,
+                                      decoration: const BoxDecoration(
+                                        color: Color(0xFFE0F2FE),
                                         shape: BoxShape.circle,
                                       ),
                                       child: const Icon(
                                         Icons.person_rounded,
                                         color: Color(0xFF0284C7),
-                                        size: 28,
+                                        size: 26,
                                       ),
                                     ),
                                     if (hasUnread)
@@ -546,8 +592,8 @@ class _DoctorDashboardPageState extends State<DoctorDashboardPage> {
                                         right: 0,
                                         top: 0,
                                         child: Container(
-                                          width: 12,
-                                          height: 12,
+                                          width: 11,
+                                          height: 11,
                                           decoration: BoxDecoration(
                                             color: const Color(0xFFEF4444),
                                             shape: BoxShape.circle,
@@ -571,13 +617,14 @@ class _DoctorDashboardPageState extends State<DoctorDashboardPage> {
                                         overflow: TextOverflow.ellipsis,
                                         style: TextStyle(
                                           fontWeight: FontWeight.bold,
-                                          fontSize: 14.5,
+                                          fontSize: 14,
                                           color: isDark
                                               ? Colors.white
                                               : const Color(0xFF0F172A),
                                         ),
                                       ),
                                     ),
+                                    const SizedBox(width: 6),
                                     Text(
                                       timeStr,
                                       style: TextStyle(
@@ -593,7 +640,7 @@ class _DoctorDashboardPageState extends State<DoctorDashboardPage> {
                                   ],
                                 ),
                                 subtitle: Padding(
-                                  padding: const EdgeInsets.only(top: 4),
+                                  padding: const EdgeInsets.only(top: 3),
                                   child: Row(
                                     children: [
                                       Expanded(
@@ -602,7 +649,7 @@ class _DoctorDashboardPageState extends State<DoctorDashboardPage> {
                                           maxLines: 1,
                                           overflow: TextOverflow.ellipsis,
                                           style: TextStyle(
-                                            fontSize: 12.5,
+                                            fontSize: 12,
                                             color: hasUnread
                                                 ? (isDark
                                                     ? Colors.white
@@ -614,10 +661,11 @@ class _DoctorDashboardPageState extends State<DoctorDashboardPage> {
                                           ),
                                         ),
                                       ),
-                                      if (hasUnread)
+                                      if (hasUnread) ...[
+                                        const SizedBox(width: 6),
                                         Container(
                                           padding: const EdgeInsets.symmetric(
-                                            horizontal: 7,
+                                            horizontal: 6,
                                             vertical: 2,
                                           ),
                                           decoration: BoxDecoration(
@@ -629,23 +677,26 @@ class _DoctorDashboardPageState extends State<DoctorDashboardPage> {
                                             '${room.unreadCountDoctor} baru',
                                             style: const TextStyle(
                                               color: Colors.white,
-                                              fontSize: 10,
+                                              fontSize: 9.5,
                                               fontWeight: FontWeight.bold,
                                             ),
                                           ),
                                         ),
+                                      ],
                                     ],
                                   ),
                                 ),
                                 trailing: const Icon(
                                   Icons.chevron_right_rounded,
                                   color: Color(0xFF94A3B8),
+                                  size: 20,
                                 ),
                                 onTap: () {
                                   Navigator.push(
                                     context,
                                     MaterialPageRoute(
-                                      builder: (context) => KonsultasiDokterPage(
+                                      builder: (context) =>
+                                          KonsultasiDokterPage(
                                         chatId: room.id,
                                         isDoctorView: true,
                                         doctorName: room.doctorName,
@@ -664,7 +715,7 @@ class _DoctorDashboardPageState extends State<DoctorDashboardPage> {
                       },
                     ),
 
-                    const SizedBox(height: 30),
+                    const SizedBox(height: 24),
                   ],
                 ),
               ),
@@ -680,7 +731,7 @@ class _DoctorDashboardPageState extends State<DoctorDashboardPage> {
     required String value,
   }) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
       decoration: BoxDecoration(
         color: isDark ? const Color(0xFF1E293B) : Colors.white,
         borderRadius: BorderRadius.circular(14),
@@ -691,22 +742,25 @@ class _DoctorDashboardPageState extends State<DoctorDashboardPage> {
       child: Row(
         children: [
           Container(
-            padding: const EdgeInsets.all(8),
+            padding: const EdgeInsets.all(7),
             decoration: BoxDecoration(
               color: color.withValues(alpha: 0.12),
               borderRadius: BorderRadius.circular(10),
             ),
-            child: Icon(icon, color: color, size: 20),
+            child: Icon(icon, color: color, size: 18),
           ),
-          const SizedBox(width: 10),
+          const SizedBox(width: 8),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
               children: [
                 Text(
                   label,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
                   style: TextStyle(
-                    fontSize: 11,
+                    fontSize: 10.5,
                     color: isDark
                         ? const Color(0xFF94A3B8)
                         : const Color(0xFF64748B),
@@ -715,8 +769,10 @@ class _DoctorDashboardPageState extends State<DoctorDashboardPage> {
                 const SizedBox(height: 2),
                 Text(
                   value,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
                   style: TextStyle(
-                    fontSize: 13,
+                    fontSize: 12.5,
                     fontWeight: FontWeight.bold,
                     color: isDark ? Colors.white : const Color(0xFF0F172A),
                   ),

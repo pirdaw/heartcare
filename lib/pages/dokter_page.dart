@@ -1,3 +1,4 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'home_page.dart';
 import 'detail_dokter_page.dart';
@@ -110,6 +111,48 @@ class _PilihDokterPageState extends State<PilihDokterPage> {
 
       return true;
     }).toList();
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchRegisteredDoctors();
+  }
+
+  Future<void> _fetchRegisteredDoctors() async {
+    try {
+      final snap = await FirebaseFirestore.instance
+          .collection('users')
+          .where('role', isEqualTo: 'doctor')
+          .get();
+
+      if (!mounted) return;
+
+      for (final doc in snap.docs) {
+        final data = doc.data();
+        final nama = data['nama'] as String? ?? 'dr. Dokter Spesialis';
+        final exists = _dokter.any((d) =>
+            (d['nama'] as String).toLowerCase() == nama.toLowerCase());
+
+        if (!exists) {
+          setState(() {
+            _dokter.add({
+              'nama': nama,
+              'spesialis':
+                  data['spesialis'] ?? 'Spesialis Jantung & Pembuluh Darah',
+              'foto': data['foto'] ?? 'assets/images/dokter_nurlitta.jpg',
+              'gambar': data['foto'] ?? 'assets/images/dokter_nurlitta.jpg',
+              'pengalaman': data['pengalaman'] ?? '10 tahun',
+              'sip': data['sip'] ?? '2026/SIP/HEARTCARE',
+              'lokasi': data['lokasi'] ?? 'Klinik Jantung HeartCare',
+              'tentang': data['tentang'] ??
+                  'Berpengalaman dalam diagnosis dan penanganan masalah jantung dan kardiovaskular secara menyeluruh.',
+              'isOnline': data['isOnline'] ?? true,
+            });
+          });
+        }
+      }
+    } catch (_) {}
   }
 
   @override
