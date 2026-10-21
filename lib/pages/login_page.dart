@@ -3,7 +3,6 @@ import '../services/auth_service.dart';
 import 'forgot_password_page.dart';
 import 'home_page.dart';
 import 'signup_page.dart';
-import 'home_page.dart';
 
 class LoginPage extends StatefulWidget {
   final String? initialEmail;
@@ -23,7 +22,6 @@ class _LoginPageState extends State<LoginPage> {
 
   // Menampilkan / menyembunyikan password
   bool _obscurePassword = true;
-  bool _isLoading = false;
 
   @override
   void initState() {
@@ -41,23 +39,6 @@ class _LoginPageState extends State<LoginPage> {
     super.dispose();
   }
 
-<<<<<<< HEAD
-  // ==========================================
-  // PROSES LOGIN DENGAN FIREBASE AUTHENTICATION
-  // ==========================================
-  Future<void> _login() async {
-    final email = emailController.text.trim();
-    final password = passwordController.text.trim();
-
-    if (email.isEmpty || password.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Email dan kata sandi wajib diisi')),
-      );
-      return;
-    }
-
-    setState(() => _isLoading = true);
-=======
   Future<void> _handleLogin() async {
     if (_isLoading) return;
 
@@ -85,7 +66,6 @@ class _LoginPageState extends State<LoginPage> {
     setState(() {
       _isLoading = true;
     });
->>>>>>> a00283c708b1bbb7d146aabf5e55656be1c38c85
 
     final error = await AuthService.instance.signIn(
       email: email,
@@ -93,14 +73,6 @@ class _LoginPageState extends State<LoginPage> {
     );
 
     if (!mounted) return;
-<<<<<<< HEAD
-    setState(() => _isLoading = false);
-
-    if (error != null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(error)),
-      );
-=======
 
     setState(() {
       _isLoading = false;
@@ -108,15 +80,11 @@ class _LoginPageState extends State<LoginPage> {
 
     if (error != null) {
       _showErrorSnackBar(error);
->>>>>>> a00283c708b1bbb7d146aabf5e55656be1c38c85
       return;
     }
 
     Navigator.pushReplacement(
       context,
-<<<<<<< HEAD
-      MaterialPageRoute(builder: (context) => const HomePage()),
-=======
       MaterialPageRoute(
         builder: (context) => const HomePage(),
       ),
@@ -145,7 +113,6 @@ class _LoginPageState extends State<LoginPage> {
         margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
         duration: const Duration(seconds: 3),
       ),
->>>>>>> a00283c708b1bbb7d146aabf5e55656be1c38c85
     );
   }
 
@@ -414,11 +381,7 @@ class _LoginPageState extends State<LoginPage> {
                         width: double.infinity,
                         height: 55,
                         child: ElevatedButton(
-<<<<<<< HEAD
-                          onPressed: _isLoading ? null : _login,
-=======
                           onPressed: _isLoading ? null : _handleLogin,
->>>>>>> a00283c708b1bbb7d146aabf5e55656be1c38c85
                           style: ElevatedButton.styleFrom(
                             backgroundColor:
                                 const Color(0xFF0B9AC1),
@@ -434,13 +397,8 @@ class _LoginPageState extends State<LoginPage> {
                           ),
                           child: _isLoading
                               ? const SizedBox(
-<<<<<<< HEAD
-                                  width: 22,
-                                  height: 22,
-=======
                                   width: 24,
                                   height: 24,
->>>>>>> a00283c708b1bbb7d146aabf5e55656be1c38c85
                                   child: CircularProgressIndicator(
                                     color: Colors.white,
                                     strokeWidth: 2.5,

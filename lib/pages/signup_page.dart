@@ -1,9 +1,6 @@
 import 'package:flutter/material.dart';
 import '../services/auth_service.dart';
-<<<<<<< HEAD
 import 'login_page.dart';
-=======
->>>>>>> a00283c708b1bbb7d146aabf5e55656be1c38c85
 import 'success_page.dart';
 
 class SignupPage extends StatefulWidget {
@@ -23,6 +20,12 @@ class _SignupPageState extends State<SignupPage> {
   final TextEditingController _emailController =
       TextEditingController();
 
+  final TextEditingController _teleponController =
+      TextEditingController();
+
+  final TextEditingController _tanggalLahirController =
+      TextEditingController();
+
   final TextEditingController _passwordController =
       TextEditingController();
 
@@ -35,23 +38,69 @@ class _SignupPageState extends State<SignupPage> {
   void dispose() {
     _namaController.dispose();
     _emailController.dispose();
+    _teleponController.dispose();
+    _tanggalLahirController.dispose();
     _passwordController.dispose();
     _confirmPasswordController.dispose();
     super.dispose();
   }
 
-<<<<<<< HEAD
-  bool _isLoading = false;
+  Future<void> _selectTanggalLahir() async {
+    final now = DateTime.now();
+    final initialDate = DateTime(2000, 1, 1);
+    final picked = await showDatePicker(
+      context: context,
+      initialDate: initialDate,
+      firstDate: DateTime(1900),
+      lastDate: now,
+      helpText: 'PILIH TANGGAL LAHIR',
+      confirmText: 'PILIH',
+      cancelText: 'BATAL',
+      builder: (context, child) {
+        return Theme(
+          data: Theme.of(context).copyWith(
+            colorScheme: const ColorScheme.light(
+              primary: Color(0xFF0098B9),
+              onPrimary: Colors.white,
+              onSurface: Color(0xFF0F172A),
+            ),
+          ),
+          child: child!,
+        );
+      },
+    );
+    if (picked != null) {
+      const months = [
+        'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni',
+        'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'
+      ];
+      setState(() {
+        _tanggalLahirController.text =
+            '${picked.day} ${months[picked.month - 1]} ${picked.year}';
+      });
+    }
+  }
 
   Future<void> _daftar() async {
+    if (_isLoading) return;
+
     final nama = _namaController.text.trim();
     final email = _emailController.text.trim();
-    final password = _passwordController.text.trim();
-    final confirmPassword = _confirmPasswordController.text.trim();
+    final telepon = _teleponController.text.trim();
+    final tanggalLahir = _tanggalLahirController.text.trim();
+    final password = _passwordController.text;
+    final confirmPassword = _confirmPasswordController.text;
 
     if (nama.isEmpty || email.isEmpty || password.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Semua kolom wajib diisi')),
+        const SnackBar(content: Text('Mohon lengkapi semua data wajib (Nama, Email, Kata Sandi).')),
+      );
+      return;
+    }
+
+    if (password != confirmPassword) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Konfirmasi kata sandi tidak sama.')),
       );
       return;
     }
@@ -59,92 +108,49 @@ class _SignupPageState extends State<SignupPage> {
     if (password.length < 6) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('Kata sandi terlalu lemah (minimal 6 karakter)'),
-=======
-  Future<void> _daftar() async {
-    if (_isLoading) return;
-
-    if (_passwordController.text != _confirmPasswordController.text) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Konfirmasi kata sandi tidak sama.'),
->>>>>>> a00283c708b1bbb7d146aabf5e55656be1c38c85
+          content: Text('Kata sandi terlalu lemah (minimal 6 karakter).'),
         ),
       );
       return;
     }
 
-<<<<<<< HEAD
-    if (password != confirmPassword) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Konfirmasi kata sandi tidak cocok')),
-=======
-    if (_namaController.text.trim().isEmpty ||
-        _emailController.text.trim().isEmpty ||
-        _passwordController.text.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Mohon lengkapi semua data.'),
-        ),
->>>>>>> a00283c708b1bbb7d146aabf5e55656be1c38c85
-      );
-      return;
-    }
-
-<<<<<<< HEAD
-    setState(() => _isLoading = true);
-
-    final error = await AuthService.instance.signUp(
-      name: nama,
-      email: email,
-      password: password,
-=======
     setState(() {
       _isLoading = true;
     });
 
     final error = await AuthService.instance.signUp(
-      name: _namaController.text,
-      email: _emailController.text,
-      password: _passwordController.text,
->>>>>>> a00283c708b1bbb7d146aabf5e55656be1c38c85
+      name: nama,
+      email: email,
+      password: password,
+      telepon: telepon,
+      tanggalLahir: tanggalLahir,
     );
 
     if (!mounted) return;
 
-<<<<<<< HEAD
-    if (error != null) {
-      setState(() => _isLoading = false);
-=======
     setState(() {
       _isLoading = false;
     });
 
     if (error != null) {
->>>>>>> a00283c708b1bbb7d146aabf5e55656be1c38c85
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(error)),
       );
       return;
     }
 
-<<<<<<< HEAD
     // Keluar dari sesi otomatis Firebase agar pengguna harus login terlebih dahulu
     await AuthService.instance.signOut();
 
     if (!mounted) return;
-    setState(() => _isLoading = false);
 
-    Navigator.push(
-=======
     Navigator.pushReplacement(
->>>>>>> a00283c708b1bbb7d146aabf5e55656be1c38c85
       context,
       MaterialPageRoute(
         builder: (context) => SuccessPage(
           title: 'Pendaftaran Berhasil',
           message: 'Akun Anda berhasil dibuat!',
-          subMessage: 'Silakan masuk menggunakan email dan kata sandi Anda.',
+          subMessage: 'Profil Anda telah tersimpan. Silakan masuk menggunakan email dan kata sandi Anda.',
           buttonText: 'Masuk',
           onButtonPressed: () {
             Navigator.pushAndRemoveUntil(
@@ -260,16 +266,58 @@ class _SignupPageState extends State<SignupPage> {
                 const SizedBox(height: 20),
 
                 // =====================================
-                // EMAIL / NO HP
+                // EMAIL
                 // =====================================
 
-                _buildLabel('Email atau No. HP'),
+                _buildLabel('Email'),
 
                 const SizedBox(height: 10),
 
                 _buildTextField(
                   controller: _emailController,
-                  hintText: 'Masukkan Email atau No. HP',
+                  hintText: 'Masukkan Alamat Email',
+                  keyboardType: TextInputType.emailAddress,
+                ),
+
+                const SizedBox(height: 20),
+
+                // =====================================
+                // NO. TELEPON
+                // =====================================
+
+                _buildLabel('No. Telepon'),
+
+                const SizedBox(height: 10),
+
+                _buildTextField(
+                  controller: _teleponController,
+                  hintText: 'Contoh: 081234567890',
+                  keyboardType: TextInputType.phone,
+                ),
+
+                const SizedBox(height: 20),
+
+                // =====================================
+                // TANGGAL LAHIR
+                // =====================================
+
+                _buildLabel('Tanggal Lahir'),
+
+                const SizedBox(height: 10),
+
+                _buildTextField(
+                  controller: _tanggalLahirController,
+                  hintText: 'Pilih Tanggal Lahir',
+                  readOnly: true,
+                  onTap: _selectTanggalLahir,
+                  suffixIcon: IconButton(
+                    onPressed: _selectTanggalLahir,
+                    icon: const Icon(
+                      Icons.calendar_month_rounded,
+                      size: 22,
+                      color: Color(0xFF0098B9),
+                    ),
+                  ),
                 ),
 
                 const SizedBox(height: 20),
@@ -360,13 +408,8 @@ class _SignupPageState extends State<SignupPage> {
                     ),
                     child: _isLoading
                         ? const SizedBox(
-<<<<<<< HEAD
-                            width: 22,
-                            height: 22,
-=======
                             width: 24,
                             height: 24,
->>>>>>> a00283c708b1bbb7d146aabf5e55656be1c38c85
                             child: CircularProgressIndicator(
                               color: Colors.white,
                               strokeWidth: 2.5,
@@ -455,12 +498,18 @@ class _SignupPageState extends State<SignupPage> {
     required String hintText,
     bool obscureText = false,
     Widget? suffixIcon,
+    TextInputType? keyboardType,
+    bool readOnly = false,
+    VoidCallback? onTap,
   }) {
     return SizedBox(
       height: 58,
       child: TextField(
         controller: controller,
         obscureText: obscureText,
+        keyboardType: keyboardType,
+        readOnly: readOnly,
+        onTap: onTap,
 
         style: const TextStyle(
           fontSize: 14,

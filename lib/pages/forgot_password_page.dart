@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import '../services/auth_service.dart';
 import 'check_email_page.dart';
-import '../services/auth_service.dart';
 
 class ForgotPasswordPage extends StatefulWidget {
   const ForgotPasswordPage({super.key});
@@ -21,31 +20,21 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
   }
 
   Future<void> _handleResetPassword() async {
-<<<<<<< HEAD
-=======
     if (_isLoading) return;
 
->>>>>>> a00283c708b1bbb7d146aabf5e55656be1c38c85
     final email = _emailController.text.trim();
 
     if (email.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-<<<<<<< HEAD
-        const SnackBar(content: Text('Masukkan email kamu terlebih dahulu')),
-=======
         const SnackBar(
           content: Text('Masukkan alamat email terlebih dahulu.'),
           backgroundColor: Color(0xFFE53935),
           behavior: SnackBarBehavior.floating,
         ),
->>>>>>> a00283c708b1bbb7d146aabf5e55656be1c38c85
       );
       return;
     }
 
-<<<<<<< HEAD
-    setState(() => _isLoading = true);
-=======
     // Validasi format email dasar
     final emailRegex = RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$');
     if (!emailRegex.hasMatch(email)) {
@@ -65,18 +54,10 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
     setState(() {
       _isLoading = true;
     });
->>>>>>> a00283c708b1bbb7d146aabf5e55656be1c38c85
 
     final error = await AuthService.instance.sendPasswordResetEmail(email);
 
     if (!mounted) return;
-<<<<<<< HEAD
-    setState(() => _isLoading = false);
-
-    if (error != null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(error)),
-=======
 
     setState(() {
       _isLoading = false;
@@ -89,15 +70,11 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
           backgroundColor: const Color(0xFFE53935),
           behavior: SnackBarBehavior.floating,
         ),
->>>>>>> a00283c708b1bbb7d146aabf5e55656be1c38c85
       );
       return;
     }
 
-<<<<<<< HEAD
-=======
     // Berhasil kirim email -> pindah ke CheckEmailPage dengan email tujuan
->>>>>>> a00283c708b1bbb7d146aabf5e55656be1c38c85
     Navigator.push(
       context,
       MaterialPageRoute(
@@ -191,10 +168,7 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
                 height: 58,
                 child: TextField(
                   controller: _emailController,
-<<<<<<< HEAD
-=======
                   enabled: !_isLoading,
->>>>>>> a00283c708b1bbb7d146aabf5e55656be1c38c85
                   keyboardType: TextInputType.emailAddress,
                   textInputAction: TextInputAction.done,
                   onSubmitted: (_) => _handleResetPassword(),
@@ -251,17 +225,6 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
                   ),
                   child: _isLoading
                       ? const SizedBox(
-<<<<<<< HEAD
-                          width: 22,
-                          height: 22,
-                          child: CircularProgressIndicator(
-                            strokeWidth: 2.4,
-                            color: Colors.white,
-                          ),
-                        )
-                      : const Text(
-                          'Reset password',
-=======
                           width: 24,
                           height: 24,
                           child: CircularProgressIndicator(
@@ -271,7 +234,6 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
                         )
                       : const Text(
                           'Kirim Tautan Reset',
->>>>>>> a00283c708b1bbb7d146aabf5e55656be1c38c85
                           style: TextStyle(
                             fontSize: 16,
                             fontWeight: FontWeight.bold,

@@ -1,35 +1,27 @@
 import 'package:flutter/material.dart';
 import 'home_page.dart';
+import 'login_page.dart';
 
-<<<<<<< HEAD
-class SuccessPage extends StatelessWidget {
+class SuccessPage extends StatefulWidget {
   final String title;
   final String message;
-  final String subMessage;
+  final String? subMessage;
+  final String? subtitle;
   final String buttonText;
   final VoidCallback? onButtonPressed;
+  final Widget? destinationPage;
+  final Duration? duration;
 
   const SuccessPage({
     super.key,
     this.title = 'Successful',
     this.message = 'Password Anda telah berhasil diubah',
-    this.subMessage = 'Silakan klik Selesai untuk masuk ke akun Anda.',
+    this.subMessage,
+    this.subtitle,
     this.buttonText = 'Selesai',
     this.onButtonPressed,
-  });
-=======
-class SuccessPage extends StatefulWidget {
-  final String title;
-  final String subtitle;
-  final Widget? destinationPage;
-  final Duration duration;
-
-  const SuccessPage({
-    super.key,
-    this.title = 'Pendaftaran Berhasil!',
-    this.subtitle = 'Menyiapkan akun Anda, mohon tunggu sebentar...',
     this.destinationPage,
-    this.duration = const Duration(milliseconds: 1800),
+    this.duration,
   });
 
   @override
@@ -57,17 +49,23 @@ class _SuccessPageState extends State<SuccessPage>
 
     _controller.forward();
 
-    // Otomatis navigasi ke halaman utama/tujuan tanpa perlu klik tombol
-    Future.delayed(widget.duration, () {
-      if (!mounted) return;
-      Navigator.pushAndRemoveUntil(
-        context,
-        MaterialPageRoute(
-          builder: (context) => widget.destinationPage ?? const HomePage(),
-        ),
-        (route) => false,
-      );
-    });
+    // Jika ada duration atau destinationPage tanpa button listener khusus, auto navigasi
+    if (widget.duration != null) {
+      Future.delayed(widget.duration!, () {
+        if (!mounted) return;
+        if (widget.onButtonPressed != null) {
+          widget.onButtonPressed!();
+        } else {
+          Navigator.pushAndRemoveUntil(
+            context,
+            MaterialPageRoute(
+              builder: (context) => widget.destinationPage ?? const HomePage(),
+            ),
+            (route) => false,
+          );
+        }
+      });
+    }
   }
 
   @override
@@ -75,10 +73,11 @@ class _SuccessPageState extends State<SuccessPage>
     _controller.dispose();
     super.dispose();
   }
->>>>>>> a00283c708b1bbb7d146aabf5e55656be1c38c85
 
   @override
   Widget build(BuildContext context) {
+    final displayDesc = widget.subtitle ?? widget.message;
+
     return Scaffold(
       backgroundColor: Colors.white,
       body: SafeArea(
@@ -88,102 +87,6 @@ class _SuccessPageState extends State<SuccessPage>
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-<<<<<<< HEAD
-                // ==========================================
-                // ICON CENTANG
-                // ==========================================
-                Container(
-                  width: 68,
-                  height: 68,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    border: Border.all(
-                      color: const Color(0xFF009FE3),
-                      width: 1.5,
-                    ),
-                  ),
-                  child: const Icon(
-                    Icons.check,
-                    color: Color(0xFF4D91D8),
-                    size: 36,
-                  ),
-                ),
-
-                const SizedBox(height: 24),
-
-                // ==========================================
-                // SUCCESSFUL / JUDUL
-                // ==========================================
-                Text(
-                  title,
-                  textAlign: TextAlign.center,
-                  style: const TextStyle(
-                    fontSize: 23,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.black,
-                  ),
-                ),
-
-                const SizedBox(height: 12),
-
-                // ==========================================
-                // KETERANGAN
-                // ==========================================
-                Text(
-                  message,
-                  textAlign: TextAlign.center,
-                  style: const TextStyle(
-                    fontSize: 14,
-                    color: Colors.black87,
-                  ),
-                ),
-
-                const SizedBox(height: 6),
-
-                Text(
-                  subMessage,
-                  textAlign: TextAlign.center,
-                  style: const TextStyle(
-                    fontSize: 14,
-                    color: Colors.black87,
-                  ),
-                ),
-
-                const SizedBox(height: 40),
-
-                // ==========================================
-                // TOMBOL SELESAI / AKSI
-                // ==========================================
-                SizedBox(
-                  width: 130,
-                  height: 50,
-                  child: ElevatedButton(
-                    onPressed: onButtonPressed ??
-                        () {
-                          Navigator.pushAndRemoveUntil(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => const LoginPage(),
-                            ),
-                            (route) => false,
-                          );
-                        },
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFF0B9AC1),
-                      foregroundColor: Colors.white,
-                      elevation: 0,
-                      padding: const EdgeInsets.symmetric(horizontal: 16),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                    ),
-                    child: Text(
-                      buttonText,
-                      style: const TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                      ),
-=======
                 // Icon Animasi Centang
                 ScaleTransition(
                   scale: _scaleAnimation,
@@ -209,7 +112,6 @@ class _SuccessPageState extends State<SuccessPage>
                       Icons.check_rounded,
                       color: Color(0xFF0B9AC1),
                       size: 46,
->>>>>>> a00283c708b1bbb7d146aabf5e55656be1c38c85
                     ),
                   ),
                 ),
@@ -231,7 +133,7 @@ class _SuccessPageState extends State<SuccessPage>
 
                 // Keterangan
                 Text(
-                  widget.subtitle,
+                  displayDesc,
                   textAlign: TextAlign.center,
                   style: const TextStyle(
                     fontSize: 14,
@@ -240,17 +142,63 @@ class _SuccessPageState extends State<SuccessPage>
                   ),
                 ),
 
+                if (widget.subMessage != null && widget.subMessage!.isNotEmpty) ...[
+                  const SizedBox(height: 6),
+                  Text(
+                    widget.subMessage!,
+                    textAlign: TextAlign.center,
+                    style: const TextStyle(
+                      fontSize: 14,
+                      color: Color(0xFF64748B),
+                    ),
+                  ),
+                ],
+
                 const SizedBox(height: 36),
 
-                // Loading Indicator
-                const SizedBox(
-                  width: 24,
-                  height: 24,
-                  child: CircularProgressIndicator(
-                    strokeWidth: 2.5,
-                    valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF0B9AC1)),
+                // Tombol atau Loading Indicator
+                if (widget.duration != null && widget.onButtonPressed == null)
+                  const SizedBox(
+                    width: 24,
+                    height: 24,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2.5,
+                      valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF0B9AC1)),
+                    ),
+                  )
+                else
+                  SizedBox(
+                    width: 140,
+                    height: 50,
+                    child: ElevatedButton(
+                      onPressed: widget.onButtonPressed ??
+                          () {
+                            Navigator.pushAndRemoveUntil(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => const LoginPage(),
+                              ),
+                              (route) => false,
+                            );
+                          },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFF0B9AC1),
+                        foregroundColor: Colors.white,
+                        elevation: 0,
+                        padding: const EdgeInsets.symmetric(horizontal: 16),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                      ),
+                      child: Text(
+                        widget.buttonText,
+                        style: const TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
                   ),
-                ),
               ],
             ),
           ),

@@ -1,4 +1,6 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/foundation.dart';
 
 /// Wrapper sederhana di atas FirebaseAuth.
 ///
@@ -24,11 +26,6 @@ class AuthService {
     required String email,
     required String password,
   }) async {
-<<<<<<< HEAD
-    try {
-      await _auth.signInWithEmailAndPassword(
-        email: email.trim(),
-=======
     final trimmedEmail = email.trim();
     if (trimmedEmail.isEmpty && password.isEmpty) {
       return 'Harap masukkan email dan kata sandi.';
@@ -43,46 +40,36 @@ class AuthService {
     try {
       await _auth.signInWithEmailAndPassword(
         email: trimmedEmail,
->>>>>>> a00283c708b1bbb7d146aabf5e55656be1c38c85
         password: password,
       );
       return null;
     } on FirebaseAuthException catch (e) {
       return _mapError(e);
-<<<<<<< HEAD
-    } catch (_) {
-=======
     } catch (e) {
       final str = e.toString();
       if (str.contains('pigeon') || str.contains('FirebaseAuthHostApi')) {
         return 'Harap masukkan email dan kata sandi yang valid.';
       }
->>>>>>> a00283c708b1bbb7d146aabf5e55656be1c38c85
       return 'Terjadi kesalahan tak terduga. Coba lagi.';
     }
   }
 
-  /// Daftar akun baru dengan nama, email & password.
+  /// Daftar akun baru dengan nama, email, password, no. telepon, & tanggal lahir.
   /// Return null jika sukses, atau pesan error jika gagal.
   Future<String?> signUp({
     required String name,
     required String email,
     required String password,
+    String telepon = '',
+    String tanggalLahir = '',
   }) async {
-<<<<<<< HEAD
-    try {
-      final credential = await _auth.createUserWithEmailAndPassword(
-        email: email.trim(),
-        password: password,
-      );
-      if (name.trim().isNotEmpty) {
-        await credential.user?.updateDisplayName(name.trim());
-=======
     final trimmedName = name.trim();
     final trimmedEmail = email.trim();
+    final trimmedTelepon = telepon.trim();
+    final trimmedTanggalLahir = tanggalLahir.trim();
 
     if (trimmedName.isEmpty || trimmedEmail.isEmpty || password.isEmpty) {
-      return 'Mohon lengkapi semua data.';
+      return 'Mohon lengkapi semua data wajib.';
     }
 
     try {
@@ -92,20 +79,40 @@ class AuthService {
       );
       if (trimmedName.isNotEmpty) {
         await credential.user?.updateDisplayName(trimmedName);
->>>>>>> a00283c708b1bbb7d146aabf5e55656be1c38c85
+      }
+      final user = credential.user;
+      if (user != null) {
+        try {
+          await FirebaseFirestore.instance.collection('users').doc(user.uid).set({
+            'nama': trimmedName,
+            'email': trimmedEmail,
+            'telepon': trimmedTelepon,
+            'ttl': trimmedTanggalLahir,
+            'tanggalLahir': trimmedTanggalLahir,
+            'jenisKelamin': '',
+            'alamat': '',
+            'golonganDarah': '',
+            'tinggiBadan': '',
+            'beratBadan': '',
+            'alergi': '',
+            'penyakitDiderita': '',
+            'riwayatOperasi': '',
+            'createdAt': FieldValue.serverTimestamp(),
+            'updatedAt': FieldValue.serverTimestamp(),
+          }, SetOptions(merge: true));
+          debugPrint('[AuthService] Berhasil menyimpan user ke Firestore users/${user.uid}');
+        } catch (e) {
+          debugPrint('[AuthService] Gagal menyimpan user ke Firestore: $e');
+        }
       }
       return null;
     } on FirebaseAuthException catch (e) {
       return _mapError(e);
-<<<<<<< HEAD
-    } catch (_) {
-=======
     } catch (e) {
       final str = e.toString();
       if (str.contains('pigeon') || str.contains('FirebaseAuthHostApi')) {
         return 'Mohon periksa kembali data yang dimasukkan.';
       }
->>>>>>> a00283c708b1bbb7d146aabf5e55656be1c38c85
       return 'Terjadi kesalahan tak terduga. Coba lagi.';
     }
   }
@@ -113,14 +120,6 @@ class AuthService {
   /// Kirim email reset password (berisi link, bukan kode OTP).
   /// Return null jika sukses, atau pesan error jika gagal.
   Future<String?> sendPasswordResetEmail(String email) async {
-<<<<<<< HEAD
-    try {
-      await _auth.sendPasswordResetEmail(email: email.trim());
-      return null;
-    } on FirebaseAuthException catch (e) {
-      return _mapError(e);
-    } catch (_) {
-=======
     final trimmedEmail = email.trim();
     if (trimmedEmail.isEmpty) {
       return 'Masukkan alamat email terlebih dahulu.';
@@ -136,13 +135,10 @@ class AuthService {
       if (str.contains('pigeon') || str.contains('FirebaseAuthHostApi')) {
         return 'Format email tidak valid.';
       }
->>>>>>> a00283c708b1bbb7d146aabf5e55656be1c38c85
       return 'Terjadi kesalahan tak terduga. Coba lagi.';
     }
   }
 
-<<<<<<< HEAD
-=======
   /// Ubah kata sandi user yang sedang login.
   /// Return null jika sukses, atau pesan error jika gagal.
   Future<String?> updatePassword(String newPassword) async {
@@ -164,7 +160,6 @@ class AuthService {
     }
   }
 
->>>>>>> a00283c708b1bbb7d146aabf5e55656be1c38c85
   /// Keluar dari akun (logout).
   Future<void> signOut() => _auth.signOut();
 
@@ -187,10 +182,6 @@ class AuthService {
         return 'Terlalu banyak percobaan. Coba lagi beberapa saat lagi.';
       case 'network-request-failed':
         return 'Gagal terhubung. Periksa koneksi internet kamu.';
-<<<<<<< HEAD
-      default:
-        return e.message ?? 'Terjadi kesalahan (${e.code}).';
-=======
       case 'channel-error':
         return 'Harap masukkan email dan kata sandi dengan benar.';
       default:
@@ -202,7 +193,6 @@ class AuthService {
           return 'Harap masukkan email dan kata sandi yang valid.';
         }
         return msg ?? 'Terjadi kesalahan (${e.code}).';
->>>>>>> a00283c708b1bbb7d146aabf5e55656be1c38c85
     }
   }
 }

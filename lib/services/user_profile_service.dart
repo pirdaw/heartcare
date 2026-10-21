@@ -1,6 +1,8 @@
+import 'dart:async';
 import 'dart:convert';
-import 'package:flutter/foundation.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class UserProfileData {
@@ -39,6 +41,7 @@ class UserProfileData {
         'email': email,
         'jenisKelamin': jenisKelamin,
         'ttl': ttl,
+        'tanggalLahir': ttl,
         'alamat': alamat,
         'telepon': telepon,
         'golonganDarah': golonganDarah,
@@ -49,20 +52,40 @@ class UserProfileData {
         'riwayatOperasi': riwayatOperasi,
       };
 
-  factory UserProfileData.fromJson(Map<String, dynamic> json) => UserProfileData(
-        nama: json['nama'] ?? '',
-        email: json['email'] ?? '',
-        jenisKelamin: json['jenisKelamin'] ?? '',
-        ttl: json['ttl'] ?? '',
-        alamat: json['alamat'] ?? '',
-        telepon: json['telepon'] ?? '',
-        golonganDarah: json['golonganDarah'] ?? '',
-        tinggiBadan: json['tinggiBadan'] ?? '',
-        beratBadan: json['beratBadan'] ?? '',
-        alergi: json['alergi'] ?? '',
-        penyakitDiderita: json['penyakitDiderita'] ?? '',
-        riwayatOperasi: json['riwayatOperasi'] ?? '',
-      );
+  factory UserProfileData.fromJson(Map<String, dynamic> json) {
+    final rawNama = (json['nama'] as String?)?.trim() ?? '';
+    final rawName = (json['name'] as String?)?.trim() ?? '';
+    final resolvedNama = rawNama.isNotEmpty ? rawNama : rawName;
+
+    final rawTelepon = (json['telepon'] as String?)?.trim() ?? '';
+    final rawPhone = (json['phone'] as String?)?.trim() ??
+        (json['noHp'] as String?)?.trim() ??
+        '';
+    final resolvedTelepon = rawTelepon.isNotEmpty ? rawTelepon : rawPhone;
+
+    final rawTtl = (json['ttl'] as String?)?.trim() ?? '';
+    final rawTanggalLahir = (json['tanggalLahir'] as String?)?.trim() ??
+        (json['tanggal_lahir'] as String?)?.trim() ??
+        '';
+    final resolvedTtl = rawTtl.isNotEmpty ? rawTtl : rawTanggalLahir;
+
+    return UserProfileData(
+      nama: resolvedNama,
+      email: (json['email'] as String?)?.trim() ?? '',
+      jenisKelamin: (json['jenisKelamin'] as String?)?.trim() ??
+          (json['gender'] as String?)?.trim() ??
+          '',
+      ttl: resolvedTtl,
+      alamat: (json['alamat'] as String?)?.trim() ?? '',
+      telepon: resolvedTelepon,
+      golonganDarah: (json['golonganDarah'] as String?)?.trim() ?? '',
+      tinggiBadan: (json['tinggiBadan'] as String?)?.trim() ?? '',
+      beratBadan: (json['beratBadan'] as String?)?.trim() ?? '',
+      alergi: (json['alergi'] as String?)?.trim() ?? '',
+      penyakitDiderita: (json['penyakitDiderita'] as String?)?.trim() ?? '',
+      riwayatOperasi: (json['riwayatOperasi'] as String?)?.trim() ?? '',
+    );
+  }
 
   bool get isDataPribadiComplete =>
       nama.trim().isNotEmpty &&
@@ -87,14 +110,34 @@ class UserProfileData {
 class UserProfileService extends ChangeNotifier {
   static final UserProfileService _instance = UserProfileService._internal();
   factory UserProfileService() => _instance;
-  UserProfileService._internal();
+
+  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  final FirebaseAuth _auth = FirebaseAuth.instance;
+
+  final Map<String, UserProfileData> _cache = {};
+  StreamSubscription<DocumentSnapshot<Map<String, dynamic>>>?
+      _firestoreSubscription;
+  String? _subscribedUid;
+
+  UserProfileService._internal() {
+    final initialUser = _auth.currentUser;
+    if (initialUser != null && initialUser.uid.isNotEmpty) {
+      _subscribeToFirestore(initialUser.uid);
+    }
+
+    _auth.authStateChanges().listen((user) {
+      if (user != null && user.uid.isNotEmpty) {
+        _subscribeToFirestore(user.uid);
+      } else {
+        _unsubscribeFromFirestore();
+      }
+    });
+  }
 
   static UserProfileService get instance => _instance;
 
-  final Map<String, UserProfileData> _cache = {};
-
   String _getUserKey() {
-    final user = FirebaseAuth.instance.currentUser;
+    final user = _auth.currentUser;
     if (user != null && user.uid.isNotEmpty) {
       return user.uid;
     }
@@ -109,11 +152,16 @@ class UserProfileService extends ChangeNotifier {
   /// Field data pribadi & data kesehatan lainnya berstatus kosong (belum diisi) agar diisi sendiri.
   UserProfileData get currentProfile {
     final key = _getUserKey();
+    final user = _auth.currentUser;
+
+    if (user != null && user.uid.isNotEmpty && _subscribedUid != user.uid) {
+      _subscribeToFirestore(user.uid);
+    }
+
     if (_cache.containsKey(key)) {
       return _cache[key]!;
     }
 
-    final user = FirebaseAuth.instance.currentUser;
     String name = (user?.displayName ?? '').trim();
     if (name.isEmpty && user?.email != null && user!.email!.isNotEmpty) {
       final prefix = user.email!.split('@').first;
@@ -139,6 +187,58 @@ class UserProfileService extends ChangeNotifier {
     return newProfile;
   }
 
+  void _subscribeToFirestore(String uid) {
+    if (_subscribedUid == uid && _firestoreSubscription != null) return;
+
+    _unsubscribeFromFirestore();
+    _subscribedUid = uid;
+
+    try {
+      _firestoreSubscription = _firestore
+          .collection('users')
+          .doc(uid)
+          .snapshots()
+          .listen(
+        (snapshot) {
+          if (snapshot.exists && snapshot.data() != null) {
+            final data = snapshot.data()!;
+            final loaded = UserProfileData.fromJson(data);
+
+            // Fallback nama & email jika belum tersimpan di Firestore
+            final currentUser = _auth.currentUser;
+            if (loaded.nama.trim().isEmpty &&
+                (currentUser?.displayName ?? '').isNotEmpty) {
+              loaded.nama = currentUser!.displayName!.trim();
+            }
+            if (loaded.email.trim().isEmpty &&
+                (currentUser?.email ?? '').isNotEmpty) {
+              loaded.email = currentUser!.email!;
+            }
+
+            _cache[uid] = loaded;
+            _saveToPrefs(uid, loaded);
+            notifyListeners();
+          } else {
+            // Jika dokumen belum ada di Firestore, buat dokumen awal
+            final current = currentProfile;
+            _saveToFirestore(uid, current);
+          }
+        },
+        onError: (error) {
+          debugPrint('[UserProfileService] Firestore stream error: $error');
+        },
+      );
+    } catch (e) {
+      debugPrint('[UserProfileService] Failed to listen to Firestore: $e');
+    }
+  }
+
+  void _unsubscribeFromFirestore() {
+    _firestoreSubscription?.cancel();
+    _firestoreSubscription = null;
+    _subscribedUid = null;
+  }
+
   Future<void> _loadFromPrefs(String key) async {
     try {
       final prefs = await SharedPreferences.getInstance();
@@ -146,8 +246,7 @@ class UserProfileService extends ChangeNotifier {
       if (jsonStr != null && jsonStr.isNotEmpty) {
         final Map<String, dynamic> data = jsonDecode(jsonStr);
         final loaded = UserProfileData.fromJson(data);
-        // Pastikan nama dan email tetap konsisten dengan Firebase jika profil tersimpan kosong
-        final user = FirebaseAuth.instance.currentUser;
+        final user = _auth.currentUser;
         if (loaded.nama.trim().isEmpty && (user?.displayName ?? '').isNotEmpty) {
           loaded.nama = user!.displayName!.trim();
         }
@@ -160,11 +259,32 @@ class UserProfileService extends ChangeNotifier {
     } catch (_) {}
   }
 
+  Future<void> _saveToPrefs(String key, UserProfileData profile) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString('user_profile_$key', jsonEncode(profile.toJson()));
+    } catch (_) {}
+  }
+
+  Future<void> _saveToFirestore(String uid, UserProfileData profile) async {
+    try {
+      await _firestore.collection('users').doc(uid).set(
+        {
+          ...profile.toJson(),
+          'updatedAt': FieldValue.serverTimestamp(),
+        },
+        SetOptions(merge: true),
+      );
+    } catch (e) {
+      debugPrint('[UserProfileService] Gagal menyimpan ke Firestore: $e');
+    }
+  }
+
   Future<void> saveProfile(UserProfileData profile) async {
     final key = _getUserKey();
     _cache[key] = profile;
 
-    final user = FirebaseAuth.instance.currentUser;
+    final user = _auth.currentUser;
     if (user != null &&
         profile.nama.trim().isNotEmpty &&
         user.displayName != profile.nama.trim()) {
@@ -175,10 +295,11 @@ class UserProfileService extends ChangeNotifier {
 
     notifyListeners();
 
-    try {
-      final prefs = await SharedPreferences.getInstance();
-      await prefs.setString('user_profile_$key', jsonEncode(profile.toJson()));
-    } catch (_) {}
+    await _saveToPrefs(key, profile);
+
+    if (user != null && user.uid.isNotEmpty) {
+      await _saveToFirestore(user.uid, profile);
+    }
   }
 
   Future<void> updateDataPribadi({

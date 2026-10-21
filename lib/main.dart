@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'firebase_options.dart';
 import 'pages/welcome_page.dart';
 import 'services/theme_service.dart';
@@ -11,20 +12,10 @@ Future<void> main() async {
     options: DefaultFirebaseOptions.currentPlatform,
   );
 
-<<<<<<< HEAD
-void main() async {
-  // Wajib dipanggil sebelum menggunakan plugin Flutter apa pun
-  // (termasuk Firebase) di dalam main().
-  WidgetsFlutterBinding.ensureInitialized();
-
-  // Menghubungkan aplikasi ke project Firebase sesuai platform
-  // (android/ios/web/dst) menggunakan firebase_options.dart.
-  await Firebase.initializeApp(
-    options: DefaultFirebaseOptions.currentPlatform,
+  FirebaseFirestore.instance.settings = const Settings(
+    persistenceEnabled: true,
   );
 
-=======
->>>>>>> a00283c708b1bbb7d146aabf5e55656be1c38c85
   runApp(const HeartCareApp());
 }
 

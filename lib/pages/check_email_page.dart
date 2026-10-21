@@ -1,49 +1,22 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
-<<<<<<< HEAD
-import '../services/auth_service.dart';
-=======
 import 'package:url_launcher/url_launcher.dart';
 import '../services/auth_service.dart';
 import 'login_page.dart';
->>>>>>> a00283c708b1bbb7d146aabf5e55656be1c38c85
 
 class CheckEmailPage extends StatefulWidget {
   final String email;
 
-<<<<<<< HEAD
-  const CheckEmailPage({super.key, required this.email});
-=======
   const CheckEmailPage({
     super.key,
     required this.email,
   });
->>>>>>> a00283c708b1bbb7d146aabf5e55656be1c38c85
 
   @override
   State<CheckEmailPage> createState() => _CheckEmailPageState();
 }
 
 class _CheckEmailPageState extends State<CheckEmailPage> {
-<<<<<<< HEAD
-  bool _isResending = false;
-
-  Future<void> _resendEmail() async {
-    setState(() => _isResending = true);
-
-    final error = await AuthService.instance.sendPasswordResetEmail(
-      widget.email,
-    );
-
-    if (!mounted) return;
-    setState(() => _isResending = false);
-
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(error ?? 'Email reset password dikirim ulang'),
-      ),
-    );
-=======
   int _resendCountdown = 60;
   Timer? _timer;
   bool _isResending = false;
@@ -58,7 +31,6 @@ class _CheckEmailPageState extends State<CheckEmailPage> {
   void dispose() {
     _timer?.cancel();
     super.dispose();
->>>>>>> a00283c708b1bbb7d146aabf5e55656be1c38c85
   }
 
   void _startCountdown() {
@@ -204,39 +176,8 @@ class _CheckEmailPageState extends State<CheckEmailPage> {
               const SizedBox(height: 24),
 
               // ==========================================
-              // ICON EMAIL
-              // ==========================================
-              Container(
-                width: 68,
-                height: 68,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: const Color(0xFFEAF6FB),
-                  border: Border.all(
-                    color: const Color(0xFF009FE3),
-                    width: 1.5,
-                  ),
-                ),
-                child: const Icon(
-                  Icons.mark_email_read_outlined,
-                  color: Color(0xFF0B9AC1),
-                  size: 32,
-                ),
-              ),
-
-              const SizedBox(height: 24),
-
-              // ==========================================
               // JUDUL
               // ==========================================
-<<<<<<< HEAD
-              const Text(
-                'Periksa email kamu',
-                style: TextStyle(
-                  fontSize: 23,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.black,
-=======
               const Center(
                 child: Text(
                   'Periksa Email Anda',
@@ -246,7 +187,6 @@ class _CheckEmailPageState extends State<CheckEmailPage> {
                     fontWeight: FontWeight.bold,
                     color: Colors.black,
                   ),
->>>>>>> a00283c708b1bbb7d146aabf5e55656be1c38c85
                 ),
               ),
 
@@ -255,35 +195,6 @@ class _CheckEmailPageState extends State<CheckEmailPage> {
               // ==========================================
               // KETERANGAN
               // ==========================================
-<<<<<<< HEAD
-              Text(
-                'Kami sudah mengirimkan link reset password ke:\n'
-                '${widget.email}\n\n'
-                'Buka email tersebut dan klik link di dalamnya untuk '
-                'membuat kata sandi baru.',
-                style: const TextStyle(
-                  fontSize: 14,
-                  color: Colors.black87,
-                  height: 1.4,
-                ),
-              ),
-
-              const SizedBox(height: 35),
-
-              // ==========================================
-              // TOMBOL KEMBALI KE MASUK
-              // ==========================================
-              SizedBox(
-                width: double.infinity,
-                height: 55,
-                child: ElevatedButton(
-                  onPressed: () {
-                    Navigator.popUntil(
-                      context,
-                      (route) => route.isFirst,
-                    );
-                  },
-=======
               const Center(
                 child: Text(
                   'Kami telah mengirimkan tautan untuk mengatur ulang kata sandi ke:',
@@ -402,7 +313,6 @@ class _CheckEmailPageState extends State<CheckEmailPage> {
                       fontWeight: FontWeight.bold,
                     ),
                   ),
->>>>>>> a00283c708b1bbb7d146aabf5e55656be1c38c85
                   style: ElevatedButton.styleFrom(
                     backgroundColor: const Color(0xFF0B9AC1),
                     foregroundColor: Colors.white,
@@ -445,11 +355,7 @@ class _CheckEmailPageState extends State<CheckEmailPage> {
                     ),
                   ),
                   child: const Text(
-<<<<<<< HEAD
-                    'Kembali ke Masuk',
-=======
                     'Sudah Ubah Password? Masuk Sekarang',
->>>>>>> a00283c708b1bbb7d146aabf5e55656be1c38c85
                     style: TextStyle(
                       fontSize: 14,
                       fontWeight: FontWeight.bold,
@@ -464,32 +370,6 @@ class _CheckEmailPageState extends State<CheckEmailPage> {
               // KIRIM ULANG EMAIL DENGAN COUNTDOWN
               // ==========================================
               Center(
-<<<<<<< HEAD
-                child: GestureDetector(
-                  onTap: _isResending ? null : _resendEmail,
-                  child: RichText(
-                    textAlign: TextAlign.center,
-                    text: TextSpan(
-                      style: const TextStyle(
-                        fontSize: 13,
-                        color: Colors.grey,
-                      ),
-                      children: [
-                        const TextSpan(
-                          text: 'Belum menerima email? ',
-                        ),
-                        TextSpan(
-                          text: _isResending
-                              ? 'Mengirim...'
-                              : 'Kirim ulang email',
-                          style: const TextStyle(
-                            color: Color(0xFF0077CC),
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                      ],
-                    ),
-=======
                 child: _isResending
                     ? const SizedBox(
                         width: 20,
@@ -533,7 +413,6 @@ class _CheckEmailPageState extends State<CheckEmailPage> {
                     fontSize: 12,
                     color: Colors.grey.shade600,
                     fontStyle: FontStyle.italic,
->>>>>>> a00283c708b1bbb7d146aabf5e55656be1c38c85
                   ),
                 ),
               ),
@@ -545,9 +424,6 @@ class _CheckEmailPageState extends State<CheckEmailPage> {
       ),
     );
   }
-<<<<<<< HEAD
-}
-=======
 
   Widget _buildStepItem(String number, String text) {
     return Row(
@@ -585,4 +461,3 @@ class _CheckEmailPageState extends State<CheckEmailPage> {
     );
   }
 }
->>>>>>> a00283c708b1bbb7d146aabf5e55656be1c38c85
