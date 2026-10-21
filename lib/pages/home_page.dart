@@ -365,33 +365,76 @@ class _HomePageState extends State<HomePage> {
           backgroundColor: isDark ? const Color(0xFF0F172A) : const Color(0xFFF8FAFC),
           body: Container(
             decoration: BoxDecoration(
-              color: isDark ? const Color(0xFF0F172A) : const Color(0xFFF8FAFC),
               gradient: LinearGradient(
                 begin: Alignment.topCenter,
                 end: Alignment.bottomCenter,
-                stops: const [0.0, 0.22, 0.55],
+                stops: const [0.0, 0.28, 0.65, 1.0],
                 colors: isDark
                     ? const [
                         Color(0xFF1E293B),
-                        Color(0xFF131D2E),
+                        Color(0xFF162032),
+                        Color(0xFF111927),
                         Color(0xFF0F172A),
                       ]
                     : const [
-                        Color(0xFFE8F6FA),
-                        Color(0xFFF4FAFC),
+                        Color(0xFFE0F2FE),
+                        Color(0xFFEDF6FD),
+                        Color(0xFFF3F8FD),
                         Color(0xFFF8FAFC),
                       ],
               ),
             ),
             child: SafeArea(
-              child: Column(
+              child: Stack(
                 children: [
-                  Expanded(
-                    child: SingleChildScrollView(
-                      padding: const EdgeInsets.fromLTRB(20, 18, 20, 20),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
+                  // Ornamen ambient glow lembut agar layar tidak monoton putih
+                  Positioned(
+                    top: -40,
+                    right: -30,
+                    child: Container(
+                      width: 220,
+                      height: 220,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: const Color(0xFF38BDF8)
+                            .withValues(alpha: isDark ? 0.04 : 0.16),
+                      ),
+                    ),
+                  ),
+                  Positioned(
+                    top: 280,
+                    left: -60,
+                    child: Container(
+                      width: 200,
+                      height: 200,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: const Color(0xFF0EA5E9)
+                            .withValues(alpha: isDark ? 0.03 : 0.08),
+                      ),
+                    ),
+                  ),
+                  Positioned(
+                    bottom: 140,
+                    right: -50,
+                    child: Container(
+                      width: 200,
+                      height: 200,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: const Color(0xFF0284C7)
+                            .withValues(alpha: isDark ? 0.03 : 0.06),
+                      ),
+                    ),
+                  ),
+                  Column(
+                    children: [
+                      Expanded(
+                        child: SingleChildScrollView(
+                          padding: const EdgeInsets.fromLTRB(20, 18, 20, 20),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
                         // 1. HEADER (PROFIL & EMERGENCY SOS)
                         Row(
                           crossAxisAlignment: CrossAxisAlignment.center,
@@ -1055,7 +1098,7 @@ class _HomePageState extends State<HomePage> {
                                 style: TextStyle(
                                   fontSize: 12,
                                   fontWeight: FontWeight.w600,
-                                  color: isDark ? const Color(0xFF38BDF8) : const Color(0xFF0098B9),
+                                  color: isDark ? const Color(0xFF38BDF8) : const Color(0xFF0284C7),
                                 ),
                               ),
                             ),
@@ -1093,22 +1136,22 @@ class _HomePageState extends State<HomePage> {
                                       Color(0xFF0E2536),
                                     ]
                                   : const [
-                                      Color(0xFFE2F7FB),
-                                      Color(0xFFC7EBF4),
+                                      Color(0xFFEBF6FE),
+                                      Color(0xFFD4ECFC),
                                     ],
                             ),
                             borderRadius: BorderRadius.circular(16),
                             border: Border.all(
                               color: isDark
                                   ? const Color(0xFF1E3A5F)
-                                  : const Color(0xFFBCE7F2),
+                                  : const Color(0xFFBAE6FD),
                               width: 1.2,
                             ),
                             boxShadow: [
                               BoxShadow(
                                 color: (isDark
                                         ? const Color(0xFF38BDF8)
-                                        : const Color(0xFF0098B9))
+                                        : const Color(0xFF0284C7))
                                     .withValues(alpha: 0.08),
                                 blurRadius: 10,
                                 offset: const Offset(0, 3),
@@ -1213,14 +1256,14 @@ class _HomePageState extends State<HomePage> {
                                       decoration: BoxDecoration(
                                         gradient: const LinearGradient(
                                           colors: [
-                                            Color(0xFF0098B9),
+                                            Color(0xFF0EA5E9),
                                             Color(0xFF0284C7),
                                           ],
                                         ),
                                         borderRadius: BorderRadius.circular(8),
                                         boxShadow: [
                                           BoxShadow(
-                                            color: const Color(0xFF0098B9)
+                                            color: const Color(0xFF0284C7)
                                                 .withValues(alpha: 0.25),
                                             blurRadius: 6,
                                             offset: const Offset(0, 2),
@@ -1273,7 +1316,7 @@ class _HomePageState extends State<HomePage> {
                                       decoration: BoxDecoration(
                                         color: isDark
                                             ? const Color(0xFF1E293B)
-                                            : const Color(0xFF0098B9)
+                                            : const Color(0xFF0284C7)
                                                 .withValues(alpha: 0.12),
                                         borderRadius:
                                             BorderRadius.circular(11),
@@ -1282,7 +1325,7 @@ class _HomePageState extends State<HomePage> {
                                         Icons.alarm_off_rounded,
                                         color: isDark
                                             ? const Color(0xFF38BDF8)
-                                            : const Color(0xFF0098B9),
+                                            : const Color(0xFF0284C7),
                                         size: 24,
                                       ),
                                     ),
@@ -1319,14 +1362,14 @@ class _HomePageState extends State<HomePage> {
                                       decoration: BoxDecoration(
                                         gradient: const LinearGradient(
                                           colors: [
-                                            Color(0xFF0098B9),
+                                            Color(0xFF0EA5E9),
                                             Color(0xFF0284C7),
                                           ],
                                         ),
                                         borderRadius: BorderRadius.circular(8),
                                         boxShadow: [
                                           BoxShadow(
-                                            color: const Color(0xFF0098B9)
+                                            color: const Color(0xFF0284C7)
                                                 .withValues(alpha: 0.25),
                                             blurRadius: 6,
                                             offset: const Offset(0, 2),
@@ -1409,7 +1452,7 @@ class _HomePageState extends State<HomePage> {
                                 style: TextStyle(
                                   fontSize: 12,
                                   fontWeight: FontWeight.w600,
-                                  color: isDark ? const Color(0xFF38BDF8) : const Color(0xFF0098B9),
+                                  color: isDark ? const Color(0xFF38BDF8) : const Color(0xFF0284C7),
                                 ),
                               ),
                             ),
@@ -1606,14 +1649,16 @@ class _HomePageState extends State<HomePage> {
                 ),
               ],
             ),
-          ),
+          ],
         ),
+      ),
+    ),
       );
     },
   );
 }
 
-  // WIDGET HELPER: 4 SERVICE CARDS (SERAGAM BIRU MUDA C7EBF4 GRADIENT)
+  // WIDGET HELPER: 4 SERVICE CARDS (GRADASI BIRU ELEGAN & DETAIL ORNAMEN)
   Widget _serviceCard({
     required IconData icon,
     required String title,
@@ -1621,8 +1666,8 @@ class _HomePageState extends State<HomePage> {
     VoidCallback? onTap,
     bool isDark = false,
   }) {
-    const Color brandTeal = Color(0xFF0098B9);
-    final Color borderColor = isDark ? const Color(0xFF1E3A5F) : const Color(0xFFBCE7F2);
+    const Color brandPrimary = Color(0xFF0284C7);
+    final Color borderColor = isDark ? const Color(0xFF1E3A5F) : const Color(0xFFBAE6FD);
     final LinearGradient cardGradient = isDark
         ? const LinearGradient(
             begin: Alignment.topLeft,
@@ -1636,8 +1681,8 @@ class _HomePageState extends State<HomePage> {
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
             colors: [
-              Color(0xFFE2F7FB),
-              Color(0xFFC7EBF4),
+              Color(0xFFEBF6FE),
+              Color(0xFFD4ECFC),
             ],
           );
 
@@ -1646,7 +1691,6 @@ class _HomePageState extends State<HomePage> {
       behavior: HitTestBehavior.opaque,
       child: Container(
         height: 172,
-        padding: const EdgeInsets.all(13),
         decoration: BoxDecoration(
           gradient: cardGradient,
           borderRadius: BorderRadius.circular(16),
@@ -1656,88 +1700,111 @@ class _HomePageState extends State<HomePage> {
           ),
           boxShadow: [
             BoxShadow(
-              color: (isDark ? const Color(0xFF38BDF8) : brandTeal).withValues(alpha: 0.08),
+              color: (isDark ? const Color(0xFF38BDF8) : brandPrimary).withValues(alpha: 0.10),
               blurRadius: 10,
               offset: const Offset(0, 3),
             ),
           ],
         ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Container(
-                  width: 48,
-                  height: 48,
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(16),
+          child: Stack(
+            children: [
+              // Ornamen aksen lingkaran lembut di sudut kartu
+              Positioned(
+                right: -12,
+                bottom: -12,
+                child: Container(
+                  width: 66,
+                  height: 66,
                   decoration: BoxDecoration(
-                    color: isDark ? const Color(0xFF0F172A) : Colors.white,
-                    borderRadius: BorderRadius.circular(13),
-                    boxShadow: [
-                      BoxShadow(
-                        color: (isDark ? Colors.black : brandTeal).withValues(alpha: 0.12),
-                        blurRadius: 6,
-                        offset: const Offset(0, 2),
-                      ),
-                    ],
-                  ),
-                  child: Icon(
-                    icon,
-                    size: 25,
-                    color: isDark ? const Color(0xFF38BDF8) : brandTeal,
-                  ),
-                ),
-                Container(
-                  width: 24,
-                  height: 24,
-                  decoration: BoxDecoration(
-                    color: isDark
-                        ? const Color(0xFF0F172A)
-                        : Colors.white.withValues(alpha: 0.9),
                     shape: BoxShape.circle,
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withValues(alpha: 0.04),
-                        blurRadius: 4,
-                        offset: const Offset(0, 1),
+                    color: Colors.white.withValues(alpha: isDark ? 0.03 : 0.38),
+                  ),
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.all(13),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Container(
+                          width: 48,
+                          height: 48,
+                          decoration: BoxDecoration(
+                            color: isDark ? const Color(0xFF0F172A) : Colors.white,
+                            borderRadius: BorderRadius.circular(13),
+                            boxShadow: [
+                              BoxShadow(
+                                color: (isDark ? Colors.black : brandPrimary).withValues(alpha: 0.12),
+                                blurRadius: 6,
+                                offset: const Offset(0, 2),
+                              ),
+                            ],
+                          ),
+                          child: Icon(
+                            icon,
+                            size: 25,
+                            color: isDark ? const Color(0xFF38BDF8) : brandPrimary,
+                          ),
+                        ),
+                        Container(
+                          width: 26,
+                          height: 26,
+                          decoration: BoxDecoration(
+                            color: isDark
+                                ? const Color(0xFF0F172A)
+                                : Colors.white.withValues(alpha: 0.95),
+                            shape: BoxShape.circle,
+                            boxShadow: [
+                              BoxShadow(
+                                color: brandPrimary.withValues(alpha: 0.12),
+                                blurRadius: 4,
+                                offset: const Offset(0, 1),
+                              ),
+                            ],
+                          ),
+                          child: Icon(
+                            Icons.arrow_forward_rounded,
+                            size: 14,
+                            color: isDark ? const Color(0xFF38BDF8) : brandPrimary,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 11),
+                    Text(
+                      title,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.bold,
+                        height: 1.22,
+                        color: isDark ? Colors.white : const Color(0xFF0F172A),
                       ),
-                    ],
-                  ),
-                  child: Icon(
-                    Icons.arrow_forward_rounded,
-                    size: 13,
-                    color: isDark ? const Color(0xFF38BDF8) : brandTeal,
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 11),
-            Text(
-              title,
-              maxLines: 2,
-              overflow: TextOverflow.ellipsis,
-              style: TextStyle(
-                fontSize: 13,
-                fontWeight: FontWeight.bold,
-                height: 1.22,
-                color: isDark ? Colors.white : const Color(0xFF0F172A),
-              ),
-            ),
-            const SizedBox(height: 4),
-            Expanded(
-              child: Text(
-                description,
-                maxLines: 3,
-                overflow: TextOverflow.ellipsis,
-                style: TextStyle(
-                  fontSize: 11,
-                  height: 1.3,
-                  color: isDark ? const Color(0xFF94A3B8) : const Color(0xFF334155),
+                    ),
+                    const SizedBox(height: 4),
+                    Expanded(
+                      child: Text(
+                        description,
+                        maxLines: 3,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(
+                          fontSize: 11,
+                          height: 1.3,
+                          color: isDark ? const Color(0xFF94A3B8) : const Color(0xFF334155),
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );

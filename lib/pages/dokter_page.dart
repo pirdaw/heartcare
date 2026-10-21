@@ -14,7 +14,8 @@ class PilihDokterPage extends StatefulWidget {
 }
 
 class _PilihDokterPageState extends State<PilihDokterPage> {
-  static const Color brandTeal = Color(0xFF0098B9);
+  static const Color brandPrimary = Color(0xFF0284C7);
+  static const Color brandLight = Color(0xFFE0F2FE);
 
   // =========================================================
   // DATA DOKTER LENGKAP DENGAN FOTO ASLI & DETAIL DINAMIS
@@ -119,8 +120,6 @@ class _PilihDokterPageState extends State<PilihDokterPage> {
 
   @override
   Widget build(BuildContext context) {
-    const Color brandTeal = Color(0xFF0098B9);
-
     return ValueListenableBuilder<ThemeMode>(
       valueListenable: ThemeService.themeModeNotifier,
       builder: (context, themeMode, _) {
@@ -179,12 +178,12 @@ class _PilihDokterPageState extends State<PilihDokterPage> {
                       border: Border.all(
                         color: isDark
                             ? const Color(0xFF334155)
-                            : const Color(0xFFE2E8F0),
+                            : const Color(0xFFBAE6FD),
                       ),
                       boxShadow: [
                         BoxShadow(
-                          color: Colors.black.withValues(alpha: isDark ? 0.2 : 0.02),
-                          blurRadius: 8,
+                          color: const Color(0xFF0284C7).withValues(alpha: isDark ? 0.2 : 0.06),
+                          blurRadius: 10,
                           offset: const Offset(0, 2),
                         ),
                       ],
@@ -208,7 +207,7 @@ class _PilihDokterPageState extends State<PilihDokterPage> {
                         ),
                         prefixIcon: Icon(
                           Icons.search_rounded,
-                          color: isDark ? const Color(0xFF38BDF8) : brandTeal,
+                          color: isDark ? const Color(0xFF38BDF8) : brandPrimary,
                           size: 22,
                         ),
                         suffixIcon: _searchQuery.isNotEmpty
@@ -288,15 +287,21 @@ class _PilihDokterPageState extends State<PilihDokterPage> {
                         decoration: BoxDecoration(
                           color: isDark
                               ? const Color(0xFF0F2B3E)
-                              : const Color(0xFFE8F7FB),
+                              : brandLight,
                           borderRadius: BorderRadius.circular(12),
+                          border: Border.all(
+                            color: isDark
+                                ? const Color(0xFF1E3A5F)
+                                : const Color(0xFFBAE6FD),
+                            width: 1,
+                          ),
                         ),
                         child: Text(
                           '${_filteredDoctors.length} Dokter',
                           style: TextStyle(
                             fontSize: 11.5,
                             fontWeight: FontWeight.bold,
-                            color: isDark ? const Color(0xFF38BDF8) : brandTeal,
+                            color: isDark ? const Color(0xFF38BDF8) : brandPrimary,
                           ),
                         ),
                       ),
@@ -463,22 +468,40 @@ class _PilihDokterPageState extends State<PilihDokterPage> {
     bool selected, {
     bool isDark = false,
   }) {
-    const Color brandTeal = Color(0xFF0098B9);
     return Container(
       margin: const EdgeInsets.only(right: 10),
       padding: const EdgeInsets.symmetric(
         horizontal: 18,
       ),
       decoration: BoxDecoration(
+        gradient: selected
+            ? const LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [
+                  Color(0xFF0EA5E9),
+                  Color(0xFF0284C7),
+                ],
+              )
+            : null,
         color: selected
-            ? brandTeal
+            ? null
             : (isDark ? const Color(0xFF1E293B) : const Color(0xFFF1F3F6)),
         borderRadius: BorderRadius.circular(20),
         border: Border.all(
           color: selected
-              ? brandTeal
+              ? const Color(0xFF0284C7)
               : (isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0)),
         ),
+        boxShadow: selected
+            ? [
+                BoxShadow(
+                  color: const Color(0xFF0284C7).withValues(alpha: 0.28),
+                  blurRadius: 8,
+                  offset: const Offset(0, 3),
+                ),
+              ]
+            : null,
       ),
       alignment: Alignment.center,
       child: Text(
@@ -514,9 +537,10 @@ class _PilihDokterPageState extends State<PilihDokterPage> {
         ),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: isDark ? 0.2 : 0.02),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
+            color: (isDark ? Colors.black : const Color(0xFF0284C7))
+                .withValues(alpha: isDark ? 0.2 : 0.04),
+            blurRadius: 10,
+            offset: const Offset(0, 3),
           ),
         ],
       ),
@@ -537,7 +561,7 @@ class _PilihDokterPageState extends State<PilihDokterPage> {
                   border: Border.all(
                     color: isDark
                         ? const Color(0xFF1E3A5F)
-                        : const Color(0xFFE0F2FE),
+                        : const Color(0xFFBAE6FD),
                     width: 1.5,
                   ),
                 ),
@@ -552,7 +576,7 @@ class _PilihDokterPageState extends State<PilihDokterPage> {
                         size: 40,
                         color: isDark
                             ? const Color(0xFF38BDF8)
-                            : brandTeal,
+                            : brandPrimary,
                       );
                     },
                   ),
@@ -604,7 +628,7 @@ class _PilihDokterPageState extends State<PilihDokterPage> {
                     fontWeight: FontWeight.w600,
                     color: isDark
                         ? const Color(0xFF38BDF8)
-                        : brandTeal,
+                        : brandPrimary,
                   ),
                 ),
                 const SizedBox(height: 6),
@@ -657,20 +681,24 @@ class _PilihDokterPageState extends State<PilihDokterPage> {
 
           // TOMBOL CHEVRON / DETAIL
           Container(
-            width: 34,
-            height: 34,
+            width: 36,
+            height: 36,
             decoration: BoxDecoration(
               color: isDark
-                  ? const Color(0xFF0F172A)
-                  : const Color(0xFFF1F5F9),
+                  ? const Color(0xFF0F2B3E)
+                  : brandLight,
               borderRadius: BorderRadius.circular(10),
+              border: Border.all(
+                color: isDark ? const Color(0xFF1E3A5F) : const Color(0xFFBAE6FD),
+                width: 1,
+              ),
             ),
             child: Icon(
               Icons.chevron_right_rounded,
               size: 22,
               color: isDark
-                  ? const Color(0xFF94A3B8)
-                  : const Color(0xFF475569),
+                  ? const Color(0xFF38BDF8)
+                  : brandPrimary,
             ),
           ),
         ],
@@ -731,8 +759,7 @@ class _PilihDokterPageState extends State<PilihDokterPage> {
     VoidCallback? onTap,
     bool isDark = false,
   }) {
-    const Color brandTeal = Color(0xFF0098B9);
-    final Color activeColor = isDark ? const Color(0xFF38BDF8) : brandTeal;
+    final Color activeColor = isDark ? const Color(0xFF38BDF8) : const Color(0xFF1479F5);
     final Color inactiveColor = isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B);
 
     return GestureDetector(

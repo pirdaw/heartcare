@@ -670,7 +670,7 @@ class _KonsultasiDokterPageState
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
-      barrierColor: Colors.black.withOpacity(0.35),
+      barrierColor: Colors.black.withValues(alpha: 0.35),
       builder: (context) {
         return StatefulBuilder(
           builder: (context, setSheetState) {
@@ -1075,7 +1075,7 @@ class _KonsultasiDokterPageState
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
-      barrierColor: Colors.black.withOpacity(0.35),
+      barrierColor: Colors.black.withValues(alpha: 0.35),
       builder: (context) {
         return Container(
           height: 335,

@@ -25,7 +25,6 @@ class _PilihJadwalPageState extends State<PilihJadwalPage> {
   String selectedDayName = 'Sel';
   String? selectedTime = '09.00';
 
-  static const Color brandTeal = Color(0xFF0098B9);
 
   final List<Map<String, String>> dates = [
     {"day": "Sen", "date": "1"},
@@ -162,20 +161,30 @@ class _PilihJadwalPageState extends State<PilihJadwalPage> {
                                     child: Container(
                                       height: 68,
                                       decoration: BoxDecoration(
+                                        gradient: isSelected
+                                            ? const LinearGradient(
+                                                begin: Alignment.topCenter,
+                                                end: Alignment.bottomCenter,
+                                                colors: [
+                                                  Color(0xFF0EA5E9),
+                                                  Color(0xFF0284C7),
+                                                ],
+                                              )
+                                            : null,
                                         color: isSelected
-                                            ? brandTeal
+                                            ? null
                                             : (isDark ? const Color(0xFF1E293B) : Colors.white),
                                         borderRadius: BorderRadius.circular(14),
                                         border: Border.all(
                                           color: isSelected
-                                              ? brandTeal
+                                              ? const Color(0xFF0284C7)
                                               : (isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0)),
                                           width: 1.2,
                                         ),
                                         boxShadow: isSelected
                                             ? [
                                                 BoxShadow(
-                                                  color: brandTeal.withValues(alpha: 0.25),
+                                                  color: const Color(0xFF0284C7).withValues(alpha: 0.30),
                                                   blurRadius: 8,
                                                   offset: const Offset(0, 3),
                                                 ),
@@ -248,25 +257,51 @@ class _PilihJadwalPageState extends State<PilihJadwalPage> {
                         // TOMBOL KONFIRMASI JADWAL
                         SizedBox(
                           width: double.infinity,
-                          height: 48,
-                          child: ElevatedButton(
-                            onPressed: selectedTime == null
-                                ? null
-                                : _onConfirmSchedule,
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: brandTeal,
-                              disabledBackgroundColor: isDark ? const Color(0xFF1E293B) : const Color(0xFFB4E3EE),
-                              foregroundColor: Colors.white,
-                              elevation: 0,
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(10),
-                              ),
+                          height: 50,
+                          child: DecoratedBox(
+                            decoration: BoxDecoration(
+                              gradient: selectedTime == null
+                                  ? null
+                                  : const LinearGradient(
+                                      colors: [
+                                        Color(0xFF0EA5E9),
+                                        Color(0xFF0284C7),
+                                      ],
+                                    ),
+                              color: selectedTime == null
+                                  ? (isDark ? const Color(0xFF1E293B) : const Color(0xFFCBD5E1))
+                                  : null,
+                              borderRadius: BorderRadius.circular(14),
+                              boxShadow: selectedTime == null
+                                  ? null
+                                  : [
+                                      BoxShadow(
+                                        color: const Color(0xFF0284C7).withValues(alpha: 0.28),
+                                        blurRadius: 10,
+                                        offset: const Offset(0, 3),
+                                      ),
+                                    ],
                             ),
-                            child: const Text(
-                              "Konfirmasi Jadwal",
-                              style: TextStyle(
-                                fontSize: 15,
-                                fontWeight: FontWeight.bold,
+                            child: ElevatedButton(
+                              onPressed: selectedTime == null
+                                  ? null
+                                  : _onConfirmSchedule,
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: Colors.transparent,
+                                shadowColor: Colors.transparent,
+                                disabledBackgroundColor: Colors.transparent,
+                                foregroundColor: Colors.white,
+                                elevation: 0,
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(14),
+                                ),
+                              ),
+                              child: const Text(
+                                "Konfirmasi Jadwal",
+                                style: TextStyle(
+                                  fontSize: 15,
+                                  fontWeight: FontWeight.bold,
+                                ),
                               ),
                             ),
                           ),
@@ -403,20 +438,28 @@ class _PilihJadwalPageState extends State<PilihJadwalPage> {
                       height: 32,
                       alignment: Alignment.center,
                       decoration: BoxDecoration(
+                        gradient: isSelected
+                            ? const LinearGradient(
+                                colors: [
+                                  Color(0xFF0EA5E9),
+                                  Color(0xFF0284C7),
+                                ],
+                              )
+                            : null,
                         color: isSelected
-                            ? brandTeal
+                            ? null
                             : (isDark ? const Color(0xFF1E293B) : const Color(0xFFF4F6F8)),
                         borderRadius: BorderRadius.circular(8),
                         border: Border.all(
                           color: isSelected
-                              ? brandTeal
+                              ? const Color(0xFF0284C7)
                               : (isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0)),
                           width: 1.2,
                         ),
                         boxShadow: isSelected
                             ? [
                                 BoxShadow(
-                                  color: brandTeal.withValues(alpha: 0.20),
+                                  color: const Color(0xFF0284C7).withValues(alpha: 0.22),
                                   blurRadius: 6,
                                   offset: const Offset(0, 2),
                                 ),
@@ -471,7 +514,7 @@ class _PilihJadwalPageState extends State<PilihJadwalPage> {
     required bool active,
     VoidCallback? onTap,
   }) {
-    final activeColor = isDark ? const Color(0xFF38BDF8) : brandTeal;
+    final activeColor = isDark ? const Color(0xFF38BDF8) : const Color(0xFF1479F5);
     final inactiveColor = isDark ? const Color(0xFF64748B) : const Color(0xFF64748B);
 
     return GestureDetector(
