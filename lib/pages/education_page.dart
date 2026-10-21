@@ -21,8 +21,28 @@ class EducationPage extends StatelessWidget {
         final isDark = themeMode == ThemeMode.dark;
 
         return Scaffold(
-          backgroundColor: isDark ? const Color(0xFF0F172A) : Colors.white,
-          body: SafeArea(
+          backgroundColor: isDark ? const Color(0xFF0F172A) : const Color(0xFFF8FAFC),
+          body: Container(
+            decoration: BoxDecoration(
+              color: isDark ? const Color(0xFF0F172A) : const Color(0xFFF8FAFC),
+              gradient: LinearGradient(
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+                stops: const [0.0, 0.22, 0.6],
+                colors: isDark
+                    ? const [
+                        Color(0xFF1E293B),
+                        Color(0xFF131D2E),
+                        Color(0xFF0F172A),
+                      ]
+                    : const [
+                        Color(0xFFE8F6FA),
+                        Color(0xFFF4FAFC),
+                        Color(0xFFF8FAFC),
+                      ],
+              ),
+            ),
+            child: SafeArea(
             child: Column(
               children: [
                 // HEADER BAR
@@ -293,7 +313,8 @@ class EducationPage extends StatelessWidget {
               ],
             ),
           ),
-        );
+        ),
+      );
       },
     );
   }
@@ -446,8 +467,28 @@ class PolaMakanSehatPage extends StatelessWidget {
         final isDark = themeMode == ThemeMode.dark;
 
         return Scaffold(
-          backgroundColor: isDark ? const Color(0xFF0F172A) : Colors.white,
-          body: SafeArea(
+          backgroundColor: isDark ? const Color(0xFF0F172A) : const Color(0xFFF8FAFC),
+          body: Container(
+            decoration: BoxDecoration(
+              color: isDark ? const Color(0xFF0F172A) : const Color(0xFFF8FAFC),
+              gradient: LinearGradient(
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+                stops: const [0.0, 0.22, 0.6],
+                colors: isDark
+                    ? const [
+                        Color(0xFF1E293B),
+                        Color(0xFF131D2E),
+                        Color(0xFF0F172A),
+                      ]
+                    : const [
+                        Color(0xFFE8F6FA),
+                        Color(0xFFF4FAFC),
+                        Color(0xFFF8FAFC),
+                      ],
+              ),
+            ),
+            child: SafeArea(
             child: Column(
               children: [
                 // HEADER BAR
@@ -621,7 +662,8 @@ class PolaMakanSehatPage extends StatelessWidget {
               ],
             ),
           ),
-        );
+        ),
+      );
       },
     );
   }
@@ -641,8 +683,28 @@ class AktivitasFisikPage extends StatelessWidget {
         final isDark = themeMode == ThemeMode.dark;
 
         return Scaffold(
-          backgroundColor: isDark ? const Color(0xFF0F172A) : Colors.white,
-          body: SafeArea(
+          backgroundColor: isDark ? const Color(0xFF0F172A) : const Color(0xFFF8FAFC),
+          body: Container(
+            decoration: BoxDecoration(
+              color: isDark ? const Color(0xFF0F172A) : const Color(0xFFF8FAFC),
+              gradient: LinearGradient(
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+                stops: const [0.0, 0.22, 0.6],
+                colors: isDark
+                    ? const [
+                        Color(0xFF1E293B),
+                        Color(0xFF131D2E),
+                        Color(0xFF0F172A),
+                      ]
+                    : const [
+                        Color(0xFFE8F6FA),
+                        Color(0xFFF4FAFC),
+                        Color(0xFFF8FAFC),
+                      ],
+              ),
+            ),
+            child: SafeArea(
             child: Column(
               children: [
                 // HEADER BAR
@@ -856,7 +918,8 @@ class AktivitasFisikPage extends StatelessWidget {
               ],
             ),
           ),
-        );
+        ),
+      );
       },
     );
   }
@@ -876,8 +939,28 @@ class KebiasaanSehatPage extends StatelessWidget {
         final isDark = themeMode == ThemeMode.dark;
 
         return Scaffold(
-          backgroundColor: isDark ? const Color(0xFF0F172A) : Colors.white,
-          body: SafeArea(
+          backgroundColor: isDark ? const Color(0xFF0F172A) : const Color(0xFFF8FAFC),
+          body: Container(
+            decoration: BoxDecoration(
+              color: isDark ? const Color(0xFF0F172A) : const Color(0xFFF8FAFC),
+              gradient: LinearGradient(
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+                stops: const [0.0, 0.22, 0.6],
+                colors: isDark
+                    ? const [
+                        Color(0xFF1E293B),
+                        Color(0xFF131D2E),
+                        Color(0xFF0F172A),
+                      ]
+                    : const [
+                        Color(0xFFE8F6FA),
+                        Color(0xFFF4FAFC),
+                        Color(0xFFF8FAFC),
+                      ],
+              ),
+            ),
+            child: SafeArea(
             child: Column(
               children: [
                 // HEADER BAR
@@ -1051,7 +1134,8 @@ class KebiasaanSehatPage extends StatelessWidget {
               ],
             ),
           ),
-        );
+        ),
+      );
       },
     );
   }

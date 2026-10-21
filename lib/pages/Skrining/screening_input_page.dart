@@ -128,116 +128,144 @@ class _ScreeningInputPageState extends State<ScreeningInputPage> {
         final isDark = themeMode == ThemeMode.dark;
 
         return Scaffold(
-          backgroundColor: isDark ? const Color(0xFF0F172A) : Colors.white,
-          body: SafeArea(
-            child: Column(
-              children: [
-                // ----------------------------------------------------
-                // TOP APP BAR
-                // ----------------------------------------------------
-                Padding(
-                  padding: const EdgeInsets.only(
-                    left: 16,
-                    right: 16,
-                    top: 12,
-                    bottom: 8,
-                  ),
-                  child: Stack(
-                    alignment: Alignment.center,
-                    children: [
-                      Align(
-                        alignment: Alignment.centerLeft,
-                        child: Container(
-                          width: 42,
-                          height: 42,
-                          decoration: BoxDecoration(
-                            color: isDark ? const Color(0xFF1E293B) : const Color(0xFFF1F3F6),
-                            shape: BoxShape.circle,
-                          ),
-                          child: IconButton(
-                            icon: Icon(
-                              Icons.chevron_left,
-                              color: isDark ? Colors.white : const Color(0xFF1E293B),
-                              size: 26,
+          backgroundColor: isDark ? const Color(0xFF0F172A) : const Color(0xFFF8FAFC),
+          body: Container(
+            decoration: BoxDecoration(
+              color: isDark ? const Color(0xFF0F172A) : const Color(0xFFF8FAFC),
+              gradient: LinearGradient(
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+                stops: const [0.0, 0.22, 0.6],
+                colors: isDark
+                    ? const [
+                        Color(0xFF1E293B),
+                        Color(0xFF131D2E),
+                        Color(0xFF0F172A),
+                      ]
+                    : const [
+                        Color(0xFFE8F6FA),
+                        Color(0xFFF4FAFC),
+                        Color(0xFFF8FAFC),
+                      ],
+              ),
+            ),
+            child: SafeArea(
+              child: Column(
+                children: [
+                  // ----------------------------------------------------
+                  // TOP APP BAR
+                  // ----------------------------------------------------
+                  Padding(
+                    padding: const EdgeInsets.only(
+                      left: 16,
+                      right: 16,
+                      top: 12,
+                      bottom: 8,
+                    ),
+                    child: Stack(
+                      alignment: Alignment.center,
+                      children: [
+                        Align(
+                          alignment: Alignment.centerLeft,
+                          child: Container(
+                            width: 42,
+                            height: 42,
+                            decoration: BoxDecoration(
+                              color: isDark ? const Color(0xFF1E293B) : Colors.white,
+                              shape: BoxShape.circle,
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.black.withValues(alpha: isDark ? 0.2 : 0.05),
+                                  blurRadius: 6,
+                                  offset: const Offset(0, 2),
+                                ),
+                              ],
                             ),
-                            onPressed: _onPreviousStep,
+                            child: IconButton(
+                              icon: Icon(
+                                Icons.chevron_left,
+                                color: isDark ? Colors.white : const Color(0xFF1E293B),
+                                size: 26,
+                              ),
+                              onPressed: _onPreviousStep,
+                            ),
                           ),
                         ),
-                      ),
-                      Center(
-                        child: Text(
-                          'Skrining - Input Data ($_currentStep/$_totalSteps)',
+                        Center(
+                          child: Text(
+                            'Skrining - Input Data ($_currentStep/$_totalSteps)',
+                            style: TextStyle(
+                              fontSize: 17,
+                              fontWeight: FontWeight.bold,
+                              color: isDark ? Colors.white : const Color(0xFF111827),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+
+                  const SizedBox(height: 14),
+
+                  // ----------------------------------------------------
+                  // STEPPER (5 LANGKAH)
+                  // ----------------------------------------------------
+                  Center(
+                    child: _buildStepper(isDark),
+                  ),
+
+                  const SizedBox(height: 24),
+
+                  // ----------------------------------------------------
+                  // FORM CONTENT
+                  // ----------------------------------------------------
+                  Expanded(
+                    child: SingleChildScrollView(
+                      padding: const EdgeInsets.symmetric(horizontal: 24),
+                      child: _buildCurrentStepContent(isDark),
+                    ),
+                  ),
+
+                  // ----------------------------------------------------
+                  // BUTTON LANJUTKAN
+                  // ----------------------------------------------------
+                  Padding(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 24,
+                      vertical: 14,
+                    ),
+                    child: SizedBox(
+                      width: double.infinity,
+                      height: 50,
+                      child: ElevatedButton(
+                        onPressed: _onNextStep,
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: primaryTeal,
+                          foregroundColor: Colors.white,
+                          elevation: 0,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                        ),
+                        child: const Text(
+                          'Lanjutkan',
                           style: TextStyle(
-                            fontSize: 17,
+                            fontSize: 16,
                             fontWeight: FontWeight.bold,
-                            color: isDark ? Colors.white : const Color(0xFF111827),
                           ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-
-                const SizedBox(height: 14),
-
-                // ----------------------------------------------------
-                // STEPPER (5 LANGKAH)
-                // ----------------------------------------------------
-                Center(
-                  child: _buildStepper(isDark),
-                ),
-
-                const SizedBox(height: 24),
-
-                // ----------------------------------------------------
-                // FORM CONTENT
-                // ----------------------------------------------------
-                Expanded(
-                  child: SingleChildScrollView(
-                    padding: const EdgeInsets.symmetric(horizontal: 24),
-                    child: _buildCurrentStepContent(isDark),
-                  ),
-                ),
-
-                // ----------------------------------------------------
-                // BUTTON LANJUTKAN
-                // ----------------------------------------------------
-                Padding(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 24,
-                    vertical: 14,
-                  ),
-                  child: SizedBox(
-                    width: double.infinity,
-                    height: 50,
-                    child: ElevatedButton(
-                      onPressed: _onNextStep,
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: primaryTeal,
-                        foregroundColor: Colors.white,
-                        elevation: 0,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                      ),
-                      child: const Text(
-                        'Lanjutkan',
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
                         ),
                       ),
                     ),
                   ),
-                ),
 
-                // ----------------------------------------------------
-                // BOTTOM NAVIGATION
-                // ----------------------------------------------------
-                const HeartCareBottomNavBar(
-                  currentIndex: 1,
-                ),
-              ],
+                  // ----------------------------------------------------
+                  // BOTTOM NAVIGATION
+                  // ----------------------------------------------------
+                  const HeartCareBottomNavBar(
+                    currentIndex: 1,
+                  ),
+                ],
+              ),
             ),
           ),
         );

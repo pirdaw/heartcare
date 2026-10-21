@@ -117,7 +117,23 @@ class _HomePageState extends State<HomePage> {
       builder: (context) => Container(
         padding: const EdgeInsets.fromLTRB(22, 16, 22, 28),
         decoration: BoxDecoration(
-          color: isDark ? const Color(0xFF1E293B) : Colors.white,
+          color: isDark ? const Color(0xFF0F172A) : const Color(0xFFF8FAFC),
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            stops: const [0.0, 0.35, 0.8],
+            colors: isDark
+                ? const [
+                    Color(0xFF1E293B),
+                    Color(0xFF131D2E),
+                    Color(0xFF0F172A),
+                  ]
+                : const [
+                    Color(0xFFE8F6FA),
+                    Color(0xFFF4FAFC),
+                    Color(0xFFF8FAFC),
+                  ],
+          ),
           borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
         ),
         child: Column(
