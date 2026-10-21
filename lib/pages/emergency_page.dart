@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:heartcare/services/theme_service.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 class EmergencyPage extends StatelessWidget {
@@ -37,7 +38,6 @@ class EmergencyPage extends StatelessWidget {
     }
   }
 
-
   void _showErrorSnackBar(BuildContext context, String message) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
@@ -54,129 +54,66 @@ class EmergencyPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: const Color(0xFFF8FAFC),
-      appBar: AppBar(
-        backgroundColor: Colors.white,
-        elevation: 0,
-        scrolledUnderElevation: 1,
-        shadowColor: Colors.black12,
-        leading: Padding(
-          padding: const EdgeInsets.all(8.0),
-          child: Material(
-            color: const Color(0xFFF1F5F9),
-            borderRadius: BorderRadius.circular(12),
-            child: InkWell(
-              borderRadius: BorderRadius.circular(12),
-              onTap: () => Navigator.of(context).pop(),
-              child: const Icon(
-                Icons.arrow_back_ios_new_rounded,
-                color: Color(0xFF0F172A),
-                size: 18,
-              ),
-            ),
-          ),
-        ),
-        title: const Text(
-          'Panggilan Darurat Medis',
-          style: TextStyle(
-            color: Color(0xFF0F172A),
-            fontSize: 17,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-        actions: [
-          Container(
-            margin: const EdgeInsets.only(right: 16),
-            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-            decoration: BoxDecoration(
-              color: const Color(0xFFFFECEF),
-              borderRadius: BorderRadius.circular(20),
-              border: Border.all(color: const Color(0xFFFFCDD2)),
-            ),
-            child: const Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Icon(
-                  Icons.circle,
-                  color: Color(0xFFDC2626),
-                  size: 9,
-                ),
-                SizedBox(width: 5),
-                Text(
-                  'Siaga 24 Jam',
-                  style: TextStyle(
-                    color: Color(0xFFDC2626),
-                    fontSize: 11.5,
-                    fontWeight: FontWeight.w700,
+    return ValueListenableBuilder<ThemeMode>(
+      valueListenable: ThemeService.themeModeNotifier,
+      builder: (context, themeMode, _) {
+        final isDark = themeMode == ThemeMode.dark;
+
+        return Scaffold(
+          backgroundColor: isDark ? const Color(0xFF0F172A) : const Color(0xFFF8FAFC),
+          appBar: AppBar(
+            backgroundColor: isDark ? const Color(0xFF1E293B) : Colors.white,
+            elevation: 0,
+            scrolledUnderElevation: 1,
+            shadowColor: Colors.black12,
+            leading: Padding(
+              padding: const EdgeInsets.all(8.0),
+              child: Material(
+                color: isDark ? const Color(0xFF0F172A) : const Color(0xFFF1F5F9),
+                borderRadius: BorderRadius.circular(12),
+                child: InkWell(
+                  borderRadius: BorderRadius.circular(12),
+                  onTap: () => Navigator.of(context).pop(),
+                  child: Icon(
+                    Icons.arrow_back_ios_new_rounded,
+                    color: isDark ? Colors.white : const Color(0xFF0F172A),
+                    size: 18,
                   ),
                 ),
-              ],
-            ),
-          ),
-        ],
-      ),
-      body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.fromLTRB(18, 16, 18, 28),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // 1. HERO BANNER: PANGGILAN 119
-              _buildMainHotlineCard(context),
-
-              const SizedBox(height: 20),
-
-              // 2. NOMOR PANGGILAN CEPAT LAINNYA
-              const Text(
-                'Layanan Darurat Cepat',
-                style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
-                  color: Color(0xFF0F172A),
-                ),
               ),
-              const SizedBox(height: 10),
-              _buildQuickContactsGrid(context),
-
-              const SizedBox(height: 24),
-
-              // 3. PANDUAN GEJALA SERANGAN JANTUNG
-              _buildSymptomsGuideCard(),
-
-              const SizedBox(height: 20),
-
-              // 4. SOP PERTOLONGAN PERTAMA
-              _buildFirstAidGuideCard(),
-
-              const SizedBox(height: 20),
-
-              // 5. FOOTER DISCLAIMER
+            ),
+            title: Text(
+              'Panggilan Darurat Medis',
+              style: TextStyle(
+                color: isDark ? Colors.white : const Color(0xFF0F172A),
+                fontSize: 17,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            actions: [
               Container(
-                width: double.infinity,
-                padding: const EdgeInsets.all(14),
+                margin: const EdgeInsets.only(right: 16),
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
                 decoration: BoxDecoration(
-                  color: const Color(0xFFF1F5F9),
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: const Color(0xFFE2E8F0)),
+                  color: isDark ? const Color(0xFF7F1D1D).withValues(alpha: 0.5) : const Color(0xFFFFECEF),
+                  borderRadius: BorderRadius.circular(20),
+                  border: Border.all(color: isDark ? const Color(0xFF991B1B) : const Color(0xFFFFCDD2)),
                 ),
-                child: const Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
                   children: [
                     Icon(
-                      Icons.info_outline_rounded,
-                      color: Color(0xFF64748B),
-                      size: 20,
+                      Icons.circle,
+                      color: isDark ? const Color(0xFFF87171) : const Color(0xFFDC2626),
+                      size: 9,
                     ),
-                    SizedBox(width: 10),
-                    Expanded(
-                      child: Text(
-                        'Panggilan darurat 119 & 112 dapat dihubungi secara gratis (bebas pulsa) dari seluruh operator seluler dan telepon rumah di Indonesia.',
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: Color(0xFF64748B),
-                          height: 1.4,
-                        ),
+                    const SizedBox(width: 5),
+                    Text(
+                      'Siaga 24 Jam',
+                      style: TextStyle(
+                        color: isDark ? const Color(0xFFF87171) : const Color(0xFFDC2626),
+                        fontSize: 11.5,
+                        fontWeight: FontWeight.w700,
                       ),
                     ),
                   ],
@@ -184,8 +121,78 @@ class EmergencyPage extends StatelessWidget {
               ),
             ],
           ),
-        ),
-      ),
+          body: SafeArea(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.fromLTRB(18, 16, 18, 28),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // 1. HERO BANNER: PANGGILAN 119
+                  _buildMainHotlineCard(context),
+
+                  const SizedBox(height: 20),
+
+                  // 2. NOMOR PANGGILAN CEPAT LAINNYA
+                  Text(
+                    'Layanan Darurat Cepat',
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                      color: isDark ? Colors.white : const Color(0xFF0F172A),
+                    ),
+                  ),
+                  const SizedBox(height: 10),
+                  _buildQuickContactsGrid(context, isDark),
+
+                  const SizedBox(height: 24),
+
+                  // 3. PANDUAN GEJALA SERANGAN JANTUNG
+                  _buildSymptomsGuideCard(isDark),
+
+                  const SizedBox(height: 20),
+
+                  // 4. SOP PERTOLONGAN PERTAMA
+                  _buildFirstAidGuideCard(isDark),
+
+                  const SizedBox(height: 20),
+
+                  // 5. FOOTER DISCLAIMER
+                  Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.all(14),
+                    decoration: BoxDecoration(
+                      color: isDark ? const Color(0xFF1E293B) : const Color(0xFFF1F5F9),
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0)),
+                    ),
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Icon(
+                          Icons.info_outline_rounded,
+                          color: isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B),
+                          size: 20,
+                        ),
+                        const SizedBox(width: 10),
+                        Expanded(
+                          child: Text(
+                            'Panggilan darurat 119 & 112 dapat dihubungi secara gratis (bebas pulsa) dari seluruh operator seluler dan telepon rumah di Indonesia.',
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B),
+                              height: 1.4,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        );
+      },
     );
   }
 
@@ -365,20 +372,21 @@ class EmergencyPage extends StatelessWidget {
   }
 
   /// Tombol-tombol Panggilan Cepat (112 & 118)
-  Widget _buildQuickContactsGrid(BuildContext context) {
+  Widget _buildQuickContactsGrid(BuildContext context, bool isDark) {
     return Row(
       children: [
         // Panggilan 112 (Darurat Terpadu)
         Expanded(
           child: _buildContactItem(
             context: context,
+            isDark: isDark,
             number: '112',
             label: 'Darurat Terpadu',
             sublabel: 'Polisi / Damkar / SAR',
             icon: Icons.support_agent_rounded,
             iconColor: const Color(0xFF0284C7),
-            bgColor: const Color(0xFFF0F9FF),
-            borderColor: const Color(0xFFBAE6FD),
+            bgColor: isDark ? const Color(0xFF0369A1).withValues(alpha: 0.25) : const Color(0xFFF0F9FF),
+            borderColor: isDark ? const Color(0xFF0284C7).withValues(alpha: 0.4) : const Color(0xFFBAE6FD),
             onTap: () => _makePhoneCall(
               context,
               '112',
@@ -391,13 +399,14 @@ class EmergencyPage extends StatelessWidget {
         Expanded(
           child: _buildContactItem(
             context: context,
+            isDark: isDark,
             number: '118',
             label: 'Ambulans AGD',
             sublabel: 'Gawat Darurat Daerah',
             icon: Icons.airport_shuttle_rounded,
             iconColor: const Color(0xFFEA580C),
-            bgColor: const Color(0xFFFFF7ED),
-            borderColor: const Color(0xFFFFEDD5),
+            bgColor: isDark ? const Color(0xFFC2410C).withValues(alpha: 0.25) : const Color(0xFFFFF7ED),
+            borderColor: isDark ? const Color(0xFFEA580C).withValues(alpha: 0.4) : const Color(0xFFFFEDD5),
             onTap: () => _makePhoneCall(
               context,
               '118',
@@ -411,6 +420,7 @@ class EmergencyPage extends StatelessWidget {
 
   Widget _buildContactItem({
     required BuildContext context,
+    required bool isDark,
     required String number,
     required String label,
     required String sublabel,
@@ -421,7 +431,7 @@ class EmergencyPage extends StatelessWidget {
     required VoidCallback onTap,
   }) {
     return Material(
-      color: Colors.white,
+      color: isDark ? const Color(0xFF1E293B) : Colors.white,
       borderRadius: BorderRadius.circular(16),
       child: InkWell(
         borderRadius: BorderRadius.circular(16),
@@ -430,10 +440,10 @@ class EmergencyPage extends StatelessWidget {
           padding: const EdgeInsets.all(14),
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: borderColor),
+            border: Border.all(color: isDark ? const Color(0xFF334155) : borderColor),
             boxShadow: [
               BoxShadow(
-                color: iconColor.withValues(alpha: 0.06),
+                color: iconColor.withValues(alpha: isDark ? 0.15 : 0.06),
                 blurRadius: 8,
                 offset: const Offset(0, 2),
               ),
@@ -470,26 +480,26 @@ class EmergencyPage extends StatelessWidget {
               const SizedBox(height: 10),
               Text(
                 number,
-                style: const TextStyle(
+                style: TextStyle(
                   fontSize: 22,
                   fontWeight: FontWeight.bold,
-                  color: Color(0xFF0F172A),
+                  color: isDark ? Colors.white : const Color(0xFF0F172A),
                 ),
               ),
               const SizedBox(height: 2),
               Text(
                 label,
-                style: const TextStyle(
+                style: TextStyle(
                   fontSize: 12.5,
                   fontWeight: FontWeight.w600,
-                  color: Color(0xFF1E293B),
+                  color: isDark ? const Color(0xFFE2E8F0) : const Color(0xFF1E293B),
                 ),
               ),
               Text(
                 sublabel,
-                style: const TextStyle(
+                style: TextStyle(
                   fontSize: 10.5,
-                  color: Color(0xFF64748B),
+                  color: isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B),
                 ),
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
@@ -502,7 +512,7 @@ class EmergencyPage extends StatelessWidget {
   }
 
   /// Panduan Gejala Serangan Jantung
-  Widget _buildSymptomsGuideCard() {
+  Widget _buildSymptomsGuideCard(bool isDark) {
     final symptoms = [
       {
         'icon': Icons.monitor_heart_rounded,
@@ -534,39 +544,42 @@ class EmergencyPage extends StatelessWidget {
       width: double.infinity,
       padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
-        color: const Color(0xFFFFF1F2),
+        color: isDark ? const Color(0xFF450A0A).withValues(alpha: 0.5) : const Color(0xFFFFF1F2),
         borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: const Color(0xFFFFCCD2), width: 1.2),
+        border: Border.all(
+          color: isDark ? const Color(0xFF991B1B).withValues(alpha: 0.6) : const Color(0xFFFFCCD2),
+          width: 1.2,
+        ),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Row(
+          Row(
             children: [
               Icon(
                 Icons.warning_amber_rounded,
-                color: Color(0xFFE11D48),
+                color: isDark ? const Color(0xFFFB7185) : const Color(0xFFE11D48),
                 size: 24,
               ),
-              SizedBox(width: 8),
+              const SizedBox(width: 8),
               Expanded(
                 child: Text(
                   'Gejala Darurat Serangan Jantung',
                   style: TextStyle(
                     fontSize: 15.5,
                     fontWeight: FontWeight.bold,
-                    color: Color(0xFF9F1239),
+                    color: isDark ? const Color(0xFFFECDD3) : const Color(0xFF9F1239),
                   ),
                 ),
               ),
             ],
           ),
           const SizedBox(height: 6),
-          const Text(
+          Text(
             'Segera hubungi bantuan medis jika merasakan satu atau lebih tanda di bawah ini:',
             style: TextStyle(
               fontSize: 12,
-              color: Color(0xFF881337),
+              color: isDark ? const Color(0xFFFDA4AF) : const Color(0xFF881337),
               height: 1.3,
             ),
           ),
@@ -581,14 +594,16 @@ class EmergencyPage extends StatelessWidget {
                     margin: const EdgeInsets.only(top: 2),
                     padding: const EdgeInsets.all(6),
                     decoration: BoxDecoration(
-                      color: Colors.white,
+                      color: isDark ? const Color(0xFF1E293B) : Colors.white,
                       borderRadius: BorderRadius.circular(8),
-                      border: Border.all(color: const Color(0xFFFFCCD2)),
+                      border: Border.all(
+                        color: isDark ? const Color(0xFF991B1B) : const Color(0xFFFFCCD2),
+                      ),
                     ),
                     child: Icon(
                       item['icon'] as IconData,
                       size: 16,
-                      color: const Color(0xFFE11D48),
+                      color: isDark ? const Color(0xFFFB7185) : const Color(0xFFE11D48),
                     ),
                   ),
                   const SizedBox(width: 10),
@@ -598,18 +613,18 @@ class EmergencyPage extends StatelessWidget {
                       children: [
                         Text(
                           item['title'] as String,
-                          style: const TextStyle(
+                          style: TextStyle(
                             fontSize: 13,
                             fontWeight: FontWeight.bold,
-                            color: Color(0xFF881337),
+                            color: isDark ? const Color(0xFFFECDD3) : const Color(0xFF881337),
                           ),
                         ),
                         const SizedBox(height: 2),
                         Text(
                           item['desc'] as String,
-                          style: const TextStyle(
+                          style: TextStyle(
                             fontSize: 11.5,
-                            color: Color(0xFF4C0519),
+                            color: isDark ? const Color(0xFFFDA4AF) : const Color(0xFF4C0519),
                             height: 1.35,
                           ),
                         ),
@@ -626,7 +641,7 @@ class EmergencyPage extends StatelessWidget {
   }
 
   /// SOP Langkah Awal Pertolongan Pertama
-  Widget _buildFirstAidGuideCard() {
+  Widget _buildFirstAidGuideCard(bool isDark) {
     final steps = [
       {
         'num': '1',
@@ -663,12 +678,12 @@ class EmergencyPage extends StatelessWidget {
       width: double.infinity,
       padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: isDark ? const Color(0xFF1E293B) : Colors.white,
         borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: const Color(0xFFE2E8F0)),
+        border: Border.all(color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0)),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.02),
+            color: Colors.black.withValues(alpha: isDark ? 0.2 : 0.02),
             blurRadius: 8,
             offset: const Offset(0, 2),
           ),
@@ -677,21 +692,21 @@ class EmergencyPage extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Row(
+          Row(
             children: [
               Icon(
                 Icons.medical_services_outlined,
-                color: Color(0xFF0F766E),
+                color: isDark ? const Color(0xFF2DD4BF) : const Color(0xFF0F766E),
                 size: 22,
               ),
-              SizedBox(width: 8),
+              const SizedBox(width: 8),
               Expanded(
                 child: Text(
                   'Langkah Pertolongan Pertama (SOP)',
                   style: TextStyle(
                     fontSize: 15.5,
                     fontWeight: FontWeight.bold,
-                    color: Color(0xFF0F172A),
+                    color: isDark ? Colors.white : const Color(0xFF0F172A),
                   ),
                 ),
               ),
@@ -708,16 +723,16 @@ class EmergencyPage extends StatelessWidget {
                     width: 24,
                     height: 24,
                     alignment: Alignment.center,
-                    decoration: const BoxDecoration(
-                      color: Color(0xFFCCFBF1),
+                    decoration: BoxDecoration(
+                      color: isDark ? const Color(0xFF134E4A) : const Color(0xFFCCFBF1),
                       shape: BoxShape.circle,
                     ),
                     child: Text(
                       step['num']!,
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 12,
                         fontWeight: FontWeight.bold,
-                        color: Color(0xFF0F766E),
+                        color: isDark ? const Color(0xFF5EEAD4) : const Color(0xFF0F766E),
                       ),
                     ),
                   ),
@@ -728,18 +743,18 @@ class EmergencyPage extends StatelessWidget {
                       children: [
                         Text(
                           step['title']!,
-                          style: const TextStyle(
+                          style: TextStyle(
                             fontSize: 13,
                             fontWeight: FontWeight.bold,
-                            color: Color(0xFF1E293B),
+                            color: isDark ? Colors.white : const Color(0xFF1E293B),
                           ),
                         ),
                         const SizedBox(height: 1),
                         Text(
                           step['desc']!,
-                          style: const TextStyle(
+                          style: TextStyle(
                             fontSize: 11.5,
-                            color: Color(0xFF64748B),
+                            color: isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B),
                             height: 1.3,
                           ),
                         ),
