@@ -4,78 +4,14 @@ import 'package:heartcare/services/theme_service.dart';
 // ============================================================================
 // HALAMAN UTAMA: EDUKASI KESEHATAN
 // ============================================================================
-class EducationPage extends StatefulWidget {
+class EducationPage extends StatelessWidget {
   const EducationPage({super.key});
 
   static const Color primaryTeal = Color(0xFF0098B9);
   static const Color darkSlate = Color(0xFF0F172A);
   static const Color subSlate = Color(0xFF475569);
-  static const Color cardBorder = Color(0xFFD2EDF5);
-
-  static Widget buildBackButton(BuildContext context) {
-    return Container(
-      width: 40,
-      height: 40,
-      decoration: BoxDecoration(
-        color: Colors.white,
-        shape: BoxShape.circle,
-        boxShadow: [
-          BoxShadow(
-            color: const Color(0xFF0098B9).withValues(alpha: 0.14),
-            blurRadius: 10,
-            offset: const Offset(0, 3),
-          ),
-        ],
-        border: Border.all(
-          color: const Color(0xFFBCE7F5),
-          width: 1.2,
-        ),
-      ),
-      child: IconButton(
-        padding: EdgeInsets.zero,
-        onPressed: () => Navigator.pop(context),
-        icon: const Icon(
-          Icons.arrow_back_ios_new_rounded,
-          size: 16,
-          color: Color(0xFF0F172A),
-        ),
-      ),
-    );
-  }
-
-  @override
-  State<EducationPage> createState() => _EducationPageState();
-}
-
-class _EducationPageState extends State<EducationPage> {
-  int _currentTipIndex = 0;
-
-  final List<Map<String, String>> _quickTips = [
-    {
-      'title': 'Tips Aktivitas Hari Ini',
-      'desc':
-          'Lakukan "Talk Test" saat berjalan kaki: Jika masih bisa berbicara nyaman tanpa terengah-engah, intensitas tersebut optimal dan aman bagi pompa jantung Anda.',
-      'tag': 'Aktivitas Aman',
-    },
-    {
-      'title': 'Tips Nutrisi Harian',
-      'desc':
-          'Batasi konsumsi garam maksimal 1 sendok teh (2.000 mg natrium) per hari untuk mencegah beban berlebih pada pembuluh darah dan otot jantung.',
-      'tag': 'Nutrisi Terukur',
-    },
-    {
-      'title': 'Tips Pemulihan & Istirahat',
-      'desc':
-          'Tidur 7-8 jam per malam memberi kesempatan biologis bagi denyut jantung dan tekanan darah untuk beristirahat dan menstabilkan ritme alami.',
-      'tag': 'Kualitas Tidur',
-    },
-  ];
-
-  void _nextTip() {
-    setState(() {
-      _currentTipIndex = (_currentTipIndex + 1) % _quickTips.length;
-    });
-  }
+  static const Color lightBg = Color(0xFFF8FAFC);
+  static const Color cardBorder = Color(0xFFE2E8F0);
 
   @override
   Widget build(BuildContext context) {
@@ -382,22 +318,20 @@ class _EducationPageState extends State<EducationPage> {
     );
   }
 
-  // KARTU TOPIK EDUKASI (Harmonis, Kaya Warna, Tidak Monoton)
-  Widget _buildTopicCard(
+  Widget _buildMenuCard(
     BuildContext context, {
-    required String number,
     required String title,
-    required String categoryTag,
-    required String readTime,
-    required int pointsCount,
-    required IconData icon,
     required String description,
-    required List<String> keyHighlights,
+    required String tag,
+    required IconData icon,
+    required Color iconBgColor,
+    required Color iconColor,
     required VoidCallback onTap,
+    bool isDark = false,
   }) {
     return InkWell(
       onTap: onTap,
-      borderRadius: BorderRadius.circular(18),
+      borderRadius: BorderRadius.circular(16),
       child: Container(
         width: double.infinity,
         padding: const EdgeInsets.all(16),
@@ -421,68 +355,37 @@ class _EducationPageState extends State<EducationPage> {
           children: [
             Row(
               children: [
-                // Icon Container dengan Gradient Khas Topik
                 Container(
-                  width: 48,
-                  height: 48,
+                  width: 44,
+                  height: 44,
                   decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      colors: [primaryColor, secondaryColor],
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                    ),
-                    borderRadius: BorderRadius.circular(14),
-                    boxShadow: [
-                      BoxShadow(
-                        color: primaryColor.withValues(alpha: 0.28),
-                        blurRadius: 8,
-                        offset: const Offset(0, 3),
-                      ),
-                    ],
+                    color: iconBgColor,
+                    borderRadius: BorderRadius.circular(12),
                   ),
-                  child: Center(
-                    child: Icon(
-                      icon,
-                      color: Colors.white,
-                      size: 24,
-                    ),
-                  ),
+                  child: Center(child: Icon(icon, color: iconColor, size: 24)),
                 ),
                 const SizedBox(width: 12),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Row(
-                        children: [
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 8,
-                              vertical: 3,
-                            ),
-                            decoration: BoxDecoration(
-                              color: softBgColor,
-                              borderRadius: BorderRadius.circular(6),
-                            ),
-                            child: Text(
-                              categoryTag,
-                              style: TextStyle(
-                                fontSize: 10.5,
-                                fontWeight: FontWeight.w700,
-                                color: tagTextColor,
-                              ),
-                            ),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 2.5,
+                        ),
+                        decoration: BoxDecoration(
+                          color: iconBgColor,
+                          borderRadius: BorderRadius.circular(6),
+                        ),
+                        child: Text(
+                          tag,
+                          style: TextStyle(
+                            fontSize: 10,
+                            fontWeight: FontWeight.w700,
+                            color: iconColor,
                           ),
-                          const SizedBox(width: 8),
-                          Text(
-                            readTime,
-                            style: const TextStyle(
-                              fontSize: 10.5,
-                              color: Color(0xFF64748B),
-                              fontWeight: FontWeight.w500,
-                            ),
-                          ),
-                        ],
+                        ),
                       ),
                       const SizedBox(height: 4),
                       Text(
@@ -496,9 +399,9 @@ class _EducationPageState extends State<EducationPage> {
                     ],
                   ),
                 ),
-                // Number Badge Selaras
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  width: 32,
+                  height: 32,
                   decoration: BoxDecoration(
                     color: isDark ? const Color(0xFF0F172A) : lightBg,
                     shape: BoxShape.circle,
@@ -513,7 +416,7 @@ class _EducationPageState extends State<EducationPage> {
                 ),
               ],
             ),
-            const SizedBox(height: 12),
+            const SizedBox(height: 10),
             Text(
               description,
               style: TextStyle(
@@ -522,133 +425,8 @@ class _EducationPageState extends State<EducationPage> {
                 height: 1.4,
               ),
             ),
-            const SizedBox(height: 12),
-            // Key Highlight Pills
-            Wrap(
-              spacing: 6,
-              runSpacing: 6,
-              children: keyHighlights.map((highlight) {
-                return Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                  decoration: BoxDecoration(
-                    color: softBgColor.withValues(alpha: 0.5),
-                    borderRadius: BorderRadius.circular(16),
-                    border: Border.all(
-                      color: borderHighlightColor.withValues(alpha: 0.8),
-                      width: 0.9,
-                    ),
-                  ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Icon(
-                        Icons.check_circle_outline_rounded,
-                        size: 12,
-                        color: primaryColor,
-                      ),
-                      const SizedBox(width: 4),
-                      Text(
-                        highlight,
-                        style: const TextStyle(
-                          fontSize: 11,
-                          fontWeight: FontWeight.w600,
-                          color: Color(0xFF1E293B),
-                        ),
-                      ),
-                    ],
-                  ),
-                );
-              }).toList(),
-            ),
-            const SizedBox(height: 14),
-            // Separator & Action Row
-            Container(
-              height: 1,
-              color: const Color(0xFFF1F5F9),
-            ),
-            const SizedBox(height: 10),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(
-                  'Lihat panduan lengkap ($pointsCount materi)',
-                  style: TextStyle(
-                    fontSize: 11.5,
-                    fontWeight: FontWeight.w600,
-                    color: primaryColor,
-                  ),
-                ),
-                Container(
-                  width: 30,
-                  height: 30,
-                  decoration: BoxDecoration(
-                    color: softBgColor,
-                    shape: BoxShape.circle,
-                  ),
-                  child: Center(
-                    child: Icon(
-                      Icons.arrow_forward_rounded,
-                      size: 15,
-                      color: primaryColor,
-                    ),
-                  ),
-                ),
-              ],
-            ),
           ],
         ),
-      ),
-    );
-  }
-
-  // DISCLAIMER BOX (Warna Lembut Medis)
-  Widget _buildMedicalDisclaimerBox() {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(15),
-      decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.9),
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(
-          color: const Color(0xFFCCE8F0),
-          width: 1.2,
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: const Color(0xFF0098B9).withValues(alpha: 0.05),
-            blurRadius: 10,
-            offset: const Offset(0, 3),
-          ),
-        ],
-      ),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Container(
-            padding: const EdgeInsets.all(6),
-            decoration: const BoxDecoration(
-              color: Color(0xFF0098B9),
-              shape: BoxShape.circle,
-            ),
-            child: const Icon(
-              Icons.info_outline_rounded,
-              size: 15,
-              color: Colors.white,
-            ),
-          ),
-          const SizedBox(width: 12),
-          const Expanded(
-            child: Text(
-              'Informasi dalam edukasi ini bertujuan sebagai panduan umum. Selalu konsultasikan kondisi dan kebutuhan spesifik Anda dengan dokter atau tenaga kesehatan yang merawat.',
-              style: TextStyle(
-                fontSize: 11.5,
-                height: 1.45,
-                color: Color(0xFF1E3A8A),
-                fontWeight: FontWeight.w500,
-              ),
-            ),
-          ),
-        ],
       ),
     );
   }
@@ -761,7 +539,7 @@ class PolaMakanSehatPage extends StatelessWidget {
                           isDark: isDark,
                         ),
 
-                    const SizedBox(height: 14),
+                        const SizedBox(height: 14),
 
                         // MATERI B: Batasi Lemak, Gula, dan Garam
                         _buildDetailCard(
@@ -901,25 +679,27 @@ class AktivitasFisikPage extends StatelessWidget {
                   ),
                 ),
 
-            const SizedBox(height: 12),
+                const SizedBox(height: 12),
 
-            Expanded(
-              child: SingleChildScrollView(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 20,
-                  vertical: 8,
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    // BANNER RINGKASAN
-                    _buildOverviewCard(
-                      icon: Icons.directions_walk_rounded,
-                      title: 'Aktivitas Fisik Aman & Terukur',
-                      description: 'Aktivitas fisik sangat bermanfaat menjaga kekuatan pompa jantung dan kebugaran tubuh, asalkan dilakukan secara sederhana, bertahap, dan disesuaikan dengan kapasitas tubuh masing-masing.',
-                      color: const Color(0xFF0284C7),
-                      bgColor: const Color(0xFFE0F2FE),
+                Expanded(
+                  child: SingleChildScrollView(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 20,
+                      vertical: 8,
                     ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        // BANNER RINGKASAN
+                        _buildOverviewCard(
+                          icon: Icons.directions_walk_rounded,
+                          title: 'Aktivitas Fisik Aman & Terukur',
+                          description:
+                              'Aktivitas fisik sangat bermanfaat menjaga kekuatan pompa jantung dan kebugaran tubuh, asalkan dilakukan secara sederhana, bertahap, dan disesuaikan dengan kapasitas tubuh masing-masing.',
+                          color: const Color(0xFF0284C7),
+                          bgColor: const Color(0xFFE0F2FE),
+                          isDark: isDark,
+                        ),
 
                         const SizedBox(height: 20),
 
@@ -1063,10 +843,10 @@ class AktivitasFisikPage extends StatelessWidget {
                           ),
                         ),
 
-                    const SizedBox(height: 24),
+                        const SizedBox(height: 24),
 
-                    // TOMBOL KEMBALI
-                    _buildBackButtonBottom(context),
+                        // TOMBOL KEMBALI
+                        _buildBackButtonBottom(context, isDark: isDark),
 
                         const SizedBox(height: 20),
                       ],
@@ -1278,14 +1058,11 @@ class KebiasaanSehatPage extends StatelessWidget {
 }
 
 // ============================================================================
-// SHARED HELPER WIDGETS DETAIL PAGES (Harmonious, Premium, Clean)
+// HELPER WIDGETS DETAIL PAGES
 // ============================================================================
-
 Widget _buildOverviewCard({
   required IconData icon,
   required String title,
-  required String tag,
-  required String readDuration,
   required String description,
   required Color color,
   required Color bgColor,
@@ -1293,6 +1070,7 @@ Widget _buildOverviewCard({
 }) {
   return Container(
     width: double.infinity,
+    padding: const EdgeInsets.all(16),
     decoration: BoxDecoration(
       color: isDark ? const Color(0xFF1E293B) : bgColor,
       borderRadius: BorderRadius.circular(16),
@@ -1332,7 +1110,7 @@ Widget _buildOverviewCard({
                   color: isDark ? Colors.white : const Color(0xFF0F172A),
                 ),
               ),
-              const SizedBox(height: 12),
+              const SizedBox(height: 4),
               Text(
                 description,
                 style: TextStyle(
@@ -1352,8 +1130,12 @@ Widget _buildOverviewCard({
 Widget _buildDetailCard({
   required String label,
   required String title,
-  required String categoryTag,
+  required String tag,
+  required Color tagColor,
+  required Color tagBgColor,
   required IconData icon,
+  required Color iconColor,
+  required Color iconBgColor,
   required String summary,
   required List<String> points,
   bool isDark = false,
@@ -1407,7 +1189,7 @@ Widget _buildDetailCard({
                       vertical: 2,
                     ),
                     decoration: BoxDecoration(
-                      color: tagBgColor,
+                      color: isDark ? tagColor.withValues(alpha: 0.2) : tagBgColor,
                       borderRadius: BorderRadius.circular(5),
                     ),
                     child: Text(
@@ -1415,7 +1197,7 @@ Widget _buildDetailCard({
                       style: TextStyle(
                         fontSize: 9.5,
                         fontWeight: FontWeight.w700,
-                        color: tagColor,
+                        color: isDark ? const Color(0xFF38BDF8) : tagColor,
                       ),
                     ),
                   ),
@@ -1450,7 +1232,7 @@ Widget _buildDetailCard({
         const SizedBox(height: 10),
         ...points.map((point) {
           return Padding(
-            padding: const EdgeInsets.only(bottom: 9),
+            padding: const EdgeInsets.only(bottom: 8),
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -1462,7 +1244,7 @@ Widget _buildDetailCard({
                     color: isDark ? const Color(0xFF38BDF8) : const Color(0xFF0098B9),
                   ),
                 ),
-                const SizedBox(width: 10),
+                const SizedBox(width: 8),
                 Expanded(
                   child: Text(
                     point,
