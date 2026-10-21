@@ -21,6 +21,7 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
+  static const Color brandPrimary = Color(0xFF0284C7);
   int _selectedIndex = 0;
   final HealthReminderController _reminderController =
       HealthReminderController();
@@ -106,268 +107,6 @@ class _HomePageState extends State<HomePage> {
       );
       return;
     }
-  }
-
-  void _showProgramModal() {
-    final isDark = ThemeService.isDarkMode;
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (context) => Container(
-        padding: const EdgeInsets.fromLTRB(22, 16, 22, 28),
-        decoration: BoxDecoration(
-          color: isDark ? const Color(0xFF0F172A) : const Color(0xFFF8FAFC),
-          gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            stops: const [0.0, 0.35, 0.8],
-            colors: isDark
-                ? const [
-                    Color(0xFF1E293B),
-                    Color(0xFF131D2E),
-                    Color(0xFF0F172A),
-                  ]
-                : const [
-                    Color(0xFFE8F6FA),
-                    Color(0xFFF4FAFC),
-                    Color(0xFFF8FAFC),
-                  ],
-          ),
-          borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Center(
-              child: Container(
-                width: 42,
-                height: 4,
-                margin: const EdgeInsets.only(bottom: 18),
-                decoration: BoxDecoration(
-                  color: isDark
-                      ? const Color(0xFF475569)
-                      : const Color(0xFFCBD5E1),
-                  borderRadius: BorderRadius.circular(2),
-                ),
-              ),
-            ),
-            Row(
-              children: [
-                Container(
-                  width: 50,
-                  height: 50,
-                  decoration: BoxDecoration(
-                    gradient: const LinearGradient(
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                      colors: [
-                        Color(0xFF06B6D4),
-                        Color(0xFF0891B2),
-                      ],
-                    ),
-                    borderRadius: BorderRadius.circular(14),
-                    boxShadow: [
-                      BoxShadow(
-                        color: const Color(0xFF0891B2).withValues(alpha: 0.3),
-                        blurRadius: 8,
-                        offset: const Offset(0, 3),
-                      ),
-                    ],
-                  ),
-                  child: const Icon(
-                    Icons.monitor_heart_rounded,
-                    color: Colors.white,
-                    size: 26,
-                  ),
-                ),
-                const SizedBox(width: 14),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Program Kesehatan Jantung',
-                        style: TextStyle(
-                          fontSize: 16.5,
-                          fontWeight: FontWeight.bold,
-                          color: isDark ? Colors.white : const Color(0xFF0F172A),
-                        ),
-                      ),
-                      const SizedBox(height: 3),
-                      Text(
-                        'Panduan 30 hari untuk jantung sehat & prima',
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: isDark
-                              ? const Color(0xFF94A3B8)
-                              : const Color(0xFF64748B),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 20),
-            _programBenefitItem(
-              Icons.restaurant_rounded,
-              'Panduan Gizi Rendah Garam & Kolesterol',
-              'Menu harian terstruktur ramah kardiovaskular.',
-              isDark: isDark,
-            ),
-            const SizedBox(height: 12),
-            _programBenefitItem(
-              Icons.directions_walk_rounded,
-              'Target Aktivitas Fisik Ringan 30 Menit/Hari',
-              'Latihan aerobik santai menjaga kelenturan pembuluh darah.',
-              isDark: isDark,
-            ),
-            const SizedBox(height: 12),
-            _programBenefitItem(
-              Icons.fact_check_outlined,
-              'Evaluasi Risiko Berkala dengan AI',
-              'Pantau progres kesehatan jantung Anda secara berkelanjutan.',
-              isDark: isDark,
-            ),
-            const SizedBox(height: 22),
-            Row(
-              children: [
-                Expanded(
-                  child: OutlinedButton(
-                    onPressed: () {
-                      Navigator.pop(context);
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => const EducationPage(),
-                        ),
-                      );
-                    },
-                    style: OutlinedButton.styleFrom(
-                      foregroundColor: isDark
-                          ? const Color(0xFF38BDF8)
-                          : const Color(0xFF079BC1),
-                      side: BorderSide(
-                        color: isDark
-                            ? const Color(0xFF38BDF8)
-                            : const Color(0xFF079BC1),
-                      ),
-                      padding: const EdgeInsets.symmetric(vertical: 12),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                    ),
-                    child: const Text(
-                      'Buka Edukasi',
-                      style: TextStyle(fontWeight: FontWeight.bold),
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: DecoratedBox(
-                    decoration: BoxDecoration(
-                      gradient: const LinearGradient(
-                        colors: [
-                          Color(0xFF0EA5E9),
-                          Color(0xFF0284C7),
-                        ],
-                      ),
-                      borderRadius: BorderRadius.circular(10),
-                      boxShadow: [
-                        BoxShadow(
-                          color: const Color(0xFF0284C7).withValues(alpha: 0.28),
-                          blurRadius: 6,
-                          offset: const Offset(0, 2),
-                        ),
-                      ],
-                    ),
-                    child: ElevatedButton(
-                      onPressed: () {
-                        Navigator.pop(context);
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => const ScreeningIntroPage(),
-                          ),
-                        );
-                      },
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.transparent,
-                        shadowColor: Colors.transparent,
-                        foregroundColor: Colors.white,
-                        elevation: 0,
-                        padding: const EdgeInsets.symmetric(vertical: 12),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(10),
-                        ),
-                      ),
-                      child: const Text(
-                        'Mulai Skrining',
-                        style: TextStyle(fontWeight: FontWeight.bold),
-                      ),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _programBenefitItem(
-      IconData icon, String title, String subtitle,
-      {bool isDark = false}) {
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Container(
-          width: 34,
-          height: 34,
-          decoration: BoxDecoration(
-            color: isDark
-                ? const Color(0xFF0F2B3E)
-                : const Color(0xFFE8F7FB),
-            borderRadius: BorderRadius.circular(8),
-          ),
-          child: Icon(
-            icon,
-            size: 18,
-            color: isDark ? const Color(0xFF38BDF8) : const Color(0xFF079BC1),
-          ),
-        ),
-        const SizedBox(width: 12),
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                title,
-                style: TextStyle(
-                  fontSize: 13,
-                  fontWeight: FontWeight.w600,
-                  color: isDark ? Colors.white : const Color(0xFF1E293B),
-                ),
-              ),
-              const SizedBox(height: 1),
-              Text(
-                subtitle,
-                style: TextStyle(
-                  fontSize: 11,
-                  color: isDark
-                      ? const Color(0xFF94A3B8)
-                      : const Color(0xFF64748B),
-                ),
-              ),
-            ],
-          ),
-        ),
-      ],
-    );
   }
 
   @override
@@ -1045,40 +784,22 @@ class _HomePageState extends State<HomePage> {
 
                         const SizedBox(height: 10),
 
-                        // BARIS 2 LAYANAN
-                        Row(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Expanded(
-                              child: _serviceCard(
-                                icon: Icons.monitor_heart_rounded,
-                                title: 'Program Kesehatan Jantung',
-                                description:
-                                    'Ikuti program untuk menjaga kesehatan jantung Anda.',
-                                isDark: isDark,
-                                onTap: _showProgramModal,
+                        // BARIS 2 LAYANAN: SATU CARD EDUKASI KESEHATAN
+                        _horizontalServiceCard(
+                          icon: Icons.menu_book_rounded,
+                          title: 'Edukasi Kesehatan',
+                          description:
+                              'Dapatkan informasi dan tips menjaga kesehatan Anda.',
+                          isDark: isDark,
+                          onTap: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) =>
+                                    const EducationPage(),
                               ),
-                            ),
-                            const SizedBox(width: 10),
-                            Expanded(
-                              child: _serviceCard(
-                                icon: Icons.menu_book_rounded,
-                                title: 'Edukasi Kesehatan',
-                                description:
-                                    'Dapatkan informasi dan tips menjaga kesehatan Anda.',
-                                isDark: isDark,
-                                onTap: () {
-                                  Navigator.push(
-                                    context,
-                                    MaterialPageRoute(
-                                      builder: (context) =>
-                                          const EducationPage(),
-                                    ),
-                                  );
-                                },
-                              ),
-                            ),
-                          ],
+                            );
+                          },
                         ),
                         const SizedBox(height: 22),
 
@@ -1682,7 +1403,6 @@ class _HomePageState extends State<HomePage> {
     VoidCallback? onTap,
     bool isDark = false,
   }) {
-    const Color brandPrimary = Color(0xFF0284C7);
     final Color borderColor = isDark ? const Color(0xFF1E3A5F) : const Color(0xFFBAE6FD);
     final LinearGradient cardGradient = isDark
         ? const LinearGradient(
@@ -1814,6 +1534,156 @@ class _HomePageState extends State<HomePage> {
                           height: 1.3,
                           color: isDark ? const Color(0xFF94A3B8) : const Color(0xFF334155),
                         ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+
+
+  // WIDGET HELPER: HORIZONTAL SERVICE CARD (FULL WIDTH)
+  Widget _horizontalServiceCard({
+    required IconData icon,
+    required String title,
+    required String description,
+    required bool isDark,
+    required VoidCallback onTap,
+  }) {
+    final Color borderColor = isDark ? const Color(0xFF1E3A5F) : const Color(0xFFBAE6FD);
+    final LinearGradient cardGradient = isDark
+        ? const LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [
+              Color(0xFF1E293B),
+              Color(0xFF0E2536),
+            ],
+          )
+        : const LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [
+              Color(0xFFEBF6FE),
+              Color(0xFFD4ECFC),
+            ],
+          );
+
+    return GestureDetector(
+      onTap: onTap,
+      behavior: HitTestBehavior.opaque,
+      child: Container(
+        decoration: BoxDecoration(
+          gradient: cardGradient,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(
+            color: borderColor,
+            width: 1.2,
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: (isDark ? const Color(0xFF38BDF8) : brandPrimary).withValues(alpha: 0.10),
+              blurRadius: 10,
+              offset: const Offset(0, 3),
+            ),
+          ],
+        ),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(16),
+          child: Stack(
+            children: [
+              // Ornamen aksen lingkaran lembut di sudut kartu
+              Positioned(
+                right: -15,
+                bottom: -20,
+                child: Container(
+                  width: 80,
+                  height: 80,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: Colors.white.withValues(alpha: isDark ? 0.03 : 0.38),
+                  ),
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
+                child: Row(
+                  children: [
+                    Container(
+                      width: 48,
+                      height: 48,
+                      decoration: BoxDecoration(
+                        color: isDark ? const Color(0xFF0F172A) : Colors.white,
+                        borderRadius: BorderRadius.circular(13),
+                        boxShadow: [
+                          BoxShadow(
+                            color: (isDark ? Colors.black : brandPrimary).withValues(alpha: 0.12),
+                            blurRadius: 6,
+                            offset: const Offset(0, 2),
+                          ),
+                        ],
+                      ),
+                      child: Icon(
+                        icon,
+                        size: 25,
+                        color: isDark ? const Color(0xFF38BDF8) : brandPrimary,
+                      ),
+                    ),
+                    const SizedBox(width: 14),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(
+                            title,
+                            style: TextStyle(
+                              fontSize: 14,
+                              fontWeight: FontWeight.bold,
+                              color: isDark ? Colors.white : const Color(0xFF0F172A),
+                            ),
+                          ),
+                          const SizedBox(height: 3),
+                          Text(
+                            description,
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                            style: TextStyle(
+                              fontSize: 11.5,
+                              height: 1.3,
+                              color: isDark ? const Color(0xFF94A3B8) : const Color(0xFF334155),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(width: 10),
+                    Container(
+                      width: 28,
+                      height: 28,
+                      decoration: BoxDecoration(
+                        color: isDark
+                            ? const Color(0xFF0F172A)
+                            : Colors.white.withValues(alpha: 0.95),
+                        shape: BoxShape.circle,
+                        boxShadow: [
+                          BoxShadow(
+                            color: brandPrimary.withValues(alpha: 0.12),
+                            blurRadius: 4,
+                            offset: const Offset(0, 1),
+                          ),
+                        ],
+                      ),
+                      child: Icon(
+                        Icons.arrow_forward_rounded,
+                        size: 15,
+                        color: isDark ? const Color(0xFF38BDF8) : brandPrimary,
                       ),
                     ),
                   ],
