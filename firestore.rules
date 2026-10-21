@@ -7,10 +7,16 @@ service cloud.firestore {
       return request.auth != null;
     }
     
-    // User profile documents
+    // User profile documents (allow public read so doctor profiles can be listed)
     match /users/{userId} {
-      allow read: if isAuthenticated();
+      allow read: if true;
       allow write: if isAuthenticated() && request.auth.uid == userId;
+    }
+
+    // Public doctor listings
+    match /doctors/{doctorId} {
+      allow read: if true;
+      allow write: if isAuthenticated();
     }
 
     // Chat rooms

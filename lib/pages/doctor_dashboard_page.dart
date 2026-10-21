@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../services/auth_service.dart';
 import '../services/chat_service.dart';
 import '../services/theme_service.dart';
+import '../services/doctor_service.dart';
 import 'home_page.dart';
 import 'konsultasi_dokter_page.dart';
 import 'welcome_page.dart';
@@ -26,6 +27,9 @@ class _DoctorDashboardPageState extends State<DoctorDashboardPage> {
 
   Future<void> _loadDoctorProfile() async {
     final profile = await AuthService.instance.getCurrentDoctorProfile();
+    if (profile != null) {
+      await DoctorService.instance.registerOrUpdateDoctorInFirestore(profile);
+    }
     if (mounted) {
       setState(() {
         _doctorProfile = profile;

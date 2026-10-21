@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
+import 'doctor_service.dart';
 
 /// Wrapper di atas FirebaseAuth dengan penanganan peran Pasien dan Dokter.
 class AuthService {
@@ -37,6 +38,21 @@ class AuthService {
         email: trimmedEmail,
         password: password,
       );
+
+      final user = _auth.currentUser;
+      if (user != null) {
+        final displayName = (user.displayName ?? '').toLowerCase();
+        if (trimmedEmail.toLowerCase().contains('dokter') ||
+            displayName.startsWith('dr.') ||
+            displayName.startsWith('dr ')) {
+          await DoctorService.instance.ensureUserIsDoctor(
+            uid: user.uid,
+            email: user.email ?? trimmedEmail,
+            displayName: user.displayName,
+          );
+        }
+      }
+
       return null;
     } on FirebaseAuthException catch (e) {
       return _mapError(e);
@@ -73,10 +89,13 @@ class AuthService {
 
       final user = _auth.currentUser;
       if (user != null) {
-        final role = await getUserRole();
-        if (role != 'doctor') {
-          debugPrint('[AuthService] User login sebagai akun dengan role: $role');
-        }
+        // Auto-heal: Pastikan akun langsung terdaftar sebagai dokter di Firestore & cache
+        await DoctorService.instance.ensureUserIsDoctor(
+          uid: user.uid,
+          email: user.email ?? trimmedEmail,
+          displayName: user.displayName,
+        );
+        debugPrint('[AuthService] Sukses auto-heal akun dokter untuk ${user.uid}');
       }
 
       return null;
@@ -97,11 +116,10 @@ class AuthService {
           .collection('users')
           .doc(user.uid)
           .get();
-      if (doc.exists) {
-        final role = doc.data()?['role'] as String?;
-        if (role != null && role.isNotEmpty) {
-          final r = role.toLowerCase();
-          if (r == 'doctor' || r == 'dokter') return 'doctor';
+      if (doc.exists && doc.data() != null) {
+        final data = doc.data()!;
+        if (DoctorService.isDoctorDocument(data)) {
+          return 'doctor';
         }
       }
     } catch (_) {}
@@ -159,7 +177,7 @@ class AuthService {
     } catch (_) {}
   }
 
-  /// Daftar akun khusus dokter dan simpan profil ke Firestore
+  /// Daftar akun khusus dokter dan simpan profil ke Firestore & Cache
   Future<String?> signUpDoctor({
     required String name,
     required String email,
@@ -185,6 +203,12 @@ class AuthService {
       return 'Mohon lengkapi Nama Dokter, Email, dan Kata Sandi.';
     }
 
+    String formattedName = trimmedName;
+    if (!formattedName.toLowerCase().startsWith('dr.') &&
+        !formattedName.toLowerCase().startsWith('dr ')) {
+      formattedName = 'dr. $formattedName';
+    }
+
     try {
       final credential = await _auth.createUserWithEmailAndPassword(
         email: trimmedEmail,
@@ -192,9 +216,11 @@ class AuthService {
       );
       final user = credential.user;
       if (user != null) {
-        await user.updateDisplayName(trimmedName);
-        await FirebaseFirestore.instance.collection('users').doc(user.uid).set({
-          'nama': trimmedName,
+        await user.updateDisplayName(formattedName);
+
+        final docData = {
+          'uid': user.uid,
+          'nama': formattedName,
           'email': trimmedEmail,
           'telepon': trimmedTelepon,
           'role': 'doctor',
@@ -209,12 +235,15 @@ class AuthService {
               : 'Berpengalaman dalam penanganan masalah jantung dan kardiovaskular secara profesional dan komprehensif.',
           'foto': foto,
           'isOnline': true,
-          'createdAt': FieldValue.serverTimestamp(),
-          'updatedAt': FieldValue.serverTimestamp(),
-        }, SetOptions(merge: true));
+        };
+
+        await DoctorService.instance.registerOrUpdateDoctorInFirestore(
+          docData,
+          uid: user.uid,
+        );
 
         debugPrint(
-            '[AuthService] Berhasil mendaftarkan akun dokter di Firestore users/${user.uid}');
+            '[AuthService] Berhasil mendaftarkan akun dokter di Firestore users/${user.uid} dan doctors/${user.uid}');
       }
       return null;
     } on FirebaseAuthException catch (e) {
@@ -242,6 +271,15 @@ class AuthService {
       return 'Mohon lengkapi semua data wajib.';
     }
 
+    final isDoctorByPattern = role.toLowerCase() == 'doctor' ||
+        role.toLowerCase() == 'dokter' ||
+        trimmedName.toLowerCase().startsWith('dr.') ||
+        trimmedName.toLowerCase().startsWith('dr ') ||
+        trimmedName.toLowerCase().contains('dokter') ||
+        trimmedEmail.toLowerCase().contains('dokter');
+
+    final effectiveRole = isDoctorByPattern ? 'doctor' : role;
+
     try {
       final credential = await _auth.createUserWithEmailAndPassword(
         email: trimmedEmail,
@@ -259,7 +297,7 @@ class AuthService {
             'telepon': trimmedTelepon,
             'ttl': trimmedTanggalLahir,
             'tanggalLahir': trimmedTanggalLahir,
-            'role': role,
+            'role': effectiveRole,
             'jenisKelamin': '',
             'alamat': '',
             'golonganDarah': '',
@@ -271,8 +309,17 @@ class AuthService {
             'createdAt': FieldValue.serverTimestamp(),
             'updatedAt': FieldValue.serverTimestamp(),
           }, SetOptions(merge: true));
+
+          if (isDoctorByPattern) {
+            await DoctorService.instance.ensureUserIsDoctor(
+              uid: user.uid,
+              email: trimmedEmail,
+              displayName: trimmedName,
+            );
+          }
+
           debugPrint(
-              '[AuthService] Berhasil menyimpan user ke Firestore users/${user.uid}');
+              '[AuthService] Berhasil menyimpan user ($effectiveRole) ke Firestore users/${user.uid}');
         } catch (e) {
           debugPrint('[AuthService] Gagal menyimpan user ke Firestore: $e');
         }

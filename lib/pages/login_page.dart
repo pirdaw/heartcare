@@ -28,6 +28,9 @@ class _LoginPageState extends State<LoginPage> {
   void initState() {
     super.initState();
     emailController = TextEditingController(text: widget.initialEmail ?? '');
+    if ((widget.initialEmail ?? '').toLowerCase().contains('dokter')) {
+      _isDoctorMode = true;
+    }
   }
 
   // Status loading saat proses login berlangsung

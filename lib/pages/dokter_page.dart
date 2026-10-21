@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'home_page.dart';
 import 'detail_dokter_page.dart';
@@ -8,6 +9,7 @@ import 'screening_intro_page.dart';
 import 'riwayat_page.dart';
 import 'signup_page.dart';
 import '../services/theme_service.dart';
+import '../services/doctor_service.dart';
 
 class PilihDokterPage extends StatefulWidget {
   const PilihDokterPage({super.key});
@@ -23,6 +25,23 @@ class _PilihDokterPageState extends State<PilihDokterPage> {
   final TextEditingController _searchController = TextEditingController();
   String _searchQuery = '';
   String _selectedCategory = 'Semua';
+  List<Map<String, dynamic>> _cachedDoctors = [];
+  bool _isActionLoading = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadCachedDoctors();
+  }
+
+  Future<void> _loadCachedDoctors() async {
+    final list = await DoctorService.instance.getCachedDoctors();
+    if (mounted) {
+      setState(() {
+        _cachedDoctors = list;
+      });
+    }
+  }
 
   @override
   void dispose() {
@@ -31,18 +50,31 @@ class _PilihDokterPageState extends State<PilihDokterPage> {
   }
 
   Widget _buildDoctorPhoto(String? photo, bool isDark) {
-    if (photo != null && photo.isNotEmpty && photo.startsWith('assets/')) {
-      return Image.asset(
-        photo,
-        fit: BoxFit.cover,
-        errorBuilder: (context, error, stackTrace) {
-          return Icon(
+    if (photo != null && photo.isNotEmpty) {
+      if (photo.startsWith('http://') || photo.startsWith('https://')) {
+        return Image.network(
+          photo,
+          fit: BoxFit.cover,
+          errorBuilder: (context, error, stackTrace) => Icon(
             Icons.person,
             size: 40,
             color: isDark ? const Color(0xFF38BDF8) : brandPrimary,
-          );
-        },
-      );
+          ),
+        );
+      }
+      if (photo.startsWith('assets/')) {
+        return Image.asset(
+          photo,
+          fit: BoxFit.cover,
+          errorBuilder: (context, error, stackTrace) {
+            return Icon(
+              Icons.person,
+              size: 40,
+              color: isDark ? const Color(0xFF38BDF8) : brandPrimary,
+            );
+          },
+        );
+      }
     }
     return Icon(
       Icons.person_rounded,
@@ -153,42 +185,47 @@ class _PilihDokterPageState extends State<PilihDokterPage> {
                 FirebaseFirestore.instance.collection('users').snapshots(),
             builder: (context, snapshot) {
               if (snapshot.connectionState == ConnectionState.waiting &&
-                  !snapshot.hasData) {
+                  !snapshot.hasData &&
+                  _cachedDoctors.isEmpty) {
                 return const Center(child: CircularProgressIndicator());
               }
 
-              final docs = snapshot.data?.docs ?? [];
+              if (snapshot.hasError) {
+                debugPrint(
+                    '[PilihDokterPage] Firestore Stream Error: ${snapshot.error}');
+              }
 
-              // Filter hanya user yang memiliki role doctor/dokter
-              final List<Map<String, dynamic>> allDoctors = docs
-                  .where((doc) {
-                    final data = doc.data();
-                    final role = (data['role'] as String? ?? '').toLowerCase();
-                    return role == 'doctor' || role == 'dokter';
-                  })
-                  .map((doc) {
-                    final data = doc.data();
-                    return {
-                      'id': doc.id,
-                      'uid': doc.id,
-                      'nama': data['nama'] as String? ?? 'dr. Dokter HeartCare',
-                      'spesialis': data['spesialis'] as String? ??
-                          'Spesialis Jantung & Pembuluh Darah',
-                      'foto': data['foto'] as String? ??
-                          'assets/images/dokter_nurlitta.jpg',
-                      'pengalaman':
-                          data['pengalaman'] as String? ?? '8 tahun',
-                      'sip': data['sip'] as String? ?? 'SIP/2026',
-                      'lokasi': data['lokasi'] as String? ??
-                          'Klinik Jantung HeartCare',
-                      'tentang': data['tentang'] as String? ??
-                          'Berpengalaman dalam diagnosis dan konsultasi kesehatan jantung komprehensif.',
-                      'isOnline': data['isOnline'] as bool? ?? true,
-                      'telepon': data['telepon'] as String? ?? '',
-                      'email': data['email'] as String? ?? '',
-                    };
-                  })
-                  .toList();
+              final docs = snapshot.data?.docs ?? [];
+              final List<Map<String, dynamic>> firestoreDoctors = [];
+
+              for (final doc in docs) {
+                final data = doc.data();
+                if (DoctorService.isDoctorDocument(data)) {
+                  final normalized = DoctorService.normalizeDoctorData(
+                    id: doc.id,
+                    data: data,
+                  );
+                  firestoreDoctors.add(normalized);
+                  // Simpan ke cache lokal agar selalu tersedia offline
+                  DoctorService.instance.cacheDoctor(normalized);
+                }
+              }
+
+              // Gabungkan dokter dari Firestore dan Cache Lokal (Deduplikasi)
+              final Map<String, Map<String, dynamic>> mergedMap = {};
+              for (final d in _cachedDoctors) {
+                final key =
+                    (d['id'] ?? d['uid'] ?? d['email'] ?? d['nama']).toString();
+                mergedMap[key] = d;
+              }
+              for (final d in firestoreDoctors) {
+                final key =
+                    (d['id'] ?? d['uid'] ?? d['email'] ?? d['nama']).toString();
+                mergedMap[key] = d;
+              }
+
+              final List<Map<String, dynamic>> allDoctors =
+                  mergedMap.values.toList();
 
               // Kategori spesialisasi dinamis dari dokter yang terdaftar
               final Set<String> categorySet = {'Semua'};
@@ -393,7 +430,7 @@ class _PilihDokterPageState extends State<PilihDokterPage> {
                     // =========================================================
                     Expanded(
                       child: allDoctors.isEmpty
-                          ? _buildNoDoctorsYetState(context, isDark: isDark)
+                          ? _buildNoDoctorsYetState(isDark: isDark)
                           : (filteredDoctors.isEmpty
                               ? _emptyDoctorState(isDark: isDark)
                               : ListView.separated(
@@ -837,10 +874,12 @@ class _PilihDokterPageState extends State<PilihDokterPage> {
   // =========================================================
   // STATE JIKA BELUM ADA DOKTER TERDAFTAR DI FIRESTORE
   // =========================================================
-  Widget _buildNoDoctorsYetState(BuildContext context, {bool isDark = false}) {
+  Widget _buildNoDoctorsYetState({bool isDark = false}) {
+    final currentUser = FirebaseAuth.instance.currentUser;
+
     return Center(
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 28),
+      child: SingleChildScrollView(
+        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
@@ -854,13 +893,13 @@ class _PilihDokterPageState extends State<PilihDokterPage> {
               ),
               child: const Icon(
                 Icons.medical_services_rounded,
-                size: 48,
+                size: 44,
                 color: Color(0xFF0284C7),
               ),
             ),
-            const SizedBox(height: 18),
+            const SizedBox(height: 16),
             Text(
-              'Belum Ada Akun Dokter Terdaftar',
+              'Belum Ada Dokter Terdeteksi',
               textAlign: TextAlign.center,
               style: TextStyle(
                 fontSize: 17,
@@ -870,42 +909,132 @@ class _PilihDokterPageState extends State<PilihDokterPage> {
             ),
             const SizedBox(height: 8),
             Text(
-              'Akun dokter yang dibuat akan langsung tampil di sini secara real-time. Daftarkan akun dokter terlebih dahulu untuk mulai menguji chat.',
+              'Akun dokter yang dibuat akan langsung tampil di sini secara real-time. Jika Anda sudah membuat akun dokter, Anda dapat menyinkronkannya atau membuat dokter uji coba di bawah ini.',
               textAlign: TextAlign.center,
               style: TextStyle(
-                fontSize: 13,
+                fontSize: 12.5,
                 color: isDark
                     ? const Color(0xFF94A3B8)
                     : const Color(0xFF64748B),
                 height: 1.4,
               ),
             ),
-            const SizedBox(height: 24),
-            ElevatedButton.icon(
-              onPressed: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => const SignupPage(
-                      initialRole: 'doctor',
+            const SizedBox(height: 20),
+
+            // Tombol 1: Daftar Akun Dokter Baru
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton.icon(
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const SignupPage(
+                        initialRole: 'doctor',
+                      ),
+                    ),
+                  ).then((_) => _loadCachedDoctors());
+                },
+                icon: const Icon(Icons.person_add_rounded, size: 18),
+                label: const Text(
+                  'Daftar Akun Dokter Baru',
+                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13.5),
+                ),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFF0284C7),
+                  foregroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(vertical: 12),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
+              ),
+            ),
+
+            const SizedBox(height: 10),
+
+            // Tombol 2: Jadikan Akun Saya Sebagai Dokter (Jika sedang login)
+            if (currentUser != null) ...[
+              SizedBox(
+                width: double.infinity,
+                child: OutlinedButton.icon(
+                  onPressed: _isActionLoading
+                      ? null
+                      : () async {
+                          setState(() => _isActionLoading = true);
+                          final ok = await DoctorService.instance.promoteCurrentUserToDoctor();
+                          await _loadCachedDoctors();
+                          if (mounted) {
+                            setState(() => _isActionLoading = false);
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: Text(ok
+                                    ? 'Akun Anda (${currentUser.displayName ?? currentUser.email}) berhasil diaktifkan sebagai Dokter!'
+                                    : 'Gagal mengaktifkan akun dokter.'),
+                                backgroundColor: ok
+                                    ? const Color(0xFF10B981)
+                                    : const Color(0xFFEF4444),
+                                behavior: SnackBarBehavior.floating,
+                              ),
+                            );
+                          }
+                        },
+                  icon: const Icon(Icons.verified_user_rounded, size: 18),
+                  label: Text(
+                    'Jadikan Akun Saya (${currentUser.email ?? "Aktif"}) Sebagai Dokter',
+                    style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12.5),
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: isDark ? const Color(0xFF38BDF8) : const Color(0xFF0284C7),
+                    side: BorderSide(
+                      color: isDark ? const Color(0xFF0284C7) : const Color(0xFF38BDF8),
+                    ),
+                    padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 10),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
                     ),
                   ),
-                );
-              },
-              icon: const Icon(Icons.person_add_rounded, size: 18),
-              label: const Text(
-                'Daftar Akun Dokter Sekarang',
-                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
-              ),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFF0284C7),
-                foregroundColor: Colors.white,
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 20,
-                  vertical: 12,
                 ),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
+              ),
+              const SizedBox(height: 10),
+            ],
+
+            // Tombol 3: Tambah Dokter Uji Coba Cepat (dr. Valent, Sp.JP)
+            SizedBox(
+              width: double.infinity,
+              child: TextButton.icon(
+                onPressed: _isActionLoading
+                    ? null
+                    : () async {
+                        setState(() => _isActionLoading = true);
+                        final doc = await DoctorService.instance.seedQuickTestDoctor();
+                        await _loadCachedDoctors();
+                        if (mounted) {
+                          setState(() => _isActionLoading = false);
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text('Dokter uji coba (${doc["nama"]}) berhasil ditambahkan dan siap dites chat real-time!'),
+                              backgroundColor: const Color(0xFF10B981),
+                              behavior: SnackBarBehavior.floating,
+                            ),
+                          );
+                        }
+                      },
+                icon: const Icon(Icons.bolt_rounded, size: 18),
+                label: const Text(
+                  'Tambah Dokter Uji Coba (dr. Valent, Sp.JP)',
+                  style: TextStyle(fontWeight: FontWeight.w600, fontSize: 13),
+                ),
+                style: TextButton.styleFrom(
+                  foregroundColor: isDark ? const Color(0xFF94A3B8) : const Color(0xFF475569),
+                  backgroundColor: isDark
+                      ? const Color(0xFF1E293B)
+                      : const Color(0xFFF1F5F9),
+                  padding: const EdgeInsets.symmetric(vertical: 11),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
                 ),
               ),
             ),
