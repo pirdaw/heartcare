@@ -534,110 +534,159 @@ class ChatService {
     }
   }
 
-  /// Real-time stream pesan untuk room chat tertentu (menggabungkan Firestore dan Cache Lokal)
-  Stream<List<ChatMessage>> getMessagesStream(String chatId) {
-    // Ambil pesan lokal terlebih dahulu agar UI instan
-    final localFuture = _loadLocalMessages(chatId);
-
-    return _firestore
-        .collection('chats')
-        .doc(chatId)
-        .collection('messages')
-        .snapshots()
-        .asyncMap((snapshot) async {
-      final localList = await localFuture;
-      final Map<String, ChatMessage> map = {};
-
-      // 1. Muat dari lokal
-      for (final m in localList) {
-        map[m.id] = m;
-      }
-      final inMem = _localMessages[chatId] ?? [];
-      for (final m in inMem) {
-        map[m.id] = m;
-      }
-
-      // 2. Timpa dengan data Firestore yang terkonfirmasi
-      for (final doc in snapshot.docs) {
-        try {
-          final m = ChatMessage.fromFirestore(doc);
-          map[m.id] = m;
-        } catch (_) {}
-      }
-
-      final list = map.values.toList();
-      list.sort((a, b) => a.timestamp.compareTo(b.timestamp));
-
-      // Simpan sinkronisasi terbaru ke lokal
-      _localMessages[chatId] = list;
-      _saveMessagesToLocal(chatId, list);
-
-      return list;
-    }).handleError((error) async {
-      debugPrint('[ChatService] getMessagesStream fallback to local cache: $error');
-      final list = await _loadLocalMessages(chatId);
-      list.sort((a, b) => a.timestamp.compareTo(b.timestamp));
-      return list;
-    });
+  /// Helper deterministik untuk menghitung chatId
+  String computeChatId({required String patientId, required String doctorId}) {
+    return 'chat_${_cleanId(patientId)}_${_cleanId(doctorId)}';
   }
 
-  /// Real-time stream daftar chat untuk dokter tertentu (inbox dokter di portal dokter)
-  Stream<List<ChatRoom>> getDoctorChatsStream(String doctorName,
-      {String? doctorId}) {
-    return _firestore.collection('chats').snapshots().map((snapshot) {
-      final Map<String, ChatRoom> map = {};
+  /// Ambil daftar ruang chat yang tersimpan di cache lokal (sinkron, tanpa menunggu jaringan)
+  List<ChatRoom> getCachedRooms() {
+    final list = _localRooms.values.toList();
+    list.sort((a, b) => b.lastMessageTime.compareTo(a.lastMessageTime));
+    return list;
+  }
 
-      // 1. Masukkan data lokal
-      for (final r in _localRooms.values) {
-        map[r.id] = r;
-      }
+  /// Ambil daftar pesan yang tersimpan di cache lokal untuk room tertentu (sinkron)
+  List<ChatMessage> getCachedMessages(String chatId) {
+    final list = _localMessages[chatId] ?? [];
+    list.sort((a, b) => a.timestamp.compareTo(b.timestamp));
+    return list;
+  }
 
-      // 2. Masukkan data Firestore
-      for (final doc in snapshot.docs) {
-        try {
-          final r = ChatRoom.fromFirestore(doc);
-          map[r.id] = r;
-        } catch (_) {}
-      }
+  /// Real-time stream pesan untuk room chat tertentu (instan dengan cache lokal + Firestore)
+  Stream<List<ChatMessage>> getMessagesStream(String chatId) async* {
+    // 1. Emit data lokal secara instan pada milidetik ke-0 agar tidak pernah stuck loading
+    final initialList = await _loadLocalMessages(chatId);
+    initialList.sort((a, b) => a.timestamp.compareTo(b.timestamp));
+    yield initialList;
 
-      final targetName = doctorName.replaceAll(RegExp(r'(dr\.|dr|sp\.jp|spjp)', caseSensitive: false), '').trim().toLowerCase();
-      final targetId = (doctorId ?? '').trim().toLowerCase();
+    // 2. Stream real-time Firestore dan gabungkan secara mulus
+    try {
+      await for (final snapshot in _firestore
+          .collection('chats')
+          .doc(chatId)
+          .collection('messages')
+          .snapshots()) {
+        final Map<String, ChatMessage> map = {};
 
-      final list = map.values.where((room) {
-        // Cek kecocokan ID
-        if (targetId.isNotEmpty) {
-          final rDoctorId = room.doctorId.toLowerCase();
-          if (rDoctorId == targetId ||
-              rDoctorId.contains(targetId) ||
-              targetId.contains(rDoctorId)) {
-            return true;
-          }
+        // Masukkan lokal dulu
+        final inMem = _localMessages[chatId] ?? [];
+        for (final m in inMem) {
+          map[m.id] = m;
         }
 
-        // Cek kecocokan Nama Dokter
-        final rName = room.doctorName.replaceAll(RegExp(r'(dr\.|dr|sp\.jp|spjp)', caseSensitive: false), '').trim().toLowerCase();
-        if (targetName.isNotEmpty && rName.isNotEmpty) {
-          if (rName.contains(targetName) || targetName.contains(rName)) {
-            return true;
-          }
+        // Timpa dengan data Firestore yang terkonfirmasi
+        for (final doc in snapshot.docs) {
+          try {
+            final m = ChatMessage.fromFirestore(doc);
+            map[m.id] = m;
+          } catch (_) {}
         }
 
-        // Fallback untuk akun dokter default / pengetesan
-        if (targetName.isEmpty || targetName.contains('heartcare') || rName.contains('heartcare') || rName.contains('valent')) {
+        final list = map.values.toList();
+        list.sort((a, b) => a.timestamp.compareTo(b.timestamp));
+
+        _localMessages[chatId] = list;
+        _saveMessagesToLocal(chatId, list);
+
+        yield list;
+      }
+    } catch (e) {
+      debugPrint('[ChatService] getMessagesStream fallback to local cache: $e');
+      final fallbackList = await _loadLocalMessages(chatId);
+      fallbackList.sort((a, b) => a.timestamp.compareTo(b.timestamp));
+      yield fallbackList;
+    }
+  }
+
+  List<ChatRoom> _filterDoctorRooms(
+    List<ChatRoom> allRooms,
+    String doctorName, {
+    String? doctorId,
+  }) {
+    final targetName = doctorName
+        .replaceAll(RegExp(r'(dr\.|dr|sp\.jp|spjp)', caseSensitive: false), '')
+        .trim()
+        .toLowerCase();
+    final targetId = (doctorId ?? '').trim().toLowerCase();
+
+    final filtered = allRooms.where((room) {
+      // 1. Cek kecocokan ID
+      if (targetId.isNotEmpty) {
+        final rDoctorId = room.doctorId.toLowerCase();
+        if (rDoctorId == targetId ||
+            rDoctorId.contains(targetId) ||
+            targetId.contains(rDoctorId)) {
           return true;
         }
+      }
 
-        return false;
-      }).toList();
+      // 2. Cek kecocokan Nama Dokter
+      final rName = room.doctorName
+          .replaceAll(RegExp(r'(dr\.|dr|sp\.jp|spjp)', caseSensitive: false), '')
+          .trim()
+          .toLowerCase();
+      if (targetName.isNotEmpty && rName.isNotEmpty) {
+        if (rName.contains(targetName) || targetName.contains(rName)) {
+          return true;
+        }
+      }
 
-      list.sort((a, b) => b.lastMessageTime.compareTo(a.lastMessageTime));
-      return list;
-    }).handleError((error) {
-      debugPrint('[ChatService] getDoctorChatsStream fallback: $error');
-      final list = _localRooms.values.toList();
-      list.sort((a, b) => b.lastMessageTime.compareTo(a.lastMessageTime));
-      return list;
-    });
+      // 3. Fallback akun dokter default / pengetesan
+      if (targetName.isEmpty ||
+          targetName.contains('heartcare') ||
+          targetName.contains('dokter') ||
+          rName.contains('heartcare') ||
+          rName.contains('valent') ||
+          rName.contains('dokter') ||
+          targetId.isEmpty) {
+        return true;
+      }
+
+      return false;
+    }).toList();
+
+    // Jika filter spesifik kosong tetapi ada konsultasi pasien aktif di sistem,
+    // tampilkan semua konsultasi agar dokter tidak pernah melewatkan pesan pasien!
+    if (filtered.isEmpty && allRooms.isNotEmpty) {
+      final fallback = allRooms.toList();
+      fallback.sort((a, b) => b.lastMessageTime.compareTo(a.lastMessageTime));
+      return fallback;
+    }
+
+    filtered.sort((a, b) => b.lastMessageTime.compareTo(a.lastMessageTime));
+    return filtered;
+  }
+
+  /// Real-time stream daftar chat untuk dokter tertentu (instan tanpa jeda loading)
+  Stream<List<ChatRoom>> getDoctorChatsStream(String doctorName,
+      {String? doctorId}) async* {
+    // 1. Emit data lokal seketika pada milidetik ke-0 agar dokter dashboard tidak loading
+    yield _filterDoctorRooms(_localRooms.values.toList(), doctorName, doctorId: doctorId);
+
+    // 2. Stream real-time Firestore
+    try {
+      await for (final snapshot in _firestore.collection('chats').snapshots()) {
+        final Map<String, ChatRoom> map = {};
+
+        for (final r in _localRooms.values) {
+          map[r.id] = r;
+        }
+
+        for (final doc in snapshot.docs) {
+          try {
+            final r = ChatRoom.fromFirestore(doc);
+            map[r.id] = r;
+            _localRooms[r.id] = r;
+          } catch (_) {}
+        }
+
+        yield _filterDoctorRooms(map.values.toList(), doctorName, doctorId: doctorId);
+      }
+    } catch (e) {
+      debugPrint('[ChatService] getDoctorChatsStream fallback: $e');
+      yield _filterDoctorRooms(_localRooms.values.toList(), doctorName, doctorId: doctorId);
+    }
   }
 
   /// Real-time stream daftar chat untuk pasien tertentu

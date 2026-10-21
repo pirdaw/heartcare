@@ -127,6 +127,33 @@ class AuthService {
     return 'patient';
   }
 
+  /// Profil dokter instan/sinkron tanpa menunggu request jaringan Firestore
+  Map<String, dynamic> getFastDoctorProfile() {
+    final user = _auth.currentUser;
+    String name = (user?.displayName ?? '').trim();
+    if (name.isEmpty && user?.email != null && user!.email!.isNotEmpty) {
+      final prefix = user.email!.split('@').first;
+      name = prefix.isNotEmpty ? '${prefix[0].toUpperCase()}${prefix.substring(1)}' : 'Dokter';
+    }
+    if (name.isEmpty) {
+      name = 'Dokter HeartCare';
+    }
+    if (!name.toLowerCase().startsWith('dr.') && !name.toLowerCase().startsWith('dr ')) {
+      name = 'dr. $name';
+    }
+
+    return {
+      'uid': user?.uid ?? 'doctor_uid',
+      'nama': name,
+      'email': user?.email ?? '',
+      'spesialis': 'Spesialis Jantung & Pembuluh Darah',
+      'foto': 'assets/images/dokter_nurlitta.jpg',
+      'sip': 'SIP/2026',
+      'lokasi': 'Klinik Jantung HeartCare',
+      'isOnline': true,
+    };
+  }
+
   /// Mendapatkan profil dokter yang sedang login
   Future<Map<String, dynamic>?> getCurrentDoctorProfile() async {
     final user = _auth.currentUser;

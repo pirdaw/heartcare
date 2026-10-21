@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:heartcare/pages/Skrining/screening_input_page.dart';
 import 'package:heartcare/pages/profil_page.dart';
 import 'package:heartcare/services/theme_service.dart';
@@ -58,7 +59,7 @@ class _KonsultasiDokterPageState
       ScrollController();
 
   String? _activeChatId;
-  bool _isLoadingChat = true;
+  bool _isLoadingChat = false;
   final bool _isDoctorTyping = false;
   final List<ChatMessage> _optimisticMessages = [];
   String selectedReminder = "1 hari sebelumnya";
@@ -66,38 +67,69 @@ class _KonsultasiDokterPageState
   @override
   void initState() {
     super.initState();
-    _initChat();
-  }
-
-  Future<void> _initChat() async {
+    // Pre-komputasi activeChatId secara instan pada frame pertama
     if (widget.chatId != null && widget.chatId!.isNotEmpty) {
       _activeChatId = widget.chatId;
     } else {
       final profile = UserProfileService.instance.currentProfile;
-      _activeChatId = await ChatService.instance.getOrCreateChatRoom(
-        doctorName: widget.doctorName,
-        doctorPhoto: widget.doctorPhoto,
-        doctorSpecialty: widget.doctorSpecialty,
-        doctorId: widget.doctorId,
-        patientId: widget.patientId,
-        patientName: widget.patientName ??
-            (profile.nama.isNotEmpty ? profile.nama : 'Pasien HeartCare'),
-        patientPhoto: widget.patientPhoto ?? profile.fotoProfil,
+      final patientId = widget.patientId ??
+          FirebaseAuth.instance.currentUser?.uid ??
+          (profile.nama.isNotEmpty
+              ? profile.nama
+                  .replaceAll(RegExp(r'[^a-zA-Z0-9]'), '_')
+                  .toLowerCase()
+              : 'patient_user');
+      final doctorId = widget.doctorId ?? widget.doctorName;
+      _activeChatId = ChatService.instance.computeChatId(
+        patientId: patientId,
+        doctorId: doctorId,
       );
     }
+    _isLoadingChat = false;
+    _initChat();
+  }
 
-    if (_activeChatId != null) {
-      await ChatService.instance.markMessagesAsRead(
-        _activeChatId!,
-        widget.isDoctorView ? 'doctor' : 'patient',
-      );
-    }
+  Future<void> _initChat() async {
+    try {
+      if (widget.chatId != null && widget.chatId!.isNotEmpty) {
+        _activeChatId = widget.chatId;
+      } else {
+        final profile = UserProfileService.instance.currentProfile;
+        final resolvedId = await ChatService.instance
+            .getOrCreateChatRoom(
+              doctorName: widget.doctorName,
+              doctorPhoto: widget.doctorPhoto,
+              doctorSpecialty: widget.doctorSpecialty,
+              doctorId: widget.doctorId,
+              patientId: widget.patientId,
+              patientName: widget.patientName ??
+                  (profile.nama.isNotEmpty ? profile.nama : 'Pasien HeartCare'),
+              patientPhoto: widget.patientPhoto ?? profile.fotoProfil,
+            )
+            .timeout(
+              const Duration(seconds: 2),
+              onTimeout: () => _activeChatId ?? 'chat_patient_doctor',
+            );
+        _activeChatId = resolvedId;
+      }
 
-    if (mounted) {
-      setState(() {
-        _isLoadingChat = false;
-      });
-      _scrollToBottom();
+      if (_activeChatId != null) {
+        ChatService.instance
+            .markMessagesAsRead(
+              _activeChatId!,
+              widget.isDoctorView ? 'doctor' : 'patient',
+            )
+            .catchError((_) {});
+      }
+    } catch (e) {
+      debugPrint('[KonsultasiDokterPage] _initChat error: $e');
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isLoadingChat = false;
+        });
+        _scrollToBottom();
+      }
     }
   }
 
@@ -561,12 +593,21 @@ class _KonsultasiDokterPageState
 
                         Expanded(
                           child: StreamBuilder<List<ChatMessage>>(
+                            initialData: _activeChatId != null
+                                ? ChatService.instance
+                                    .getCachedMessages(_activeChatId!)
+                                : [],
                             stream: _activeChatId != null
-                                ? ChatService.instance.getMessagesStream(_activeChatId!)
+                                ? ChatService.instance
+                                    .getMessagesStream(_activeChatId!)
                                 : const Stream.empty(),
                             builder: (context, snapshot) {
-                              if (_isLoadingChat && _optimisticMessages.isEmpty) {
-                                return const Center(child: CircularProgressIndicator());
+                              if (_isLoadingChat &&
+                                  _optimisticMessages.isEmpty &&
+                                  (!snapshot.hasData ||
+                                      snapshot.data!.isEmpty)) {
+                                return const Center(
+                                    child: CircularProgressIndicator());
                               }
 
                               final streamMessages = snapshot.data ?? [];

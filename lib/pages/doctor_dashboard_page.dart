@@ -16,26 +16,41 @@ class DoctorDashboardPage extends StatefulWidget {
 
 class _DoctorDashboardPageState extends State<DoctorDashboardPage> {
   Map<String, dynamic>? _doctorProfile;
-  bool _isLoading = true;
+  bool _isLoading = false;
   bool _isOnline = true;
 
   @override
   void initState() {
     super.initState();
+    _doctorProfile = AuthService.instance.getFastDoctorProfile();
+    _isOnline = _doctorProfile?['isOnline'] ?? true;
     _loadDoctorProfile();
   }
 
   Future<void> _loadDoctorProfile() async {
-    final profile = await AuthService.instance.getCurrentDoctorProfile();
-    if (profile != null) {
-      await DoctorService.instance.registerOrUpdateDoctorInFirestore(profile);
-    }
-    if (mounted) {
-      setState(() {
-        _doctorProfile = profile;
-        _isOnline = profile?['isOnline'] ?? true;
-        _isLoading = false;
-      });
+    try {
+      final profile = await AuthService.instance
+          .getCurrentDoctorProfile()
+          .timeout(const Duration(seconds: 2));
+      if (profile != null) {
+        DoctorService.instance
+            .registerOrUpdateDoctorInFirestore(profile)
+            .catchError((_) {});
+      }
+      if (mounted && profile != null) {
+        setState(() {
+          _doctorProfile = profile;
+          _isOnline = profile['isOnline'] ?? true;
+        });
+      }
+    } catch (e) {
+      debugPrint('[DoctorDashboardPage] _loadDoctorProfile error: $e');
+    } finally {
+      if (mounted && _isLoading) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
     }
   }
 
@@ -459,16 +474,25 @@ class _DoctorDashboardPageState extends State<DoctorDashboardPage> {
 
                     // STREAM DAFTAR CHAT PASIEN
                     StreamBuilder<List<ChatRoom>>(
+                      initialData: ChatService.instance.getCachedRooms(),
                       stream: ChatService.instance.getDoctorChatsStream(
                         doctorName,
                         doctorId: doctorUid,
                       ),
                       builder: (context, snapshot) {
                         if (snapshot.connectionState ==
-                            ConnectionState.waiting) {
+                                ConnectionState.waiting &&
+                            (!snapshot.hasData || snapshot.data == null)) {
                           return const Padding(
-                            padding: EdgeInsets.symmetric(vertical: 40),
-                            child: Center(child: CircularProgressIndicator()),
+                            padding: EdgeInsets.symmetric(vertical: 24),
+                            child: Center(
+                              child: SizedBox(
+                                width: 22,
+                                height: 22,
+                                child:
+                                    CircularProgressIndicator(strokeWidth: 2),
+                              ),
+                            ),
                           );
                         }
 
