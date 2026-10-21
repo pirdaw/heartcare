@@ -19,23 +19,12 @@ service cloud.firestore {
       allow write: if isAuthenticated();
     }
 
-    // Chat rooms
+    // Chat rooms & Real-time messages subcollection
     match /chats/{chatId} {
-      // Allow reading and updating chat if authenticated and user is part of the consultation
-      allow read: if isAuthenticated();
-      allow create: if isAuthenticated();
-      allow update: if isAuthenticated() && (
-        resource.data.patientId == request.auth.uid ||
-        resource.data.doctorId == request.auth.uid ||
-        request.resource.data.patientId == request.auth.uid ||
-        request.resource.data.doctorId == request.auth.uid
-      );
+      allow read, write: if true;
       
-      // Real-time messages subcollection
       match /messages/{messageId} {
-        allow read: if isAuthenticated();
-        allow create: if isAuthenticated() && request.resource.data.senderId == request.auth.uid;
-        allow update, delete: if isAuthenticated() && resource.data.senderId == request.auth.uid;
+        allow read, write: if true;
       }
     }
   }

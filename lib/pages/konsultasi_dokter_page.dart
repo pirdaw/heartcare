@@ -60,6 +60,7 @@ class _KonsultasiDokterPageState
   String? _activeChatId;
   bool _isLoadingChat = true;
   final bool _isDoctorTyping = false;
+  final List<ChatMessage> _optimisticMessages = [];
   String selectedReminder = "1 hari sebelumnya";
 
   @override
@@ -156,6 +157,26 @@ class _KonsultasiDokterPageState
         ? widget.doctorName
         : (widget.patientName ??
             (profile.nama.isNotEmpty ? profile.nama : 'Pasien'));
+
+    final now = DateTime.now();
+    final timeStr =
+        "${now.hour.toString().padLeft(2, '0')}.${now.minute.toString().padLeft(2, '0')}";
+
+    final optMsg = ChatMessage(
+      id: 'opt_${now.millisecondsSinceEpoch}',
+      senderId: widget.isDoctorView ? 'doctor' : 'patient',
+      senderRole: senderRole,
+      senderName: senderName,
+      message: text,
+      timestamp: now,
+      timeFormatted: timeStr,
+      isRead: false,
+    );
+
+    setState(() {
+      _optimisticMessages.add(optMsg);
+    });
+    _scrollToBottom();
 
     await ChatService.instance.sendMessage(
       chatId: _activeChatId!,
@@ -322,6 +343,28 @@ class _KonsultasiDokterPageState
         (title.contains("Skrining") || title.contains("EKG")
             ? "assets/images/screening_jantung.png"
             : null);
+
+    final now = DateTime.now();
+    final timeStr =
+        "${now.hour.toString().padLeft(2, '0')}.${now.minute.toString().padLeft(2, '0')}";
+
+    final optMsg = ChatMessage(
+      id: 'opt_att_${now.millisecondsSinceEpoch}',
+      senderId: widget.isDoctorView ? 'doctor' : 'patient',
+      senderRole: senderRole,
+      senderName: senderName,
+      message: "📎 Lampiran: $title",
+      attachmentType: title,
+      imagePath: path,
+      timestamp: now,
+      timeFormatted: timeStr,
+      isRead: false,
+    );
+
+    setState(() {
+      _optimisticMessages.add(optMsg);
+    });
+    _scrollToBottom();
 
     await ChatService.instance.sendMessage(
       chatId: _activeChatId!,
@@ -522,13 +565,26 @@ class _KonsultasiDokterPageState
                                 ? ChatService.instance.getMessagesStream(_activeChatId!)
                                 : const Stream.empty(),
                             builder: (context, snapshot) {
-                              if (_isLoadingChat ||
-                                  (snapshot.connectionState == ConnectionState.waiting &&
-                                      !snapshot.hasData)) {
+                              if (_isLoadingChat && _optimisticMessages.isEmpty) {
                                 return const Center(child: CircularProgressIndicator());
                               }
 
-                              final messages = snapshot.data ?? [];
+                              final streamMessages = snapshot.data ?? [];
+                              final Map<String, ChatMessage> map = {};
+
+                              for (final m in _optimisticMessages) {
+                                map[m.id] = m;
+                              }
+
+                              for (final m in streamMessages) {
+                                _optimisticMessages.removeWhere((opt) =>
+                                    opt.message == m.message &&
+                                    opt.senderRole == m.senderRole);
+                                map[m.id] = m;
+                              }
+
+                              final messages = map.values.toList();
+                              messages.sort((a, b) => a.timestamp.compareTo(b.timestamp));
 
                               if (messages.isNotEmpty) {
                                 WidgetsBinding.instance.addPostFrameCallback((_) {
