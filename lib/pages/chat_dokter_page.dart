@@ -1,15 +1,15 @@
 import 'package:flutter/material.dart';
 
-class KonsultasiDokterPage extends StatefulWidget {
-  const KonsultasiDokterPage({super.key});
+class ChatDokterStaticPage extends StatefulWidget {
+  const ChatDokterStaticPage({super.key});
 
   @override
-  State<KonsultasiDokterPage> createState() =>
-      _KonsultasiDokterPageState();
+  State<ChatDokterStaticPage> createState() =>
+      _ChatDokterStaticPageState();
 }
 
-class _KonsultasiDokterPageState
-    extends State<KonsultasiDokterPage> {
+class _ChatDokterStaticPageState
+    extends State<ChatDokterStaticPage> {
   final TextEditingController messageController =
       TextEditingController();
 

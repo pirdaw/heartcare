@@ -2,12 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
 
-/// Wrapper sederhana di atas FirebaseAuth.
-///
-/// Setiap method mengembalikan `null` jika berhasil, atau pesan error
-/// (dalam Bahasa Indonesia) jika gagal — supaya halaman UI cukup
-/// menampilkan pesannya lewat SnackBar tanpa perlu tahu detail
-/// FirebaseAuthException.
+/// Wrapper di atas FirebaseAuth dengan penanganan peran Pasien dan Dokter.
 class AuthService {
   AuthService._();
   static final AuthService instance = AuthService._();
@@ -19,6 +14,46 @@ class AuthService {
 
   /// Stream status login — dipakai AuthGate untuk pindah halaman otomatis.
   Stream<User?> get authStateChanges => _auth.authStateChanges();
+
+  /// Daftar akun dokter bawaan yang siap digunakan
+  static const List<Map<String, String>> predefinedDoctors = [
+    {
+      'email': 'dokter.andi@heartcare.com',
+      'password': 'dokter123',
+      'nama': 'dr. Andi Pratama',
+      'spesialis': 'Spesialis Jantung & Pembuluh Darah',
+      'foto': 'assets/images/dokter_andi.jpg',
+      'sip': '1823/SIP/2021',
+      'lokasi': 'Klinik Jantung Sejahtera, Jember',
+    },
+    {
+      'email': 'dokter.nurlitta@heartcare.com',
+      'password': 'dokter123',
+      'nama': 'dr. Nurlitta Dwi',
+      'spesialis': 'Spesialis Jantung & Konsultan Aritmia',
+      'foto': 'assets/images/dokter_nurlitta.jpg',
+      'sip': '2406/SIP/2023',
+      'lokasi': 'RS Mitra Sehat, Jember',
+    },
+    {
+      'email': 'dokter.sinta@heartcare.com',
+      'password': 'dokter123',
+      'nama': 'dr. Sinta Maharani',
+      'spesialis': 'Spesialis Jantung & Kardiovaskular',
+      'foto': 'assets/images/dokter_sinta.jpg',
+      'sip': '2105/SIP/2022',
+      'lokasi': 'RS Graha Medika, Jember',
+    },
+    {
+      'email': 'dokter.rina@heartcare.com',
+      'password': 'dokter123',
+      'nama': 'dr. Rina Amelia',
+      'spesialis': 'Spesialis Jantung & Prevensi Kardio',
+      'foto': 'assets/images/dokter_rina.jpg',
+      'sip': '1944/SIP/2023',
+      'lokasi': 'Pusat Jantung Terpadu, Jember',
+    },
+  ];
 
   /// Login dengan email & password.
   /// Return null jika sukses, atau pesan error jika gagal.
@@ -44,6 +79,14 @@ class AuthService {
       );
       return null;
     } on FirebaseAuthException catch (e) {
+      // Jika mencoba login sebagai akun dokter bawaan namun belum terdaftar di Firebase Auth
+      final isPredefinedDoctor = predefinedDoctors.any(
+        (d) => d['email']?.toLowerCase() == trimmedEmail.toLowerCase(),
+      );
+      if (isPredefinedDoctor &&
+          (e.code == 'user-not-found' || e.code == 'invalid-credential')) {
+        return await _registerPredefinedDoctor(trimmedEmail, password);
+      }
       return _mapError(e);
     } catch (e) {
       final str = e.toString();
@@ -54,14 +97,205 @@ class AuthService {
     }
   }
 
+  /// Login khusus dokter dengan auto-provisioning jika akun belum ada di Firebase
+  Future<String?> signInDoctor({
+    required String email,
+    required String password,
+  }) async {
+    final trimmedEmail = email.trim();
+    if (trimmedEmail.isEmpty || password.isEmpty) {
+      return 'Mohon isi email dan kata sandi dokter.';
+    }
+
+    try {
+      await _auth.signInWithEmailAndPassword(
+        email: trimmedEmail,
+        password: password,
+      );
+
+      // Pastikan role dokter tersimpan di Firestore
+      final user = _auth.currentUser;
+      if (user != null) {
+        await _ensureDoctorFirestoreData(user.uid, trimmedEmail);
+      }
+
+      return null;
+    } on FirebaseAuthException catch (e) {
+      if (e.code == 'user-not-found' || e.code == 'invalid-credential') {
+        return await _registerPredefinedDoctor(trimmedEmail, password);
+      }
+      return _mapError(e);
+    } catch (e) {
+      return 'Gagal masuk akun dokter: $e';
+    }
+  }
+
+  Future<String?> _registerPredefinedDoctor(String email, String password) async {
+    final doctorInfo = predefinedDoctors.firstWhere(
+      (d) => d['email']?.toLowerCase() == email.toLowerCase(),
+      orElse: () => {
+        'email': email,
+        'nama': 'dr. Dokter HeartCare',
+        'spesialis': 'Spesialis Jantung',
+        'foto': 'assets/images/dokter_nurlitta.jpg',
+        'sip': '1001/SIP/2024',
+        'lokasi': 'Klinik HeartCare',
+      },
+    );
+
+    try {
+      final cred = await _auth.createUserWithEmailAndPassword(
+        email: email,
+        password: password,
+      );
+      final user = cred.user;
+      if (user != null) {
+        await user.updateDisplayName(doctorInfo['nama']);
+        await FirebaseFirestore.instance.collection('users').doc(user.uid).set({
+          'nama': doctorInfo['nama'],
+          'email': email,
+          'role': 'doctor',
+          'spesialis': doctorInfo['spesialis'],
+          'sip': doctorInfo['sip'],
+          'foto': doctorInfo['foto'],
+          'lokasi': doctorInfo['lokasi'],
+          'isOnline': true,
+          'createdAt': FieldValue.serverTimestamp(),
+          'updatedAt': FieldValue.serverTimestamp(),
+        }, SetOptions(merge: true));
+      }
+      return null;
+    } on FirebaseAuthException catch (e) {
+      return _mapError(e);
+    } catch (e) {
+      return 'Gagal mendaftarkan akun dokter: $e';
+    }
+  }
+
+  Future<void> _ensureDoctorFirestoreData(String uid, String email) async {
+    try {
+      final docRef = FirebaseFirestore.instance.collection('users').doc(uid);
+      final doc = await docRef.get();
+      final data = doc.data() ?? {};
+
+      if (data['role'] != 'doctor') {
+        final doctorInfo = predefinedDoctors.firstWhere(
+          (d) => d['email']?.toLowerCase() == email.toLowerCase(),
+          orElse: () => {
+            'nama': 'dr. Dokter Spesialis',
+            'spesialis': 'Spesialis Jantung',
+            'foto': 'assets/images/dokter_nurlitta.jpg',
+            'sip': '1001/SIP/2024',
+            'lokasi': 'Klinik Jantung HeartCare',
+          },
+        );
+
+        await docRef.set({
+          'role': 'doctor',
+          'nama': doctorInfo['nama'],
+          'spesialis': doctorInfo['spesialis'],
+          'sip': doctorInfo['sip'],
+          'foto': doctorInfo['foto'],
+          'isOnline': true,
+          'updatedAt': FieldValue.serverTimestamp(),
+        }, SetOptions(merge: true));
+      }
+    } catch (_) {}
+  }
+
+  /// Mendapatkan role pengguna saat ini ('doctor' atau 'patient')
+  Future<String> getUserRole() async {
+    final user = _auth.currentUser;
+    if (user == null) return 'patient';
+
+    // Cek berdasarkan email dokter bawaan terlebih dahulu
+    final isDoctorEmail = predefinedDoctors.any(
+      (d) => d['email']?.toLowerCase() == (user.email ?? '').toLowerCase(),
+    );
+    if (isDoctorEmail) return 'doctor';
+
+    try {
+      final doc = await FirebaseFirestore.instance
+          .collection('users')
+          .doc(user.uid)
+          .get();
+      if (doc.exists) {
+        final role = doc.data()?['role'] as String?;
+        if (role != null && role.isNotEmpty) {
+          return role;
+        }
+      }
+    } catch (_) {}
+
+    return 'patient';
+  }
+
+  /// Mendapatkan profil dokter yang sedang login
+  Future<Map<String, dynamic>?> getCurrentDoctorProfile() async {
+    final user = _auth.currentUser;
+    if (user == null) return null;
+
+    final defaultDoctor = predefinedDoctors.firstWhere(
+      (d) => d['email']?.toLowerCase() == (user.email ?? '').toLowerCase(),
+      orElse: () => {
+        'nama': user.displayName ?? 'dr. Dokter HeartCare',
+        'spesialis': 'Spesialis Jantung',
+        'foto': 'assets/images/dokter_nurlitta.jpg',
+        'sip': '1001/SIP/2024',
+        'email': user.email ?? '',
+      },
+    );
+
+    try {
+      final doc = await FirebaseFirestore.instance
+          .collection('users')
+          .doc(user.uid)
+          .get();
+      if (doc.exists) {
+        final data = doc.data() ?? {};
+        return {
+          'uid': user.uid,
+          'nama': data['nama'] ?? defaultDoctor['nama'],
+          'spesialis': data['spesialis'] ?? defaultDoctor['spesialis'],
+          'foto': data['foto'] ?? defaultDoctor['foto'],
+          'sip': data['sip'] ?? defaultDoctor['sip'],
+          'email': user.email ?? defaultDoctor['email'],
+          'isOnline': data['isOnline'] ?? true,
+        };
+      }
+    } catch (_) {}
+
+    return {
+      'uid': user.uid,
+      'nama': defaultDoctor['nama'],
+      'spesialis': defaultDoctor['spesialis'],
+      'foto': defaultDoctor['foto'],
+      'sip': defaultDoctor['sip'],
+      'email': defaultDoctor['email'],
+      'isOnline': true,
+    };
+  }
+
+  /// Ubah status online dokter
+  Future<void> updateDoctorOnlineStatus(bool isOnline) async {
+    final user = _auth.currentUser;
+    if (user == null) return;
+    try {
+      await FirebaseFirestore.instance
+          .collection('users')
+          .doc(user.uid)
+          .set({'isOnline': isOnline}, SetOptions(merge: true));
+    } catch (_) {}
+  }
+
   /// Daftar akun baru dengan nama, email, password, no. telepon, & tanggal lahir.
-  /// Return null jika sukses, atau pesan error jika gagal.
   Future<String?> signUp({
     required String name,
     required String email,
     required String password,
     String telepon = '',
     String tanggalLahir = '',
+    String role = 'patient',
   }) async {
     final trimmedName = name.trim();
     final trimmedEmail = email.trim();
@@ -89,6 +323,7 @@ class AuthService {
             'telepon': trimmedTelepon,
             'ttl': trimmedTanggalLahir,
             'tanggalLahir': trimmedTanggalLahir,
+            'role': role,
             'jenisKelamin': '',
             'alamat': '',
             'golonganDarah': '',
@@ -100,7 +335,8 @@ class AuthService {
             'createdAt': FieldValue.serverTimestamp(),
             'updatedAt': FieldValue.serverTimestamp(),
           }, SetOptions(merge: true));
-          debugPrint('[AuthService] Berhasil menyimpan user ke Firestore users/${user.uid}');
+          debugPrint(
+              '[AuthService] Berhasil menyimpan user ke Firestore users/${user.uid}');
         } catch (e) {
           debugPrint('[AuthService] Gagal menyimpan user ke Firestore: $e');
         }
@@ -117,8 +353,7 @@ class AuthService {
     }
   }
 
-  /// Kirim email reset password (berisi link, bukan kode OTP).
-  /// Return null jika sukses, atau pesan error jika gagal.
+  /// Kirim email reset password.
   Future<String?> sendPasswordResetEmail(String email) async {
     final trimmedEmail = email.trim();
     if (trimmedEmail.isEmpty) {
@@ -140,7 +375,6 @@ class AuthService {
   }
 
   /// Ubah kata sandi user yang sedang login.
-  /// Return null jika sukses, atau pesan error jika gagal.
   Future<String?> updatePassword(String newPassword) async {
     final user = _auth.currentUser;
     if (user == null) {

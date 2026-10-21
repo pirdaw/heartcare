@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../services/auth_service.dart';
+import 'doctor_dashboard_page.dart';
 import 'forgot_password_page.dart';
 import 'home_page.dart';
 import 'signup_page.dart';
@@ -31,6 +32,7 @@ class _LoginPageState extends State<LoginPage> {
 
   // Status loading saat proses login berlangsung
   bool _isLoading = false;
+  bool _isDoctorMode = false;
 
   @override
   void dispose() {
@@ -67,10 +69,15 @@ class _LoginPageState extends State<LoginPage> {
       _isLoading = true;
     });
 
-    final error = await AuthService.instance.signIn(
-      email: email,
-      password: password,
-    );
+    final error = _isDoctorMode
+        ? await AuthService.instance.signInDoctor(
+            email: email,
+            password: password,
+          )
+        : await AuthService.instance.signIn(
+            email: email,
+            password: password,
+          );
 
     if (!mounted) return;
 
@@ -83,12 +90,24 @@ class _LoginPageState extends State<LoginPage> {
       return;
     }
 
-    Navigator.pushReplacement(
-      context,
-      MaterialPageRoute(
-        builder: (context) => const HomePage(),
-      ),
-    );
+    final role = await AuthService.instance.getUserRole();
+    if (!mounted) return;
+
+    if (role == 'doctor' || _isDoctorMode) {
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(
+          builder: (context) => const DoctorDashboardPage(),
+        ),
+      );
+    } else {
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(
+          builder: (context) => const HomePage(),
+        ),
+      );
+    }
   }
 
   void _showErrorSnackBar(String message) {
@@ -192,7 +211,165 @@ class _LoginPageState extends State<LoginPage> {
                         ),
                       ),
 
-                      const SizedBox(height: 70),
+                      const SizedBox(height: 36),
+
+                      // ==========================================
+                      // TAB PILIH MODE (PASIEN / DOKTER)
+                      // ==========================================
+                      Container(
+                        height: 48,
+                        padding: const EdgeInsets.all(4),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFF1F5F9),
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(
+                            color: const Color(0xFFCBD5E1),
+                            width: 1,
+                          ),
+                        ),
+                        child: Row(
+                          children: [
+                            Expanded(
+                              child: InkWell(
+                                onTap: () {
+                                  setState(() {
+                                    _isDoctorMode = false;
+                                    emailController.clear();
+                                    passwordController.clear();
+                                  });
+                                },
+                                borderRadius: BorderRadius.circular(9),
+                                child: Container(
+                                  alignment: Alignment.center,
+                                  decoration: BoxDecoration(
+                                    color: !_isDoctorMode
+                                        ? const Color(0xFF0B9AC1)
+                                        : Colors.transparent,
+                                    borderRadius: BorderRadius.circular(9),
+                                    boxShadow: !_isDoctorMode
+                                        ? [
+                                            BoxShadow(
+                                              color: const Color(0xFF0B9AC1)
+                                                  .withValues(alpha: 0.3),
+                                              blurRadius: 6,
+                                              offset: const Offset(0, 2),
+                                            ),
+                                          ]
+                                        : null,
+                                  ),
+                                  child: Text(
+                                    'Masuk Pasien',
+                                    style: TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 13.5,
+                                      color: !_isDoctorMode
+                                          ? Colors.white
+                                          : const Color(0xFF64748B),
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ),
+                            Expanded(
+                              child: InkWell(
+                                onTap: () {
+                                  setState(() {
+                                    _isDoctorMode = true;
+                                    emailController.text =
+                                        'dokter.andi@heartcare.com';
+                                    passwordController.text = 'dokter123';
+                                  });
+                                },
+                                borderRadius: BorderRadius.circular(9),
+                                child: Container(
+                                  alignment: Alignment.center,
+                                  decoration: BoxDecoration(
+                                    color: _isDoctorMode
+                                        ? const Color(0xFF0B9AC1)
+                                        : Colors.transparent,
+                                    borderRadius: BorderRadius.circular(9),
+                                    boxShadow: _isDoctorMode
+                                        ? [
+                                            BoxShadow(
+                                              color: const Color(0xFF0B9AC1)
+                                                  .withValues(alpha: 0.3),
+                                              blurRadius: 6,
+                                              offset: const Offset(0, 2),
+                                            ),
+                                          ]
+                                        : null,
+                                  ),
+                                  child: Text(
+                                    'Masuk Dokter',
+                                    style: TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 13.5,
+                                      color: _isDoctorMode
+                                          ? Colors.white
+                                          : const Color(0xFF64748B),
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+
+                      if (_isDoctorMode) ...[
+                        const SizedBox(height: 16),
+                        const Text(
+                          'Pilih Cepat Akun Dokter:',
+                          style: TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.bold,
+                            color: Color(0xFF0284C7),
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        SingleChildScrollView(
+                          scrollDirection: Axis.horizontal,
+                          child: Row(
+                            children: AuthService.predefinedDoctors.map((doc) {
+                              final isSelected =
+                                  emailController.text.toLowerCase() ==
+                                      doc['email']?.toLowerCase();
+                              return Padding(
+                                padding: const EdgeInsets.only(right: 8),
+                                child: ChoiceChip(
+                                  label: Text(
+                                    doc['nama'] ?? '',
+                                    style: TextStyle(
+                                      fontSize: 11.5,
+                                      fontWeight: isSelected
+                                          ? FontWeight.bold
+                                          : FontWeight.normal,
+                                      color: isSelected
+                                          ? Colors.white
+                                          : const Color(0xFF0F172A),
+                                    ),
+                                  ),
+                                  selected: isSelected,
+                                  selectedColor: const Color(0xFF0284C7),
+                                  backgroundColor: const Color(0xFFE0F2FE),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(20),
+                                  ),
+                                  onSelected: (_) {
+                                    setState(() {
+                                      emailController.text = doc['email']!;
+                                      passwordController.text =
+                                          doc['password']!;
+                                    });
+                                  },
+                                ),
+                              );
+                            }).toList(),
+                          ),
+                        ),
+                      ],
+
+                      const SizedBox(height: 24),
 
                       // ==========================================
                       // EMAIL / NO HP
@@ -404,9 +581,11 @@ class _LoginPageState extends State<LoginPage> {
                                     strokeWidth: 2.5,
                                   ),
                                 )
-                              : const Text(
-                                  'Masuk',
-                                  style: TextStyle(
+                              : Text(
+                                  _isDoctorMode
+                                      ? 'Masuk sebagai Dokter'
+                                      : 'Masuk',
+                                  style: const TextStyle(
                                     fontSize: 16,
                                     fontWeight: FontWeight.bold,
                                   ),

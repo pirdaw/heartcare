@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:heartcare/services/theme_service.dart';
 import 'home_page.dart';
+import 'konsultasi_dokter_page.dart';
 import 'pilih_jadwal_page.dart';
 import 'profil_page.dart';
 
@@ -365,7 +366,7 @@ class DetailDokterPage extends StatelessWidget {
                         const SizedBox(height: 24),
 
                         // ==================================================
-                        // TOMBOL PILIH JADWAL
+                        // TOMBOL CHAT KONSULTASI SEKARANG (REAL-TIME)
                         // ==================================================
                         Container(
                           width: double.infinity,
@@ -393,7 +394,7 @@ class DetailDokterPage extends StatelessWidget {
                                 Navigator.push(
                                   context,
                                   MaterialPageRoute(
-                                    builder: (context) => PilihJadwalPage(
+                                    builder: (context) => KonsultasiDokterPage(
                                       doctorName: nama,
                                       doctorSpecialty: spesialis,
                                       doctorPhoto: imagePath,
@@ -405,17 +406,72 @@ class DetailDokterPage extends StatelessWidget {
                                 mainAxisAlignment: MainAxisAlignment.center,
                                 children: [
                                   Icon(
-                                    Icons.calendar_month_rounded,
+                                    Icons.chat_bubble_rounded,
                                     color: Colors.white,
                                     size: 20,
                                   ),
                                   SizedBox(width: 8),
                                   Text(
-                                    'Pilih Jadwal Konsultasi',
+                                    'Chat Konsultasi Sekarang',
                                     style: TextStyle(
                                       fontSize: 15,
                                       fontWeight: FontWeight.bold,
                                       color: Colors.white,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ),
+
+                        const SizedBox(height: 12),
+
+                        // ==================================================
+                        // TOMBOL PILIH JADWAL
+                        // ==================================================
+                        Container(
+                          width: double.infinity,
+                          height: 50,
+                          decoration: BoxDecoration(
+                            color: isDark ? const Color(0xFF1E293B) : const Color(0xFFF0F9FF),
+                            borderRadius: BorderRadius.circular(14),
+                            border: Border.all(
+                              color: isDark ? const Color(0xFF334155) : const Color(0xFFBAE6FD),
+                              width: 1.2,
+                            ),
+                          ),
+                          child: Material(
+                            color: Colors.transparent,
+                            child: InkWell(
+                              borderRadius: BorderRadius.circular(14),
+                              onTap: () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) => PilihJadwalPage(
+                                      doctorName: nama,
+                                      doctorSpecialty: spesialis,
+                                      doctorPhoto: imagePath,
+                                    ),
+                                  ),
+                                );
+                              },
+                              child: Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Icon(
+                                    Icons.calendar_month_rounded,
+                                    color: isDark ? const Color(0xFF38BDF8) : const Color(0xFF0284C7),
+                                    size: 20,
+                                  ),
+                                  const SizedBox(width: 8),
+                                  Text(
+                                    'Pilih Jadwal Temu',
+                                    style: TextStyle(
+                                      fontSize: 15,
+                                      fontWeight: FontWeight.bold,
+                                      color: isDark ? Colors.white : const Color(0xFF0284C7),
                                     ),
                                   ),
                                 ],
