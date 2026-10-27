@@ -744,10 +744,10 @@ class _HomePageState extends State<HomePage> {
                           children: [
                             Expanded(
                               child: _serviceCard(
-                                icon: Icons.notifications_active_rounded,
-                                title: 'Pengingat Kesehatan',
+                                icon: Icons.alarm_rounded,
+                                title: 'Pengingat Obat',
                                 description:
-                                    'Pengingat agar tidak melewati kegiatan penting.',
+                                    'Atur alarm dan jadwal minum obat tepat waktu.',
                                 isDark: isDark,
                                 onTap: () {
                                   Navigator.push(
@@ -846,15 +846,10 @@ class _HomePageState extends State<HomePage> {
 
                     Builder(
                       builder: (context) {
-                        final hasReminder =
-                            _reminderController.medicines.isNotEmpty;
-                        final nextMed = hasReminder
-                            ? _reminderController.medicines.first
-                            : null;
-                        final timeRaw = (nextMed != null &&
-                                nextMed.reminderTimes.isNotEmpty)
-                            ? nextMed.reminderTimes.first
-                            : '';
+                        final nextAlarm = _reminderController.nextAlarmItem;
+                        final hasReminder = nextAlarm != null;
+                        final nextMed = nextAlarm?.medicine;
+                        final timeRaw = nextAlarm?.time ?? '';
                         final timeFormatted = timeRaw.isNotEmpty
                             ? (timeRaw.contains('WIB')
                                 ? timeRaw
