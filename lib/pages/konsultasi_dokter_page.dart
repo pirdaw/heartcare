@@ -1,10 +1,13 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:heartcare/pages/Skrining/screening_input_page.dart';
 import 'package:heartcare/pages/profil_page.dart';
 import 'package:heartcare/services/theme_service.dart';
 import '../services/user_profile_service.dart';
 import '../services/chat_service.dart';
+import '../services/doctor_service.dart';
 
 class ChatItem {
   final String message;
@@ -63,10 +66,13 @@ class _KonsultasiDokterPageState
   final bool _isDoctorTyping = false;
   final List<ChatMessage> _optimisticMessages = [];
   String selectedReminder = "1 hari sebelumnya";
+  StreamSubscription? _doctorStatusSub;
+  bool _isDoctorOnline = true;
 
   @override
   void initState() {
     super.initState();
+    _listenDoctorOnlineStatus();
     // Pre-komputasi activeChatId secara instan pada frame pertama
     if (widget.chatId != null && widget.chatId!.isNotEmpty) {
       _activeChatId = widget.chatId;
@@ -133,8 +139,31 @@ class _KonsultasiDokterPageState
     }
   }
 
+  void _listenDoctorOnlineStatus() {
+    if (widget.isDoctorView) return;
+
+    final docId = widget.doctorId;
+    if (docId != null && docId.isNotEmpty) {
+      _doctorStatusSub = FirebaseFirestore.instance
+          .collection('users')
+          .doc(docId)
+          .snapshots()
+          .listen((snap) {
+        if (snap.exists && snap.data() != null) {
+          final isOnline = snap.data()!['isOnline'] as bool? ?? true;
+          if (mounted && _isDoctorOnline != isOnline) {
+            setState(() {
+              _isDoctorOnline = isOnline;
+            });
+          }
+        }
+      }, onError: (_) {});
+    }
+  }
+
   @override
   void dispose() {
+    _doctorStatusSub?.cancel();
     messageController.dispose();
     _scrollController.dispose();
     super.dispose();
@@ -563,7 +592,11 @@ class _KonsultasiDokterPageState
                                     size: 8,
                                     color: _isDoctorTyping
                                         ? primaryBlue
-                                        : onlineGreen,
+                                        : (widget.isDoctorView
+                                            ? onlineGreen
+                                            : (_isDoctorOnline
+                                                ? onlineGreen
+                                                : const Color(0xFFF59E0B))),
                                   ),
                                   const SizedBox(width: 4),
                                   Text(
@@ -571,12 +604,18 @@ class _KonsultasiDokterPageState
                                         ? "Sedang mengetik..."
                                         : (widget.isDoctorView
                                             ? "Pasien Aktif"
-                                            : "Online"),
+                                            : (_isDoctorOnline
+                                                ? "Online"
+                                                : "Offline")),
                                     style: TextStyle(
                                       fontSize: 10.5,
                                       color: _isDoctorTyping
                                           ? primaryBlue
-                                          : onlineGreen,
+                                          : (widget.isDoctorView
+                                              ? onlineGreen
+                                              : (_isDoctorOnline
+                                                  ? onlineGreen
+                                                  : const Color(0xFFF59E0B))),
                                       fontWeight:
                                           FontWeight.w600,
                                     ),
@@ -600,6 +639,84 @@ class _KonsultasiDokterPageState
                       ],
                     ),
                   ),
+
+                  // ==================================================
+                  // PENGINGAT JIKA DOKTER SEDANG OFFLINE (UNTUK PASIEN)
+                  // ==================================================
+                  if (!widget.isDoctorView && !_isDoctorOnline)
+                    Container(
+                      margin: const EdgeInsets.fromLTRB(14, 8, 14, 4),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 14,
+                        vertical: 10,
+                      ),
+                      decoration: BoxDecoration(
+                        color: isDark
+                            ? const Color(0xFF2A2415)
+                            : const Color(0xFFFFFBEB),
+                        borderRadius: BorderRadius.circular(14),
+                        border: Border.all(
+                          color: isDark
+                              ? const Color(0xFF78350F)
+                              : const Color(0xFFFDE68A),
+                          width: 1,
+                        ),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withValues(alpha: 0.04),
+                            blurRadius: 6,
+                            offset: const Offset(0, 2),
+                          ),
+                        ],
+                      ),
+                      child: Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.all(5),
+                            decoration: BoxDecoration(
+                              color: const Color(0xFFF59E0B)
+                                  .withValues(alpha: 0.2),
+                              shape: BoxShape.circle,
+                            ),
+                            child: const Icon(
+                              Icons.pause_circle_filled_rounded,
+                              color: Color(0xFFD97706),
+                              size: 18,
+                            ),
+                          ),
+                          const SizedBox(width: 10),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  'Dokter Sedang Offline',
+                                  style: TextStyle(
+                                    fontSize: 12.5,
+                                    fontWeight: FontWeight.bold,
+                                    color: isDark
+                                        ? const Color(0xFFFDE68A)
+                                        : const Color(0xFF92400E),
+                                  ),
+                                ),
+                                const SizedBox(height: 2),
+                                Text(
+                                  'Dokter saat ini sedang tidak menerima konsultasi langsung. Anda tetap dapat meninggalkan pesan atau pertanyaan di bawah ini, dokter akan merespons saat kembali online.',
+                                  style: TextStyle(
+                                    fontSize: 11.5,
+                                    height: 1.35,
+                                    color: isDark
+                                        ? const Color(0xFFE2E8F0)
+                                        : const Color(0xFF78350F),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
 
                   // ==================================================
                   // AREA CHAT INTERAKTIF
@@ -793,7 +910,9 @@ class _KonsultasiDokterPageState
                                       color: isDark ? Colors.white : const Color(0xFF0F172A),
                                     ),
                                     decoration: InputDecoration(
-                                      hintText: "Ketik pesan....",
+                                      hintText: (!widget.isDoctorView && !_isDoctorOnline)
+                                          ? "Tinggalkan pesan untuk dokter..."
+                                          : "Ketik pesan....",
                                       hintStyle: TextStyle(
                                         fontSize: 13.5,
                                         color: isDark ? const Color(0xFF64748B) : const Color(0xFF94A3B8),
@@ -1174,30 +1293,10 @@ class _KonsultasiDokterPageState
         color: Color(0xFFE6E6E6),
       ),
       clipBehavior: Clip.antiAlias,
-      child: Image.asset(
-        widget.doctorPhoto.isNotEmpty
-            ? widget.doctorPhoto
-            : "assets/images/dokter_nurlitta.png",
-        fit: BoxFit.cover,
-        errorBuilder: (context, error, stackTrace) {
-          return Image.asset(
-            "assets/images/dokter_nurlitta.png",
-            fit: BoxFit.cover,
-            errorBuilder: (context, error, stackTrace) {
-              return Image.asset(
-                "assets/images/profile_woman.png",
-                fit: BoxFit.cover,
-                errorBuilder: (context, error, stackTrace) {
-                  return Icon(
-                    Icons.person,
-                    color: Colors.grey,
-                    size: width * 0.6,
-                  );
-                },
-              );
-            },
-          );
-        },
+      child: DoctorService.buildDoctorImage(
+        widget.doctorPhoto,
+        width: width,
+        height: height,
       ),
     );
   }

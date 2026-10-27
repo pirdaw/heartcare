@@ -150,6 +150,12 @@ class AuthService {
       'foto': 'assets/images/dokter_nurlitta.jpg',
       'sip': 'SIP/2026',
       'lokasi': 'Klinik Jantung HeartCare',
+      'telepon': '',
+      'noWa': '',
+      'whatsapp': '',
+      'pengalaman': '10 tahun',
+      'tentang':
+          'Dokter spesialis jantung dan kardiovaskular bersertifikasi yang berdedikasi melayani konsultasi kesehatan jantung pasien secara komprehensif.',
       'isOnline': true,
     };
   }
@@ -159,36 +165,71 @@ class AuthService {
     final user = _auth.currentUser;
     if (user == null) return null;
 
+    Map<String, dynamic> data = {};
+
     try {
       final doc = await FirebaseFirestore.instance
           .collection('users')
           .doc(user.uid)
           .get();
       if (doc.exists) {
-        final data = doc.data() ?? {};
-        return {
-          'uid': user.uid,
-          'nama': data['nama'] ?? user.displayName ?? 'dr. Dokter HeartCare',
-          'spesialis':
-              data['spesialis'] ?? 'Spesialis Jantung & Pembuluh Darah',
-          'foto': data['foto'] ?? 'assets/images/dokter_nurlitta.jpg',
-          'sip': data['sip'] ?? 'SIP/2026',
-          'lokasi': data['lokasi'] ?? 'Klinik Jantung HeartCare',
-          'email': user.email ?? data['email'] ?? '',
-          'isOnline': data['isOnline'] ?? true,
-        };
+        data = doc.data() ?? {};
       }
     } catch (_) {}
 
+    // Coba juga periksa dokumen di koleksi doctors jika data telepon belum ada
+    if (data['telepon'] == null && data['noWa'] == null) {
+      try {
+        final docDoc = await FirebaseFirestore.instance
+            .collection('doctors')
+            .doc(user.uid)
+            .get();
+        if (docDoc.exists) {
+          data = {...(docDoc.data() ?? {}), ...data};
+        }
+      } catch (_) {}
+    }
+
+    // Ambil juga dari cache lokal jika Firestore sedang offline
+    try {
+      final cachedList = await DoctorService.instance.getCachedDoctors();
+      for (final cd in cachedList) {
+        if (cd['id'] == user.uid || cd['uid'] == user.uid || cd['email'] == user.email) {
+          data = {...cd, ...data};
+          break;
+        }
+      }
+    } catch (_) {}
+
+    final telepon = (data['telepon'] ??
+            data['noWa'] ??
+            data['whatsapp'] ??
+            data['noTelepon'] ??
+            data['phone'] ??
+            '')
+        .toString()
+        .trim();
+    final pengalaman = (data['pengalaman'] ?? '10 tahun').toString().trim();
+    final tentang = (data['tentang'] ??
+            'Dokter spesialis jantung dan kardiovaskular bersertifikasi yang berdedikasi melayani konsultasi kesehatan jantung pasien secara komprehensif.')
+        .toString()
+        .trim();
+
     return {
       'uid': user.uid,
-      'nama': user.displayName ?? 'dr. Dokter HeartCare',
-      'spesialis': 'Spesialis Jantung & Pembuluh Darah',
-      'foto': 'assets/images/dokter_nurlitta.jpg',
-      'sip': 'SIP/2026',
-      'lokasi': 'Klinik Jantung HeartCare',
-      'email': user.email ?? '',
-      'isOnline': true,
+      'nama': data['nama'] ?? user.displayName ?? 'dr. Dokter HeartCare',
+      'spesialis':
+          data['spesialis'] ?? 'Spesialis Jantung & Pembuluh Darah',
+      'foto': data['foto'] ?? 'assets/images/dokter_nurlitta.jpg',
+      'sip': data['sip'] ?? 'SIP/2026',
+      'lokasi': data['lokasi'] ?? 'Klinik Jantung HeartCare',
+      'telepon': telepon,
+      'noWa': telepon,
+      'whatsapp': telepon,
+      'pengalaman': pengalaman,
+      'tentang': tentang,
+      'email': user.email ?? data['email'] ?? '',
+      'isOnline': data['isOnline'] ?? true,
     };
   }
 

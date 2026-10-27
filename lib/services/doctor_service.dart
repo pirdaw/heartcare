@@ -1,12 +1,14 @@
 import 'dart:async';
 import 'dart:convert';
+import 'dart:io';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-/// Layanan terpusat untuk registrasi, sinkronisasi, dan penemuan akun dokter
-/// dengan dukungan fail-safe: Firestore (users & doctors) + Cache Lokal (SharedPreferences).
+/// Layanan terpusat untuk registrasi, sinkronisasi, dan penemuan akun dokter autentik
+/// dengan sinkronisasi Firestore (users & doctors) + Cache Lokal (SharedPreferences).
 class DoctorService {
   DoctorService._();
   static final DoctorService instance = DoctorService._();
@@ -16,7 +18,7 @@ class DoctorService {
 
   static const String _prefKeyDoctors = 'heartcare_registered_doctors_v2';
 
-  /// Cek apakah suatu map data dokumen merupakan akun dokter
+  /// Cek apakah suatu dokumen adalah akun dokter
   static bool isDoctorDocument(Map<String, dynamic> data) {
     final role = (data['role'] as String? ?? '').trim().toLowerCase();
     if (role == 'doctor' || role == 'dokter') return true;
@@ -38,6 +40,66 @@ class DoctorService {
     }
 
     return false;
+  }
+
+  /// Cek apakah akun dokter adalah akun asli (BUKAN dummy yang di-generate tanpa akun)
+  static bool isRealDoctorAccount(Map<String, dynamic> data, String id) {
+    final cleanId = id.trim().toLowerCase();
+    // Filter akun dummy yang di-generate sebelumnya
+    if (cleanId.startsWith('dr_valent_') ||
+        cleanId.startsWith('dummy_') ||
+        cleanId.contains('dummy')) {
+      return false;
+    }
+
+    final email = (data['email'] as String? ?? '').trim().toLowerCase();
+    if (email == 'dr.valent@heartcare.id' && cleanId.startsWith('dr_valent_')) {
+      return false;
+    }
+
+    return isDoctorDocument(data);
+  }
+
+  /// Bersihkan data dokter dummy dari Cache Lokal dan Firestore
+  Future<void> cleanupDummyDoctors() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final List<String> list = prefs.getStringList(_prefKeyDoctors) ?? [];
+      final List<Map<String, dynamic>> cleanList = [];
+
+      for (final item in list) {
+        try {
+          final decoded = jsonDecode(item) as Map<String, dynamic>;
+          final id = (decoded['id'] ?? decoded['uid'] ?? '').toString();
+          if (isRealDoctorAccount(decoded, id)) {
+            cleanList.add(decoded);
+          }
+        } catch (_) {}
+      }
+
+      final encoded = cleanList.map((e) => jsonEncode(e)).toList();
+      await prefs.setStringList(_prefKeyDoctors, encoded);
+
+      // Bersihkan juga dari Firestore jika ada dokumen dummy dr_valent_*
+      try {
+        final dummyUsers = await _firestore.collection('users').get();
+        for (final doc in dummyUsers.docs) {
+          if (doc.id.startsWith('dr_valent_') || doc.id.startsWith('dummy_')) {
+            await doc.reference.delete();
+          }
+        }
+        final dummyDoctors = await _firestore.collection('doctors').get();
+        for (final doc in dummyDoctors.docs) {
+          if (doc.id.startsWith('dr_valent_') || doc.id.startsWith('dummy_')) {
+            await doc.reference.delete();
+          }
+        }
+      } catch (e) {
+        debugPrint('[DoctorService] Info cleanup Firestore: $e');
+      }
+    } catch (e) {
+      debugPrint('[DoctorService] Gagal membersihkan dummy doctors: $e');
+    }
   }
 
   /// Normalisasi data dokter ke format standar `Map<String, dynamic>`
@@ -86,7 +148,13 @@ class DoctorService {
 
     final bool isOnline = data['isOnline'] as bool? ?? true;
     final String email = (data['email'] as String? ?? '').trim();
-    final String telepon = (data['telepon'] as String? ?? '').trim();
+    final String telepon = ((data['telepon'] ??
+            data['noWa'] ??
+            data['whatsapp'] ??
+            data['noTelepon'] ??
+            data['phone']) as String? ??
+            '')
+        .trim();
 
     return {
       'id': id,
@@ -101,6 +169,8 @@ class DoctorService {
       'isOnline': isOnline,
       'email': email,
       'telepon': telepon,
+      'noWa': telepon,
+      'whatsapp': telepon,
       'role': 'doctor',
     };
   }
@@ -108,21 +178,28 @@ class DoctorService {
   /// Simpan dokter ke SharedPreferences agar selalu ada fallback instan offline
   Future<void> cacheDoctor(Map<String, dynamic> doctor) async {
     try {
+      final docId = (doctor['id'] ?? doctor['uid'] ?? '').toString();
+      // Jangan pernah simpan dokter dummy ke cache
+      if (!isRealDoctorAccount(doctor, docId)) return;
+
       final prefs = await SharedPreferences.getInstance();
       final List<String> list = prefs.getStringList(_prefKeyDoctors) ?? [];
       final List<Map<String, dynamic>> decoded = [];
 
       for (final item in list) {
         try {
-          decoded.add(jsonDecode(item) as Map<String, dynamic>);
+          final d = jsonDecode(item) as Map<String, dynamic>;
+          final id = (d['id'] ?? d['uid'] ?? '').toString();
+          if (isRealDoctorAccount(d, id)) {
+            decoded.add(d);
+          }
         } catch (_) {}
       }
 
-      final docId = doctor['id'] ?? doctor['uid'];
       final docEmail = doctor['email'];
 
       decoded.removeWhere((d) {
-        if (docId != null && (d['id'] == docId || d['uid'] == docId)) {
+        if (docId.isNotEmpty && (d['id'] == docId || d['uid'] == docId)) {
           return true;
         }
         if (docEmail != null && docEmail.isNotEmpty && d['email'] == docEmail) {
@@ -140,7 +217,7 @@ class DoctorService {
     }
   }
 
-  /// Ambil daftar dokter dari SharedPreferences
+  /// Ambil daftar dokter dari SharedPreferences (hanya akun asli)
   Future<List<Map<String, dynamic>>> getCachedDoctors() async {
     try {
       final prefs = await SharedPreferences.getInstance();
@@ -148,7 +225,11 @@ class DoctorService {
       final List<Map<String, dynamic>> result = [];
       for (final item in list) {
         try {
-          result.add(jsonDecode(item) as Map<String, dynamic>);
+          final d = jsonDecode(item) as Map<String, dynamic>;
+          final id = (d['id'] ?? d['uid'] ?? '').toString();
+          if (isRealDoctorAccount(d, id)) {
+            result.add(d);
+          }
         } catch (_) {}
       }
       return result;
@@ -209,6 +290,151 @@ class DoctorService {
     }
   }
 
+  /// Perbarui profil dokter (Nama, SIP, Spesialisasi, Lokasi, Bio, Telepon)
+  Future<bool> updateDoctorProfile({
+    required String uid,
+    required String nama,
+    required String sip,
+    required String spesialis,
+    required String lokasi,
+    required String pengalaman,
+    required String telepon,
+    required String tentang,
+    String? foto,
+  }) async {
+    try {
+      String formattedName = nama.trim();
+      if (!formattedName.toLowerCase().startsWith('dr.') &&
+          !formattedName.toLowerCase().startsWith('dr ')) {
+        formattedName = 'dr. $formattedName';
+      }
+
+      final payload = <String, dynamic>{
+        'nama': formattedName,
+        'sip': sip.trim(),
+        'spesialis': spesialis.trim(),
+        'lokasi': lokasi.trim(),
+        'pengalaman': pengalaman.trim(),
+        'telepon': telepon.trim(),
+        'noWa': telepon.trim(),
+        'whatsapp': telepon.trim(),
+        'tentang': tentang.trim(),
+        'role': 'doctor',
+        'updatedAt': FieldValue.serverTimestamp(),
+      };
+
+      if (foto != null && foto.isNotEmpty) {
+        payload['foto'] = foto;
+      }
+
+      // Update Firestore users & doctors
+      await _firestore
+          .collection('users')
+          .doc(uid)
+          .set(payload, SetOptions(merge: true));
+
+      await _firestore
+          .collection('doctors')
+          .doc(uid)
+          .set(payload, SetOptions(merge: true));
+
+      // Update Firebase Auth display name jika user sedang login
+      final currentUser = _auth.currentUser;
+      if (currentUser != null && currentUser.uid == uid) {
+        await currentUser.updateDisplayName(formattedName);
+      }
+
+      // Update cache
+      final cachedDoc = normalizeDoctorData(
+        id: uid,
+        data: {
+          ...payload,
+          'uid': uid,
+          'email': currentUser?.email ?? '',
+        },
+      );
+      await cacheDoctor(cachedDoc);
+
+      return true;
+    } catch (e) {
+      debugPrint('[DoctorService] Gagal update profil dokter: $e');
+      return false;
+    }
+  }
+
+  /// Perbarui status Online/Offline dokter di Firestore & Cache
+  Future<void> updateDoctorOnlineStatus({
+    required String uid,
+    required bool isOnline,
+  }) async {
+    try {
+      final payload = {
+        'isOnline': isOnline,
+        'lastActiveAt': FieldValue.serverTimestamp(),
+      };
+
+      await _firestore
+          .collection('users')
+          .doc(uid)
+          .set(payload, SetOptions(merge: true));
+
+      await _firestore
+          .collection('doctors')
+          .doc(uid)
+          .set(payload, SetOptions(merge: true));
+
+      // Update cache
+      final cached = await getCachedDoctors();
+      for (final doc in cached) {
+        if (doc['id'] == uid || doc['uid'] == uid) {
+          doc['isOnline'] = isOnline;
+          await cacheDoctor(doc);
+          break;
+        }
+      }
+    } catch (e) {
+      debugPrint('[DoctorService] Error updateDoctorOnlineStatus: $e');
+    }
+  }
+
+  /// Perbarui foto profil dokter (Base64 atau URL)
+  Future<bool> updateDoctorPhoto({
+    required String uid,
+    required String photoData,
+  }) async {
+    try {
+      final payload = {
+        'foto': photoData,
+        'updatedAt': FieldValue.serverTimestamp(),
+      };
+
+      await _firestore
+          .collection('users')
+          .doc(uid)
+          .set(payload, SetOptions(merge: true));
+
+      await _firestore
+          .collection('doctors')
+          .doc(uid)
+          .set(payload, SetOptions(merge: true));
+
+      // Update cache
+      final cached = await getCachedDoctors();
+      for (final doc in cached) {
+        if (doc['id'] == uid || doc['uid'] == uid) {
+          doc['foto'] = photoData;
+          await cacheDoctor(doc);
+          break;
+        }
+      }
+
+      return true;
+    } catch (e) {
+      debugPrint('[DoctorService] Error updateDoctorPhoto: $e');
+      return false;
+    }
+  }
+
   /// Pastikan akun user saat ini ditandai sebagai role dokter
   Future<bool> ensureUserIsDoctor({
     required String uid,
@@ -263,32 +489,101 @@ class DoctorService {
     );
   }
 
-  /// Buat akun dokter uji coba cepat jika user ingin langsung menguji chat
-  Future<Map<String, dynamic>> seedQuickTestDoctor({
-    String nama = 'dr. Valent Pratama, Sp.JP',
-    String spesialis = 'Spesialis Jantung & Pembuluh Darah',
-    String email = 'dr.valent@heartcare.id',
-  }) async {
-    final doctorId = 'dr_valent_${DateTime.now().millisecondsSinceEpoch % 10000}';
-    final normalized = normalizeDoctorData(
-      id: doctorId,
-      data: {
-        'nama': nama,
-        'email': email,
-        'spesialis': spesialis,
-        'telepon': '+62 812-9876-5432',
-        'sip': 'SIP-9921/2026',
-        'lokasi': 'Klinik Jantung HeartCare',
-        'pengalaman': '10 tahun',
-        'tentang':
-            'Dokter Spesialis Jantung dan Pembuluh Darah berpengalaman. Siap memberikan diagnosis dan konsultasi kesehatan jantung komprehensif.',
-        'foto': 'assets/images/dokter_nurlitta.jpg',
-        'isOnline': true,
-        'role': 'doctor',
-      },
-    );
+  /// Helper serbaguna untuk menampilkan foto dokter (Base64, Network, Asset, atau File)
+  static Widget buildDoctorImage(
+    String? photo, {
+    double? width,
+    double? height,
+    BoxFit fit = BoxFit.cover,
+    bool isDark = false,
+  }) {
+    if (photo == null || photo.trim().isEmpty) {
+      return Icon(
+        Icons.person_rounded,
+        size: width != null ? width * 0.6 : 36,
+        color: isDark ? const Color(0xFF38BDF8) : const Color(0xFF0284C7),
+      );
+    }
 
-    await registerOrUpdateDoctorInFirestore(normalized, uid: doctorId);
-    return normalized;
+    final trimmed = photo.trim();
+
+    // 1. URL Internet (http/https)
+    if (trimmed.startsWith('http://') || trimmed.startsWith('https://')) {
+      return Image.network(
+        trimmed,
+        width: width,
+        height: height,
+        fit: fit,
+        errorBuilder: (context, error, stackTrace) => Icon(
+          Icons.person_rounded,
+          size: width != null ? width * 0.6 : 36,
+          color: isDark ? const Color(0xFF38BDF8) : const Color(0xFF0284C7),
+        ),
+      );
+    }
+
+    // 2. Base64 Image
+    if (trimmed.startsWith('data:image') || trimmed.length > 200) {
+      try {
+        String cleanBase64 = trimmed;
+        if (cleanBase64.contains(',')) {
+          cleanBase64 = cleanBase64.split(',').last;
+        }
+        final bytes = base64Decode(cleanBase64);
+        return Image.memory(
+          bytes,
+          width: width,
+          height: height,
+          fit: fit,
+          errorBuilder: (context, error, stackTrace) => Icon(
+            Icons.person_rounded,
+            size: width != null ? width * 0.6 : 36,
+            color: isDark ? const Color(0xFF38BDF8) : const Color(0xFF0284C7),
+          ),
+        );
+      } catch (_) {}
+    }
+
+    // 3. Asset Image
+    if (trimmed.startsWith('assets/')) {
+      return Image.asset(
+        trimmed,
+        width: width,
+        height: height,
+        fit: fit,
+        errorBuilder: (context, error, stackTrace) => Icon(
+          Icons.person_rounded,
+          size: width != null ? width * 0.6 : 36,
+          color: isDark ? const Color(0xFF38BDF8) : const Color(0xFF0284C7),
+        ),
+      );
+    }
+
+    // 4. File lokal di perangkat (jika bukan Web)
+    if (!kIsWeb) {
+      try {
+        final file = File(trimmed);
+        if (file.existsSync()) {
+          return Image.file(
+            file,
+            width: width,
+            height: height,
+            fit: fit,
+            errorBuilder: (context, error, stackTrace) => Icon(
+              Icons.person_rounded,
+              size: width != null ? width * 0.6 : 36,
+              color: isDark ? const Color(0xFF38BDF8) : const Color(0xFF0284C7),
+            ),
+          );
+        }
+      } catch (_) {}
+    }
+
+    // Default icon
+    return Icon(
+      Icons.person_rounded,
+      size: width != null ? width * 0.6 : 36,
+      color: isDark ? const Color(0xFF38BDF8) : const Color(0xFF0284C7),
+    );
   }
 }

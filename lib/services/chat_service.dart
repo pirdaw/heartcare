@@ -140,6 +140,12 @@ class ChatRoom {
     required this.updatedAt,
   });
 
+  String get lastMessageTimeFormatted {
+    final h = lastMessageTime.hour.toString().padLeft(2, '0');
+    final m = lastMessageTime.minute.toString().padLeft(2, '0');
+    return "$h.$m";
+  }
+
   factory ChatRoom.fromFirestore(DocumentSnapshot doc) {
     final data = doc.data() as Map<String, dynamic>? ?? {};
 
@@ -156,6 +162,12 @@ class ChatRoom {
       updated = (data['updatedAt'] as Timestamp).toDate();
     }
 
+    int unreadDoctor = (data['unreadCountDoctor'] as num?)?.toInt() ?? 0;
+    final lastSender = (data['lastSenderRole'] as String? ?? '').toLowerCase();
+    if (unreadDoctor <= 0 && lastSender == 'patient') {
+      unreadDoctor = 1;
+    }
+
     return ChatRoom(
       id: doc.id,
       patientId: data['patientId'] ?? '',
@@ -168,7 +180,7 @@ class ChatRoom {
       lastMessage: data['lastMessage'] ?? '',
       lastMessageTime: lastTime,
       lastSenderRole: data['lastSenderRole'] ?? '',
-      unreadCountDoctor: (data['unreadCountDoctor'] as num?)?.toInt() ?? 0,
+      unreadCountDoctor: unreadDoctor,
       unreadCountPatient: (data['unreadCountPatient'] as num?)?.toInt() ?? 0,
       updatedAt: updated,
     );
@@ -177,6 +189,12 @@ class ChatRoom {
   factory ChatRoom.fromJson(Map<String, dynamic> json) {
     final lastTimeMillis = json['lastMessageLocalTime'] as num? ??
         DateTime.now().millisecondsSinceEpoch;
+    int unreadDoctor = (json['unreadCountDoctor'] as num?)?.toInt() ?? 0;
+    final lastSender = (json['lastSenderRole'] as String? ?? '').toLowerCase();
+    if (unreadDoctor <= 0 && lastSender == 'patient') {
+      unreadDoctor = 1;
+    }
+
     return ChatRoom(
       id: json['id'] as String? ?? json['chatId'] as String? ?? '',
       patientId: json['patientId'] as String? ?? '',
@@ -189,7 +207,7 @@ class ChatRoom {
       lastMessage: json['lastMessage'] as String? ?? '',
       lastMessageTime: DateTime.fromMillisecondsSinceEpoch(lastTimeMillis.toInt()),
       lastSenderRole: json['lastSenderRole'] as String? ?? '',
-      unreadCountDoctor: (json['unreadCountDoctor'] as num?)?.toInt() ?? 0,
+      unreadCountDoctor: unreadDoctor,
       unreadCountPatient: (json['unreadCountPatient'] as num?)?.toInt() ?? 0,
       updatedAt: DateTime.fromMillisecondsSinceEpoch(lastTimeMillis.toInt()),
     );
@@ -663,12 +681,14 @@ class ChatService {
     final targetId = (doctorId ?? '').trim().toLowerCase();
 
     final filtered = allRooms.where((room) {
-      // 1. Cek kecocokan ID
+      // 1. Cek kecocokan ID dokter atau room ID
       if (targetId.isNotEmpty) {
         final rDoctorId = room.doctorId.toLowerCase();
+        final rRoomId = room.id.toLowerCase();
         if (rDoctorId == targetId ||
             rDoctorId.contains(targetId) ||
-            targetId.contains(rDoctorId)) {
+            targetId.contains(rDoctorId) ||
+            rRoomId.contains(targetId)) {
           return true;
         }
       }
@@ -716,50 +736,61 @@ class ChatService {
     // 1. Emit data lokal seketika pada milidetik ke-0 agar dokter dashboard tidak loading
     yield _filterDoctorRooms(_localRooms.values.toList(), doctorName, doctorId: doctorId);
 
-    // 2. Stream real-time Firestore
+    // 2. Stream real-time Firestore secara langsung dari koleksi 'chats'
     try {
       await for (final snapshot in _firestore.collection('chats').snapshots()) {
         final Map<String, ChatRoom> map = {};
 
+        // Inisialisasi dari cache lokal
         for (final r in _localRooms.values) {
           map[r.id] = r;
         }
 
+        // Timpa / tambahkan dari dokumen Firestore real-time
         for (final doc in snapshot.docs) {
           try {
             final r = ChatRoom.fromFirestore(doc);
             map[r.id] = r;
             _localRooms[r.id] = r;
-          } catch (_) {}
+          } catch (e) {
+            debugPrint('[ChatService] Error parsing room ${doc.id}: $e');
+          }
         }
 
-        yield _filterDoctorRooms(map.values.toList(), doctorName, doctorId: doctorId);
+        final filtered = _filterDoctorRooms(map.values.toList(), doctorName, doctorId: doctorId);
+        yield filtered;
       }
     } catch (e) {
-      debugPrint('[ChatService] getDoctorChatsStream fallback: $e');
+      debugPrint('[ChatService] getDoctorChatsStream error: $e');
       yield _filterDoctorRooms(_localRooms.values.toList(), doctorName, doctorId: doctorId);
     }
   }
 
+
   /// Real-time stream daftar chat untuk pasien tertentu
   Stream<List<ChatRoom>> getPatientChatsStream(String patientId) {
-    final cleanPId = _cleanId(patientId);
-
-    return _firestore.collection('chats').snapshots().map((snapshot) {
+    // Query berdasarkan patientId (UID Firebase pasien) - sesuai security rules
+    return _firestore
+        .collection('chats')
+        .where('patientId', isEqualTo: patientId)
+        .snapshots()
+        .map((snapshot) {
       final Map<String, ChatRoom> map = {};
+
+      // Tambah data lokal dulu
+      final cleanPId = _cleanId(patientId);
       for (final r in _localRooms.values) {
         if (_cleanId(r.patientId).contains(cleanPId) || cleanPId.contains(_cleanId(r.patientId))) {
           map[r.id] = r;
         }
       }
 
+      // Timpa dengan data Firestore
       for (final doc in snapshot.docs) {
         try {
           final r = ChatRoom.fromFirestore(doc);
-          final rPId = _cleanId(r.patientId);
-          if (rPId == cleanPId || rPId.contains(cleanPId) || cleanPId.contains(rPId)) {
-            map[r.id] = r;
-          }
+          map[r.id] = r;
+          _localRooms[r.id] = r;
         } catch (_) {}
       }
 
@@ -785,7 +816,7 @@ class ChatService {
           doctorSpecialty: room.doctorSpecialty,
           lastMessage: room.lastMessage,
           lastMessageTime: room.lastMessageTime,
-          lastSenderRole: room.lastSenderRole,
+          lastSenderRole: currentRole == 'doctor' ? 'doctor_read' : 'patient_read',
           unreadCountDoctor: currentRole == 'doctor' ? 0 : room.unreadCountDoctor,
           unreadCountPatient: currentRole == 'patient' ? 0 : room.unreadCountPatient,
           updatedAt: DateTime.now(),
@@ -796,9 +827,15 @@ class ChatService {
 
       final roomRef = _firestore.collection('chats').doc(chatId);
       if (currentRole == 'doctor') {
-        await roomRef.set({'unreadCountDoctor': 0}, SetOptions(merge: true));
+        await roomRef.set({
+          'unreadCountDoctor': 0,
+          'lastSenderRole': 'doctor_read',
+        }, SetOptions(merge: true));
       } else {
-        await roomRef.set({'unreadCountPatient': 0}, SetOptions(merge: true));
+        await roomRef.set({
+          'unreadCountPatient': 0,
+          'lastSenderRole': 'patient_read',
+        }, SetOptions(merge: true));
       }
     } catch (_) {}
   }

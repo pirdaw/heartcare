@@ -31,7 +31,9 @@ class _PilihDokterPageState extends State<PilihDokterPage> {
   @override
   void initState() {
     super.initState();
-    _loadCachedDoctors();
+    DoctorService.instance.cleanupDummyDoctors().then((_) {
+      _loadCachedDoctors();
+    });
   }
 
   Future<void> _loadCachedDoctors() async {
@@ -50,36 +52,10 @@ class _PilihDokterPageState extends State<PilihDokterPage> {
   }
 
   Widget _buildDoctorPhoto(String? photo, bool isDark) {
-    if (photo != null && photo.isNotEmpty) {
-      if (photo.startsWith('http://') || photo.startsWith('https://')) {
-        return Image.network(
-          photo,
-          fit: BoxFit.cover,
-          errorBuilder: (context, error, stackTrace) => Icon(
-            Icons.person,
-            size: 40,
-            color: isDark ? const Color(0xFF38BDF8) : brandPrimary,
-          ),
-        );
-      }
-      if (photo.startsWith('assets/')) {
-        return Image.asset(
-          photo,
-          fit: BoxFit.cover,
-          errorBuilder: (context, error, stackTrace) {
-            return Icon(
-              Icons.person,
-              size: 40,
-              color: isDark ? const Color(0xFF38BDF8) : brandPrimary,
-            );
-          },
-        );
-      }
-    }
-    return Icon(
-      Icons.person_rounded,
-      size: 40,
-      color: isDark ? const Color(0xFF38BDF8) : brandPrimary,
+    return DoctorService.buildDoctorImage(
+      photo,
+      fit: BoxFit.cover,
+      isDark: isDark,
     );
   }
 
@@ -200,7 +176,7 @@ class _PilihDokterPageState extends State<PilihDokterPage> {
 
               for (final doc in docs) {
                 final data = doc.data();
-                if (DoctorService.isDoctorDocument(data)) {
+                if (DoctorService.isRealDoctorAccount(data, doc.id)) {
                   final normalized = DoctorService.normalizeDoctorData(
                     id: doc.id,
                     data: data,
@@ -211,12 +187,15 @@ class _PilihDokterPageState extends State<PilihDokterPage> {
                 }
               }
 
-              // Gabungkan dokter dari Firestore dan Cache Lokal (Deduplikasi)
+              // Gabungkan dokter dari Firestore dan Cache Lokal (Hanya Akun Asli & Deduplikasi)
               final Map<String, Map<String, dynamic>> mergedMap = {};
               for (final d in _cachedDoctors) {
-                final key =
-                    (d['id'] ?? d['uid'] ?? d['email'] ?? d['nama']).toString();
-                mergedMap[key] = d;
+                final id = (d['id'] ?? d['uid'] ?? '').toString();
+                if (DoctorService.isRealDoctorAccount(d, id)) {
+                  final key =
+                      (d['id'] ?? d['uid'] ?? d['email'] ?? d['nama']).toString();
+                  mergedMap[key] = d;
+                }
               }
               for (final d in firestoreDoctors) {
                 final key =
@@ -475,6 +454,11 @@ class _PilihDokterPageState extends State<PilihDokterPage> {
                                                 isOnline: dokter['isOnline']
                                                         as bool? ??
                                                     true,
+                                                telepon: (dokter['telepon'] ??
+                                                        dokter['noWa'] ??
+                                                        dokter['whatsapp'] ??
+                                                        '')
+                                                    .toString(),
                                               ),
                                             ),
                                           );
@@ -719,24 +703,25 @@ class _PilihDokterPageState extends State<PilihDokterPage> {
                   ),
                 ),
               ),
-              // INDIKATOR STATUS ONLINE
-              if (isOnline)
-                Positioned(
-                  right: 3,
-                  top: 3,
-                  child: Container(
-                    width: 12,
-                    height: 12,
-                    decoration: BoxDecoration(
-                      color: const Color(0xFF10B981),
-                      shape: BoxShape.circle,
-                      border: Border.all(
-                        color: isDark ? const Color(0xFF1E293B) : Colors.white,
-                        width: 2,
-                      ),
+              // INDIKATOR STATUS ONLINE / OFFLINE
+              Positioned(
+                right: 3,
+                top: 3,
+                child: Container(
+                  width: 13,
+                  height: 13,
+                  decoration: BoxDecoration(
+                    color: isOnline
+                        ? const Color(0xFF10B981)
+                        : const Color(0xFF94A3B8),
+                    shape: BoxShape.circle,
+                    border: Border.all(
+                      color: isDark ? const Color(0xFF1E293B) : Colors.white,
+                      width: 2,
                     ),
                   ),
                 ),
+              ),
             ],
           ),
 
@@ -768,7 +753,43 @@ class _PilihDokterPageState extends State<PilihDokterPage> {
                     color: isDark ? const Color(0xFF38BDF8) : brandPrimary,
                   ),
                 ),
-                const SizedBox(height: 6),
+                const SizedBox(height: 4),
+                // Status badge
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                  decoration: BoxDecoration(
+                    color: isOnline
+                        ? const Color(0xFF10B981).withValues(alpha: 0.12)
+                        : (isDark
+                            ? const Color(0xFF334155)
+                            : const Color(0xFFF1F5F9)),
+                    borderRadius: BorderRadius.circular(6),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(
+                        Icons.circle,
+                        size: 6,
+                        color: isOnline
+                            ? const Color(0xFF10B981)
+                            : const Color(0xFF94A3B8),
+                      ),
+                      const SizedBox(width: 4),
+                      Text(
+                        isOnline ? 'Online • Siap Konsultasi' : 'Offline • Tinggalkan Pesan',
+                        style: TextStyle(
+                          fontSize: 10,
+                          fontWeight: FontWeight.w600,
+                          color: isOnline
+                              ? const Color(0xFF10B981)
+                              : (isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B)),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 5),
                 Row(
                   children: [
                     Icon(
@@ -790,35 +811,13 @@ class _PilihDokterPageState extends State<PilihDokterPage> {
                     ),
                   ],
                 ),
-                const SizedBox(height: 3),
-                Row(
-                  children: [
-                    const Icon(
-                      Icons.location_on_outlined,
-                      size: 13,
-                      color: Color(0xFF94A3B8),
-                    ),
-                    const SizedBox(width: 4),
-                    Expanded(
-                      child: Text(
-                        dokter['lokasi'] as String,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(
-                          fontSize: 11,
-                          color: Color(0xFF94A3B8),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
               ],
             ),
           ),
 
           const SizedBox(width: 8),
 
-          // TOMBOL CHAT CEPAT
+          // TOMBOL CHAT / PESAN
           Material(
             color: Colors.transparent,
             child: InkWell(
@@ -830,32 +829,43 @@ class _PilihDokterPageState extends State<PilihDokterPage> {
                   vertical: 8,
                 ),
                 decoration: BoxDecoration(
-                  gradient: const LinearGradient(
-                    colors: [Color(0xFF0EA5E9), Color(0xFF0284C7)],
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                  ),
+                  gradient: isOnline
+                      ? const LinearGradient(
+                          colors: [Color(0xFF0EA5E9), Color(0xFF0284C7)],
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                        )
+                      : LinearGradient(
+                          colors: isDark
+                              ? [const Color(0xFF334155), const Color(0xFF1E293B)]
+                              : [const Color(0xFF64748B), const Color(0xFF475569)],
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                        ),
                   borderRadius: BorderRadius.circular(12),
                   boxShadow: [
                     BoxShadow(
-                      color: const Color(0xFF0284C7).withValues(alpha: 0.3),
+                      color: (isOnline
+                              ? const Color(0xFF0284C7)
+                              : const Color(0xFF475569))
+                          .withValues(alpha: 0.3),
                       blurRadius: 6,
                       offset: const Offset(0, 2),
                     ),
                   ],
                 ),
-                child: const Column(
+                child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     Icon(
-                      Icons.chat_bubble_rounded,
+                      isOnline ? Icons.chat_bubble_rounded : Icons.mark_chat_unread_outlined,
                       color: Colors.white,
                       size: 16,
                     ),
-                    SizedBox(height: 2),
+                    const SizedBox(height: 2),
                     Text(
-                      'Chat',
-                      style: TextStyle(
+                      isOnline ? 'Chat' : 'Pesan',
+                      style: const TextStyle(
                         fontSize: 10.5,
                         fontWeight: FontWeight.bold,
                         color: Colors.white,
@@ -997,47 +1007,7 @@ class _PilihDokterPageState extends State<PilihDokterPage> {
                   ),
                 ),
               ),
-              const SizedBox(height: 10),
             ],
-
-            // Tombol 3: Tambah Dokter Uji Coba Cepat (dr. Valent, Sp.JP)
-            SizedBox(
-              width: double.infinity,
-              child: TextButton.icon(
-                onPressed: _isActionLoading
-                    ? null
-                    : () async {
-                        setState(() => _isActionLoading = true);
-                        final doc = await DoctorService.instance.seedQuickTestDoctor();
-                        await _loadCachedDoctors();
-                        if (mounted) {
-                          setState(() => _isActionLoading = false);
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(
-                              content: Text('Dokter uji coba (${doc["nama"]}) berhasil ditambahkan dan siap dites chat real-time!'),
-                              backgroundColor: const Color(0xFF10B981),
-                              behavior: SnackBarBehavior.floating,
-                            ),
-                          );
-                        }
-                      },
-                icon: const Icon(Icons.bolt_rounded, size: 18),
-                label: const Text(
-                  'Tambah Dokter Uji Coba (dr. Valent, Sp.JP)',
-                  style: TextStyle(fontWeight: FontWeight.w600, fontSize: 13),
-                ),
-                style: TextButton.styleFrom(
-                  foregroundColor: isDark ? const Color(0xFF94A3B8) : const Color(0xFF475569),
-                  backgroundColor: isDark
-                      ? const Color(0xFF1E293B)
-                      : const Color(0xFFF1F5F9),
-                  padding: const EdgeInsets.symmetric(vertical: 11),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                ),
-              ),
-            ),
           ],
         ),
       ),
