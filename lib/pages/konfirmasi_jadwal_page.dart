@@ -4,6 +4,7 @@ import 'home_page.dart';
 import 'konsultasi_dokter_page.dart';
 
 class KonfirmasiJadwalPage extends StatelessWidget {
+  final String? doctorId;
   final String doctorName;
   final String doctorSpecialty;
   final String doctorPhoto;
@@ -12,6 +13,7 @@ class KonfirmasiJadwalPage extends StatelessWidget {
 
   const KonfirmasiJadwalPage({
     super.key,
+    this.doctorId,
     this.doctorName = 'dr. Nurlitta Dwi',
     this.doctorSpecialty = 'Spesialis Jantung',
     this.doctorPhoto = 'assets/images/dokter_nurlitta.jpg',
@@ -274,6 +276,7 @@ class KonfirmasiJadwalPage extends StatelessWidget {
                             context,
                             MaterialPageRoute(
                               builder: (context) => KonsultasiDokterPage(
+                                doctorId: doctorId,
                                 doctorName: doctorName,
                                 doctorPhoto: doctorPhoto,
                                 doctorSpecialty: doctorSpecialty,

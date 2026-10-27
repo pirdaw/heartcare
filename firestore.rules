@@ -23,7 +23,7 @@ service cloud.firestore {
     match /chats/{chatId} {
       allow read, write: if true;
       
-      match /messages/{messageId} {
+      match /{document=**} {
         allow read, write: if true;
       }
     }

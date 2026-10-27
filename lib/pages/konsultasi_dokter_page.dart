@@ -210,12 +210,30 @@ class _KonsultasiDokterPageState
     });
     _scrollToBottom();
 
-    await ChatService.instance.sendMessage(
+    final success = await ChatService.instance.sendMessage(
       chatId: _activeChatId!,
       message: text,
       senderRole: senderRole,
       senderName: senderName,
+      patientId: widget.patientId,
+      patientName: widget.patientName ?? profile.nama,
+      doctorId: widget.doctorId,
+      doctorName: widget.doctorName,
     );
+
+    if (!success && mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+            'Pesan tersimpan lokal, namun gagal disinkronkan ke server Firestore. Mohon pastikan aturan keamanan (Security Rules) Firestore telah diaktifkan/dipublikasikan di Firebase Console.',
+            style: TextStyle(fontSize: 12),
+          ),
+          backgroundColor: Color(0xFFEF4444),
+          duration: Duration(seconds: 4),
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+    }
 
     _scrollToBottom();
   }

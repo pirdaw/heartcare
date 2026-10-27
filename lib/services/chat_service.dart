@@ -4,6 +4,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'doctor_service.dart';
 
 class ChatMessage {
   final String id;
@@ -263,9 +264,27 @@ class ChatService {
         currentUser?.email?.replaceAll(RegExp(r'[^a-zA-Z0-9]'), '_') ??
         'patient_user';
 
-    final resolvedDoctorId = (doctorId != null && doctorId.isNotEmpty)
+    String resolvedDoctorId = (doctorId != null && doctorId.isNotEmpty)
         ? doctorId
         : _cleanId(doctorName);
+
+    // Jika doctorId tidak dioper atau berupa nama, coba cari UID dokter asli di Firestore
+    if (doctorId == null || doctorId.isEmpty || doctorId == doctorName) {
+      try {
+        final cleanTarget = _cleanId(doctorName);
+        final usersSnap = await _firestore.collection('users').get();
+        for (final doc in usersSnap.docs) {
+          final data = doc.data();
+          if (DoctorService.isDoctorDocument(data)) {
+            final dName = (data['nama'] as String? ?? data['name'] as String? ?? '');
+            if (_cleanId(dName).contains(cleanTarget) || cleanTarget.contains(_cleanId(dName))) {
+              resolvedDoctorId = doc.id;
+              break;
+            }
+          }
+        }
+      } catch (_) {}
+    }
 
     final chatId = 'chat_${_cleanId(resolvedPatientId)}_${_cleanId(resolvedDoctorId)}';
     final resolvedPatientName = patientName ??
@@ -423,13 +442,17 @@ class ChatService {
   }
 
   /// Mengirim pesan baru ke ruang chat real-time
-  Future<void> sendMessage({
+  Future<bool> sendMessage({
     required String chatId,
     required String message,
     required String senderRole, // 'patient' atau 'doctor'
     required String senderName,
     String? attachmentType,
     String? imagePath,
+    String? patientId,
+    String? patientName,
+    String? doctorId,
+    String? doctorName,
   }) async {
     final currentUser = _auth.currentUser;
     final senderId = currentUser?.uid ??
@@ -492,6 +515,7 @@ class ChatService {
     }
 
     // 3. Simpan ke Firestore secara background
+    bool isCloudSuccess = false;
     try {
       final msgRef = _firestore
           .collection('chats')
@@ -513,8 +537,8 @@ class ChatService {
         'isRead': false,
       });
 
-      // Update ringkasan ruang chat (gunakan set dengan merge agar fail-safe)
-      await _firestore.collection('chats').doc(chatId).set({
+      // Update ringkasan ruang chat (lengkap dengan data pasien & dokter)
+      final Map<String, dynamic> roomPayload = {
         'chatId': chatId,
         'lastMessage': snippet,
         'lastMessageTime': FieldValue.serverTimestamp(),
@@ -526,12 +550,35 @@ class ChatService {
           'unreadCountDoctor': FieldValue.increment(1),
         if (senderRole == 'doctor')
           'unreadCountPatient': FieldValue.increment(1),
-      }, SetOptions(merge: true));
+      };
 
+      if (existingRoom != null) {
+        roomPayload['patientId'] = existingRoom.patientId;
+        roomPayload['patientName'] = existingRoom.patientName;
+        roomPayload['patientPhoto'] = existingRoom.patientPhoto;
+        roomPayload['doctorId'] = existingRoom.doctorId;
+        roomPayload['doctorName'] = existingRoom.doctorName;
+        roomPayload['doctorPhoto'] = existingRoom.doctorPhoto;
+        roomPayload['doctorSpecialty'] = existingRoom.doctorSpecialty;
+      } else {
+        if (patientId != null && patientId.isNotEmpty) roomPayload['patientId'] = patientId;
+        if (patientName != null && patientName.isNotEmpty) roomPayload['patientName'] = patientName;
+        if (doctorId != null && doctorId.isNotEmpty) roomPayload['doctorId'] = doctorId;
+        if (doctorName != null && doctorName.isNotEmpty) roomPayload['doctorName'] = doctorName;
+      }
+
+      await _firestore
+          .collection('chats')
+          .doc(chatId)
+          .set(roomPayload, SetOptions(merge: true));
+
+      isCloudSuccess = true;
       debugPrint('[ChatService] Sukses kirim pesan ke Firestore: $chatId');
     } catch (e) {
       debugPrint('[ChatService] sendMessage Firestore warning (tersimpan di lokal): $e');
     }
+
+    return isCloudSuccess;
   }
 
   /// Helper deterministik untuk menghitung chatId
@@ -562,11 +609,16 @@ class ChatService {
 
     // 2. Stream real-time Firestore dan gabungkan secara mulus
     try {
-      await for (final snapshot in _firestore
+      final firestoreStream = _firestore
           .collection('chats')
           .doc(chatId)
           .collection('messages')
-          .snapshots()) {
+          .snapshots()
+          .handleError((err) {
+        debugPrint('[ChatService] getMessagesStream Firestore error: $err');
+      });
+
+      await for (final snapshot in firestoreStream) {
         final Map<String, ChatMessage> map = {};
 
         // Masukkan lokal dulu
