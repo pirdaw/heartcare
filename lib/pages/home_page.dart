@@ -744,10 +744,10 @@ class _HomePageState extends State<HomePage> {
                           children: [
                             Expanded(
                               child: _serviceCard(
-                                icon: Icons.notifications_active_rounded,
-                                title: 'Pengingat Kesehatan',
+                                icon: Icons.alarm_rounded,
+                                title: 'Pengingat Obat',
                                 description:
-                                    'Pengingat agar tidak melewati kegiatan penting.',
+                                    'Atur alarm dan jadwal minum obat tepat waktu.',
                                 isDark: isDark,
                                 onTap: () {
                                   Navigator.push(
@@ -846,26 +846,306 @@ class _HomePageState extends State<HomePage> {
 
                     Builder(
                       builder: (context) {
-                        if (_reminderController.medicines.isEmpty) {
-                          return _buildEmptyReminderCard(isDark);
-                        }
-                        return Column(
-                          children: [
-                            for (int i = 0;
-                                i < _reminderController.medicines.length;
-                                i++)
-                              Padding(
-                                padding: EdgeInsets.only(
-                                  bottom: i == _reminderController.medicines.length - 1
-                                      ? 0
-                                      : 10,
-                                ),
-                                child: _buildReminderItemCard(
-                                  _reminderController.medicines[i],
-                                  isDark,
-                                ),
+                        final nextAlarm = _reminderController.nextAlarmItem;
+                        final hasReminder = nextAlarm != null;
+                        final nextMed = nextAlarm?.medicine;
+                        final timeRaw = nextAlarm?.time ?? '';
+                        final timeFormatted = timeRaw.isNotEmpty
+                            ? (timeRaw.contains('WIB')
+                                ? timeRaw
+                                : '$timeRaw WIB')
+                            : '';
+
+                        return Container(
+                          padding: const EdgeInsets.all(14),
+                          decoration: BoxDecoration(
+                            gradient: LinearGradient(
+                              begin: Alignment.topLeft,
+                              end: Alignment.bottomRight,
+                              colors: isDark
+                                  ? const [
+                                      Color(0xFF1E293B),
+                                      Color(0xFF0E2536),
+                                    ]
+                                  : const [
+                                      Color(0xFFEBF6FE),
+                                      Color(0xFFD4ECFC),
+                                    ],
+                            ),
+                            borderRadius: BorderRadius.circular(16),
+                            border: Border.all(
+                              color: isDark
+                                  ? const Color(0xFF1E3A5F)
+                                  : const Color(0xFFBAE6FD),
+                              width: 1.2,
+                            ),
+                            boxShadow: [
+                              BoxShadow(
+                                color: (isDark
+                                        ? const Color(0xFF38BDF8)
+                                        : const Color(0xFF0284C7))
+                                    .withValues(alpha: 0.08),
+                                blurRadius: 10,
+                                offset: const Offset(0, 3),
                               ),
-                          ],
+                            ],
+                          ),
+                          child: hasReminder && nextMed != null
+                              ? Row(
+                                  children: [
+                                    Container(
+                                      width: 44,
+                                      height: 44,
+                                      decoration: BoxDecoration(
+                                        gradient: const LinearGradient(
+                                          begin: Alignment.topLeft,
+                                          end: Alignment.bottomRight,
+                                          colors: [
+                                            Color(0xFF38BDF8),
+                                            Color(0xFF0284C7),
+                                          ],
+                                        ),
+                                        borderRadius: BorderRadius.circular(12),
+                                        boxShadow: [
+                                          BoxShadow(
+                                            color: const Color(0xFF0284C7)
+                                                .withValues(alpha: 0.28),
+                                            blurRadius: 6,
+                                            offset: const Offset(0, 2),
+                                          ),
+                                        ],
+                                      ),
+                                      child: const Icon(
+                                        Icons.medication_rounded,
+                                        color: Colors.white,
+                                        size: 24,
+                                      ),
+                                    ),
+                                    const SizedBox(width: 12),
+                                    Expanded(
+                                      child: Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        children: [
+                                          Row(
+                                            children: [
+                                              Flexible(
+                                                child: Text(
+                                                  nextMed.name,
+                                                  maxLines: 1,
+                                                  overflow:
+                                                      TextOverflow.ellipsis,
+                                                  style: TextStyle(
+                                                    fontSize: 13.5,
+                                                    fontWeight:
+                                                        FontWeight.bold,
+                                                    color: isDark
+                                                        ? Colors.white
+                                                        : const Color(
+                                                            0xFF0F172A),
+                                                  ),
+                                                ),
+                                              ),
+                                              if (timeFormatted
+                                                  .isNotEmpty) ...[
+                                                const SizedBox(width: 6),
+                                                Text(
+                                                  '• $timeFormatted',
+                                                  style: TextStyle(
+                                                    fontSize: 11,
+                                                    fontWeight:
+                                                        FontWeight.w600,
+                                                    color: isDark
+                                                        ? const Color(
+                                                            0xFF38BDF8)
+                                                        : const Color(
+                                                            0xFF0284C7),
+                                                  ),
+                                                ),
+                                              ],
+                                            ],
+                                          ),
+                                          const SizedBox(height: 2),
+                                          Text(
+                                            nextMed.schedule.isNotEmpty
+                                                ? '${nextMed.amount} ${nextMed.unit} ${nextMed.schedule}'
+                                                : (nextMed.note.isNotEmpty
+                                                    ? nextMed.note
+                                                    : '${nextMed.amount} ${nextMed.unit}'),
+                                            maxLines: 1,
+                                            overflow: TextOverflow.ellipsis,
+                                            style: TextStyle(
+                                              fontSize: 11,
+                                              color: isDark
+                                                  ? const Color(0xFF94A3B8)
+                                                  : const Color(0xFF475569),
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                    DecoratedBox(
+                                      decoration: BoxDecoration(
+                                        gradient: const LinearGradient(
+                                          colors: [
+                                            Color(0xFF0EA5E9),
+                                            Color(0xFF0284C7),
+                                          ],
+                                        ),
+                                        borderRadius: BorderRadius.circular(8),
+                                        boxShadow: [
+                                          BoxShadow(
+                                            color: const Color(0xFF0284C7)
+                                                .withValues(alpha: 0.25),
+                                            blurRadius: 6,
+                                            offset: const Offset(0, 2),
+                                          ),
+                                        ],
+                                      ),
+                                      child: ElevatedButton(
+                                        onPressed: () {
+                                          Navigator.push(
+                                            context,
+                                            MaterialPageRoute(
+                                              builder: (context) =>
+                                                  const PengingatKesehatanPage(),
+                                            ),
+                                          );
+                                        },
+                                        style: ElevatedButton.styleFrom(
+                                          backgroundColor: Colors.transparent,
+                                          shadowColor: Colors.transparent,
+                                          foregroundColor: Colors.white,
+                                          elevation: 0,
+                                          padding: const EdgeInsets.symmetric(
+                                            horizontal: 14,
+                                            vertical: 8,
+                                          ),
+                                          minimumSize: Size.zero,
+                                          tapTargetSize: MaterialTapTargetSize
+                                              .shrinkWrap,
+                                          shape: RoundedRectangleBorder(
+                                            borderRadius:
+                                                BorderRadius.circular(8),
+                                          ),
+                                        ),
+                                        child: const Text(
+                                          'Jadwal',
+                                          style: TextStyle(
+                                            fontSize: 11.5,
+                                            fontWeight: FontWeight.bold,
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                )
+                              : Row(
+                                  children: [
+                                    Container(
+                                      width: 44,
+                                      height: 44,
+                                      decoration: BoxDecoration(
+                                        color: isDark
+                                            ? const Color(0xFF1E293B)
+                                            : const Color(0xFF0284C7)
+                                                .withValues(alpha: 0.12),
+                                        borderRadius:
+                                            BorderRadius.circular(11),
+                                      ),
+                                      child: Icon(
+                                        Icons.alarm_off_rounded,
+                                        color: isDark
+                                            ? const Color(0xFF38BDF8)
+                                            : const Color(0xFF0284C7),
+                                        size: 24,
+                                      ),
+                                    ),
+                                    const SizedBox(width: 12),
+                                    Expanded(
+                                      child: Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        children: [
+                                          Text(
+                                            'Belum ada jadwal obat',
+                                            style: TextStyle(
+                                              fontSize: 13.5,
+                                              fontWeight: FontWeight.bold,
+                                              color: isDark
+                                                  ? Colors.white
+                                                  : const Color(0xFF1E293B),
+                                            ),
+                                          ),
+                                          const SizedBox(height: 2),
+                                          Text(
+                                            'Atur pengingat agar minum obat tepat waktu',
+                                            style: TextStyle(
+                                              fontSize: 11,
+                                              color: isDark
+                                                  ? const Color(0xFF94A3B8)
+                                                  : const Color(0xFF64748B),
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                    DecoratedBox(
+                                      decoration: BoxDecoration(
+                                        gradient: const LinearGradient(
+                                          colors: [
+                                            Color(0xFF0EA5E9),
+                                            Color(0xFF0284C7),
+                                          ],
+                                        ),
+                                        borderRadius: BorderRadius.circular(8),
+                                        boxShadow: [
+                                          BoxShadow(
+                                            color: const Color(0xFF0284C7)
+                                                .withValues(alpha: 0.25),
+                                            blurRadius: 6,
+                                            offset: const Offset(0, 2),
+                                          ),
+                                        ],
+                                      ),
+                                      child: ElevatedButton(
+                                        onPressed: () {
+                                          Navigator.push(
+                                            context,
+                                            MaterialPageRoute(
+                                              builder: (context) =>
+                                                  const PengingatKesehatanPage(),
+                                            ),
+                                          );
+                                        },
+                                        style: ElevatedButton.styleFrom(
+                                          backgroundColor: Colors.transparent,
+                                          shadowColor: Colors.transparent,
+                                          foregroundColor: Colors.white,
+                                          elevation: 0,
+                                          padding: const EdgeInsets.symmetric(
+                                            horizontal: 14,
+                                            vertical: 8,
+                                          ),
+                                          minimumSize: Size.zero,
+                                          tapTargetSize: MaterialTapTargetSize
+                                              .shrinkWrap,
+                                          shape: RoundedRectangleBorder(
+                                            borderRadius:
+                                                BorderRadius.circular(8),
+                                          ),
+                                        ),
+                                        child: const Text(
+                                          'Atur',
+                                          style: TextStyle(
+                                            fontSize: 11.5,
+                                            fontWeight: FontWeight.bold,
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ),
                         );
                       },
                     ),
@@ -1110,275 +1390,6 @@ class _HomePageState extends State<HomePage> {
   );
 }
 
-  // ==============================================================
-  // WIDGET HELPER: PENGINGAT KESEHATAN (KONSISTEN DENGAN TEMA BIRU UTAMA)
-  // ==============================================================
-
-  BoxDecoration _reminderCardDecoration(bool isDark) {
-    return BoxDecoration(
-      gradient: LinearGradient(
-        begin: Alignment.topLeft,
-        end: Alignment.bottomRight,
-        colors: isDark
-            ? const [
-                Color(0xFF1E293B),
-                Color(0xFF0E2536),
-              ]
-            : const [
-                Color(0xFFEBF6FE),
-                Color(0xFFD4ECFC),
-              ],
-      ),
-      borderRadius: BorderRadius.circular(16),
-      border: Border.all(
-        color: isDark ? const Color(0xFF1E3A5F) : const Color(0xFFBAE6FD),
-        width: 1.2,
-      ),
-      boxShadow: [
-        BoxShadow(
-          color: (isDark ? Colors.black : brandPrimary)
-              .withValues(alpha: isDark ? 0.25 : 0.10),
-          blurRadius: 8,
-          offset: const Offset(0, 3),
-        ),
-      ],
-    );
-  }
-
-  Widget _reminderIconContainer({
-    required IconData icon,
-    required bool isDark,
-  }) {
-    return Container(
-      width: 44,
-      height: 44,
-      decoration: BoxDecoration(
-        color: isDark ? const Color(0xFF0F172A) : Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        boxShadow: [
-          BoxShadow(
-            color: (isDark ? Colors.black : brandPrimary)
-                .withValues(alpha: isDark ? 0.3 : 0.12),
-            blurRadius: 6,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Icon(
-        icon,
-        size: 22,
-        color: isDark ? const Color(0xFF38BDF8) : brandPrimary,
-      ),
-    );
-  }
-
-  Widget _buildReminderItemCard(MedicineReminder med, bool isDark) {
-    final timeRaw = med.reminderTimes.isNotEmpty ? med.reminderTimes.first : '';
-    final timeFormatted = timeRaw.isNotEmpty
-        ? (timeRaw.contains('WIB') ? timeRaw : ' WIB')
-        : '';
-
-    return Container(
-      padding: const EdgeInsets.all(14),
-      decoration: _reminderCardDecoration(isDark),
-      child: Row(
-        children: [
-          _reminderIconContainer(
-            icon: Icons.medication_rounded,
-            isDark: isDark,
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    Flexible(
-                      child: Text(
-                        med.name,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: TextStyle(
-                          fontSize: 13.5,
-                          fontWeight: FontWeight.bold,
-                          color: isDark ? Colors.white : const Color(0xFF0F172A),
-                        ),
-                      ),
-                    ),
-                    if (timeFormatted.isNotEmpty) ...[
-                      const SizedBox(width: 6),
-                      Text(
-                        '• ',
-                        style: TextStyle(
-                          fontSize: 11,
-                          fontWeight: FontWeight.w600,
-                          color: isDark ? const Color(0xFF38BDF8) : brandPrimary,
-                        ),
-                      ),
-                    ],
-                  ],
-                ),
-                const SizedBox(height: 2),
-                Text(
-                  med.schedule.isNotEmpty
-                      ? '  '
-                      : (med.note.isNotEmpty
-                          ? med.note
-                          : ' '),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: TextStyle(
-                    fontSize: 11,
-                    color: isDark ? const Color(0xFF94A3B8) : const Color(0xFF475569),
-                  ),
-                ),
-              ],
-            ),
-          ),
-          DecoratedBox(
-            decoration: BoxDecoration(
-              gradient: const LinearGradient(
-                colors: [
-                  Color(0xFF0EA5E9),
-                  Color(0xFF0284C7),
-                ],
-              ),
-              borderRadius: BorderRadius.circular(8),
-              boxShadow: [
-                BoxShadow(
-                  color: const Color(0xFF0284C7).withValues(alpha: 0.25),
-                  blurRadius: 6,
-                  offset: const Offset(0, 2),
-                ),
-              ],
-            ),
-            child: ElevatedButton(
-              onPressed: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => const PengingatKesehatanPage(),
-                  ),
-                );
-              },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.transparent,
-                shadowColor: Colors.transparent,
-                foregroundColor: Colors.white,
-                elevation: 0,
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 14,
-                  vertical: 8,
-                ),
-                minimumSize: Size.zero,
-                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(8),
-                ),
-              ),
-              child: const Text(
-                'Jadwal',
-                style: TextStyle(
-                  fontSize: 11.5,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildEmptyReminderCard(bool isDark) {
-    return Container(
-      padding: const EdgeInsets.all(14),
-      decoration: _reminderCardDecoration(isDark),
-      child: Row(
-        children: [
-          _reminderIconContainer(
-            icon: Icons.alarm_off_rounded,
-            isDark: isDark,
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'Belum ada jadwal obat',
-                  style: TextStyle(
-                    fontSize: 13.5,
-                    fontWeight: FontWeight.bold,
-                    color: isDark ? Colors.white : const Color(0xFF1E293B),
-                  ),
-                ),
-                const SizedBox(height: 2),
-                Text(
-                  'Atur pengingat agar minum obat tepat waktu',
-                  style: TextStyle(
-                    fontSize: 11,
-                    color: isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B),
-                  ),
-                ),
-              ],
-            ),
-          ),
-          DecoratedBox(
-            decoration: BoxDecoration(
-              gradient: const LinearGradient(
-                colors: [
-                  Color(0xFF0EA5E9),
-                  Color(0xFF0284C7),
-                ],
-              ),
-              borderRadius: BorderRadius.circular(8),
-              boxShadow: [
-                BoxShadow(
-                  color: const Color(0xFF0284C7).withValues(alpha: 0.25),
-                  blurRadius: 6,
-                  offset: const Offset(0, 2),
-                ),
-              ],
-            ),
-            child: ElevatedButton(
-              onPressed: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => const PengingatKesehatanPage(),
-                  ),
-                );
-              },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.transparent,
-                shadowColor: Colors.transparent,
-                foregroundColor: Colors.white,
-                elevation: 0,
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 14,
-                  vertical: 8,
-                ),
-                minimumSize: Size.zero,
-                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(8),
-                ),
-              ),
-              child: const Text(
-                'Atur',
-                style: TextStyle(
-                  fontSize: 11.5,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
 
   // WIDGET HELPER: SERVICE CARDS (GRADASI BIRU ELEGAN)
   Widget _serviceCard({
