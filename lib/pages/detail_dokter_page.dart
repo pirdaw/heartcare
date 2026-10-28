@@ -1,10 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:heartcare/services/theme_service.dart';
+import 'package:heartcare/services/doctor_service.dart';
 import 'home_page.dart';
+import 'konsultasi_dokter_page.dart';
 import 'pilih_jadwal_page.dart';
 import 'profil_page.dart';
 
 class DetailDokterPage extends StatelessWidget {
+  final String? doctorId;
   final String nama;
   final String spesialis;
   final String imagePath;
@@ -13,10 +16,12 @@ class DetailDokterPage extends StatelessWidget {
   final String lokasi;
   final String tentang;
   final bool isOnline;
+  final String telepon;
 
   const DetailDokterPage({
     super.key,
-    this.nama = 'dr. Nurlitta Dwi',
+    this.doctorId,
+    this.nama = 'dr. Dokter HeartCare',
     this.spesialis = 'Spesialis Jantung',
     this.imagePath = 'assets/images/dokter_nurlitta.jpg',
     this.pengalaman = '12 tahun',
@@ -25,6 +30,7 @@ class DetailDokterPage extends StatelessWidget {
     this.tentang =
         'Berpengalaman dalam memberikan pemeriksaan dan penanganan komprehensif terhadap berbagai kondisi jantung dan kardiovaskular.',
     this.isOnline = true,
+    this.telepon = '',
   });
 
   static const Color brandPrimary = Color(0xFF0284C7);
@@ -138,33 +144,25 @@ class DetailDokterPage extends StatelessWidget {
                                       ],
                                     ),
                                     child: ClipOval(
-                                      child: Image.asset(
+                                      child: DoctorService.buildDoctorImage(
                                         imagePath,
-                                        fit: BoxFit.cover,
-                                        errorBuilder: (context, error, stackTrace) {
-                                          return Container(
-                                            color: isDark ? const Color(0xFF334155) : const Color(0xFFE0F2FE),
-                                            child: Icon(
-                                              Icons.person,
-                                              size: 65,
-                                              color: isDark ? Colors.white70 : brandPrimary,
-                                            ),
-                                          );
-                                        },
+                                        width: 120,
+                                        height: 120,
+                                        isDark: isDark,
                                       ),
                                     ),
                                   ),
-                                  // STATUS ONLINE DOT
+                                  // STATUS ONLINE / OFFLINE DOT
                                   Positioned(
                                     right: 6,
                                     bottom: 4,
                                     child: Container(
-                                      width: 18,
-                                      height: 18,
+                                      width: 20,
+                                      height: 20,
                                       decoration: BoxDecoration(
                                         color: isOnline
                                             ? onlineGreen
-                                            : const Color(0xFF94A3B8),
+                                            : const Color(0xFFF59E0B),
                                         shape: BoxShape.circle,
                                         border: Border.all(
                                           color: isDark ? const Color(0xFF1E293B) : Colors.white,
@@ -304,6 +302,15 @@ class DetailDokterPage extends StatelessWidget {
                                 title: 'Lokasi Praktik',
                                 value: lokasi,
                               ),
+                              if (telepon.isNotEmpty) ...[
+                                Divider(height: 20, color: isDark ? const Color(0xFF334155) : const Color(0xFFF1F5F9)),
+                                _infoTile(
+                                  isDark: isDark,
+                                  icon: Icons.phone_rounded,
+                                  title: 'No. Telepon / WhatsApp',
+                                  value: telepon,
+                                ),
+                              ],
                             ],
                           ),
                         ),
@@ -362,7 +369,126 @@ class DetailDokterPage extends StatelessWidget {
                           ),
                         ),
 
-                        const SizedBox(height: 24),
+                        if (!isOnline) ...[
+                          const SizedBox(height: 18),
+                          Container(
+                            padding: const EdgeInsets.all(12),
+                            decoration: BoxDecoration(
+                              color: isDark
+                                  ? const Color(0xFF2A2415)
+                                  : const Color(0xFFFFFBEB),
+                              borderRadius: BorderRadius.circular(14),
+                              border: Border.all(
+                                color: isDark
+                                    ? const Color(0xFF78350F)
+                                    : const Color(0xFFFDE68A),
+                              ),
+                            ),
+                            child: Row(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                const Icon(
+                                  Icons.info_outline_rounded,
+                                  color: Color(0xFFD97706),
+                                  size: 20,
+                                ),
+                                const SizedBox(width: 10),
+                                Expanded(
+                                  child: Text(
+                                    'Dokter saat ini sedang offline dan tidak menerima konsultasi tatap muka langsung. Namun, Anda tetap dapat meninggalkan pesan chat, dan dokter akan merespons saat kembali online.',
+                                    style: TextStyle(
+                                      fontSize: 12,
+                                      height: 1.35,
+                                      color: isDark
+                                          ? const Color(0xFFFDE68A)
+                                          : const Color(0xFF92400E),
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+
+                        const SizedBox(height: 20),
+
+                        // ==================================================
+                        // TOMBOL CHAT KONSULTASI SEKARANG (REAL-TIME)
+                        // ==================================================
+                        Container(
+                          width: double.infinity,
+                          height: 50,
+                          decoration: BoxDecoration(
+                            gradient: isOnline
+                                ? const LinearGradient(
+                                    colors: [Color(0xFF0EA5E9), Color(0xFF0284C7)],
+                                    begin: Alignment.topLeft,
+                                    end: Alignment.bottomRight,
+                                  )
+                                : LinearGradient(
+                                    colors: isDark
+                                        ? [const Color(0xFF334155), const Color(0xFF1E293B)]
+                                        : [const Color(0xFF64748B), const Color(0xFF475569)],
+                                    begin: Alignment.topLeft,
+                                    end: Alignment.bottomRight,
+                                  ),
+                            borderRadius: BorderRadius.circular(14),
+                            boxShadow: [
+                              BoxShadow(
+                                color: (isOnline
+                                        ? const Color(0xFF0284C7)
+                                        : const Color(0xFF475569))
+                                    .withValues(alpha: 0.35),
+                                blurRadius: 10,
+                                offset: const Offset(0, 4),
+                              ),
+                            ],
+                          ),
+                          child: Material(
+                            color: Colors.transparent,
+                            child: InkWell(
+                              borderRadius: BorderRadius.circular(14),
+                              onTap: () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) => KonsultasiDokterPage(
+                                      doctorId: doctorId,
+                                      doctorName: nama,
+                                      doctorSpecialty: spesialis,
+                                      doctorPhoto: imagePath,
+                                    ),
+                                  ),
+                                );
+                              },
+                              child: Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Icon(
+                                    isOnline
+                                        ? Icons.chat_bubble_rounded
+                                        : Icons.mark_chat_unread_outlined,
+                                    color: Colors.white,
+                                    size: 20,
+                                  ),
+                                  const SizedBox(width: 8),
+                                  Text(
+                                    isOnline
+                                        ? 'Chat Konsultasi Sekarang'
+                                        : 'Tinggalkan Pesan Chat',
+                                    style: const TextStyle(
+                                      fontSize: 15,
+                                      fontWeight: FontWeight.bold,
+                                      color: Colors.white,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ),
+
+                        const SizedBox(height: 12),
 
                         // ==================================================
                         // TOMBOL PILIH JADWAL
@@ -371,19 +497,12 @@ class DetailDokterPage extends StatelessWidget {
                           width: double.infinity,
                           height: 50,
                           decoration: BoxDecoration(
-                            gradient: const LinearGradient(
-                              colors: [Color(0xFF0EA5E9), Color(0xFF0284C7)],
-                              begin: Alignment.topLeft,
-                              end: Alignment.bottomRight,
-                            ),
+                            color: isDark ? const Color(0xFF1E293B) : const Color(0xFFF0F9FF),
                             borderRadius: BorderRadius.circular(14),
-                            boxShadow: [
-                              BoxShadow(
-                                color: const Color(0xFF0284C7).withValues(alpha: 0.35),
-                                blurRadius: 10,
-                                offset: const Offset(0, 4),
-                              ),
-                            ],
+                            border: Border.all(
+                              color: isDark ? const Color(0xFF334155) : const Color(0xFFBAE6FD),
+                              width: 1.2,
+                            ),
                           ),
                           child: Material(
                             color: Colors.transparent,
@@ -401,21 +520,21 @@ class DetailDokterPage extends StatelessWidget {
                                   ),
                                 );
                               },
-                              child: const Row(
+                              child: Row(
                                 mainAxisAlignment: MainAxisAlignment.center,
                                 children: [
                                   Icon(
                                     Icons.calendar_month_rounded,
-                                    color: Colors.white,
+                                    color: isDark ? const Color(0xFF38BDF8) : const Color(0xFF0284C7),
                                     size: 20,
                                   ),
-                                  SizedBox(width: 8),
+                                  const SizedBox(width: 8),
                                   Text(
-                                    'Pilih Jadwal Konsultasi',
+                                    'Pilih Jadwal Temu',
                                     style: TextStyle(
                                       fontSize: 15,
                                       fontWeight: FontWeight.bold,
-                                      color: Colors.white,
+                                      color: isDark ? Colors.white : const Color(0xFF0284C7),
                                     ),
                                   ),
                                 ],

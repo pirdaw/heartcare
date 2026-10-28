@@ -57,7 +57,6 @@ class DefaultFirebaseOptions {
     projectId: 'heart-care-firebase-d19a0',
     storageBucket: 'heart-care-firebase-d19a0.firebasestorage.app',
   );
-
   static const FirebaseOptions ios = FirebaseOptions(
     apiKey: 'AIzaSyBVeHpk_PWReddx5iLOBPP7A9EfsgemnTI',
     appId: '1:605450405329:ios:d30467f2435f00abc34cf0',
@@ -66,7 +65,6 @@ class DefaultFirebaseOptions {
     storageBucket: 'heart-care-firebase-d19a0.firebasestorage.app',
     iosBundleId: 'com.example.heartcare',
   );
-
   static const FirebaseOptions macos = FirebaseOptions(
     apiKey: 'AIzaSyBVeHpk_PWReddx5iLOBPP7A9EfsgemnTI',
     appId: '1:605450405329:ios:d30467f2435f00abc34cf0',

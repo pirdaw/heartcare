@@ -45,6 +45,39 @@ class _DataPribadiPageState extends State<DataPribadiPage> {
     final telpCtrl = TextEditingController(text: _profile.telepon);
     final emailCtrl = TextEditingController(text: _profile.email);
 
+    Future<void> pickDate() async {
+      final now = DateTime.now();
+      final initialDate = DateTime(2000, 1, 1);
+      final picked = await showDatePicker(
+        context: context,
+        initialDate: initialDate,
+        firstDate: DateTime(1900),
+        lastDate: now,
+        helpText: 'PILIH TANGGAL LAHIR',
+        confirmText: 'PILIH',
+        cancelText: 'BATAL',
+        builder: (context, child) {
+          return Theme(
+            data: Theme.of(context).copyWith(
+              colorScheme: const ColorScheme.light(
+                primary: Color(0xFF0098B9),
+                onPrimary: Colors.white,
+                onSurface: Color(0xFF0F172A),
+              ),
+            ),
+            child: child!,
+          );
+        },
+      );
+      if (picked != null) {
+        const months = [
+          'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni',
+          'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'
+        ];
+        ttlCtrl.text = '${picked.day} ${months[picked.month - 1]} ${picked.year}';
+      }
+    }
+
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -133,10 +166,32 @@ class _DataPribadiPageState extends State<DataPribadiPage> {
                 const SizedBox(height: 18),
                 _inputField("Nama Lengkap", namaCtrl, isDark: isDark),
                 _inputField("Jenis Kelamin", jkCtrl, isDark: isDark),
-                _inputField("Tempat, Tanggal Lahir", ttlCtrl, isDark: isDark),
+                _inputField(
+                  "Tempat, Tanggal Lahir",
+                  ttlCtrl,
+                  isDark: isDark,
+                  suffixIcon: IconButton(
+                    icon: const Icon(
+                      Icons.calendar_month_rounded,
+                      color: Color(0xFF0098B9),
+                      size: 20,
+                    ),
+                    onPressed: pickDate,
+                  ),
+                ),
                 _inputField("Alamat", alamatCtrl, isDark: isDark),
-                _inputField("No. Telepon", telpCtrl, isDark: isDark),
-                _inputField("Email", emailCtrl, isDark: isDark),
+                _inputField(
+                  "No. Telepon",
+                  telpCtrl,
+                  isDark: isDark,
+                  keyboardType: TextInputType.phone,
+                ),
+                _inputField(
+                  "Email",
+                  emailCtrl,
+                  isDark: isDark,
+                  keyboardType: TextInputType.emailAddress,
+                ),
                 const SizedBox(height: 18),
                 Container(
                   width: double.infinity,
@@ -170,7 +225,7 @@ class _DataPribadiPageState extends State<DataPribadiPage> {
                         Navigator.pop(context);
                         ScaffoldMessenger.of(context).showSnackBar(
                           const SnackBar(
-                            content: Text("Data pribadi berhasil diperbarui"),
+                            content: Text("Data pribadi berhasil diperbarui & disimpan di Firestore"),
                             backgroundColor: Color(0xFF0098B9),
                           ),
                         );
@@ -205,6 +260,8 @@ class _DataPribadiPageState extends State<DataPribadiPage> {
     String label,
     TextEditingController controller, {
     bool isDark = false,
+    Widget? suffixIcon,
+    TextInputType? keyboardType,
   }) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 12),
@@ -222,6 +279,7 @@ class _DataPribadiPageState extends State<DataPribadiPage> {
           const SizedBox(height: 5),
           TextField(
             controller: controller,
+            keyboardType: keyboardType,
             style: TextStyle(
               fontSize: 13.5,
               color: isDark ? Colors.white : const Color(0xFF0F172A),
@@ -233,6 +291,7 @@ class _DataPribadiPageState extends State<DataPribadiPage> {
               fillColor: isDark
                   ? const Color(0xFF0F172A)
                   : const Color(0xFFF8FAFC),
+              suffixIcon: suffixIcon,
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(10),
                 borderSide: BorderSide(

@@ -1,4 +1,3 @@
-import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:heartcare/pages/data_pribadi_page.dart';
 import 'package:heartcare/pages/data_kesehatan_page.dart';
@@ -213,18 +212,20 @@ class _ProfilPageState extends State<ProfilPage> {
                             : const Color(0xFF64748B),
                       ),
                     ),
-                    onTap: () {
+                    onTap: () async {
                       Navigator.pop(context);
-                      ProfileService.instance.removeProfileImage();
-                      setState(() {});
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content:
-                              Text("Foto profil berhasil dikembalikan ke bawaan"),
-                          backgroundColor: Color(0xFF64748B),
-                          behavior: SnackBarBehavior.floating,
-                        ),
-                      );
+                      await ProfileService.instance.removeProfileImage();
+                      if (mounted) setState(() {});
+                      if (context.mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content:
+                                Text("Foto profil berhasil dikembalikan ke bawaan"),
+                            backgroundColor: Color(0xFF64748B),
+                            behavior: SnackBarBehavior.floating,
+                          ),
+                        );
+                      }
                     },
                   ),
                 ],
@@ -457,10 +458,11 @@ class _ProfilPageState extends State<ProfilPage> {
                                 valueListenable:
                                     ProfileService.profileImageNotifier,
                                 builder: (context, imagePath, _) {
-                                  if (imagePath != null &&
-                                      File(imagePath).existsSync()) {
-                                    return Image.file(
-                                      File(imagePath),
+                                  final provider =
+                                      ProfileService.getImageProvider(imagePath);
+                                  if (provider != null) {
+                                    return Image(
+                                      image: provider,
                                       fit: BoxFit.cover,
                                       errorBuilder:
                                           (context, error, stackTrace) {

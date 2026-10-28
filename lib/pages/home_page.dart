@@ -1,4 +1,3 @@
-import 'dart:io';
 import 'package:flutter/material.dart';
 import 'screening_intro_page.dart';
 import 'dokter_page.dart';
@@ -224,10 +223,11 @@ class _HomePageState extends State<HomePage> {
                                     valueListenable:
                                         ProfileService.profileImageNotifier,
                                     builder: (context, imagePath, _) {
-                                      if (imagePath != null &&
-                                          File(imagePath).existsSync()) {
-                                        return Image.file(
-                                          File(imagePath),
+                                      final provider =
+                                          ProfileService.getImageProvider(imagePath);
+                                      if (provider != null) {
+                                        return Image(
+                                          image: provider,
                                           fit: BoxFit.cover,
                                           errorBuilder:
                                               (context, error, stackTrace) {

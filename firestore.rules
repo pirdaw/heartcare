@@ -1,0 +1,80 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // =============================================
+    // HELPER FUNCTIONS
+    // =============================================
+    
+    // Cek apakah user sudah login
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    
+    // Cek apakah user adalah pemilik dokumen
+    function isOwner(userId) {
+      return request.auth != null && request.auth.uid == userId;
+    }
+
+    // =============================================
+    // USER PROFILES
+    // Dokter dan pasien perlu baca profil satu sama lain
+    // =============================================
+    match /users/{userId} {
+      // Baca publik agar pasien bisa lihat profil dokter dan sebaliknya
+      allow read: if true;
+      // Hanya pemilik akun yang bisa menulis profil sendiri
+      allow write: if isOwner(userId);
+    }
+    
+    // =============================================
+    // DOCTOR LISTINGS
+    // =============================================
+    match /doctors/{doctorId} {
+      // Siapapun bisa baca daftar dokter (untuk pilih dokter)
+      allow read: if true;
+      // Hanya user yang login bisa update data dokter
+      allow write: if isAuthenticated();
+    }
+    
+    // =============================================
+    // CHAT ROOMS
+    // Hanya user yang terautentikasi (login) yang bisa akses
+    // Query selalu dilakukan per-dokter atau per-pasien di app layer
+    // =============================================
+    match /chats/{chatId} {
+      // Baca: siapapun yang sudah login bisa baca chat
+      // (keamanan data dijaga melalui query filter di sisi aplikasi:
+      //  dokter hanya query chatnya sendiri, pasien hanya query chatnya sendiri)
+      allow read: if isAuthenticated();
+      
+      // Buat chat baru: user yang login (sebagai pasien atau dokter)
+      allow create: if isAuthenticated();
+      
+      // Update chat (lastMessage, unread count): user yang login
+      allow update: if isAuthenticated();
+      
+      // Hapus: tidak diizinkan
+      allow delete: if false;
+      
+      // =============================================
+      // SUB-KOLEKSI PESAN
+      // =============================================
+      match /messages/{messageId} {
+        // Baca pesan: user yang login
+        allow read: if isAuthenticated();
+        
+        // Kirim pesan: senderId harus sama dengan UID user yang login
+        // Ini mencegah user mengirim pesan atas nama orang lain
+        allow create: if isAuthenticated() && 
+          request.resource.data.get('senderId', '') == request.auth.uid;
+        
+        // Update (mark as read, dll): user yang login
+        allow update: if isAuthenticated();
+        
+        // Hapus: tidak diizinkan
+        allow delete: if false;
+      }
+    }
+  }
+}

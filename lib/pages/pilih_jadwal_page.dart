@@ -5,12 +5,14 @@ import 'konfirmasi_jadwal_page.dart';
 import 'profil_page.dart';
 
 class PilihJadwalPage extends StatefulWidget {
+  final String? doctorId;
   final String doctorName;
   final String doctorSpecialty;
   final String doctorPhoto;
 
   const PilihJadwalPage({
     super.key,
+    this.doctorId,
     this.doctorName = 'dr. Nurlitta Dwi',
     this.doctorSpecialty = 'Spesialis Jantung',
     this.doctorPhoto = 'assets/images/dokter_nurlitta.jpg',
@@ -497,6 +499,7 @@ class _PilihJadwalPageState extends State<PilihJadwalPage> {
       context,
       MaterialPageRoute(
         builder: (context) => KonfirmasiJadwalPage(
+          doctorId: widget.doctorId,
           doctorName: widget.doctorName,
           doctorSpecialty: widget.doctorSpecialty,
           doctorPhoto: widget.doctorPhoto,

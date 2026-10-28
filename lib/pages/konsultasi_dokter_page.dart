@@ -1,9 +1,13 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:heartcare/pages/Skrining/screening_input_page.dart';
-import 'package:heartcare/pages/home_page.dart';
 import 'package:heartcare/pages/profil_page.dart';
 import 'package:heartcare/services/theme_service.dart';
 import '../services/user_profile_service.dart';
+import '../services/chat_service.dart';
+import '../services/doctor_service.dart';
 
 class ChatItem {
   final String message;
@@ -25,12 +29,24 @@ class KonsultasiDokterPage extends StatefulWidget {
   final String doctorName;
   final String doctorPhoto;
   final String doctorSpecialty;
+  final String? doctorId;
+  final String? chatId;
+  final bool isDoctorView;
+  final String? patientName;
+  final String? patientPhoto;
+  final String? patientId;
 
   const KonsultasiDokterPage({
     super.key,
     this.doctorName = 'dr. Nurlitta Dwi',
     this.doctorPhoto = 'assets/images/dokter_nurlitta.jpg',
     this.doctorSpecialty = 'Spesialis Jantung',
+    this.doctorId,
+    this.chatId,
+    this.isDoctorView = false,
+    this.patientName,
+    this.patientPhoto,
+    this.patientId,
   });
 
   @override
@@ -45,57 +61,109 @@ class _KonsultasiDokterPageState
   final ScrollController _scrollController =
       ScrollController();
 
-  late List<ChatItem> _messages;
-  bool _isDoctorTyping = false;
+  String? _activeChatId;
+  bool _isLoadingChat = false;
+  final bool _isDoctorTyping = false;
+  final List<ChatMessage> _optimisticMessages = [];
   String selectedReminder = "1 hari sebelumnya";
+  StreamSubscription? _doctorStatusSub;
+  bool _isDoctorOnline = true;
 
   @override
   void initState() {
     super.initState();
-    String firstName = 'Pasien';
-    try {
+    _listenDoctorOnlineStatus();
+    // Pre-komputasi activeChatId secara instan pada frame pertama
+    if (widget.chatId != null && widget.chatId!.isNotEmpty) {
+      _activeChatId = widget.chatId;
+    } else {
       final profile = UserProfileService.instance.currentProfile;
-      if (profile.nama.trim().isNotEmpty) {
-        firstName = profile.nama.trim().split(' ').first;
-      }
-    } catch (_) {
-      firstName = 'Pasien';
+      final patientId = widget.patientId ??
+          FirebaseAuth.instance.currentUser?.uid ??
+          (profile.nama.isNotEmpty
+              ? profile.nama
+                  .replaceAll(RegExp(r'[^a-zA-Z0-9]'), '_')
+                  .toLowerCase()
+              : 'patient_user');
+      final doctorId = widget.doctorId ?? widget.doctorName;
+      _activeChatId = ChatService.instance.computeChatId(
+        patientId: patientId,
+        doctorId: doctorId,
+      );
     }
-    _messages = [
-      ChatItem(
-        message: "Halo $firstName, Selamat datang!\nAda yang bisa saya bantu?",
-        time: "14.00",
-        isDoctor: true,
-      ),
-      ChatItem(
-        message:
-            "Dok, saya tadi melakukan skrining,\nhasilnya risiko tinggi.\nApa yang harus saya lakukan?",
-        time: "14.01",
-        isDoctor: false,
-      ),
-      ChatItem(
-        message: "",
-        time: "14.01",
-        isDoctor: false,
-        imagePath: "assets/images/screening_jantung.png",
-      ),
-      ChatItem(
-        message:
-            "Baik, saya akan bantu.\nApakah ada gejala lain\nseperti nyeri dada atau sesak\nnafas?",
-        time: "14.02",
-        isDoctor: true,
-      ),
-      ChatItem(
-        message:
-            "Iya dok, saya sering sesak nafas saat\naktivitas berat",
-        time: "14.03",
-        isDoctor: false,
-      ),
-    ];
+    _isLoadingChat = false;
+    _initChat();
+  }
+
+  Future<void> _initChat() async {
+    try {
+      if (widget.chatId != null && widget.chatId!.isNotEmpty) {
+        _activeChatId = widget.chatId;
+      } else {
+        final profile = UserProfileService.instance.currentProfile;
+        final resolvedId = await ChatService.instance
+            .getOrCreateChatRoom(
+              doctorName: widget.doctorName,
+              doctorPhoto: widget.doctorPhoto,
+              doctorSpecialty: widget.doctorSpecialty,
+              doctorId: widget.doctorId,
+              patientId: widget.patientId,
+              patientName: widget.patientName ??
+                  (profile.nama.isNotEmpty ? profile.nama : 'Pasien HeartCare'),
+              patientPhoto: widget.patientPhoto ?? profile.fotoProfil,
+            )
+            .timeout(
+              const Duration(seconds: 2),
+              onTimeout: () => _activeChatId ?? 'chat_patient_doctor',
+            );
+        _activeChatId = resolvedId;
+      }
+
+      if (_activeChatId != null) {
+        ChatService.instance
+            .markMessagesAsRead(
+              _activeChatId!,
+              widget.isDoctorView ? 'doctor' : 'patient',
+            )
+            .catchError((_) {});
+      }
+    } catch (e) {
+      debugPrint('[KonsultasiDokterPage] _initChat error: $e');
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isLoadingChat = false;
+        });
+        _scrollToBottom();
+      }
+    }
+  }
+
+  void _listenDoctorOnlineStatus() {
+    if (widget.isDoctorView) return;
+
+    final docId = widget.doctorId;
+    if (docId != null && docId.isNotEmpty) {
+      _doctorStatusSub = FirebaseFirestore.instance
+          .collection('users')
+          .doc(docId)
+          .snapshots()
+          .listen((snap) {
+        if (snap.exists && snap.data() != null) {
+          final isOnline = snap.data()!['isOnline'] as bool? ?? true;
+          if (mounted && _isDoctorOnline != isOnline) {
+            setState(() {
+              _isDoctorOnline = isOnline;
+            });
+          }
+        }
+      }, onError: (_) {});
+    }
   }
 
   @override
   void dispose() {
+    _doctorStatusSub?.cancel();
     messageController.dispose();
     _scrollController.dispose();
     super.dispose();
@@ -110,26 +178,16 @@ class _KonsultasiDokterPageState
   static const Color onlineGreen = Color(0xFF10B981);
 
   // ==========================================================
-  // LOGIKA NAVIGASI KEMBALI KE BERANDA
+  // LOGIKA NAVIGASI KEMBALI
   // ==========================================================
 
   void _backToHome() {
-    Navigator.of(context).pushAndRemoveUntil(
-      MaterialPageRoute(builder: (context) => const HomePage()),
-      (route) => false,
-    );
+    Navigator.pop(context);
   }
 
   // ==========================================================
   // LOGIKA CHAT INTERAKTIF
   // ==========================================================
-
-  String _currentTimeString() {
-    final now = DateTime.now();
-    final hour = now.hour.toString().padLeft(2, '0');
-    final minute = now.minute.toString().padLeft(2, '0');
-    return "$hour.$minute";
-  }
 
   void _scrollToBottom() {
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -143,76 +201,72 @@ class _KonsultasiDokterPageState
     });
   }
 
-  void _sendMessage() {
+  Future<void> _sendMessage() async {
     final text = messageController.text.trim();
     if (text.isEmpty) return;
 
-    final time = _currentTimeString();
+    messageController.clear();
+
+    if (_activeChatId == null) {
+      await _initChat();
+    }
+    if (_activeChatId == null) return;
+
+    final profile = UserProfileService.instance.currentProfile;
+    final senderRole = widget.isDoctorView ? 'doctor' : 'patient';
+    final senderName = widget.isDoctorView
+        ? widget.doctorName
+        : (widget.patientName ??
+            (profile.nama.isNotEmpty ? profile.nama : 'Pasien'));
+
+    final now = DateTime.now();
+    final timeStr =
+        "${now.hour.toString().padLeft(2, '0')}.${now.minute.toString().padLeft(2, '0')}";
+
+    final optMsg = ChatMessage(
+      id: 'opt_${now.millisecondsSinceEpoch}',
+      senderId: widget.isDoctorView ? 'doctor' : 'patient',
+      senderRole: senderRole,
+      senderName: senderName,
+      message: text,
+      timestamp: now,
+      timeFormatted: timeStr,
+      isRead: false,
+    );
 
     setState(() {
-      _messages.add(
-        ChatItem(
-          message: text,
-          time: time,
-          isDoctor: false,
-        ),
-      );
-      _isDoctorTyping = true;
+      _optimisticMessages.add(optMsg);
     });
-
-    messageController.clear();
     _scrollToBottom();
 
-    // Simulasi jawaban dokter secara realistis dan interaktif
-    Future.delayed(const Duration(milliseconds: 1200), () {
-      if (!mounted) return;
+    final success = await ChatService.instance.sendMessage(
+      chatId: _activeChatId!,
+      message: text,
+      senderRole: senderRole,
+      senderName: senderName,
+      patientId: widget.patientId,
+      patientName: widget.patientName ?? profile.nama,
+      doctorId: widget.doctorId,
+      doctorName: widget.doctorName,
+    );
 
-      final reply = _getDoctorReply(text);
-      final replyTime = _currentTimeString();
-
-      setState(() {
-        _isDoctorTyping = false;
-        _messages.add(
-          ChatItem(
-            message: reply,
-            time: replyTime,
-            isDoctor: true,
+    if (!success && mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+            'Pesan tersimpan lokal, namun gagal disinkronkan ke server Firestore. Mohon pastikan aturan keamanan (Security Rules) Firestore telah diaktifkan/dipublikasikan di Firebase Console.',
+            style: TextStyle(fontSize: 12),
           ),
-        );
-      });
-
-      _scrollToBottom();
-    });
-  }
-
-  String _getDoctorReply(String userText) {
-    final lower = userText.toLowerCase();
-
-    if (lower.contains("sesak") ||
-        lower.contains("nafas") ||
-        lower.contains("dada") ||
-        lower.contains("nyeri") ||
-        lower.contains("sakit")) {
-      return "Baik, keluhan sesak nafas atau nyeri dada adalah gejala penting yang memerlukan perhatian. Sebaiknya batasi aktivitas berat terlebih dahulu dan usahakan duduk tegak rileks. Apakah ada riwayat hipertensi sebelumnya?";
-    } else if (lower.contains("obat") ||
-        lower.contains("resep") ||
-        lower.contains("minum")) {
-      return "Untuk konsumsi obat jantung, sangat disarankan disesuaikan dengan hasil pemeriksaan fisik dan rekam medis terbaru. Tolong hindari konsumsi obat tanpa resep ya.";
-    } else if (lower.contains("tensi") ||
-        lower.contains("tekanan darah") ||
-        lower.contains("darah tinggi") ||
-        lower.contains("hipertensi")) {
-      return "Catatan tensi sangat berharga. Disarankan mengukur tekanan darah 2x sehari (pagi dan malam). Jika angka sistolik di atas 140 mmHg, segera istirahat.";
-    } else if (lower.contains("terima kasih") ||
-        lower.contains("makasih") ||
-        lower.contains("baik dok") ||
-        lower.contains("oke dok") ||
-        lower.contains("siap")) {
-      return "Sama-sama. Tetap jaga pola makan rendah garam, cukup istirahat, dan kurangi stres. Jika ada keluhan darurat mendadak, segera gunakan tombol darurat 119 ya!";
-    } else {
-      return "Saya telah menerima informasi yang Anda sampaikan. Tetap tenang dan istirahat yang cukup. Kita akan diskusikan penanganan mendalam pada sesi konsultasi terjadwal.";
+          backgroundColor: Color(0xFFEF4444),
+          duration: Duration(seconds: 4),
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
     }
+
+    _scrollToBottom();
   }
+
 
   void _showAttachmentOptions() {
     showModalBottomSheet(
@@ -351,41 +405,56 @@ class _KonsultasiDokterPageState
     );
   }
 
-  void _sendAttachment(String title) {
-    final time = _currentTimeString();
+  Future<void> _sendAttachment(String title, {String? imagePath}) async {
+    if (_activeChatId == null) {
+      await _initChat();
+    }
+    if (_activeChatId == null) return;
+
+    final profile = UserProfileService.instance.currentProfile;
+    final senderRole = widget.isDoctorView ? 'doctor' : 'patient';
+    final senderName = widget.isDoctorView
+        ? widget.doctorName
+        : (widget.patientName ??
+            (profile.nama.isNotEmpty ? profile.nama : 'Pasien'));
+
+    final path = imagePath ??
+        (title.contains("Skrining") || title.contains("EKG")
+            ? "assets/images/screening_jantung.png"
+            : null);
+
+    final now = DateTime.now();
+    final timeStr =
+        "${now.hour.toString().padLeft(2, '0')}.${now.minute.toString().padLeft(2, '0')}";
+
+    final optMsg = ChatMessage(
+      id: 'opt_att_${now.millisecondsSinceEpoch}',
+      senderId: widget.isDoctorView ? 'doctor' : 'patient',
+      senderRole: senderRole,
+      senderName: senderName,
+      message: "📎 Lampiran: $title",
+      attachmentType: title,
+      imagePath: path,
+      timestamp: now,
+      timeFormatted: timeStr,
+      isRead: false,
+    );
 
     setState(() {
-      _messages.add(
-        ChatItem(
-          message: "📎 Lampiran: $title",
-          time: time,
-          isDoctor: false,
-          attachmentType: title,
-        ),
-      );
-      _isDoctorTyping = true;
+      _optimisticMessages.add(optMsg);
     });
-
     _scrollToBottom();
 
-    Future.delayed(const Duration(milliseconds: 1200), () {
-      if (!mounted) return;
-      final replyTime = _currentTimeString();
+    await ChatService.instance.sendMessage(
+      chatId: _activeChatId!,
+      message: "📎 Lampiran: $title",
+      senderRole: senderRole,
+      senderName: senderName,
+      attachmentType: title,
+      imagePath: path,
+    );
 
-      setState(() {
-        _isDoctorTyping = false;
-        _messages.add(
-          ChatItem(
-            message:
-                "Terima kasih atas lampirannya ($title). Dokumen ini sudah saya periksa dan simpan di rekam medis konsultasi Anda.",
-            time: replyTime,
-            isDoctor: true,
-          ),
-        );
-      });
-
-      _scrollToBottom();
-    });
+    _scrollToBottom();
   }
 
   // ==========================================================
@@ -457,14 +526,29 @@ class _KonsultasiDokterPageState
                         const SizedBox(width: 10),
 
                         // FOTO DOKTER
-                        _doctorImage(
-                          width: 44,
-                          height: 44,
-                        ),
+                        // FOTO / AVATAR HEADER
+                        widget.isDoctorView
+                            ? Container(
+                                width: 44,
+                                height: 44,
+                                decoration: const BoxDecoration(
+                                  color: Color(0xFFE0F2FE),
+                                  shape: BoxShape.circle,
+                                ),
+                                child: const Icon(
+                                  Icons.person_rounded,
+                                  color: Color(0xFF0284C7),
+                                  size: 26,
+                                ),
+                              )
+                            : _doctorImage(
+                                width: 44,
+                                height: 44,
+                              ),
 
                         const SizedBox(width: 10),
 
-                        // NAMA DOKTER
+                        // NAMA
                         Expanded(
                           child: Column(
                             mainAxisAlignment:
@@ -474,7 +558,9 @@ class _KonsultasiDokterPageState
                             children: [
 
                               Text(
-                                "Konsultasi dengan",
+                                widget.isDoctorView
+                                    ? "Konsultasi Pasien"
+                                    : "Konsultasi dengan",
                                 style: TextStyle(
                                   fontSize: 11,
                                   fontWeight: FontWeight.w600,
@@ -485,7 +571,9 @@ class _KonsultasiDokterPageState
                               const SizedBox(height: 1),
 
                               Text(
-                                widget.doctorName,
+                                widget.isDoctorView
+                                    ? (widget.patientName ?? "Pasien HeartCare")
+                                    : widget.doctorName,
                                 style: TextStyle(
                                   fontSize: 14.5,
                                   fontWeight: FontWeight.bold,
@@ -504,18 +592,30 @@ class _KonsultasiDokterPageState
                                     size: 8,
                                     color: _isDoctorTyping
                                         ? primaryBlue
-                                        : onlineGreen,
+                                        : (widget.isDoctorView
+                                            ? onlineGreen
+                                            : (_isDoctorOnline
+                                                ? onlineGreen
+                                                : const Color(0xFFF59E0B))),
                                   ),
                                   const SizedBox(width: 4),
                                   Text(
                                     _isDoctorTyping
                                         ? "Sedang mengetik..."
-                                        : "Online",
+                                        : (widget.isDoctorView
+                                            ? "Pasien Aktif"
+                                            : (_isDoctorOnline
+                                                ? "Online"
+                                                : "Offline")),
                                     style: TextStyle(
                                       fontSize: 10.5,
                                       color: _isDoctorTyping
                                           ? primaryBlue
-                                          : onlineGreen,
+                                          : (widget.isDoctorView
+                                              ? onlineGreen
+                                              : (_isDoctorOnline
+                                                  ? onlineGreen
+                                                  : const Color(0xFFF59E0B))),
                                       fontWeight:
                                           FontWeight.w600,
                                     ),
@@ -541,6 +641,84 @@ class _KonsultasiDokterPageState
                   ),
 
                   // ==================================================
+                  // PENGINGAT JIKA DOKTER SEDANG OFFLINE (UNTUK PASIEN)
+                  // ==================================================
+                  if (!widget.isDoctorView && !_isDoctorOnline)
+                    Container(
+                      margin: const EdgeInsets.fromLTRB(14, 8, 14, 4),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 14,
+                        vertical: 10,
+                      ),
+                      decoration: BoxDecoration(
+                        color: isDark
+                            ? const Color(0xFF2A2415)
+                            : const Color(0xFFFFFBEB),
+                        borderRadius: BorderRadius.circular(14),
+                        border: Border.all(
+                          color: isDark
+                              ? const Color(0xFF78350F)
+                              : const Color(0xFFFDE68A),
+                          width: 1,
+                        ),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withValues(alpha: 0.04),
+                            blurRadius: 6,
+                            offset: const Offset(0, 2),
+                          ),
+                        ],
+                      ),
+                      child: Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.all(5),
+                            decoration: BoxDecoration(
+                              color: const Color(0xFFF59E0B)
+                                  .withValues(alpha: 0.2),
+                              shape: BoxShape.circle,
+                            ),
+                            child: const Icon(
+                              Icons.pause_circle_filled_rounded,
+                              color: Color(0xFFD97706),
+                              size: 18,
+                            ),
+                          ),
+                          const SizedBox(width: 10),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  'Dokter Sedang Offline',
+                                  style: TextStyle(
+                                    fontSize: 12.5,
+                                    fontWeight: FontWeight.bold,
+                                    color: isDark
+                                        ? const Color(0xFFFDE68A)
+                                        : const Color(0xFF92400E),
+                                  ),
+                                ),
+                                const SizedBox(height: 2),
+                                Text(
+                                  'Dokter saat ini sedang tidak menerima konsultasi langsung. Anda tetap dapat meninggalkan pesan atau pertanyaan di bawah ini, dokter akan merespons saat kembali online.',
+                                  style: TextStyle(
+                                    fontSize: 11.5,
+                                    height: 1.35,
+                                    color: isDark
+                                        ? const Color(0xFFE2E8F0)
+                                        : const Color(0xFF78350F),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+
+                  // ==================================================
                   // AREA CHAT INTERAKTIF
                   // ==================================================
 
@@ -549,135 +727,137 @@ class _KonsultasiDokterPageState
                       children: [
 
                         Expanded(
-                          child: ListView.builder(
-                            controller: _scrollController,
-                            keyboardDismissBehavior:
-                                ScrollViewKeyboardDismissBehavior
-                                    .onDrag,
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 14,
-                              vertical: 10,
-                            ),
-                            itemCount: _messages.length +
-                                1 +
-                                (_isDoctorTyping ? 1 : 0),
-                            itemBuilder: (context, index) {
-                              // TANGGAL HARI INI
-                              if (index == 0) {
-                                return Column(
-                                  children: [
-                                    Center(
-                                      child: Container(
-                                        padding: const EdgeInsets.symmetric(
-                                          horizontal: 14,
-                                          vertical: 6,
-                                        ),
-                                        decoration: BoxDecoration(
-                                          color: isDark ? const Color(0xFF1E293B) : const Color(0xFFE0F2FE),
-                                          borderRadius: BorderRadius.circular(20),
-                                          border: Border.all(
-                                            color: isDark ? const Color(0xFF334155) : const Color(0xFFBAE6FD),
-                                            width: 1,
-                                          ),
-                                        ),
-                                        child: Row(
-                                          mainAxisSize: MainAxisSize.min,
-                                          children: [
-                                            Icon(
-                                              Icons.calendar_today_rounded,
-                                              size: 12,
-                                              color: isDark ? const Color(0xFF38BDF8) : const Color(0xFF0284C7),
+                          child: StreamBuilder<List<ChatMessage>>(
+                            initialData: _activeChatId != null
+                                ? ChatService.instance
+                                    .getCachedMessages(_activeChatId!)
+                                : [],
+                            stream: _activeChatId != null
+                                ? ChatService.instance
+                                    .getMessagesStream(_activeChatId!)
+                                : const Stream.empty(),
+                            builder: (context, snapshot) {
+                              if (_isLoadingChat &&
+                                  _optimisticMessages.isEmpty &&
+                                  (!snapshot.hasData ||
+                                      snapshot.data!.isEmpty)) {
+                                return const Center(
+                                    child: CircularProgressIndicator());
+                              }
+
+                              final streamMessages = snapshot.data ?? [];
+                              final Map<String, ChatMessage> map = {};
+
+                              for (final m in _optimisticMessages) {
+                                map[m.id] = m;
+                              }
+
+                              for (final m in streamMessages) {
+                                _optimisticMessages.removeWhere((opt) =>
+                                    opt.message == m.message &&
+                                    opt.senderRole == m.senderRole);
+                                map[m.id] = m;
+                              }
+
+                              final messages = map.values.toList();
+                              messages.sort((a, b) => a.timestamp.compareTo(b.timestamp));
+
+                              if (messages.isNotEmpty) {
+                                WidgetsBinding.instance.addPostFrameCallback((_) {
+                                  _scrollToBottom();
+                                });
+                              }
+
+                              return ListView.builder(
+                                controller: _scrollController,
+                                keyboardDismissBehavior:
+                                    ScrollViewKeyboardDismissBehavior.onDrag,
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 14,
+                                  vertical: 10,
+                                ),
+                                itemCount: messages.length + 1,
+                                itemBuilder: (context, index) {
+                                  // TANGGAL HARI INI
+                                  if (index == 0) {
+                                    return Column(
+                                      children: [
+                                        Center(
+                                          child: Container(
+                                            padding: const EdgeInsets.symmetric(
+                                              horizontal: 14,
+                                              vertical: 6,
                                             ),
-                                            const SizedBox(width: 6),
-                                            Text(
-                                              "Hari ini",
-                                              style: TextStyle(
-                                                fontSize: 11,
-                                                color: isDark ? const Color(0xFF38BDF8) : const Color(0xFF0284C7),
-                                                fontWeight: FontWeight.bold,
+                                            decoration: BoxDecoration(
+                                              color: isDark
+                                                  ? const Color(0xFF1E293B)
+                                                  : const Color(0xFFE0F2FE),
+                                              borderRadius: BorderRadius.circular(20),
+                                              border: Border.all(
+                                                color: isDark
+                                                    ? const Color(0xFF334155)
+                                                    : const Color(0xFFBAE6FD),
+                                                width: 1,
                                               ),
                                             ),
-                                          ],
-                                        ),
-                                      ),
-                                    ),
-                                    const SizedBox(height: 18),
-                                  ],
-                                );
-                              }
-
-                              final messageIndex = index - 1;
-
-                              if (messageIndex < _messages.length) {
-                                final item = _messages[messageIndex];
-                                return Padding(
-                                  padding:
-                                      const EdgeInsets.only(bottom: 16),
-                                  child: item.imagePath != null
-                                      ? _userImageMessage(
-                                          item.imagePath!,
-                                          item.time,
-                                          isDark,
-                                        )
-                                      : (item.isDoctor
-                                          ? _doctorMessage(
-                                              item.message,
-                                              item.time,
-                                              isDark,
-                                            )
-                                          : _userMessage(
-                                              item.message,
-                                              item.time,
-                                              isDark,
-                                            )),
-                                );
-                              }
-
-                              // INDIKATOR DOKTER SEDANG MENGETIK
-                              return Padding(
-                                padding:
-                                    const EdgeInsets.only(bottom: 16),
-                                child: Row(
-                                  crossAxisAlignment:
-                                      CrossAxisAlignment.start,
-                                  children: [
-                                    _doctorImage(
-                                      width: 28,
-                                      height: 28,
-                                    ),
-                                    const SizedBox(width: 8),
-                                    Container(
-                                      padding: const EdgeInsets.fromLTRB(14, 10, 14, 10),
-                                      decoration: BoxDecoration(
-                                        color: isDark ? const Color(0xFF1E293B) : Colors.white,
-                                        borderRadius: const BorderRadius.only(
-                                          topLeft: Radius.circular(4),
-                                          topRight: Radius.circular(16),
-                                          bottomLeft: Radius.circular(16),
-                                          bottomRight: Radius.circular(16),
-                                        ),
-                                        border: Border.all(
-                                          color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0),
-                                        ),
-                                        boxShadow: [
-                                          BoxShadow(
-                                            color: Colors.black.withValues(alpha: isDark ? 0.2 : 0.03),
-                                            blurRadius: 6,
-                                            offset: const Offset(0, 2),
+                                            child: Row(
+                                              mainAxisSize: MainAxisSize.min,
+                                              children: [
+                                                Icon(
+                                                  Icons.lock_outline_rounded,
+                                                  size: 12,
+                                                  color: isDark
+                                                      ? const Color(0xFF38BDF8)
+                                                      : const Color(0xFF0284C7),
+                                                ),
+                                                const SizedBox(width: 6),
+                                                Text(
+                                                  "Terkoneksi Real-Time (Aman dengan Firebase)",
+                                                  style: TextStyle(
+                                                    fontSize: 10.5,
+                                                    color: isDark
+                                                        ? const Color(0xFF38BDF8)
+                                                        : const Color(0xFF0284C7),
+                                                    fontWeight: FontWeight.bold,
+                                                  ),
+                                                ),
+                                              ],
+                                            ),
                                           ),
-                                        ],
-                                      ),
-                                      child: Text(
-                                        "${widget.doctorName} sedang mengetik...",
-                                        style: TextStyle(
-                                          fontSize: 12,
-                                          fontStyle: FontStyle.italic,
-                                          color: isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B),
                                         ),
-                                      ),
-                                    ),
-                                  ],
-                                ),
+                                        const SizedBox(height: 18),
+                                      ],
+                                    );
+                                  }
+
+                                  final msg = messages[index - 1];
+                                  final bool isMyMessage = widget.isDoctorView
+                                      ? msg.senderRole == 'doctor'
+                                      : msg.senderRole == 'patient';
+
+                                  return Padding(
+                                    padding: const EdgeInsets.only(bottom: 16),
+                                    child: msg.imagePath != null &&
+                                            msg.imagePath!.isNotEmpty
+                                        ? _userImageMessage(
+                                            msg.imagePath!,
+                                            msg.timeFormatted,
+                                            isDark,
+                                          )
+                                        : (isMyMessage
+                                            ? _userMessage(
+                                                msg.message,
+                                                msg.timeFormatted,
+                                                isDark,
+                                              )
+                                            : _doctorMessage(
+                                                msg.message,
+                                                msg.timeFormatted,
+                                                isDark,
+                                                senderName: msg.senderName,
+                                              )),
+                                  );
+                                },
                               );
                             },
                           ),
@@ -730,7 +910,9 @@ class _KonsultasiDokterPageState
                                       color: isDark ? Colors.white : const Color(0xFF0F172A),
                                     ),
                                     decoration: InputDecoration(
-                                      hintText: "Ketik pesan....",
+                                      hintText: (!widget.isDoctorView && !_isDoctorOnline)
+                                          ? "Tinggalkan pesan untuk dokter..."
+                                          : "Ketik pesan....",
                                       hintStyle: TextStyle(
                                         fontSize: 13.5,
                                         color: isDark ? const Color(0xFF64748B) : const Color(0xFF94A3B8),
@@ -811,15 +993,30 @@ class _KonsultasiDokterPageState
   Widget _doctorMessage(
     String message,
     String time,
-    bool isDark,
-  ) {
+    bool isDark, {
+    String? senderName,
+  }) {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.end,
       children: [
-        _doctorImage(
-          width: 32,
-          height: 32,
-        ),
+        widget.isDoctorView
+            ? Container(
+                width: 32,
+                height: 32,
+                decoration: const BoxDecoration(
+                  color: Color(0xFFE0F2FE),
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(
+                  Icons.person_rounded,
+                  color: Color(0xFF0284C7),
+                  size: 20,
+                ),
+              )
+            : _doctorImage(
+                width: 32,
+                height: 32,
+              ),
         const SizedBox(width: 8),
         Flexible(
           child: Container(
@@ -1096,30 +1293,10 @@ class _KonsultasiDokterPageState
         color: Color(0xFFE6E6E6),
       ),
       clipBehavior: Clip.antiAlias,
-      child: Image.asset(
-        widget.doctorPhoto.isNotEmpty
-            ? widget.doctorPhoto
-            : "assets/images/dokter_nurlitta.png",
-        fit: BoxFit.cover,
-        errorBuilder: (context, error, stackTrace) {
-          return Image.asset(
-            "assets/images/dokter_nurlitta.png",
-            fit: BoxFit.cover,
-            errorBuilder: (context, error, stackTrace) {
-              return Image.asset(
-                "assets/images/profile_woman.png",
-                fit: BoxFit.cover,
-                errorBuilder: (context, error, stackTrace) {
-                  return Icon(
-                    Icons.person,
-                    color: Colors.grey,
-                    size: width * 0.6,
-                  );
-                },
-              );
-            },
-          );
-        },
+      child: DoctorService.buildDoctorImage(
+        widget.doctorPhoto,
+        width: width,
+        height: height,
       ),
     );
   }
