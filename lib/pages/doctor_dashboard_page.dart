@@ -9,6 +9,8 @@ import '../services/doctor_service.dart';
 import 'home_page.dart';
 import 'konsultasi_dokter_page.dart';
 import 'welcome_page.dart';
+import '../services/chat_notification_service.dart';
+import '../widgets/chat_notification_sheet.dart';
 
 class DoctorDashboardPage extends StatefulWidget {
   const DoctorDashboardPage({super.key});
@@ -729,6 +731,66 @@ class _DoctorDashboardPageState extends State<DoctorDashboardPage> {
           ],
         ),
         actions: [
+          ListenableBuilder(
+            listenable: ChatNotificationService.instance,
+            builder: (context, _) {
+              final unread = ChatNotificationService.instance.totalUnreadNotificationCount;
+              return Center(
+                child: Padding(
+                  padding: const EdgeInsets.only(right: 4),
+                  child: Material(
+                    color: Colors.white.withValues(alpha: 0.15),
+                    borderRadius: BorderRadius.circular(10),
+                    child: InkWell(
+                      borderRadius: BorderRadius.circular(10),
+                      onTap: () => ChatNotificationSheet.show(context),
+                      child: Container(
+                        width: 36,
+                        height: 36,
+                        alignment: Alignment.center,
+                        child: Stack(
+                          clipBehavior: Clip.none,
+                          children: [
+                            const Icon(
+                              Icons.notifications_outlined,
+                              size: 20,
+                              color: Colors.white,
+                            ),
+                            if (unread > 0)
+                              Positioned(
+                                top: -4,
+                                right: -4,
+                                child: Container(
+                                  padding: const EdgeInsets.all(3),
+                                  constraints: const BoxConstraints(
+                                    minWidth: 16,
+                                    minHeight: 16,
+                                  ),
+                                  decoration: const BoxDecoration(
+                                    color: Color(0xFFEF4444),
+                                    shape: BoxShape.circle,
+                                  ),
+                                  alignment: Alignment.center,
+                                  child: Text(
+                                    unread > 9 ? '9+' : '$unread',
+                                    style: const TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 9,
+                                      fontWeight: FontWeight.bold,
+                                      height: 1,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              );
+            },
+          ),
           IconButton(
             tooltip: 'Mode Pasien',
             icon: const Icon(Icons.swap_horiz_rounded, color: Colors.white),

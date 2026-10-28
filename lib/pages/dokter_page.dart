@@ -10,6 +10,8 @@ import 'riwayat_page.dart';
 import 'signup_page.dart';
 import '../services/theme_service.dart';
 import '../services/doctor_service.dart';
+import '../services/chat_notification_service.dart';
+import '../widgets/chat_notification_sheet.dart';
 
 class PilihDokterPage extends StatefulWidget {
   const PilihDokterPage({super.key});
@@ -102,6 +104,65 @@ class _PilihDokterPageState extends State<PilihDokterPage> {
               ),
             ),
             actions: [
+              // Tombol Chat Notifications
+              ListenableBuilder(
+                listenable: ChatNotificationService.instance,
+                builder: (context, _) {
+                  final unread = ChatNotificationService.instance.totalUnreadNotificationCount;
+                  return Padding(
+                    padding: const EdgeInsets.only(right: 8),
+                    child: Material(
+                      color: isDark ? const Color(0xFF1E293B) : const Color(0xFFF1F5F9),
+                      borderRadius: BorderRadius.circular(12),
+                      child: InkWell(
+                        borderRadius: BorderRadius.circular(12),
+                        onTap: () => ChatNotificationSheet.show(context),
+                        child: Container(
+                          width: 38,
+                          height: 38,
+                          alignment: Alignment.center,
+                          child: Stack(
+                            clipBehavior: Clip.none,
+                            children: [
+                              Icon(
+                                Icons.notifications_outlined,
+                                size: 20,
+                                color: isDark ? Colors.white : const Color(0xFF0F172A),
+                              ),
+                              if (unread > 0)
+                                Positioned(
+                                  top: -4,
+                                  right: -4,
+                                  child: Container(
+                                    padding: const EdgeInsets.all(3),
+                                    constraints: const BoxConstraints(
+                                      minWidth: 16,
+                                      minHeight: 16,
+                                    ),
+                                    decoration: const BoxDecoration(
+                                      color: Color(0xFFEF4444),
+                                      shape: BoxShape.circle,
+                                    ),
+                                    alignment: Alignment.center,
+                                    child: Text(
+                                      unread > 9 ? '9+' : '$unread',
+                                      style: const TextStyle(
+                                        color: Colors.white,
+                                        fontSize: 9,
+                                        fontWeight: FontWeight.bold,
+                                        height: 1,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+                  );
+                },
+              ),
               // Tombol tambah / daftar dokter baru
               Padding(
                 padding: const EdgeInsets.only(right: 12),
@@ -818,63 +879,108 @@ class _PilihDokterPageState extends State<PilihDokterPage> {
           const SizedBox(width: 8),
 
           // TOMBOL CHAT / PESAN
-          Material(
-            color: Colors.transparent,
-            child: InkWell(
-              borderRadius: BorderRadius.circular(12),
-              onTap: onDirectChat,
-              child: Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 10,
-                  vertical: 8,
-                ),
-                decoration: BoxDecoration(
-                  gradient: isOnline
-                      ? const LinearGradient(
-                          colors: [Color(0xFF0EA5E9), Color(0xFF0284C7)],
-                          begin: Alignment.topLeft,
-                          end: Alignment.bottomRight,
-                        )
-                      : LinearGradient(
-                          colors: isDark
-                              ? [const Color(0xFF334155), const Color(0xFF1E293B)]
-                              : [const Color(0xFF64748B), const Color(0xFF475569)],
-                          begin: Alignment.topLeft,
-                          end: Alignment.bottomRight,
+          ListenableBuilder(
+            listenable: ChatNotificationService.instance,
+            builder: (context, _) {
+              final unread = ChatNotificationService.instance
+                  .getUnreadCountForDoctorName(dokter['nama'] as String? ?? '');
+
+              return Stack(
+                clipBehavior: Clip.none,
+                children: [
+                  Material(
+                    color: Colors.transparent,
+                    child: InkWell(
+                      borderRadius: BorderRadius.circular(12),
+                      onTap: onDirectChat,
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 10,
+                          vertical: 8,
                         ),
-                  borderRadius: BorderRadius.circular(12),
-                  boxShadow: [
-                    BoxShadow(
-                      color: (isOnline
-                              ? const Color(0xFF0284C7)
-                              : const Color(0xFF475569))
-                          .withValues(alpha: 0.3),
-                      blurRadius: 6,
-                      offset: const Offset(0, 2),
-                    ),
-                  ],
-                ),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(
-                      isOnline ? Icons.chat_bubble_rounded : Icons.mark_chat_unread_outlined,
-                      color: Colors.white,
-                      size: 16,
-                    ),
-                    const SizedBox(height: 2),
-                    Text(
-                      isOnline ? 'Chat' : 'Pesan',
-                      style: const TextStyle(
-                        fontSize: 10.5,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.white,
+                        decoration: BoxDecoration(
+                          gradient: isOnline
+                              ? const LinearGradient(
+                                  colors: [Color(0xFF0EA5E9), Color(0xFF0284C7)],
+                                  begin: Alignment.topLeft,
+                                  end: Alignment.bottomRight,
+                                )
+                              : LinearGradient(
+                                  colors: isDark
+                                      ? [const Color(0xFF334155), const Color(0xFF1E293B)]
+                                      : [const Color(0xFF64748B), const Color(0xFF475569)],
+                                  begin: Alignment.topLeft,
+                                  end: Alignment.bottomRight,
+                                ),
+                          borderRadius: BorderRadius.circular(12),
+                          boxShadow: [
+                            BoxShadow(
+                              color: (isOnline
+                                      ? const Color(0xFF0284C7)
+                                      : const Color(0xFF475569))
+                                  .withValues(alpha: 0.3),
+                              blurRadius: 6,
+                              offset: const Offset(0, 2),
+                            ),
+                          ],
+                        ),
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(
+                              isOnline ? Icons.chat_bubble_rounded : Icons.mark_chat_unread_outlined,
+                              color: Colors.white,
+                              size: 16,
+                            ),
+                            const SizedBox(height: 2),
+                            Text(
+                              isOnline ? 'Chat' : 'Pesan',
+                              style: const TextStyle(
+                                fontSize: 10.5,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.white,
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
                     ),
-                  ],
-                ),
-              ),
-            ),
+                  ),
+                  if (unread > 0)
+                    Positioned(
+                      top: -6,
+                      right: -6,
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 2),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFEF4444),
+                          borderRadius: BorderRadius.circular(10),
+                          border: Border.all(
+                            color: isDark ? const Color(0xFF1E293B) : Colors.white,
+                            width: 1.5,
+                          ),
+                          boxShadow: [
+                            BoxShadow(
+                              color: const Color(0xFFEF4444).withValues(alpha: 0.4),
+                              blurRadius: 4,
+                              offset: const Offset(0, 2),
+                            ),
+                          ],
+                        ),
+                        child: Text(
+                          unread > 9 ? '9+' : '$unread',
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 10,
+                            fontWeight: FontWeight.bold,
+                            height: 1,
+                          ),
+                        ),
+                      ),
+                    ),
+                ],
+              );
+            },
           ),
         ],
       ),

@@ -8,6 +8,8 @@ import 'package:heartcare/services/theme_service.dart';
 import '../services/user_profile_service.dart';
 import '../services/chat_service.dart';
 import '../services/doctor_service.dart';
+import '../services/chat_notification_service.dart';
+import '../widgets/chat_notification_sheet.dart';
 
 class ChatItem {
   final String message;
@@ -68,23 +70,35 @@ class _KonsultasiDokterPageState
   String selectedReminder = "1 hari sebelumnya";
   StreamSubscription? _doctorStatusSub;
   bool _isDoctorOnline = true;
+  late bool _sendingAsDoctor;
 
   @override
   void initState() {
     super.initState();
+    _sendingAsDoctor = widget.isDoctorView;
+    ChatNotificationService.instance.currentActiveDoctorRoom = widget.doctorName;
+    ChatNotificationService.instance.markAsRead(widget.doctorName);
     _listenDoctorOnlineStatus();
     // Pre-komputasi activeChatId secara instan pada frame pertama
     if (widget.chatId != null && widget.chatId!.isNotEmpty) {
       _activeChatId = widget.chatId;
     } else {
-      final profile = UserProfileService.instance.currentProfile;
+      String patientName = 'patient_user';
+      try {
+        final profile = UserProfileService.instance.currentProfile;
+        if (profile.nama.isNotEmpty) {
+          patientName = profile.nama;
+        }
+      } catch (_) {}
+      String? authUid;
+      try {
+        authUid = FirebaseAuth.instance.currentUser?.uid;
+      } catch (_) {}
       final patientId = widget.patientId ??
-          FirebaseAuth.instance.currentUser?.uid ??
-          (profile.nama.isNotEmpty
-              ? profile.nama
-                  .replaceAll(RegExp(r'[^a-zA-Z0-9]'), '_')
-                  .toLowerCase()
-              : 'patient_user');
+          authUid ??
+          patientName
+              .replaceAll(RegExp(r'[^a-zA-Z0-9]'), '_')
+              .toLowerCase();
       final doctorId = widget.doctorId ?? widget.doctorName;
       _activeChatId = ChatService.instance.computeChatId(
         patientId: patientId,
@@ -163,6 +177,7 @@ class _KonsultasiDokterPageState
 
   @override
   void dispose() {
+    ChatNotificationService.instance.currentActiveDoctorRoom = null;
     _doctorStatusSub?.cancel();
     messageController.dispose();
     _scrollController.dispose();
@@ -212,12 +227,16 @@ class _KonsultasiDokterPageState
     }
     if (_activeChatId == null) return;
 
-    final profile = UserProfileService.instance.currentProfile;
-    final senderRole = widget.isDoctorView ? 'doctor' : 'patient';
-    final senderName = widget.isDoctorView
-        ? widget.doctorName
-        : (widget.patientName ??
-            (profile.nama.isNotEmpty ? profile.nama : 'Pasien'));
+    String resolvedPatientName = widget.patientName ?? 'Pasien';
+    try {
+      final profile = UserProfileService.instance.currentProfile;
+      if (profile.nama.isNotEmpty && widget.patientName == null) {
+        resolvedPatientName = profile.nama;
+      }
+    } catch (_) {}
+    final isSendingDoctor = _sendingAsDoctor;
+    final senderRole = isSendingDoctor ? 'doctor' : 'patient';
+    final senderName = isSendingDoctor ? widget.doctorName : resolvedPatientName;
 
     final now = DateTime.now();
     final timeStr =
@@ -225,7 +244,7 @@ class _KonsultasiDokterPageState
 
     final optMsg = ChatMessage(
       id: 'opt_${now.millisecondsSinceEpoch}',
-      senderId: widget.isDoctorView ? 'doctor' : 'patient',
+      senderId: isSendingDoctor ? 'doctor' : 'patient',
       senderRole: senderRole,
       senderName: senderName,
       message: text,
@@ -245,10 +264,29 @@ class _KonsultasiDokterPageState
       senderRole: senderRole,
       senderName: senderName,
       patientId: widget.patientId,
-      patientName: widget.patientName ?? profile.nama,
+      patientName: resolvedPatientName,
       doctorId: widget.doctorId,
       doctorName: widget.doctorName,
     );
+
+    // Jika dikirim oleh pasien, jadwalkan balasan dokter setelah 2.5 detik
+    // (Bila pasien keluar ruangan, notifikasi floating in-app banner otomatis muncul)
+    if (!isSendingDoctor) {
+      Future.delayed(const Duration(milliseconds: 2500), () async {
+        if (_activeChatId == null) return;
+        final replyText = ChatNotificationService.instance.getClinicalReply(text);
+        await ChatService.instance.sendMessage(
+          chatId: _activeChatId!,
+          message: replyText,
+          senderRole: 'doctor',
+          senderName: widget.doctorName,
+          patientId: widget.patientId,
+          patientName: resolvedPatientName,
+          doctorId: widget.doctorId,
+          doctorName: widget.doctorName,
+        );
+      });
+    }
 
     if (!success && mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -626,14 +664,68 @@ class _KonsultasiDokterPageState
                           ),
                         ),
 
+                        // TOMBOL PUSAT NOTIFIKASI CHAT
+                        AnimatedBuilder(
+                          animation: ChatNotificationService.instance,
+                          builder: (context, _) {
+                            final unread = ChatNotificationService
+                                .instance.totalUnreadNotificationCount;
+                            return Stack(
+                              alignment: Alignment.center,
+                              children: [
+                                IconButton(
+                                  onPressed: () =>
+                                      ChatNotificationSheet.show(context),
+                                  tooltip: "Pusat Notifikasi Chat",
+                                  icon: Icon(
+                                    Icons.notifications_active_outlined,
+                                    size: 22,
+                                    color: isDark
+                                        ? const Color(0xFF94A3B8)
+                                        : const Color(0xFF475569),
+                                  ),
+                                ),
+                                if (unread > 0)
+                                  Positioned(
+                                    top: 8,
+                                    right: 8,
+                                    child: Container(
+                                      padding: const EdgeInsets.all(3),
+                                      decoration: const BoxDecoration(
+                                        color: Color(0xFFEF4444),
+                                        shape: BoxShape.circle,
+                                      ),
+                                      constraints: const BoxConstraints(
+                                        minWidth: 15,
+                                        minHeight: 15,
+                                      ),
+                                      child: Center(
+                                        child: Text(
+                                          '$unread',
+                                          style: const TextStyle(
+                                            color: Colors.white,
+                                            fontSize: 9,
+                                            fontWeight: FontWeight.bold,
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                              ],
+                            );
+                          },
+                        ),
+
                         // TOMBOL ATUR PENGINGAT (HEADER)
                         IconButton(
                           onPressed: showReminderSheet,
                           tooltip: "Atur Pengingat",
                           icon: Icon(
-                            Icons.notifications_none_rounded,
-                            size: 24,
-                            color: isDark ? const Color(0xFF94A3B8) : const Color(0xFF475569),
+                            Icons.alarm_rounded,
+                            size: 22,
+                            color: isDark
+                                ? const Color(0xFF94A3B8)
+                                : const Color(0xFF475569),
                           ),
                         ),
                       ],
@@ -864,6 +956,118 @@ class _KonsultasiDokterPageState
                         ),
 
                         // ==================================================
+                        // PILIHAN PENGIRIM: PASIEN / DOKTER (UNTUK PENGUJIAN & SIMULASI)
+                        // ==================================================
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 14,
+                            vertical: 7,
+                          ),
+                          decoration: BoxDecoration(
+                            color: isDark
+                                ? const Color(0xFF162032)
+                                : const Color(0xFFF1F5F9),
+                            border: Border(
+                              top: BorderSide(
+                                color: isDark
+                                    ? const Color(0xFF334155)
+                                    : const Color(0xFFE2E8F0),
+                                width: 0.8,
+                              ),
+                            ),
+                          ),
+                          child: Row(
+                            children: [
+                              Text(
+                                'Kirim sebagai:',
+                                style: TextStyle(
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.w600,
+                                  color: isDark
+                                      ? const Color(0xFF94A3B8)
+                                      : const Color(0xFF64748B),
+                                ),
+                              ),
+                              const SizedBox(width: 8),
+                              _senderRoleChoice(
+                                label: 'Pasien',
+                                icon: Icons.person_rounded,
+                                isSelected: !_sendingAsDoctor,
+                                isDark: isDark,
+                                onTap: () {
+                                  setState(() {
+                                    _sendingAsDoctor = false;
+                                  });
+                                },
+                              ),
+                              const SizedBox(width: 6),
+                              _senderRoleChoice(
+                                label: 'Dokter',
+                                icon: Icons.medical_services_rounded,
+                                isSelected: _sendingAsDoctor,
+                                isDark: isDark,
+                                onTap: () {
+                                  setState(() {
+                                    _sendingAsDoctor = true;
+                                  });
+                                },
+                              ),
+                              const Spacer(),
+                              GestureDetector(
+                                onTap: () {
+                                  ChatNotificationService.instance
+                                      .simulateDoctorInitiatedMessage(
+                                    doctorName: widget.doctorName,
+                                    doctorPhoto: widget.doctorPhoto,
+                                    doctorSpecialty: widget.doctorSpecialty,
+                                  );
+                                },
+                                child: Container(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 8,
+                                    vertical: 4,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    color: isDark
+                                        ? const Color(0xFF0F2B3E)
+                                        : const Color(0xFFE0F2FE),
+                                    borderRadius: BorderRadius.circular(8),
+                                    border: Border.all(
+                                      color: isDark
+                                          ? const Color(0xFF1E3A5F)
+                                          : const Color(0xFFBAE6FD),
+                                    ),
+                                  ),
+                                  child: Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      Icon(
+                                        Icons.bolt_rounded,
+                                        size: 13,
+                                        color: isDark
+                                            ? const Color(0xFF38BDF8)
+                                            : const Color(0xFF0284C7),
+                                      ),
+                                      const SizedBox(width: 3),
+                                      Text(
+                                        'Simulasi Dokter',
+                                        style: TextStyle(
+                                          fontSize: 10,
+                                          fontWeight: FontWeight.bold,
+                                          color: isDark
+                                              ? const Color(0xFF38BDF8)
+                                              : const Color(0xFF0284C7),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+
+                        // ==================================================
                         // INPUT PESAN
                         // ==================================================
 
@@ -910,9 +1114,11 @@ class _KonsultasiDokterPageState
                                       color: isDark ? Colors.white : const Color(0xFF0F172A),
                                     ),
                                     decoration: InputDecoration(
-                                      hintText: (!widget.isDoctorView && !_isDoctorOnline)
-                                          ? "Tinggalkan pesan untuk dokter..."
-                                          : "Ketik pesan....",
+                                      hintText: _sendingAsDoctor
+                                          ? "Ketik balasan sebagai dokter..."
+                                          : ((!widget.isDoctorView && !_isDoctorOnline)
+                                              ? "Tinggalkan pesan untuk dokter..."
+                                              : "Ketik pesan sebagai pasien..."),
                                       hintStyle: TextStyle(
                                         fontSize: 13.5,
                                         color: isDark ? const Color(0xFF64748B) : const Color(0xFF94A3B8),
@@ -983,6 +1189,61 @@ class _KonsultasiDokterPageState
           ),
         );
       },
+    );
+  }
+
+  Widget _senderRoleChoice({
+    required String label,
+    required IconData icon,
+    required bool isSelected,
+    required bool isDark,
+    required VoidCallback onTap,
+  }) {
+    final activeBg = label == 'Dokter'
+        ? const Color(0xFF0284C7)
+        : const Color(0xFF10B981);
+
+    return GestureDetector(
+      onTap: onTap,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 180),
+        padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 4),
+        decoration: BoxDecoration(
+          color: isSelected
+              ? activeBg
+              : (isDark ? const Color(0xFF0F172A) : Colors.white),
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(
+            color: isSelected
+                ? Colors.transparent
+                : (isDark ? const Color(0xFF334155) : const Color(0xFFCBD5E1)),
+            width: 1,
+          ),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              icon,
+              size: 13,
+              color: isSelected
+                  ? Colors.white
+                  : (isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B)),
+            ),
+            const SizedBox(width: 4),
+            Text(
+              label,
+              style: TextStyle(
+                fontSize: 11,
+                fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
+                color: isSelected
+                    ? Colors.white
+                    : (isDark ? const Color(0xFFCBD5E1) : const Color(0xFF475569)),
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 

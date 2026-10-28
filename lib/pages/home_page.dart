@@ -11,6 +11,8 @@ import 'profil_page.dart';
 import '../services/profile_service.dart';
 import '../services/theme_service.dart';
 import '../services/user_profile_service.dart';
+import '../services/chat_notification_service.dart';
+import '../widgets/chat_notification_sheet.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -348,6 +350,110 @@ class _HomePageState extends State<HomePage> {
                                   },
                                 ),
                               ),
+                            ),
+                            // TOMBOL PUSAT NOTIFIKASI CHAT DOKTER
+                            AnimatedBuilder(
+                              animation: ChatNotificationService.instance,
+                              builder: (context, _) {
+                                final unreadCount = ChatNotificationService
+                                    .instance.totalUnreadNotificationCount;
+
+                                return Padding(
+                                  padding: const EdgeInsets.only(right: 8),
+                                  child: Material(
+                                    color: Colors.transparent,
+                                    child: InkWell(
+                                      onTap: () {
+                                        ChatNotificationSheet.show(context);
+                                      },
+                                      borderRadius: BorderRadius.circular(14),
+                                      child: Stack(
+                                        clipBehavior: Clip.none,
+                                        children: [
+                                          Container(
+                                            width: 40,
+                                            height: 40,
+                                            decoration: BoxDecoration(
+                                              color: isDark
+                                                  ? const Color(0xFF1E293B)
+                                                  : Colors.white,
+                                              borderRadius:
+                                                  BorderRadius.circular(14),
+                                              border: Border.all(
+                                                color: isDark
+                                                    ? const Color(0xFF334155)
+                                                    : const Color(0xFFE2E8F0),
+                                                width: 1.2,
+                                              ),
+                                              boxShadow: [
+                                                BoxShadow(
+                                                  color: Colors.black.withValues(
+                                                      alpha: isDark ? 0.2 : 0.04),
+                                                  blurRadius: 6,
+                                                  offset: const Offset(0, 2),
+                                                ),
+                                              ],
+                                            ),
+                                            child: Icon(
+                                              Icons.notifications_active_outlined,
+                                              size: 20,
+                                              color: isDark
+                                                  ? const Color(0xFF38BDF8)
+                                                  : const Color(0xFF0284C7),
+                                            ),
+                                          ),
+                                          if (unreadCount > 0)
+                                            Positioned(
+                                              top: -3,
+                                              right: -3,
+                                              child: Container(
+                                                padding: const EdgeInsets.symmetric(
+                                                  horizontal: 5,
+                                                  vertical: 1.5,
+                                                ),
+                                                decoration: BoxDecoration(
+                                                  color: const Color(0xFFEF4444),
+                                                  borderRadius:
+                                                      BorderRadius.circular(10),
+                                                  border: Border.all(
+                                                    color: isDark
+                                                        ? const Color(0xFF0F172A)
+                                                        : Colors.white,
+                                                    width: 1.5,
+                                                  ),
+                                                  boxShadow: [
+                                                    BoxShadow(
+                                                      color: const Color(0xFFEF4444)
+                                                          .withValues(alpha: 0.4),
+                                                      blurRadius: 4,
+                                                    ),
+                                                  ],
+                                                ),
+                                                constraints: const BoxConstraints(
+                                                  minWidth: 18,
+                                                  minHeight: 18,
+                                                ),
+                                                child: Center(
+                                                  child: Text(
+                                                    unreadCount > 99
+                                                        ? '99+'
+                                                        : '$unreadCount',
+                                                    style: const TextStyle(
+                                                      color: Colors.white,
+                                                      fontSize: 9.5,
+                                                      fontWeight: FontWeight.bold,
+                                                      height: 1,
+                                                    ),
+                                                  ),
+                                                ),
+                                              ),
+                                            ),
+                                        ],
+                                      ),
+                                    ),
+                                  ),
+                                );
+                              },
                             ),
                             // TOMBOL PANGGILAN DARURAT (TELEPON SOS)
                             Material(

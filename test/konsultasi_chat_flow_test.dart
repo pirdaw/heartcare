@@ -40,8 +40,8 @@ void main() {
     // Verify typing indicator shown
     expect(find.text('Sedang mengetik...'), findsOneWidget);
 
-    // Fast-forward 1.5 seconds for simulated doctor response
-    await tester.pump(const Duration(milliseconds: 1500));
+    // Fast-forward 2.6 seconds for simulated doctor response
+    await tester.pump(const Duration(milliseconds: 2600));
     await tester.pumpAndSettle();
 
     // Verify typing indicator finished, doctor replied, and user message is present
@@ -84,10 +84,10 @@ void main() {
     expect(find.textContaining('📎 Lampiran: Hasil Skrining Jantung HeartCare'), findsOneWidget);
 
     // Advance for doctor reply
-    await tester.pump(const Duration(milliseconds: 1500));
+    await tester.pump(const Duration(milliseconds: 2600));
     await tester.pumpAndSettle();
 
-    expect(find.textContaining('Terima kasih atas lampirannya'), findsOneWidget);
+    expect(find.textContaining('keluhan sesak nafas atau nyeri dada'), findsOneWidget);
   });
 
   testWidgets('KonsultasiDokterPage opens reminder sheet from header', (WidgetTester tester) async {
@@ -101,8 +101,8 @@ void main() {
       ),
     );
 
-    // Tap notification bell in header
-    final reminderIcon = find.byIcon(Icons.notifications_none_rounded);
+    // Tap reminder icon in header
+    final reminderIcon = find.byIcon(Icons.alarm_rounded);
     expect(reminderIcon, findsOneWidget);
     await tester.tap(reminderIcon);
     await tester.pumpAndSettle();
@@ -122,8 +122,8 @@ void main() {
       ),
     );
 
-    // Tap top-left chevron back button
-    final backButton = find.byIcon(Icons.chevron_left);
+    // Tap top-left back button
+    final backButton = find.byIcon(Icons.arrow_back_ios_new_rounded);
     expect(backButton, findsOneWidget);
     await tester.tap(backButton);
     await tester.pumpAndSettle();
