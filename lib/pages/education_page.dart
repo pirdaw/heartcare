@@ -24,6 +24,23 @@ class _StatFact {
 }
 
 // ============================================================================
+// MODEL UNTUK MITOS VS FAKTA JANTUNG
+// ============================================================================
+class _HeartMyth {
+  final String myth;
+  final String fact;
+  final String explanation;
+  final String source;
+
+  const _HeartMyth({
+    required this.myth,
+    required this.fact,
+    required this.explanation,
+    required this.source,
+  });
+}
+
+// ============================================================================
 // HALAMAN UTAMA: EDUKASI KESEHATAN
 // ============================================================================
 class EducationPage extends StatefulWidget {
@@ -35,6 +52,28 @@ class EducationPage extends StatefulWidget {
   static const Color subSlate = Color(0xFF475569);
   static const Color lightBg = Color(0xFFF8FAFC);
   static const Color cardBorder = Color(0xFFE2E8F0);
+
+  // Gradient background selaras dengan halaman utama lainnya (Home, Riwayat, Pengingat)
+  static LinearGradient pageGradient(bool isDark) {
+    return LinearGradient(
+      begin: Alignment.topCenter,
+      end: Alignment.bottomCenter,
+      stops: const [0.0, 0.28, 0.65, 1.0],
+      colors: isDark
+          ? const [
+              Color(0xFF1E293B),
+              Color(0xFF162032),
+              Color(0xFF111927),
+              Color(0xFF0F172A),
+            ]
+          : const [
+              Color(0xFFE0F2FE),
+              Color(0xFFEDF6FD),
+              Color(0xFFF3F8FD),
+              Color(0xFFF8FAFC),
+            ],
+    );
+  }
 
   // Notifier bersama untuk melacak topik yang sudah dipelajari
   static final ValueNotifier<Set<String>> completedTopicsNotifier =
@@ -78,14 +117,24 @@ class EducationPage extends StatefulWidget {
 class _EducationPageState extends State<EducationPage> {
   final TextEditingController _searchController = TextEditingController();
   String _searchQuery = '';
+  int _selectedCategoryIndex = 0;
   int _currentTipIndex = 0;
+  int _currentMythIndex = 0;
 
-  final List<String> _dailyTips = [
+  final List<String> _categories = const [
+    'Semua',
+    'Nutrisi',
+    'Aktivitas',
+    'Gaya Hidup',
+    'Mitos & Fakta',
+  ];
+
+  final List<String> _dailyTips = const [
     'Beri jeda minimal 2-3 jam antara makan malam dan waktu tidur agar lambung tidak tertekan dan kerja jantung tetap stabil.',
     'Jalan santai 15-30 menit per hari secara rutin dapat melancarkan aliran darah dan menjaga elastisitas pembuluh darah.',
     'Batasi natrium/garam maksimal 1 sendok teh (2.000 mg) per hari demi menjaga kestabilan tekanan darah arteri Anda.',
     'Latihan pernapasan dalam (tarik 4 detik, hembus 6 detik) terbukti membantu meredakan ketegangan dan menstabilkan irama jantung.',
-    'Tidur cukup 7-8 jam tiap malam memberi kesempatan bagi jantung dan sistem pembuluh darah untuk beristirahat optimal.',
+    'Tidur cukup 7-8 jam tiap malam memberi kesempatan bagi organ vital dan pembuluh darah untuk beristirahat optimal.',
   ];
 
   final List<_StatFact> _facts = const [
@@ -123,6 +172,37 @@ class _EducationPageState extends State<EducationPage> {
     ),
   ];
 
+  final List<_HeartMyth> _myths = const [
+    _HeartMyth(
+      myth: 'Mandi malam hari dapat memicu rematik dan serangan jantung mendadak.',
+      fact: 'Mandi malam tidak menyebabkan penyakit jantung atau rematik.',
+      explanation:
+          'Suhu air yang terlalu dingin hanya memicu respon penyempitan pembuluh darah (vasokonstriksi) sementara. Gunakan air bersuhu suam-kuku bila Anda memiliki riwayat hipertensi atau penyakit jantung koroner.',
+      source: 'PERKI & Kemenkes RI',
+    ),
+    _HeartMyth(
+      myth: 'Penyakit jantung koroner hanya menyerang orang lanjut usia di atas 60 tahun.',
+      fact: 'Penyakit jantung koroner kini semakin banyak dialami pada usia 25–40 tahun.',
+      explanation:
+          'Gaya hidup kurang gerak, konsumsi junk-food tinggi lemak trans, kebiasaan merokok/vape, serta stres kerja berkepanjangan memicu aterosklerosis lebih dini.',
+      source: 'AHA Circulation',
+    ),
+    _HeartMyth(
+      myth: 'Orang yang memiliki riwayat sakit jantung harus istirahat total dan tidak boleh berolahraga.',
+      fact: 'Aktivitas fisik terukur justru memperkuat pompa jantung dan mempercepat pemulihan.',
+      explanation:
+          'Latihan aerobik intensitas ringan-sedang seperti jalan santai teratur sangat dianjurkan dalam protokol rehabilitasi kardiovaskular resmi.',
+      source: 'ESC Clinical Guidelines',
+    ),
+    _HeartMyth(
+      myth: 'Obat jantung hanya perlu diminum ketika dada terasa nyeri atau sesak napas.',
+      fact: 'Obat kardiovaskular harus dikonsumsi rutin sesuai dosis dan resep dokter spesialis.',
+      explanation:
+          'Obat pengontrol tekanan darah dan pencegah bekuan darah bekerja menjaga perlindungan jangka panjang pembuluh darah dari risiko serangan jantung dan stroke.',
+      source: 'AHA Heart Association',
+    ),
+  ];
+
   @override
   void dispose() {
     _searchController.dispose();
@@ -132,6 +212,12 @@ class _EducationPageState extends State<EducationPage> {
   void _nextTip() {
     setState(() {
       _currentTipIndex = (_currentTipIndex + 1) % _dailyTips.length;
+    });
+  }
+
+  void _nextMyth() {
+    setState(() {
+      _currentMythIndex = (_currentMythIndex + 1) % _myths.length;
     });
   }
 
@@ -145,148 +231,71 @@ class _EducationPageState extends State<EducationPage> {
         return Scaffold(
           backgroundColor:
               isDark ? const Color(0xFF0F172A) : const Color(0xFFF8FAFC),
-          body: SafeArea(
-            child: Column(
-              children: [
-                // HEADER BAR
-                Padding(
-                  padding:
-                      const EdgeInsets.only(left: 16, right: 16, top: 12),
-                  child: Row(
-                    children: [
-                      EducationPage._buildBackButton(context, isDark: isDark),
-                      const SizedBox(width: 14),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              'Edukasi Kesehatan',
-                              style: TextStyle(
-                                fontSize: 19,
-                                fontWeight: FontWeight.w700,
-                                color: isDark
-                                    ? Colors.white
-                                    : EducationPage.darkSlate,
-                                letterSpacing: -0.2,
-                              ),
-                            ),
-                            const SizedBox(height: 2),
-                            Text(
-                              'Panduan hidup sehat untuk mendukung kesehatan jantung',
-                              style: TextStyle(
-                                fontSize: 11.5,
-                                color: isDark
-                                    ? const Color(0xFF94A3B8)
-                                    : EducationPage.subSlate,
-                                fontWeight: FontWeight.w400,
-                              ),
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                          ],
-                        ),
+          body: Container(
+            width: double.infinity,
+            height: double.infinity,
+            decoration: BoxDecoration(
+              gradient: EducationPage.pageGradient(isDark),
+            ),
+            child: SafeArea(
+              child: Column(
+                children: [
+                  // 1. TOP BAR DENGAN BADGE KLINIS & INFO
+                  _buildTopBar(context, isDark: isDark),
+
+                  // 2. SEARCH BAR MODERN
+                  _buildSearchBar(isDark: isDark),
+
+                  // 3. HORIZONTAL CATEGORY FILTER PILLS
+                  _buildCategoryChips(isDark: isDark),
+
+                  const SizedBox(height: 8),
+
+                  // 4. KONTEN EDUKASI SCROLLABLE
+                  Expanded(
+                    child: SingleChildScrollView(
+                      physics: const BouncingScrollPhysics(),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 18,
+                        vertical: 6,
                       ),
-                    ],
-                  ),
-                ),
-
-                const SizedBox(height: 12),
-
-                // KONTEN UTAMA
-                Expanded(
-                  child: SingleChildScrollView(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 20,
-                      vertical: 6,
-                    ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        // 1. BANNER PENGANTAR (HERO SECTION)
-                        _buildHeroBanner(isDark),
-
-                        const SizedBox(height: 16),
-
-                        // 2. KARTU PROGRES BELAJAR MANDIRI
-                        _buildLearningProgressCard(isDark),
-
-                        const SizedBox(height: 18),
-
-                        // 3. FAKTA & STATISTIK CEPAT KESEHATAN JANTUNG
-                        _buildQuickFactsSection(isDark),
-
-                        const SizedBox(height: 18),
-
-                        // 4. KARTU TIPS HARIAN INTERAKTIF
-                        _buildDailyTipCard(isDark),
-
-                        const SizedBox(height: 20),
-
-                        // 5. SEARCH & FILTER MATERI
-                        _buildSearchField(isDark),
-
-                        const SizedBox(height: 18),
-
-                        // 6. JUDUL BAGIAN TOPIK
-                        Row(
-                          children: [
-                            Container(
-                              width: 4,
-                              height: 18,
-                              decoration: BoxDecoration(
-                                color: EducationPage.primaryBlue,
-                                borderRadius: BorderRadius.circular(2),
-                              ),
-                            ),
-                            const SizedBox(width: 8),
-                            Text(
-                              'Pilihan Topik Edukasi',
-                              style: TextStyle(
-                                fontSize: 15.5,
-                                fontWeight: FontWeight.w700,
-                                color: isDark
-                                    ? Colors.white
-                                    : EducationPage.darkSlate,
-                              ),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 4),
-                        Padding(
-                          padding: const EdgeInsets.only(left: 12),
-                          child: Text(
-                            'Pilih materi yang ingin Anda pelajari di bawah ini:',
-                            style: TextStyle(
-                              fontSize: 12,
-                              color: isDark
-                                  ? const Color(0xFF94A3B8)
-                                  : const Color(0xFF64748B),
-                            ),
-                          ),
-                        ),
-
-                        const SizedBox(height: 14),
-
-                        // 7. DAFTAR KARTU TOPIK (FILTERABLE)
-                        ..._buildFilteredTopicCards(context, isDark: isDark),
-
-                        const SizedBox(height: 20),
-
-                        // 8. BANNER KONSULTASI DOKTER (CALL TO ACTION)
-                        _buildDoctorConsultationCard(context, isDark: isDark),
-
-                        const SizedBox(height: 20),
-
-                        // 9. CATATAN KAKI INFORMASI (DISCLAIMER RESMI)
-                        _buildDisclaimerCard(isDark),
-
-                        const SizedBox(height: 24),
-                      ],
+                      child: _searchQuery.isNotEmpty
+                          ? Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Row(
+                                  children: [
+                                    const Icon(
+                                      Icons.search_rounded,
+                                      size: 16,
+                                      color: Color(0xFF0284C7),
+                                    ),
+                                    const SizedBox(width: 6),
+                                    Text(
+                                      'Hasil pencarian "$_searchQuery"',
+                                      style: TextStyle(
+                                        fontSize: 13,
+                                        fontWeight: FontWeight.w700,
+                                        color: isDark
+                                            ? Colors.white
+                                            : EducationPage.darkSlate,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                                const SizedBox(height: 12),
+                                ..._buildFilteredTopicCards(
+                                  context,
+                                  isDark: isDark,
+                                ),
+                                const SizedBox(height: 24),
+                              ],
+                            )
+                          : _buildCategoryView(context, isDark: isDark),
                     ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
           ),
         );
@@ -294,171 +303,617 @@ class _EducationPageState extends State<EducationPage> {
     );
   }
 
+  Widget _buildCategoryView(BuildContext context, {required bool isDark}) {
+    if (_selectedCategoryIndex == 1) {
+      // NUTRISI
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _buildFeaturedSpotlight(context, isDark: isDark),
+          const SizedBox(height: 20),
+          _buildSectionHeader(
+            title: 'Modul Nutrisi Jantung',
+            subtitle: 'Pedoman gizi klinis, pembatasan garam, dan pemilihan lemak baik',
+            countBadge: '1 Modul',
+            isDark: isDark,
+          ),
+          const SizedBox(height: 12),
+          ..._buildFilteredTopicCards(context, isDark: isDark),
+          const SizedBox(height: 20),
+          _buildMedicalConsultationBanner(context, isDark: isDark),
+          const SizedBox(height: 24),
+        ],
+      );
+    } else if (_selectedCategoryIndex == 2) {
+      // AKTIVITAS
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _buildSectionHeader(
+            title: 'Modul Aktivitas Fisik',
+            subtitle: 'Panduan latihan aerobik aman dan mobilisasi bertahap',
+            countBadge: '1 Modul',
+            isDark: isDark,
+          ),
+          const SizedBox(height: 12),
+          ..._buildFilteredTopicCards(context, isDark: isDark),
+          const SizedBox(height: 18),
+          _buildQuickFactsSection(isDark),
+          const SizedBox(height: 20),
+          _buildMedicalConsultationBanner(context, isDark: isDark),
+          const SizedBox(height: 24),
+        ],
+      );
+    } else if (_selectedCategoryIndex == 3) {
+      // GAYA HIDUP
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _buildSectionHeader(
+            title: 'Modul Gaya Hidup Sehat',
+            subtitle: 'Regenerasi tidur, manajemen stres, dan berhenti merokok',
+            countBadge: '1 Modul',
+            isDark: isDark,
+          ),
+          const SizedBox(height: 12),
+          ..._buildFilteredTopicCards(context, isDark: isDark),
+          const SizedBox(height: 18),
+          _buildDailyTipCard(isDark),
+          const SizedBox(height: 20),
+          _buildMedicalConsultationBanner(context, isDark: isDark),
+          const SizedBox(height: 24),
+        ],
+      );
+    } else if (_selectedCategoryIndex == 4) {
+      // MITOS & FAKTA
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _buildSectionHeader(
+            title: 'Mitos vs Fakta Jantung',
+            subtitle: 'Koreksi fakta medis seputar kesehatan kardiovaskular',
+            countBadge: 'Klinis',
+            isDark: isDark,
+          ),
+          const SizedBox(height: 12),
+          _buildMythVsFactCard(isDark),
+          const SizedBox(height: 18),
+          _buildDailyTipCard(isDark),
+          const SizedBox(height: 20),
+          _buildMedicalConsultationBanner(context, isDark: isDark),
+          const SizedBox(height: 24),
+        ],
+      );
+    }
+
+    // SEMUA (DEFAULT TAB 0)
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // Spotlight Feature Article Card
+        _buildFeaturedSpotlight(context, isDark: isDark),
+        const SizedBox(height: 16),
+
+        // Learning Tracker Bar
+        _buildLearningTracker(isDark),
+        const SizedBox(height: 18),
+
+        // Interactive Myth vs Fact Card
+        _buildMythVsFactCard(isDark),
+        const SizedBox(height: 22),
+
+        // Section: Main Modules
+        _buildSectionHeader(
+          title: 'Modul Pembelajaran Mandiri',
+          subtitle: 'Kurikulum komprehensif panduan gaya hidup jantung',
+          countBadge: '3 Modul',
+          isDark: isDark,
+        ),
+        const SizedBox(height: 12),
+        ..._buildFilteredTopicCards(context, isDark: isDark),
+        const SizedBox(height: 18),
+
+        // Section: Quick Facts & Targets
+        _buildSectionHeader(
+          title: 'Sasaran Kardiovaskular Harian',
+          subtitle: 'Pedoman acuan batas aman klinis resmi',
+          countBadge: 'PERKI / AHA',
+          isDark: isDark,
+        ),
+        const SizedBox(height: 12),
+        _buildQuickFactsSection(isDark),
+        const SizedBox(height: 18),
+
+        // Daily Specialist Tip
+        _buildDailyTipCard(isDark),
+        const SizedBox(height: 20),
+
+        // Doctor Consultation Banner (Avatar Stack)
+        _buildMedicalConsultationBanner(context, isDark: isDark),
+        const SizedBox(height: 16),
+
+        // Medical Disclaimer
+        _buildDisclaimerCard(context, isDark: isDark),
+        const SizedBox(height: 26),
+      ],
+    );
+  }
+
+
   // ==========================================================================
   // WIDGET-WIDGET KOMPONEN
   // ==========================================================================
-
-  Widget _buildHeroBanner(bool isDark) {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: isDark
-              ? const [Color(0xFF1E293B), Color(0xFF0F2B3B)]
-              : const [Color(0xFFE0F2FE), Color(0xFFECFDF5)],
-        ),
-        borderRadius: BorderRadius.circular(18),
-        border: Border.all(
-          color: isDark
-              ? const Color(0xFF0284C7).withValues(alpha: 0.35)
-              : const Color(0xFFBAE6FD),
-          width: 1.2,
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: const Color(0xFF0284C7)
-                .withValues(alpha: isDark ? 0.15 : 0.08),
-            blurRadius: 12,
-            offset: const Offset(0, 3),
-          ),
-        ],
-      ),
-      child: Column(
+  Widget _buildTopBar(BuildContext context, {required bool isDark}) {
+    return Padding(
+      padding: const EdgeInsets.only(left: 18, right: 18, top: 12, bottom: 8),
+      child: Row(
         children: [
-          Row(
-            children: [
-              Container(
-                width: 48,
-                height: 48,
-                decoration: BoxDecoration(
-                  gradient: const LinearGradient(
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                    colors: [Color(0xFFE11D48), Color(0xFFFB7185)],
-                  ),
-                  borderRadius: BorderRadius.circular(14),
-                  boxShadow: [
-                    BoxShadow(
-                      color:
-                          const Color(0xFFE11D48).withValues(alpha: 0.35),
-                      blurRadius: 10,
-                      offset: const Offset(0, 3),
-                    ),
-                  ],
-                ),
-                child: const Center(
-                  child: Icon(
-                    Icons.favorite_rounded,
-                    color: Colors.white,
-                    size: 26,
-                  ),
-                ),
-              ),
-              const SizedBox(width: 14),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+          EducationPage._buildBackButton(context, isDark: isDark),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
                   children: [
                     Text(
-                      'Jaga Jantung Tetap Prima',
+                      'Pusat Edukasi Jantung',
                       style: TextStyle(
-                        fontSize: 14.5,
-                        fontWeight: FontWeight.w700,
-                        color: isDark
-                            ? Colors.white
-                            : EducationPage.darkSlate,
+                        fontSize: 17.5,
+                        fontWeight: FontWeight.w800,
+                        color: isDark ? Colors.white : EducationPage.darkSlate,
+                        letterSpacing: -0.3,
                       ),
                     ),
-                    const SizedBox(height: 3),
-                    Text(
-                      'Pahami langkah penting sehari-hari untuk mendukung pemulihan dan kualitas hidup optimal.',
-                      style: TextStyle(
-                        fontSize: 11.5,
-                        color: isDark
-                            ? const Color(0xFF94A3B8)
-                            : EducationPage.subSlate,
-                        height: 1.35,
+                    const SizedBox(width: 6),
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 6,
+                        vertical: 2,
+                      ),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFDCFCE7),
+                        borderRadius: BorderRadius.circular(6),
+                        border: Border.all(
+                          color: const Color(0xFF86EFAC),
+                          width: 0.8,
+                        ),
+                      ),
+                      child: const Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(
+                            Icons.verified_rounded,
+                            size: 11,
+                            color: Color(0xFF16A34A),
+                          ),
+                          SizedBox(width: 2),
+                          Text(
+                            'KLINIS',
+                            style: TextStyle(
+                              fontSize: 9,
+                              fontWeight: FontWeight.w800,
+                              color: Color(0xFF16A34A),
+                              letterSpacing: 0.4,
+                            ),
+                          ),
+                        ],
                       ),
                     ),
                   ],
                 ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 14),
-          // QUICK FEATURE PILLS ROW
-          Container(
-            padding:
-                const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-            decoration: BoxDecoration(
-              color: isDark
-                  ? const Color(0xFF0F172A).withValues(alpha: 0.6)
-                  : Colors.white.withValues(alpha: 0.85),
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(
-                color: isDark
-                    ? const Color(0xFF334155)
-                    : const Color(0xFFE2E8F0),
-                width: 0.8,
-              ),
-            ),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceAround,
-              children: [
-                _buildBannerPill(
-                  icon: Icons.restaurant_rounded,
-                  label: 'Nutrisi Sehat',
-                  color: const Color(0xFF059669),
-                  isDark: isDark,
-                ),
-                Container(
-                  height: 16,
-                  width: 1,
-                  color: isDark
-                      ? const Color(0xFF334155)
-                      : const Color(0xFFCBD5E1),
-                ),
-                _buildBannerPill(
-                  icon: Icons.directions_walk_rounded,
-                  label: 'Aktivitas Fisik',
-                  color: const Color(0xFF0284C7),
-                  isDark: isDark,
-                ),
-                Container(
-                  height: 16,
-                  width: 1,
-                  color: isDark
-                      ? const Color(0xFF334155)
-                      : const Color(0xFFCBD5E1),
-                ),
-                _buildBannerPill(
-                  icon: Icons.spa_rounded,
-                  label: 'Pola Hidup',
-                  color: const Color(0xFF7C3AED),
-                  isDark: isDark,
+                const SizedBox(height: 2),
+                Text(
+                  'Ditinjau oleh Tim Kardiologi HeartCare',
+                  style: TextStyle(
+                    fontSize: 11.5,
+                    color: isDark
+                        ? const Color(0xFF94A3B8)
+                        : EducationPage.subSlate,
+                    fontWeight: FontWeight.w400,
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
                 ),
               ],
             ),
           ),
+          _buildInfoButton(context, isDark: isDark),
         ],
       ),
     );
   }
 
-  Widget _buildLearningProgressCard(bool isDark) {
+  Widget _buildInfoButton(BuildContext context, {required bool isDark}) {
+    return InkWell(
+      onTap: () => _showMedicalSourcesDialog(context, isDark),
+      borderRadius: BorderRadius.circular(10),
+      child: Container(
+        width: 36,
+        height: 36,
+        decoration: BoxDecoration(
+          color: isDark ? const Color(0xFF1E293B) : Colors.white,
+          borderRadius: BorderRadius.circular(10),
+          border: Border.all(
+            color: isDark
+                ? const Color(0xFF334155)
+                : const Color(0xFFE2E8F0),
+            width: 1,
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: isDark ? 0.2 : 0.04),
+              blurRadius: 4,
+              offset: const Offset(0, 1),
+            ),
+          ],
+        ),
+        child: Center(
+          child: Icon(
+            Icons.info_outline_rounded,
+            size: 19,
+            color: isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildSearchBar({required bool isDark}) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 6),
+      child: Container(
+        height: 44,
+        decoration: BoxDecoration(
+          color: isDark ? const Color(0xFF1E293B) : Colors.white,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(
+            color: isDark
+                ? const Color(0xFF334155)
+                : const Color(0xFFE2E8F0),
+            width: 1,
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: isDark ? 0.15 : 0.03),
+              blurRadius: 6,
+              offset: const Offset(0, 1),
+            ),
+          ],
+        ),
+        child: TextField(
+          controller: _searchController,
+          onChanged: (val) {
+            setState(() {
+              _searchQuery = val.trim().toLowerCase();
+            });
+          },
+          style: TextStyle(
+            fontSize: 12.5,
+            color: isDark ? Colors.white : const Color(0xFF0F172A),
+          ),
+          decoration: InputDecoration(
+            hintText: 'Cari panduan nutrisi, garam, olahraga...',
+            hintStyle: TextStyle(
+              fontSize: 12,
+              color: isDark
+                  ? const Color(0xFF64748B)
+                  : const Color(0xFF94A3B8),
+            ),
+            prefixIcon: const Icon(
+              Icons.search_rounded,
+              size: 19,
+              color: Color(0xFF0284C7),
+            ),
+            suffixIcon: _searchQuery.isNotEmpty
+                ? IconButton(
+                    icon: const Icon(Icons.clear_rounded, size: 17),
+                    onPressed: () {
+                      _searchController.clear();
+                      setState(() {
+                        _searchQuery = '';
+                      });
+                    },
+                  )
+                : null,
+            border: InputBorder.none,
+            contentPadding: const EdgeInsets.symmetric(vertical: 10),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildCategoryChips({required bool isDark}) {
+    return SizedBox(
+      height: 38,
+      child: ListView.separated(
+        padding: const EdgeInsets.symmetric(horizontal: 18),
+        scrollDirection: Axis.horizontal,
+        clipBehavior: Clip.none,
+        itemCount: _categories.length,
+        separatorBuilder: (_, _) => const SizedBox(width: 8),
+        itemBuilder: (context, index) {
+          final isSelected = _selectedCategoryIndex == index;
+          final title = _categories[index];
+
+          return InkWell(
+            onTap: () {
+              setState(() {
+                _selectedCategoryIndex = index;
+              });
+            },
+            borderRadius: BorderRadius.circular(20),
+            child: AnimatedContainer(
+              duration: const Duration(milliseconds: 200),
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+              decoration: BoxDecoration(
+                gradient: isSelected
+                    ? const LinearGradient(
+                        colors: [Color(0xFF0284C7), Color(0xFF0098B9)],
+                      )
+                    : null,
+                color: isSelected
+                    ? null
+                    : (isDark ? const Color(0xFF1E293B) : Colors.white),
+                borderRadius: BorderRadius.circular(20),
+                border: Border.all(
+                  color: isSelected
+                      ? Colors.transparent
+                      : (isDark
+                          ? const Color(0xFF334155)
+                          : const Color(0xFFE2E8F0)),
+                  width: 1,
+                ),
+                boxShadow: isSelected
+                    ? [
+                        BoxShadow(
+                          color: const Color(0xFF0284C7).withValues(alpha: 0.3),
+                          blurRadius: 8,
+                          offset: const Offset(0, 2),
+                        ),
+                      ]
+                    : null,
+              ),
+              child: Center(
+                child: Text(
+                  title,
+                  style: TextStyle(
+                    fontSize: 11.5,
+                    fontWeight:
+                        isSelected ? FontWeight.w700 : FontWeight.w500,
+                    color: isSelected
+                        ? Colors.white
+                        : (isDark
+                            ? const Color(0xFF94A3B8)
+                            : const Color(0xFF475569)),
+                  ),
+                ),
+              ),
+            ),
+          );
+        },
+      ),
+    );
+  }
+
+  Widget _buildFeaturedSpotlight(BuildContext context,
+      {required bool isDark}) {
+    return Container(
+      width: double.infinity,
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: isDark
+              ? const [Color(0xFF16253B), Color(0xFF0B1B2B)]
+              : const [Color(0xFF0284C7), Color(0xFF0369A1)],
+        ),
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(
+            color: const Color(0xFF0284C7)
+                .withValues(alpha: isDark ? 0.2 : 0.25),
+            blurRadius: 14,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(20),
+        child: Stack(
+          children: [
+            Positioned(
+              right: -30,
+              top: -30,
+              child: Container(
+                width: 130,
+                height: 130,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: Colors.white.withValues(alpha: 0.07),
+                ),
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.all(18),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 3.5,
+                        ),
+                        decoration: BoxDecoration(
+                          color: Colors.white.withValues(alpha: 0.2),
+                          borderRadius: BorderRadius.circular(6),
+                        ),
+                        child: const Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(
+                              Icons.star_rounded,
+                              size: 12,
+                              color: Color(0xFFFDE68A),
+                            ),
+                            SizedBox(width: 4),
+                            Text(
+                              'PANDUAN KLINIS PILIHAN',
+                              style: TextStyle(
+                                fontSize: 9.5,
+                                fontWeight: FontWeight.w800,
+                                color: Colors.white,
+                                letterSpacing: 0.3,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 7,
+                          vertical: 3,
+                        ),
+                        decoration: BoxDecoration(
+                          color: Colors.black.withValues(alpha: 0.15),
+                          borderRadius: BorderRadius.circular(6),
+                        ),
+                        child: const Text(
+                          '⏱ 5 Mnt Baca',
+                          style: TextStyle(
+                            fontSize: 10,
+                            fontWeight: FontWeight.w600,
+                            color: Colors.white,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 12),
+                  const Text(
+                    'Diet Rendah Garam & Nutrisi Pembuluh Darah',
+                    style: TextStyle(
+                      fontSize: 16.5,
+                      fontWeight: FontWeight.w800,
+                      color: Colors.white,
+                      height: 1.3,
+                      letterSpacing: -0.2,
+                    ),
+                  ),
+                  const SizedBox(height: 6),
+                  Text(
+                    'Pedoman praktis menyusun menu makanan sehari-hari guna mengendalikan tensi darah dan mencegah penumpukan plak di arteri.',
+                    style: TextStyle(
+                      fontSize: 11.5,
+                      color: Colors.white.withValues(alpha: 0.9),
+                      height: 1.4,
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Row(
+                        children: [
+                          Container(
+                            width: 32,
+                            height: 32,
+                            decoration: BoxDecoration(
+                              shape: BoxShape.circle,
+                              border: Border.all(color: Colors.white, width: 1.5),
+                              image: const DecorationImage(
+                                image: AssetImage(
+                                    'assets/images/dokter_nurlitta.jpg'),
+                                fit: BoxFit.cover,
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          const Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'dr. Nurlitta, Sp.JP',
+                                style: TextStyle(
+                                  fontSize: 11.5,
+                                  fontWeight: FontWeight.w700,
+                                  color: Colors.white,
+                                ),
+                              ),
+                              Text(
+                                'Spesialis Jantung & Pembuluh',
+                                style: TextStyle(
+                                  fontSize: 9.5,
+                                  color: Colors.white70,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                      ElevatedButton(
+                        onPressed: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => const PolaMakanSehatPage(),
+                            ),
+                          );
+                        },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.white,
+                          foregroundColor: const Color(0xFF0284C7),
+                          elevation: 0,
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 14,
+                            vertical: 8,
+                          ),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                        ),
+                        child: const Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Text(
+                              'Pelajari',
+                              style: TextStyle(
+                                fontSize: 11.5,
+                                fontWeight: FontWeight.w700,
+                              ),
+                            ),
+                            SizedBox(width: 3),
+                            Icon(Icons.arrow_forward_rounded, size: 13),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildLearningTracker(bool isDark) {
     return ValueListenableBuilder<Set<String>>(
       valueListenable: EducationPage.completedTopicsNotifier,
       builder: (context, completed, _) {
-        final total = 3;
+        const total = 3;
         final count = completed.length.clamp(0, total);
         final percent = count / total;
+        final isAllCompleted = count == total;
 
         return Container(
           width: double.infinity,
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+          padding: const EdgeInsets.all(14),
           decoration: BoxDecoration(
             color: isDark ? const Color(0xFF1E293B) : Colors.white,
             borderRadius: BorderRadius.circular(16),
@@ -466,11 +921,11 @@ class _EducationPageState extends State<EducationPage> {
               color: isDark
                   ? const Color(0xFF334155)
                   : const Color(0xFFE2E8F0),
-              width: 1.2,
+              width: 1,
             ),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withValues(alpha: isDark ? 0.2 : 0.03),
+                color: Colors.black.withValues(alpha: isDark ? 0.15 : 0.03),
                 blurRadius: 8,
                 offset: const Offset(0, 2),
               ),
@@ -492,39 +947,55 @@ class _EducationPageState extends State<EducationPage> {
                           borderRadius: BorderRadius.circular(8),
                         ),
                         child: const Icon(
-                          Icons.task_alt_rounded,
+                          Icons.school_rounded,
                           size: 16,
                           color: Color(0xFF0284C7),
                         ),
                       ),
                       const SizedBox(width: 8),
-                      Text(
-                        'Progres Belajar Anda',
-                        style: TextStyle(
-                          fontSize: 13,
-                          fontWeight: FontWeight.w700,
-                          color: isDark
-                              ? Colors.white
-                              : const Color(0xFF0F172A),
-                        ),
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Status Belajar Mandiri',
+                            style: TextStyle(
+                              fontSize: 12.5,
+                              fontWeight: FontWeight.w700,
+                              color: isDark
+                                  ? Colors.white
+                                  : EducationPage.darkSlate,
+                            ),
+                          ),
+                          Text(
+                            '$count dari $total Topik Selesai',
+                            style: TextStyle(
+                              fontSize: 10.5,
+                              color: isDark
+                                  ? const Color(0xFF94A3B8)
+                                  : EducationPage.subSlate,
+                            ),
+                          ),
+                        ],
                       ),
                     ],
                   ),
                   Container(
                     padding: const EdgeInsets.symmetric(
-                        horizontal: 8, vertical: 3),
+                      horizontal: 8,
+                      vertical: 3,
+                    ),
                     decoration: BoxDecoration(
-                      color: count == total
+                      color: isAllCompleted
                           ? const Color(0xFFDCFCE7)
                           : const Color(0xFFE0F2FE),
-                      borderRadius: BorderRadius.circular(12),
+                      borderRadius: BorderRadius.circular(8),
                     ),
                     child: Text(
-                      '$count dari $total Topik',
+                      '${(percent * 100).toInt()}%',
                       style: TextStyle(
                         fontSize: 11,
-                        fontWeight: FontWeight.w700,
-                        color: count == total
+                        fontWeight: FontWeight.w800,
+                        color: isAllCompleted
                             ? const Color(0xFF16A34A)
                             : const Color(0xFF0284C7),
                       ),
@@ -534,27 +1005,27 @@ class _EducationPageState extends State<EducationPage> {
               ),
               const SizedBox(height: 10),
               ClipRRect(
-                borderRadius: BorderRadius.circular(6),
+                borderRadius: BorderRadius.circular(4),
                 child: LinearProgressIndicator(
                   value: percent,
-                  minHeight: 7,
+                  minHeight: 6,
                   backgroundColor: isDark
                       ? const Color(0xFF334155)
                       : const Color(0xFFE2E8F0),
                   valueColor: AlwaysStoppedAnimation<Color>(
-                    count == total
+                    isAllCompleted
                         ? const Color(0xFF16A34A)
                         : const Color(0xFF0284C7),
                   ),
                 ),
               ),
-              const SizedBox(height: 8),
+              const SizedBox(height: 6),
               Text(
-                count == total
-                    ? 'Luar biasa! Seluruh panduan utama telah Anda pelajari.'
-                    : 'Buka tiap topik dan tandai materi yang telah selesai Anda baca.',
+                isAllCompleted
+                    ? '🎉 Selesai! Seluruh modul utama telah Anda pelajari.'
+                    : 'Buka modul di bawah ini dan tekan tombol selesai setelah membaca.',
                 style: TextStyle(
-                  fontSize: 11,
+                  fontSize: 10.5,
                   color: isDark
                       ? const Color(0xFF94A3B8)
                       : const Color(0xFF64748B),
@@ -567,121 +1038,431 @@ class _EducationPageState extends State<EducationPage> {
     );
   }
 
-  Widget _buildQuickFactsSection(bool isDark) {
+  Widget _buildSectionHeader({
+    required String title,
+    required String subtitle,
+    required String countBadge,
+    required bool isDark,
+  }) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Row(
           children: [
-            const Icon(
-              Icons.bolt_rounded,
-              size: 18,
-              color: Color(0xFFF59E0B),
+            Container(
+              width: 3.5,
+              height: 16,
+              decoration: BoxDecoration(
+                color: const Color(0xFF0284C7),
+                borderRadius: BorderRadius.circular(2),
+              ),
             ),
-            const SizedBox(width: 6),
+            const SizedBox(width: 8),
             Text(
-              'Fakta & Sasaran Sehat',
+              title,
               style: TextStyle(
-                fontSize: 13.5,
+                fontSize: 14.5,
                 fontWeight: FontWeight.w700,
-                color: isDark ? Colors.white : const Color(0xFF0F172A),
+                color: isDark ? Colors.white : EducationPage.darkSlate,
+              ),
+            ),
+            const Spacer(),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
+              decoration: BoxDecoration(
+                color: isDark
+                    ? const Color(0xFF334155).withValues(alpha: 0.5)
+                    : const Color(0xFFF1F5F9),
+                borderRadius: BorderRadius.circular(6),
+                border: Border.all(
+                  color: isDark
+                      ? const Color(0xFF475569)
+                      : const Color(0xFFE2E8F0),
+                  width: 0.8,
+                ),
+              ),
+              child: Text(
+                countBadge,
+                style: TextStyle(
+                  fontSize: 10,
+                  fontWeight: FontWeight.w700,
+                  color: isDark
+                      ? const Color(0xFF94A3B8)
+                      : const Color(0xFF64748B),
+                ),
               ),
             ),
           ],
         ),
-        const SizedBox(height: 10),
-        SizedBox(
-          height: 98,
-          child: ListView.separated(
-            scrollDirection: Axis.horizontal,
-            clipBehavior: Clip.none,
-            itemCount: _facts.length,
-            separatorBuilder: (_, _) => const SizedBox(width: 10),
-            itemBuilder: (context, index) {
-              final fact = _facts[index];
-              return Container(
-                width: 140,
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: isDark ? const Color(0xFF1E293B) : Colors.white,
-                  borderRadius: BorderRadius.circular(14),
-                  border: Border.all(
-                    color: isDark
-                        ? fact.color.withValues(alpha: 0.3)
-                        : fact.color.withValues(alpha: 0.2),
-                    width: 1.2,
-                  ),
-                  boxShadow: [
-                    BoxShadow(
-                      color: fact.color
-                          .withValues(alpha: isDark ? 0.08 : 0.04),
-                      blurRadius: 8,
-                      offset: const Offset(0, 2),
-                    ),
-                  ],
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Container(
-                          padding: const EdgeInsets.all(5),
-                          decoration: BoxDecoration(
-                            color: isDark
-                                ? fact.color.withValues(alpha: 0.2)
-                                : fact.bgColor,
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          child: Icon(fact.icon,
-                              size: 15, color: fact.color),
-                        ),
-                        Text(
-                          fact.label,
-                          style: TextStyle(
-                            fontSize: 10,
-                            fontWeight: FontWeight.w600,
-                            color: isDark
-                                ? const Color(0xFF94A3B8)
-                                : const Color(0xFF64748B),
-                          ),
-                        ),
-                      ],
-                    ),
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          fact.value,
-                          style: TextStyle(
-                            fontSize: 14,
-                            fontWeight: FontWeight.w800,
-                            color: fact.color,
-                          ),
-                        ),
-                        const SizedBox(height: 1),
-                        Text(
-                          fact.subtitle,
-                          style: TextStyle(
-                            fontSize: 9.5,
-                            color: isDark
-                                ? const Color(0xFF94A3B8)
-                                : const Color(0xFF64748B),
-                          ),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-              );
-            },
+        const SizedBox(height: 2),
+        Padding(
+          padding: const EdgeInsets.only(left: 11),
+          child: Text(
+            subtitle,
+            style: TextStyle(
+              fontSize: 11,
+              color: isDark
+                  ? const Color(0xFF94A3B8)
+                  : const Color(0xFF64748B),
+            ),
           ),
         ),
       ],
+    );
+  }
+
+  Widget _buildMythVsFactCard(bool isDark) {
+    final myth = _myths[_currentMythIndex];
+
+    return Container(
+      width: double.infinity,
+      decoration: BoxDecoration(
+        color: isDark ? const Color(0xFF1E293B) : Colors.white,
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(
+          color: isDark
+              ? const Color(0xFFD97706).withValues(alpha: 0.35)
+              : const Color(0xFFFDE68A),
+          width: 1.2,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: const Color(0xFFD97706)
+                .withValues(alpha: isDark ? 0.12 : 0.05),
+            blurRadius: 10,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(5),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFFEF3C7),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: const Icon(
+                        Icons.psychology_alt_rounded,
+                        size: 15,
+                        color: Color(0xFFD97706),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Text(
+                      'Mitos vs Fakta Jantung',
+                      style: TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w800,
+                        color: isDark
+                            ? const Color(0xFFFCD34D)
+                            : const Color(0xFF92400E),
+                      ),
+                    ),
+                  ],
+                ),
+                Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 7, vertical: 2.5),
+                  decoration: BoxDecoration(
+                    color: isDark
+                        ? const Color(0xFF0F172A)
+                        : const Color(0xFFF8FAFC),
+                    borderRadius: BorderRadius.circular(6),
+                    border: Border.all(
+                      color: isDark
+                          ? const Color(0xFF334155)
+                          : const Color(0xFFE2E8F0),
+                      width: 0.8,
+                    ),
+                  ),
+                  child: Text(
+                    myth.source,
+                    style: TextStyle(
+                      fontSize: 9.5,
+                      fontWeight: FontWeight.w600,
+                      color: isDark
+                          ? const Color(0xFF94A3B8)
+                          : const Color(0xFF64748B),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
+            // MITOS BOX
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(10),
+              decoration: BoxDecoration(
+                color: isDark
+                    ? const Color(0xFF3B151E)
+                    : const Color(0xFFFFF1F2),
+                borderRadius: BorderRadius.circular(10),
+                border: Border.all(
+                  color: isDark
+                      ? const Color(0xFFE11D48).withValues(alpha: 0.3)
+                      : const Color(0xFFFECDD3),
+                  width: 0.9,
+                ),
+              ),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 5,
+                      vertical: 2,
+                    ),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFE11D48),
+                      borderRadius: BorderRadius.circular(4),
+                    ),
+                    child: const Text(
+                      'MITOS',
+                      style: TextStyle(
+                        fontSize: 8.5,
+                        fontWeight: FontWeight.w800,
+                        color: Colors.white,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      myth.myth,
+                      style: TextStyle(
+                        fontSize: 11.5,
+                        fontWeight: FontWeight.w600,
+                        color: isDark
+                            ? const Color(0xFFFECDD3)
+                            : const Color(0xFF9F1239),
+                        height: 1.35,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 8),
+            // FAKTA BOX
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(10),
+              decoration: BoxDecoration(
+                color: isDark
+                    ? const Color(0xFF0E2A1E)
+                    : const Color(0xFFF0FDF4),
+                borderRadius: BorderRadius.circular(10),
+                border: Border.all(
+                  color: isDark
+                      ? const Color(0xFF16A34A).withValues(alpha: 0.3)
+                      : const Color(0xFFBBF7D0),
+                  width: 0.9,
+                ),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 5,
+                          vertical: 2,
+                        ),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFF16A34A),
+                          borderRadius: BorderRadius.circular(4),
+                        ),
+                        child: const Text(
+                          'FAKTA MEDIS',
+                          style: TextStyle(
+                            fontSize: 8.5,
+                            fontWeight: FontWeight.w800,
+                            color: Colors.white,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          myth.fact,
+                          style: TextStyle(
+                            fontSize: 11.5,
+                            fontWeight: FontWeight.w700,
+                            color: isDark
+                                ? const Color(0xFFBBF7D0)
+                                : const Color(0xFF166534),
+                            height: 1.35,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 6),
+                  Text(
+                    myth.explanation,
+                    style: TextStyle(
+                      fontSize: 11,
+                      color: isDark
+                          ? const Color(0xFF86EFAC).withValues(alpha: 0.9)
+                          : const Color(0xFF14532D),
+                      height: 1.4,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 12),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  'Topik ${_currentMythIndex + 1} dari ${_myths.length}',
+                  style: TextStyle(
+                    fontSize: 10.5,
+                    color: isDark
+                        ? const Color(0xFF94A3B8)
+                        : const Color(0xFF64748B),
+                  ),
+                ),
+                InkWell(
+                  onTap: _nextMyth,
+                  borderRadius: BorderRadius.circular(8),
+                  child: Padding(
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
+                    child: Row(
+                      children: [
+                        Icon(
+                          Icons.swap_horiz_rounded,
+                          size: 15,
+                          color: isDark
+                              ? const Color(0xFFFCD34D)
+                              : const Color(0xFFD97706),
+                        ),
+                        const SizedBox(width: 4),
+                        Text(
+                          'Mitos Berikutnya',
+                          style: TextStyle(
+                            fontSize: 11,
+                            fontWeight: FontWeight.w700,
+                            color: isDark
+                                ? const Color(0xFFFCD34D)
+                                : const Color(0xFFD97706),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildQuickFactsSection(bool isDark) {
+    return SizedBox(
+      height: 98,
+      child: ListView.separated(
+        scrollDirection: Axis.horizontal,
+        clipBehavior: Clip.none,
+        itemCount: _facts.length,
+        separatorBuilder: (_, _) => const SizedBox(width: 10),
+        itemBuilder: (context, index) {
+          final fact = _facts[index];
+          return Container(
+            width: 142,
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: isDark ? const Color(0xFF1E293B) : Colors.white,
+              borderRadius: BorderRadius.circular(14),
+              border: Border.all(
+                color: isDark
+                    ? fact.color.withValues(alpha: 0.3)
+                    : fact.color.withValues(alpha: 0.2),
+                width: 1.2,
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: fact.color.withValues(alpha: isDark ? 0.08 : 0.04),
+                  blurRadius: 8,
+                  offset: const Offset(0, 2),
+                ),
+              ],
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(5),
+                      decoration: BoxDecoration(
+                        color: isDark
+                            ? fact.color.withValues(alpha: 0.2)
+                            : fact.bgColor,
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Icon(fact.icon, size: 14, color: fact.color),
+                    ),
+                    Text(
+                      fact.label,
+                      style: TextStyle(
+                        fontSize: 9.5,
+                        fontWeight: FontWeight.w600,
+                        color: isDark
+                            ? const Color(0xFF94A3B8)
+                            : const Color(0xFF64748B),
+                      ),
+                    ),
+                  ],
+                ),
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      fact.value,
+                      style: TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w800,
+                        color: fact.color,
+                      ),
+                    ),
+                    const SizedBox(height: 1),
+                    Text(
+                      fact.subtitle,
+                      style: TextStyle(
+                        fontSize: 9.5,
+                        color: isDark
+                            ? const Color(0xFF94A3B8)
+                            : const Color(0xFF64748B),
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          );
+        },
+      ),
     );
   }
 
@@ -690,20 +1471,21 @@ class _EducationPageState extends State<EducationPage> {
       width: double.infinity,
       padding: const EdgeInsets.all(15),
       decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: isDark
-              ? const [Color(0xFF2E2415), Color(0xFF1E293B)]
-              : const [Color(0xFFFFFBEB), Color(0xFFFEF3C7)],
-        ),
+        color: isDark ? const Color(0xFF1E293B) : Colors.white,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
           color: isDark
-              ? const Color(0xFFB45309).withValues(alpha: 0.5)
-              : const Color(0xFFFDE68A),
+              ? const Color(0xFF334155)
+              : const Color(0xFFE2E8F0),
           width: 1.2,
         ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: isDark ? 0.15 : 0.03),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -716,25 +1498,22 @@ class _EducationPageState extends State<EducationPage> {
                   Container(
                     padding: const EdgeInsets.all(5),
                     decoration: BoxDecoration(
-                      color: const Color(0xFFF59E0B),
+                      color: const Color(0xFF0284C7).withValues(alpha: 0.12),
                       borderRadius: BorderRadius.circular(8),
                     ),
                     child: const Icon(
-                      Icons.lightbulb_rounded,
+                      Icons.format_quote_rounded,
                       size: 16,
-                      color: Colors.white,
+                      color: Color(0xFF0284C7),
                     ),
                   ),
                   const SizedBox(width: 8),
                   Text(
-                    'Tips Singkat Hari Ini',
+                    'Kiat Jantung Hari Ini',
                     style: TextStyle(
                       fontSize: 12.5,
                       fontWeight: FontWeight.w800,
-                      color: isDark
-                          ? const Color(0xFFFDE68A)
-                          : const Color(0xFF92400E),
-                      letterSpacing: 0.2,
+                      color: isDark ? Colors.white : EducationPage.darkSlate,
                     ),
                   ),
                 ],
@@ -747,22 +1526,18 @@ class _EducationPageState extends State<EducationPage> {
                       const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
                   child: Row(
                     children: [
-                      Icon(
+                      const Icon(
                         Icons.refresh_rounded,
                         size: 13,
-                        color: isDark
-                            ? const Color(0xFFFCD34D)
-                            : const Color(0xFFB45309),
+                        color: Color(0xFF0284C7),
                       ),
                       const SizedBox(width: 3),
-                      Text(
-                        'Ganti Tips',
+                      const Text(
+                        'Ganti Kiat',
                         style: TextStyle(
                           fontSize: 10.5,
                           fontWeight: FontWeight.w700,
-                          color: isDark
-                              ? const Color(0xFFFCD34D)
-                              : const Color(0xFFB45309),
+                          color: Color(0xFF0284C7),
                         ),
                       ),
                     ],
@@ -779,93 +1554,30 @@ class _EducationPageState extends State<EducationPage> {
               height: 1.45,
               fontStyle: FontStyle.italic,
               color: isDark
-                  ? const Color(0xFFFDE68A)
-                  : const Color(0xFF78350F),
+                  ? const Color(0xFFCBD5E1)
+                  : const Color(0xFF334155),
             ),
           ),
         ],
       ),
     );
   }
-
-  Widget _buildSearchField(bool isDark) {
-    return Container(
-      decoration: BoxDecoration(
-        color: isDark ? const Color(0xFF1E293B) : Colors.white,
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(
-          color: isDark
-              ? const Color(0xFF334155)
-              : const Color(0xFFE2E8F0),
-          width: 1,
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: isDark ? 0.15 : 0.02),
-            blurRadius: 6,
-            offset: const Offset(0, 1),
-          ),
-        ],
-      ),
-      child: TextField(
-        controller: _searchController,
-        onChanged: (val) {
-          setState(() {
-            _searchQuery = val.trim().toLowerCase();
-          });
-        },
-        style: TextStyle(
-          fontSize: 13,
-          color: isDark ? Colors.white : const Color(0xFF0F172A),
-        ),
-        decoration: InputDecoration(
-          hintText: 'Cari panduan (misal: garam, jalan, rokok)...',
-          hintStyle: TextStyle(
-            fontSize: 12,
-            color: isDark
-                ? const Color(0xFF64748B)
-                : const Color(0xFF94A3B8),
-          ),
-          prefixIcon: const Icon(
-            Icons.search_rounded,
-            size: 20,
-            color: Color(0xFF0284C7),
-          ),
-          suffixIcon: _searchQuery.isNotEmpty
-              ? IconButton(
-                  icon: const Icon(Icons.clear_rounded, size: 18),
-                  onPressed: () {
-                    _searchController.clear();
-                    setState(() {
-                      _searchQuery = '';
-                    });
-                  },
-                )
-              : null,
-          border: InputBorder.none,
-          contentPadding:
-              const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-        ),
-      ),
-    );
-  }
-
   List<Widget> _buildFilteredTopicCards(BuildContext context,
       {required bool isDark}) {
     final allCards = [
       _TopicCardData(
         key: 'pola_makan',
-        title: 'Pola Makan Sehat',
+        title: 'Pola Makan & Nutrisi Jantung',
         description:
-            'Panduan nutrisi tepat, pemilihan bahan makanan bergizi, dan pembatasan garam serta lemak untuk penderita penyakit jantung.',
-        tag: 'Nutrisi & Makanan',
+            'Panduan gizi klinis, pembatasan garam dapur (natrium), pemilahan lemak sehat omega-3, serta jadwal makan yang ramah bagi elastisitas pembuluh darah.',
+        tag: 'Nutrisi & Diet',
         icon: Icons.restaurant_rounded,
         accentColor: const Color(0xFF059669),
         lightBgColor: const Color(0xFFECFDF5),
         highlights: const [
           'Serat & Omega-3',
           'Batasi Garam',
-          'Jadwal Rutin',
+          'Pola 3 Jam',
         ],
         onTap: () {
           Navigator.push(
@@ -878,17 +1590,17 @@ class _EducationPageState extends State<EducationPage> {
       ),
       _TopicCardData(
         key: 'aktivitas_fisik',
-        title: 'Aktivitas Fisik',
+        title: 'Aktivitas Fisik & Latihan Mandiri',
         description:
-            'Aktivitas fisik yang aman, terukur, dan bertahap sesuai kemampuan serta kondisi kesehatan jantung masing-masing.',
-        tag: 'Latihan & Gerak',
+            'Aktivitas aerobik yang aman, terukur, dan bertahap sesuai kemampuan jantung. Lengkap dengan latihan pernapasan dalam dan mobilisasi sendi.',
+        tag: 'Latihan Fisik',
         icon: Icons.directions_walk_rounded,
         accentColor: const Color(0xFF0284C7),
         lightBgColor: const Color(0xFFE0F2FE),
         highlights: const [
-          'Jalan Kaki',
+          'Jalan Santai',
           'Latihan Napas',
-          'Mobilisasi Sendi',
+          'Mobilisasi',
         ],
         onTap: () {
           Navigator.push(
@@ -901,15 +1613,15 @@ class _EducationPageState extends State<EducationPage> {
       ),
       _TopicCardData(
         key: 'kebiasaan_sehat',
-        title: 'Kebiasaan Sehat',
+        title: 'Kebiasaan Sehat & Gaya Hidup',
         description:
-            'Menjaga pola istirahat yang cukup, menghindari rokok, mengelola stres emosional, dan kepatuhan dalam perawatan medis.',
+            'Menjaga pola istirahat 7-8 jam per malam, berhenti merokok dan paparan nikotin, manajemen stres, serta kepatuhan minum obat secara tepat waktu.',
         tag: 'Gaya Hidup',
         icon: Icons.spa_rounded,
         accentColor: const Color(0xFF7C3AED),
         lightBgColor: const Color(0xFFF5F3FF),
         highlights: const [
-          'Hindari Rokok',
+          'Bebas Rokok',
           'Tidur 7-8 Jam',
           'Kelola Stres',
         ],
@@ -924,7 +1636,23 @@ class _EducationPageState extends State<EducationPage> {
       ),
     ];
 
-    final filtered = allCards.where((card) {
+    // Filter berdasarkan kategori tab
+    List<_TopicCardData> categoryFiltered = allCards;
+    if (_selectedCategoryIndex == 1) {
+      categoryFiltered =
+          allCards.where((c) => c.key == 'pola_makan').toList();
+    } else if (_selectedCategoryIndex == 2) {
+      categoryFiltered =
+          allCards.where((c) => c.key == 'aktivitas_fisik').toList();
+    } else if (_selectedCategoryIndex == 3) {
+      categoryFiltered =
+          allCards.where((c) => c.key == 'kebiasaan_sehat').toList();
+    } else if (_selectedCategoryIndex == 4) {
+      categoryFiltered = [];
+    }
+
+    // Filter berdasarkan pencarian
+    final filtered = categoryFiltered.where((card) {
       if (_searchQuery.isEmpty) return true;
       final t = card.title.toLowerCase();
       final d = card.description.toLowerCase();
@@ -940,7 +1668,7 @@ class _EducationPageState extends State<EducationPage> {
       return [
         Container(
           width: double.infinity,
-          padding: const EdgeInsets.all(24),
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 26),
           decoration: BoxDecoration(
             color: isDark ? const Color(0xFF1E293B) : Colors.white,
             borderRadius: BorderRadius.circular(16),
@@ -952,23 +1680,32 @@ class _EducationPageState extends State<EducationPage> {
           ),
           child: Column(
             children: [
-              const Icon(
-                Icons.search_off_rounded,
-                size: 38,
-                color: Color(0xFF94A3B8),
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: isDark
+                      ? const Color(0xFF334155)
+                      : const Color(0xFFF1F5F9),
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(
+                  Icons.search_off_rounded,
+                  size: 32,
+                  color: Color(0xFF94A3B8),
+                ),
               ),
-              const SizedBox(height: 10),
+              const SizedBox(height: 12),
               Text(
                 'Topik tidak ditemukan',
                 style: TextStyle(
                   fontSize: 14,
                   fontWeight: FontWeight.w700,
-                  color: isDark ? Colors.white : const Color(0xFF0F172A),
+                  color: isDark ? Colors.white : EducationPage.darkSlate,
                 ),
               ),
               const SizedBox(height: 4),
               Text(
-                'Coba gunakan kata kunci lain seperti garam, jalan, atau rokok.',
+                'Coba gunakan kata kunci lain seperti: garam, jalan, tidur, atau rokok.',
                 textAlign: TextAlign.center,
                 style: TextStyle(
                   fontSize: 11.5,
@@ -977,15 +1714,24 @@ class _EducationPageState extends State<EducationPage> {
                       : const Color(0xFF64748B),
                 ),
               ),
-              const SizedBox(height: 12),
-              OutlinedButton(
+              const SizedBox(height: 14),
+              OutlinedButton.icon(
                 onPressed: () {
                   _searchController.clear();
                   setState(() {
                     _searchQuery = '';
+                    _selectedCategoryIndex = 0;
                   });
                 },
-                child: const Text('Reset Pencarian'),
+                icon: const Icon(Icons.refresh_rounded, size: 15),
+                label: const Text('Reset Pencarian'),
+                style: OutlinedButton.styleFrom(
+                  foregroundColor: const Color(0xFF0284C7),
+                  side: const BorderSide(color: Color(0xFF0284C7)),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                ),
               ),
             ],
           ),
@@ -1011,197 +1757,6 @@ class _EducationPageState extends State<EducationPage> {
         ),
       );
     }).toList();
-  }
-
-  Widget _buildDoctorConsultationCard(BuildContext context,
-      {required bool isDark}) {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: isDark
-              ? const [Color(0xFF0C2438), Color(0xFF1E293B)]
-              : const [Color(0xFFE0F2FE), Color(0xFFEFF6FF)],
-        ),
-        borderRadius: BorderRadius.circular(18),
-        border: Border.all(
-          color: isDark
-              ? const Color(0xFF0284C7).withValues(alpha: 0.4)
-              : const Color(0xFFBAE6FD),
-          width: 1.2,
-        ),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Container(
-                width: 44,
-                height: 44,
-                decoration: BoxDecoration(
-                  color: const Color(0xFF0284C7),
-                  borderRadius: BorderRadius.circular(12),
-                  boxShadow: [
-                    BoxShadow(
-                      color:
-                          const Color(0xFF0284C7).withValues(alpha: 0.3),
-                      blurRadius: 8,
-                      offset: const Offset(0, 2),
-                    ),
-                  ],
-                ),
-                child: const Center(
-                  child: Icon(
-                    Icons.medical_services_rounded,
-                    color: Colors.white,
-                    size: 22,
-                  ),
-                ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Butuh Arahan Medis Langsung?',
-                      style: TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w700,
-                        color: isDark
-                            ? Colors.white
-                            : const Color(0xFF0F172A),
-                      ),
-                    ),
-                    const SizedBox(height: 2),
-                    Text(
-                      'Konsultasikan pantangan atau gejala bersama dokter spesialis jantung kami.',
-                      style: TextStyle(
-                        fontSize: 11,
-                        color: isDark
-                            ? const Color(0xFF94A3B8)
-                            : const Color(0xFF475569),
-                        height: 1.35,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 12),
-          SizedBox(
-            width: double.infinity,
-            height: 42,
-            child: ElevatedButton.icon(
-              onPressed: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => const PilihDokterPage(),
-                  ),
-                );
-              },
-              icon: const Icon(Icons.support_agent_rounded, size: 18),
-              label: const Text(
-                'Pilih Dokter Spesialis',
-                style: TextStyle(
-                  fontSize: 13,
-                  fontWeight: FontWeight.w700,
-                ),
-              ),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFF0284C7),
-                foregroundColor: Colors.white,
-                elevation: 0,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildDisclaimerCard(bool isDark) {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.symmetric(
-        horizontal: 14,
-        vertical: 12,
-      ),
-      decoration: BoxDecoration(
-        color: isDark ? const Color(0xFF1E293B) : const Color(0xFFF0FDF4),
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(
-          color: isDark
-              ? const Color(0xFF059669).withValues(alpha: 0.3)
-              : const Color(0xFFA7F3D0),
-          width: 1,
-        ),
-      ),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Container(
-            padding: const EdgeInsets.all(4),
-            decoration: BoxDecoration(
-              color: const Color(0xFF059669).withValues(alpha: 0.15),
-              shape: BoxShape.circle,
-            ),
-            child: const Icon(
-              Icons.verified_user_rounded,
-              size: 18,
-              color: Color(0xFF059669),
-            ),
-          ),
-          const SizedBox(width: 10),
-          Expanded(
-            child: Text(
-              'Informasi dalam edukasi ini bertujuan sebagai panduan umum. Selalu konsultasikan kondisi dan kebutuhan spesifik Anda dengan tenaga kesehatan.',
-              style: TextStyle(
-                fontSize: 11.5,
-                height: 1.45,
-                color: isDark
-                    ? const Color(0xFF94A3B8)
-                    : const Color(0xFF065F46),
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-
-
-  static Widget _buildBannerPill({
-    required IconData icon,
-    required String label,
-    required Color color,
-    required bool isDark,
-  }) {
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Icon(icon, size: 14, color: color),
-        const SizedBox(width: 5),
-        Text(
-          label,
-          style: TextStyle(
-            fontSize: 11,
-            fontWeight: FontWeight.w600,
-            color: isDark ? const Color(0xFFE2E8F0) : const Color(0xFF334155),
-          ),
-        ),
-      ],
-    );
   }
 
   Widget _buildMenuCard(
@@ -1234,267 +1789,247 @@ class _EducationPageState extends State<EducationPage> {
                 color: isCompleted
                     ? const Color(0xFF16A34A).withValues(alpha: 0.5)
                     : (isDark
-                        ? accentColor.withValues(alpha: 0.35)
-                        : accentColor.withValues(alpha: 0.22)),
-                width: isCompleted ? 1.8 : 1.4,
+                        ? const Color(0xFF334155)
+                        : const Color(0xFFE2E8F0)),
+                width: isCompleted ? 1.5 : 1.0,
               ),
               boxShadow: [
                 BoxShadow(
                   color: isCompleted
                       ? const Color(0xFF16A34A)
-                          .withValues(alpha: isDark ? 0.15 : 0.08)
-                      : accentColor
-                          .withValues(alpha: isDark ? 0.12 : 0.06),
-                  blurRadius: 12,
-                  offset: const Offset(0, 3),
+                          .withValues(alpha: isDark ? 0.12 : 0.05)
+                      : Colors.black
+                          .withValues(alpha: isDark ? 0.15 : 0.03),
+                  blurRadius: 10,
+                  offset: const Offset(0, 2),
                 ),
               ],
             ),
-            child: ClipRRect(
-              borderRadius: BorderRadius.circular(18),
-              child: Stack(
+            child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Positioned(
-                    right: -20,
-                    top: -20,
-                    child: Container(
-                      width: 80,
-                      height: 80,
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        color: accentColor
-                            .withValues(alpha: isDark ? 0.08 : 0.04),
-                      ),
-                    ),
-                  ),
-                  Padding(
-                    padding: const EdgeInsets.all(16),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        // ROW 1: Icon + Tag & Status + Chevron
-                        Row(
-                          children: [
-                            Container(
-                              width: 46,
-                              height: 46,
-                              decoration: BoxDecoration(
-                                color: isDark
-                                    ? accentColor.withValues(alpha: 0.2)
-                                    : lightBgColor,
-                                borderRadius: BorderRadius.circular(13),
-                                border: Border.all(
-                                  color: accentColor.withValues(alpha: 0.3),
-                                  width: 1,
-                                ),
-                              ),
-                              child: Center(
-                                child:
-                                    Icon(icon, color: accentColor, size: 24),
-                              ),
-                            ),
-                            const SizedBox(width: 12),
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment:
-                                    CrossAxisAlignment.start,
-                                children: [
-                                  Row(
-                                    children: [
-                                      Container(
-                                        padding: const EdgeInsets.symmetric(
-                                          horizontal: 8,
-                                          vertical: 2.5,
-                                        ),
-                                        decoration: BoxDecoration(
-                                          color: isDark
-                                              ? accentColor
-                                                  .withValues(alpha: 0.2)
-                                              : lightBgColor,
-                                          borderRadius:
-                                              BorderRadius.circular(6),
-                                          border: Border.all(
-                                            color: accentColor
-                                                .withValues(alpha: 0.3),
-                                            width: 0.8,
-                                          ),
-                                        ),
-                                        child: Text(
-                                          tag,
-                                          style: TextStyle(
-                                            fontSize: 10,
-                                            fontWeight: FontWeight.w700,
-                                            color: accentColor,
-                                          ),
-                                        ),
-                                      ),
-                                      const SizedBox(width: 6),
-                                      if (isCompleted)
-                                        Container(
-                                          padding:
-                                              const EdgeInsets.symmetric(
-                                            horizontal: 7,
-                                            vertical: 2,
-                                          ),
-                                          decoration: BoxDecoration(
-                                            color: const Color(0xFFDCFCE7),
-                                            borderRadius:
-                                                BorderRadius.circular(6),
-                                          ),
-                                          child: const Row(
-                                            mainAxisSize: MainAxisSize.min,
-                                            children: [
-                                              Icon(
-                                                Icons.check_circle_rounded,
-                                                size: 11,
-                                                color: Color(0xFF16A34A),
-                                              ),
-                                              SizedBox(width: 3),
-                                              Text(
-                                                'Selesai',
-                                                style: TextStyle(
-                                                  fontSize: 9.5,
-                                                  fontWeight:
-                                                      FontWeight.w700,
-                                                  color: Color(0xFF16A34A),
-                                                ),
-                                              ),
-                                            ],
-                                          ),
-                                        ),
-                                    ],
-                                  ),
-                                  const SizedBox(height: 4),
-                                  Text(
-                                    title,
-                                    style: TextStyle(
-                                      fontSize: 16,
-                                      fontWeight: FontWeight.w700,
-                                      color: isDark
-                                          ? Colors.white
-                                          : EducationPage.darkSlate,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                            Container(
-                              width: 32,
-                              height: 32,
-                              decoration: BoxDecoration(
-                                color: isDark
-                                    ? accentColor.withValues(alpha: 0.15)
-                                    : lightBgColor,
-                                shape: BoxShape.circle,
-                              ),
-                              child: Center(
-                                child: Icon(
-                                  Icons.arrow_forward_ios_rounded,
-                                  color: accentColor,
-                                  size: 13,
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 12),
-                        Text(
-                          description,
-                          style: TextStyle(
-                            fontSize: 12,
-                            color: isDark
-                                ? const Color(0xFF94A3B8)
-                                : const Color(0xFF475569),
-                            height: 1.45,
+                  // HEADER: Icon, Badges, Chevron
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Container(
+                        width: 44,
+                        height: 44,
+                        decoration: BoxDecoration(
+                          color: isDark
+                              ? accentColor.withValues(alpha: 0.18)
+                              : lightBgColor,
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(
+                            color: accentColor.withValues(alpha: 0.3),
+                            width: 1,
                           ),
                         ),
-                        const SizedBox(height: 12),
-                        // HIGHLIGHT PILLS
-                        Wrap(
-                          spacing: 6,
-                          runSpacing: 6,
-                          children: highlights.map((h) {
-                            return Container(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 8,
-                                vertical: 3.5,
-                              ),
-                              decoration: BoxDecoration(
-                                color: isDark
-                                    ? const Color(0xFF0F172A)
-                                    : const Color(0xFFF8FAFC),
-                                borderRadius: BorderRadius.circular(6),
-                                border: Border.all(
-                                  color: isDark
-                                      ? const Color(0xFF334155)
-                                      : const Color(0xFFE2E8F0),
-                                  width: 0.9,
-                                ),
-                              ),
-                              child: Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  Container(
-                                    width: 5,
-                                    height: 5,
-                                    decoration: BoxDecoration(
-                                      color: accentColor,
-                                      shape: BoxShape.circle,
-                                    ),
-                                  ),
-                                  const SizedBox(width: 5),
-                                  Text(
-                                    h,
-                                    style: TextStyle(
-                                      fontSize: 10.5,
-                                      fontWeight: FontWeight.w500,
-                                      color: isDark
-                                          ? const Color(0xFFCBD5E1)
-                                          : const Color(0xFF334155),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            );
-                          }).toList(),
+                        child: Center(
+                          child: Icon(icon, color: accentColor, size: 22),
                         ),
-                        const SizedBox(height: 12),
-                        Row(
-                          mainAxisAlignment:
-                              MainAxisAlignment.spaceBetween,
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Row(
                               children: [
-                                Text(
-                                  'Buka Panduan Lengkap',
-                                  style: TextStyle(
-                                    fontSize: 11.5,
-                                    fontWeight: FontWeight.w700,
-                                    color: accentColor,
+                                Container(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 7,
+                                    vertical: 2.5,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    color: isDark
+                                        ? accentColor.withValues(alpha: 0.18)
+                                        : lightBgColor,
+                                    borderRadius: BorderRadius.circular(5),
+                                    border: Border.all(
+                                      color:
+                                          accentColor.withValues(alpha: 0.3),
+                                      width: 0.8,
+                                    ),
+                                  ),
+                                  child: Text(
+                                    tag,
+                                    style: TextStyle(
+                                      fontSize: 9.5,
+                                      fontWeight: FontWeight.w700,
+                                      color: accentColor,
+                                    ),
                                   ),
                                 ),
-                                const SizedBox(width: 4),
-                                Icon(
-                                  Icons.chevron_right_rounded,
-                                  size: 16,
-                                  color: accentColor,
-                                ),
+                                const SizedBox(width: 6),
+                                if (isCompleted)
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 6,
+                                      vertical: 2,
+                                    ),
+                                    decoration: BoxDecoration(
+                                      color: const Color(0xFFDCFCE7),
+                                      borderRadius: BorderRadius.circular(5),
+                                      border: Border.all(
+                                        color: const Color(0xFF86EFAC),
+                                        width: 0.8,
+                                      ),
+                                    ),
+                                    child: const Row(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        Icon(
+                                          Icons.check_circle_rounded,
+                                          size: 10,
+                                          color: Color(0xFF16A34A),
+                                        ),
+                                        SizedBox(width: 3),
+                                        Text(
+                                          'Selesai',
+                                          style: TextStyle(
+                                            fontSize: 9,
+                                            fontWeight: FontWeight.w700,
+                                            color: Color(0xFF16A34A),
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
                               ],
                             ),
+                            const SizedBox(height: 4),
                             Text(
-                              '⏱️ 3 Mnt Baca',
+                              title,
                               style: TextStyle(
-                                fontSize: 10.5,
-                                fontWeight: FontWeight.w600,
+                                fontSize: 14.5,
+                                fontWeight: FontWeight.w700,
                                 color: isDark
-                                    ? const Color(0xFF94A3B8)
-                                    : const Color(0xFF64748B),
+                                    ? Colors.white
+                                    : EducationPage.darkSlate,
+                                letterSpacing: -0.2,
                               ),
                             ),
                           ],
                         ),
-                      ],
+                      ),
+                      Container(
+                        width: 30,
+                        height: 30,
+                        decoration: BoxDecoration(
+                          color: isDark
+                              ? const Color(0xFF334155).withValues(alpha: 0.5)
+                              : const Color(0xFFF1F5F9),
+                          shape: BoxShape.circle,
+                        ),
+                        child: Center(
+                          child: Icon(
+                            Icons.arrow_forward_ios_rounded,
+                            color: isDark
+                                ? const Color(0xFF94A3B8)
+                                : const Color(0xFF64748B),
+                            size: 12,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 10),
+                  Text(
+                    description,
+                    style: TextStyle(
+                      fontSize: 11.5,
+                      color: isDark
+                          ? const Color(0xFF94A3B8)
+                          : const Color(0xFF475569),
+                      height: 1.4,
                     ),
+                  ),
+                  const SizedBox(height: 12),
+                  // HIGHLIGHT PILLS
+                  Wrap(
+                    spacing: 6,
+                    runSpacing: 6,
+                    children: highlights.map((h) {
+                      return Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 3,
+                        ),
+                        decoration: BoxDecoration(
+                          color: isDark
+                              ? const Color(0xFF0F172A)
+                              : const Color(0xFFF8FAFC),
+                          borderRadius: BorderRadius.circular(6),
+                          border: Border.all(
+                            color: isDark
+                                ? const Color(0xFF334155)
+                                : const Color(0xFFE2E8F0),
+                            width: 0.8,
+                          ),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Container(
+                              width: 4.5,
+                              height: 4.5,
+                              decoration: BoxDecoration(
+                                color: accentColor,
+                                shape: BoxShape.circle,
+                              ),
+                            ),
+                            const SizedBox(width: 5),
+                            Text(
+                              h,
+                              style: TextStyle(
+                                fontSize: 10,
+                                fontWeight: FontWeight.w500,
+                                color: isDark
+                                    ? const Color(0xFFCBD5E1)
+                                    : const Color(0xFF334155),
+                              ),
+                            ),
+                          ],
+                        ),
+                      );
+                    }).toList(),
+                  ),
+                  const SizedBox(height: 12),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Row(
+                        children: [
+                          Text(
+                            'Buka Modul Lengkap',
+                            style: TextStyle(
+                              fontSize: 11.5,
+                              fontWeight: FontWeight.w700,
+                              color: accentColor,
+                            ),
+                          ),
+                          const SizedBox(width: 3),
+                          Icon(
+                            Icons.chevron_right_rounded,
+                            size: 15,
+                            color: accentColor,
+                          ),
+                        ],
+                      ),
+                      Text(
+                        '4 Submateri • ~8 Mnt',
+                        style: TextStyle(
+                          fontSize: 10.5,
+                          fontWeight: FontWeight.w500,
+                          color: isDark
+                              ? const Color(0xFF94A3B8)
+                              : const Color(0xFF64748B),
+                        ),
+                      ),
+                    ],
                   ),
                 ],
               ),
@@ -1504,7 +2039,472 @@ class _EducationPageState extends State<EducationPage> {
       },
     );
   }
+
+  Widget _buildMedicalConsultationBanner(BuildContext context,
+      {required bool isDark}) {
+    return Container(
+      width: double.infinity,
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: isDark
+              ? const [Color(0xFF0C2438), Color(0xFF1E293B)]
+              : const [Color(0xFFE0F2FE), Color(0xFFEFF6FF)],
+        ),
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(
+          color: isDark
+              ? const Color(0xFF0284C7).withValues(alpha: 0.4)
+              : const Color(0xFFBAE6FD),
+          width: 1.2,
+        ),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                // Overlapping avatar stack
+                SizedBox(
+                  width: 72,
+                  height: 36,
+                  child: Stack(
+                    children: [
+                      Positioned(
+                        left: 0,
+                        child: Container(
+                          width: 34,
+                          height: 34,
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            border: Border.all(color: Colors.white, width: 2),
+                            image: const DecorationImage(
+                              image: AssetImage(
+                                  'assets/images/dokter_nurlitta.jpg'),
+                              fit: BoxFit.cover,
+                            ),
+                          ),
+                        ),
+                      ),
+                      Positioned(
+                        left: 18,
+                        child: Container(
+                          width: 34,
+                          height: 34,
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            border: Border.all(color: Colors.white, width: 2),
+                            image: const DecorationImage(
+                              image:
+                                  AssetImage('assets/images/dokter_andi.jpg'),
+                              fit: BoxFit.cover,
+                            ),
+                          ),
+                        ),
+                      ),
+                      Positioned(
+                        left: 36,
+                        child: Container(
+                          width: 34,
+                          height: 34,
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            border: Border.all(color: Colors.white, width: 2),
+                            image: const DecorationImage(
+                              image:
+                                  AssetImage('assets/images/dokter_rina.jpg'),
+                              fit: BoxFit.cover,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 6,
+                          vertical: 2,
+                        ),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFF0284C7),
+                          borderRadius: BorderRadius.circular(4),
+                        ),
+                        child: const Text(
+                          'TIM MEDIS SIAGA',
+                          style: TextStyle(
+                            fontSize: 8.5,
+                            fontWeight: FontWeight.w800,
+                            color: Colors.white,
+                            letterSpacing: 0.3,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        'Konsultasi Spesialis Jantung',
+                        style: TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w700,
+                          color: isDark
+                              ? Colors.white
+                              : const Color(0xFF0F172A),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 10),
+            Text(
+              'Diskusikan pola makan khusus, batasan aktivitas fisik, atau gejala kardiovaskular bersama dokter spesialis kardiologi kami.',
+              style: TextStyle(
+                fontSize: 11.5,
+                color: isDark
+                    ? const Color(0xFF94A3B8)
+                    : const Color(0xFF475569),
+                height: 1.4,
+              ),
+            ),
+            const SizedBox(height: 12),
+            SizedBox(
+              width: double.infinity,
+              height: 40,
+              child: ElevatedButton.icon(
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const PilihDokterPage(),
+                    ),
+                  );
+                },
+                icon: const Icon(Icons.support_agent_rounded, size: 17),
+                label: const Text(
+                  'Pilih Dokter & Mulai Chat',
+                  style: TextStyle(
+                    fontSize: 12.5,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFF0284C7),
+                  foregroundColor: Colors.white,
+                  elevation: 0,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildDisclaimerCard(BuildContext context, {required bool isDark}) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(
+        horizontal: 14,
+        vertical: 12,
+      ),
+      decoration: BoxDecoration(
+        color: isDark ? const Color(0xFF1E293B) : const Color(0xFFF0FDF4),
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(
+          color: isDark
+              ? const Color(0xFF059669).withValues(alpha: 0.3)
+              : const Color(0xFFA7F3D0),
+          width: 1,
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Container(
+                padding: const EdgeInsets.all(4),
+                decoration: BoxDecoration(
+                  color: const Color(0xFF059669).withValues(alpha: 0.15),
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(
+                  Icons.verified_user_rounded,
+                  size: 17,
+                  color: Color(0xFF059669),
+                ),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Text(
+                  'Materi edukasi HeartCare disusun mengacu pada protokol klinis resmi PERKI & American Heart Association (AHA). Tidak menggantikan diagnosis medis langsung.',
+                  style: TextStyle(
+                    fontSize: 11,
+                    height: 1.4,
+                    color: isDark
+                        ? const Color(0xFF94A3B8)
+                        : const Color(0xFF065F46),
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          Align(
+            alignment: Alignment.centerRight,
+            child: InkWell(
+              onTap: () => _showMedicalSourcesDialog(context, isDark),
+              borderRadius: BorderRadius.circular(6),
+              child: Padding(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                child: Text(
+                  'Lihat Sumber & Akreditasi Medis →',
+                  style: TextStyle(
+                    fontSize: 10.5,
+                    fontWeight: FontWeight.w700,
+                    color: isDark
+                        ? const Color(0xFF34D399)
+                        : const Color(0xFF059669),
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showMedicalSourcesDialog(BuildContext context, bool isDark) {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      isScrollControlled: true,
+      builder: (context) {
+        return Container(
+          padding: const EdgeInsets.all(22),
+          decoration: BoxDecoration(
+            color: isDark ? const Color(0xFF1E293B) : Colors.white,
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Center(
+                child: Container(
+                  width: 40,
+                  height: 4,
+                  decoration: BoxDecoration(
+                    color: isDark
+                        ? const Color(0xFF475569)
+                        : const Color(0xFFCBD5E1),
+                    borderRadius: BorderRadius.circular(2),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 16),
+              Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF0284C7).withValues(alpha: 0.12),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: const Icon(
+                      Icons.menu_book_rounded,
+                      size: 20,
+                      color: Color(0xFF0284C7),
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Referensi & Akreditasi Medis',
+                          style: TextStyle(
+                            fontSize: 15,
+                            fontWeight: FontWeight.w800,
+                            color: isDark
+                                ? Colors.white
+                                : EducationPage.darkSlate,
+                          ),
+                        ),
+                        Text(
+                          'Standar pedoman klinis kardiovaskular resmi',
+                          style: TextStyle(
+                            fontSize: 11,
+                            color: isDark
+                                ? const Color(0xFF94A3B8)
+                                : EducationPage.subSlate,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 16),
+              _buildSourceItem(
+                icon: Icons.local_hospital_rounded,
+                title: 'PERKI (Perhimpunan Dokter Spesialis Kardiovaskular Indonesia)',
+                detail: 'Panduan Praktik Klinis Penyakit Jantung Koroner & Hipertensi Arteri',
+                isDark: isDark,
+              ),
+              const SizedBox(height: 10),
+              _buildSourceItem(
+                icon: Icons.health_and_safety_rounded,
+                title: 'American Heart Association (AHA)',
+                detail: 'Cardiovascular Health Guidelines & Dietary Recommendations',
+                isDark: isDark,
+              ),
+              const SizedBox(height: 10),
+              _buildSourceItem(
+                icon: Icons.public_rounded,
+                title: 'European Society of Cardiology (ESC)',
+                detail: 'Guidelines on Cardiovascular Disease Prevention in Clinical Practice',
+                isDark: isDark,
+              ),
+              const SizedBox(height: 10),
+              _buildSourceItem(
+                icon: Icons.verified_rounded,
+                title: 'Kementerian Kesehatan RI (Kemenkes)',
+                detail: 'Panduan Pola Hidup Sehat & Gizi Seimbang Penyakit Tidak Menular',
+                isDark: isDark,
+              ),
+              const SizedBox(height: 16),
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: isDark
+                      ? const Color(0xFF0F172A)
+                      : const Color(0xFFF8FAFC),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(
+                    color: isDark
+                        ? const Color(0xFF334155)
+                        : const Color(0xFFE2E8F0),
+                  ),
+                ),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Icon(
+                      Icons.shield_outlined,
+                      size: 16,
+                      color: Color(0xFF0284C7),
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        'Peringatan Medis: Konten dalam aplikasi bertujuan memperkaya literasi kesehatan mandiri. Selalu konsultasikan perubahan diet, dosis obat, atau program latihan Anda dengan dokter spesialis jantung.',
+                        style: TextStyle(
+                          fontSize: 10.5,
+                          height: 1.4,
+                          color: isDark
+                              ? const Color(0xFF94A3B8)
+                              : const Color(0xFF64748B),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 18),
+              SizedBox(
+                width: double.infinity,
+                height: 42,
+                child: ElevatedButton(
+                  onPressed: () => Navigator.pop(context),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFF0284C7),
+                    foregroundColor: Colors.white,
+                    elevation: 0,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                  child: const Text(
+                    'Saya Mengerti',
+                    style: TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 8),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildSourceItem({
+    required IconData icon,
+    required String title,
+    required String detail,
+    required bool isDark,
+  }) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Container(
+          padding: const EdgeInsets.all(5),
+          decoration: BoxDecoration(
+            color: const Color(0xFF0284C7).withValues(alpha: 0.1),
+            borderRadius: BorderRadius.circular(6),
+          ),
+          child: Icon(icon, size: 14, color: const Color(0xFF0284C7)),
+        ),
+        const SizedBox(width: 10),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                title,
+                style: TextStyle(
+                  fontSize: 11.5,
+                  fontWeight: FontWeight.w700,
+                  color: isDark ? Colors.white : EducationPage.darkSlate,
+                ),
+              ),
+              Text(
+                detail,
+                style: TextStyle(
+                  fontSize: 10.5,
+                  color: isDark
+                      ? const Color(0xFF94A3B8)
+                      : EducationPage.subSlate,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
 }
+
 
 class _TopicCardData {
   final String key;
@@ -1546,95 +2546,101 @@ class PolaMakanSehatPage extends StatelessWidget {
         return Scaffold(
           backgroundColor:
               isDark ? const Color(0xFF0F172A) : const Color(0xFFF8FAFC),
-          body: SafeArea(
-            child: Column(
-              children: [
-                // HEADER BAR
-                Padding(
-                  padding:
-                      const EdgeInsets.only(left: 16, right: 16, top: 12),
-                  child: Row(
-                    children: [
-                      EducationPage._buildBackButton(context, isDark: isDark),
-                      const SizedBox(width: 14),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              'Pola Makan Sehat',
-                              style: TextStyle(
-                                fontSize: 18,
-                                fontWeight: FontWeight.w700,
-                                color: isDark
-                                    ? Colors.white
-                                    : const Color(0xFF0F172A),
-                              ),
-                            ),
-                            const SizedBox(height: 2),
-                            Text(
-                              'Panduan makanan bergizi untuk kesehatan jantung',
-                              style: TextStyle(
-                                fontSize: 11,
-                                color: isDark
-                                    ? const Color(0xFF94A3B8)
-                                    : const Color(0xFF64748B),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-
-                const SizedBox(height: 12),
-
-                Expanded(
-                  child: SingleChildScrollView(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 20,
-                      vertical: 8,
-                    ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
+          body: Container(
+            width: double.infinity,
+            height: double.infinity,
+            decoration: BoxDecoration(
+              gradient: EducationPage.pageGradient(isDark),
+            ),
+            child: SafeArea(
+              child: Column(
+                children: [
+                  // HEADER BAR
+                  Padding(
+                    padding:
+                        const EdgeInsets.only(left: 16, right: 16, top: 12),
+                    child: Row(
                       children: [
-                        // BANNER RINGKASAN (EMERALD GRADIENT)
-                        _buildOverviewCard(
-                          icon: Icons.restaurant_menu_rounded,
-                          title: 'Pola Makan Bagi Pasien Jantung',
-                          description:
-                              'Membahas pola makan sehat untuk orang yang sudah memiliki penyakit jantung, berfokus pada pemilihan makanan alami berkualitas dan pembiasaan waktu makan yang mendukung kerja jantung.',
-                          color: const Color(0xFF059669),
-                          bgColor: const Color(0xFFECFDF5),
-                          isDark: isDark,
-                        ),
-
-                        const SizedBox(height: 20),
-
-                        Row(
-                          children: [
-                            Container(
-                              width: 4,
-                              height: 18,
-                              decoration: BoxDecoration(
-                                color: const Color(0xFF059669),
-                                borderRadius: BorderRadius.circular(2),
+                        EducationPage._buildBackButton(context, isDark: isDark),
+                        const SizedBox(width: 14),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'Pola Makan Sehat',
+                                style: TextStyle(
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.w700,
+                                  color: isDark
+                                      ? Colors.white
+                                      : const Color(0xFF0F172A),
+                                ),
                               ),
-                            ),
-                            const SizedBox(width: 8),
-                            Text(
-                              'Materi Edukasi Nutrisi',
-                              style: TextStyle(
-                                fontSize: 15,
-                                fontWeight: FontWeight.w700,
-                                color: isDark
-                                    ? Colors.white
-                                    : const Color(0xFF0F172A),
+                              const SizedBox(height: 2),
+                              Text(
+                                'Panduan makanan bergizi untuk kesehatan jantung',
+                                style: TextStyle(
+                                  fontSize: 11,
+                                  color: isDark
+                                      ? const Color(0xFF94A3B8)
+                                      : const Color(0xFF64748B),
+                                ),
                               ),
-                            ),
-                          ],
+                            ],
+                          ),
                         ),
+                      ],
+                    ),
+                  ),
+
+                  const SizedBox(height: 12),
+
+                  Expanded(
+                    child: SingleChildScrollView(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 20,
+                        vertical: 8,
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          // BANNER RINGKASAN (EMERALD GRADIENT)
+                          _buildOverviewCard(
+                            icon: Icons.restaurant_menu_rounded,
+                            title: 'Pola Makan Bagi Pasien Jantung',
+                            description:
+                                'Membahas pola makan sehat untuk orang yang sudah memiliki penyakit jantung, berfokus pada pemilihan makanan alami berkualitas dan pembiasaan waktu makan yang mendukung kerja jantung.',
+                            color: const Color(0xFF059669),
+                            bgColor: const Color(0xFFECFDF5),
+                            isDark: isDark,
+                          ),
+
+                          const SizedBox(height: 20),
+
+                          Row(
+                            children: [
+                              Container(
+                                width: 4,
+                                height: 18,
+                                decoration: BoxDecoration(
+                                  color: const Color(0xFF059669),
+                                  borderRadius: BorderRadius.circular(2),
+                                ),
+                              ),
+                              const SizedBox(width: 8),
+                              Text(
+                                'Materi Edukasi Nutrisi',
+                                style: TextStyle(
+                                  fontSize: 15,
+                                  fontWeight: FontWeight.w700,
+                                  color: isDark
+                                      ? Colors.white
+                                      : const Color(0xFF0F172A),
+                                ),
+                              ),
+                            ],
+                          ),
                         const SizedBox(height: 12),
 
                         // MATERI A: Perbanyak Makanan Sehat (Fresh Emerald Green)
@@ -1755,7 +2761,8 @@ class PolaMakanSehatPage extends StatelessWidget {
               ],
             ),
           ),
-        );
+        ),
+      );
       },
     );
   }
@@ -1777,95 +2784,101 @@ class AktivitasFisikPage extends StatelessWidget {
         return Scaffold(
           backgroundColor:
               isDark ? const Color(0xFF0F172A) : const Color(0xFFF8FAFC),
-          body: SafeArea(
-            child: Column(
-              children: [
-                // HEADER BAR
-                Padding(
-                  padding:
-                      const EdgeInsets.only(left: 16, right: 16, top: 12),
-                  child: Row(
-                    children: [
-                      EducationPage._buildBackButton(context, isDark: isDark),
-                      const SizedBox(width: 14),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              'Aktivitas Fisik',
-                              style: TextStyle(
-                                fontSize: 18,
-                                fontWeight: FontWeight.w700,
-                                color: isDark
-                                    ? Colors.white
-                                    : const Color(0xFF0F172A),
-                              ),
-                            ),
-                            const SizedBox(height: 2),
-                            Text(
-                              'Panduan latihan fisik yang aman bagi jantung',
-                              style: TextStyle(
-                                fontSize: 11,
-                                color: isDark
-                                    ? const Color(0xFF94A3B8)
-                                    : const Color(0xFF64748B),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-
-                const SizedBox(height: 12),
-
-                Expanded(
-                  child: SingleChildScrollView(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 20,
-                      vertical: 8,
-                    ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
+          body: Container(
+            width: double.infinity,
+            height: double.infinity,
+            decoration: BoxDecoration(
+              gradient: EducationPage.pageGradient(isDark),
+            ),
+            child: SafeArea(
+              child: Column(
+                children: [
+                  // HEADER BAR
+                  Padding(
+                    padding:
+                        const EdgeInsets.only(left: 16, right: 16, top: 12),
+                    child: Row(
                       children: [
-                        // BANNER RINGKASAN (AZURE BLUE)
-                        _buildOverviewCard(
-                          icon: Icons.directions_walk_rounded,
-                          title: 'Aktivitas Fisik Aman & Terukur',
-                          description:
-                              'Aktivitas fisik sangat bermanfaat menjaga kekuatan pompa jantung dan kebugaran tubuh, asalkan dilakukan secara sederhana, bertahap, dan disesuaikan dengan kapasitas tubuh masing-masing.',
-                          color: const Color(0xFF0284C7),
-                          bgColor: const Color(0xFFE0F2FE),
-                          isDark: isDark,
-                        ),
-
-                        const SizedBox(height: 20),
-
-                        Row(
-                          children: [
-                            Container(
-                              width: 4,
-                              height: 18,
-                              decoration: BoxDecoration(
-                                color: const Color(0xFF0284C7),
-                                borderRadius: BorderRadius.circular(2),
+                        EducationPage._buildBackButton(context, isDark: isDark),
+                        const SizedBox(width: 14),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'Aktivitas Fisik',
+                                style: TextStyle(
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.w700,
+                                  color: isDark
+                                      ? Colors.white
+                                      : const Color(0xFF0F172A),
+                                ),
                               ),
-                            ),
-                            const SizedBox(width: 8),
-                            Text(
-                              'Pilihan Bentuk Aktivitas',
-                              style: TextStyle(
-                                fontSize: 15,
-                                fontWeight: FontWeight.w700,
-                                color: isDark
-                                    ? Colors.white
-                                    : const Color(0xFF0F172A),
+                              const SizedBox(height: 2),
+                              Text(
+                                'Panduan latihan fisik yang aman bagi jantung',
+                                style: TextStyle(
+                                  fontSize: 11,
+                                  color: isDark
+                                      ? const Color(0xFF94A3B8)
+                                      : const Color(0xFF64748B),
+                                ),
                               ),
-                            ),
-                          ],
+                            ],
+                          ),
                         ),
+                      ],
+                    ),
+                  ),
+
+                  const SizedBox(height: 12),
+
+                  Expanded(
+                    child: SingleChildScrollView(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 20,
+                        vertical: 8,
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          // BANNER RINGKASAN (AZURE BLUE)
+                          _buildOverviewCard(
+                            icon: Icons.directions_walk_rounded,
+                            title: 'Aktivitas Fisik Aman & Terukur',
+                            description:
+                                'Aktivitas fisik sangat bermanfaat menjaga kekuatan pompa jantung dan kebugaran tubuh, asalkan dilakukan secara sederhana, bertahap, dan disesuaikan dengan kapasitas tubuh masing-masing.',
+                            color: const Color(0xFF0284C7),
+                            bgColor: const Color(0xFFE0F2FE),
+                            isDark: isDark,
+                          ),
+
+                          const SizedBox(height: 20),
+
+                          Row(
+                            children: [
+                              Container(
+                                width: 4,
+                                height: 18,
+                                decoration: BoxDecoration(
+                                  color: const Color(0xFF0284C7),
+                                  borderRadius: BorderRadius.circular(2),
+                                ),
+                              ),
+                              const SizedBox(width: 8),
+                              Text(
+                                'Pilihan Bentuk Aktivitas',
+                                style: TextStyle(
+                                  fontSize: 15,
+                                  fontWeight: FontWeight.w700,
+                                  color: isDark
+                                      ? Colors.white
+                                      : const Color(0xFF0F172A),
+                                ),
+                              ),
+                            ],
+                          ),
                         const SizedBox(height: 12),
 
                         // MATERI A: Jalan Kaki (Ocean Blue)
@@ -2047,7 +3060,8 @@ class AktivitasFisikPage extends StatelessWidget {
               ],
             ),
           ),
-        );
+        ),
+      );
       },
     );
   }
@@ -2069,95 +3083,101 @@ class KebiasaanSehatPage extends StatelessWidget {
         return Scaffold(
           backgroundColor:
               isDark ? const Color(0xFF0F172A) : const Color(0xFFF8FAFC),
-          body: SafeArea(
-            child: Column(
-              children: [
-                // HEADER BAR
-                Padding(
-                  padding:
-                      const EdgeInsets.only(left: 16, right: 16, top: 12),
-                  child: Row(
-                    children: [
-                      EducationPage._buildBackButton(context, isDark: isDark),
-                      const SizedBox(width: 14),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              'Kebiasaan Sehat',
-                              style: TextStyle(
-                                fontSize: 18,
-                                fontWeight: FontWeight.w700,
-                                color: isDark
-                                    ? Colors.white
-                                    : const Color(0xFF0F172A),
-                              ),
-                            ),
-                            const SizedBox(height: 2),
-                            Text(
-                              'Pola hidup sehari-hari untuk menjaga kondisi jantung',
-                              style: TextStyle(
-                                fontSize: 11,
-                                color: isDark
-                                    ? const Color(0xFF94A3B8)
-                                    : const Color(0xFF64748B),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-
-                const SizedBox(height: 12),
-
-                Expanded(
-                  child: SingleChildScrollView(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 20,
-                      vertical: 8,
-                    ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
+          body: Container(
+            width: double.infinity,
+            height: double.infinity,
+            decoration: BoxDecoration(
+              gradient: EducationPage.pageGradient(isDark),
+            ),
+            child: SafeArea(
+              child: Column(
+                children: [
+                  // HEADER BAR
+                  Padding(
+                    padding:
+                        const EdgeInsets.only(left: 16, right: 16, top: 12),
+                    child: Row(
                       children: [
-                        // BANNER RINGKASAN (ROYAL VIOLET)
-                        _buildOverviewCard(
-                          icon: Icons.spa_rounded,
-                          title: 'Kebiasaan Baik Setiap Hari',
-                          description:
-                              'Membahas kebiasaan sehari-hari yang dapat membantu menjaga kondisi jantung tetap stabil, seperti menjaga pola istirahat, menghindari rokok, mengelola stres, dan mengikuti perawatan medis yang dianjurkan.',
-                          color: const Color(0xFF7C3AED),
-                          bgColor: const Color(0xFFF5F3FF),
-                          isDark: isDark,
-                        ),
-
-                        const SizedBox(height: 20),
-
-                        Row(
-                          children: [
-                            Container(
-                              width: 4,
-                              height: 18,
-                              decoration: BoxDecoration(
-                                color: const Color(0xFF7C3AED),
-                                borderRadius: BorderRadius.circular(2),
+                        EducationPage._buildBackButton(context, isDark: isDark),
+                        const SizedBox(width: 14),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'Kebiasaan Sehat',
+                                style: TextStyle(
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.w700,
+                                  color: isDark
+                                      ? Colors.white
+                                      : const Color(0xFF0F172A),
+                                ),
                               ),
-                            ),
-                            const SizedBox(width: 8),
-                            Text(
-                              'Pilar Kebiasaan Sehat',
-                              style: TextStyle(
-                                fontSize: 15,
-                                fontWeight: FontWeight.w700,
-                                color: isDark
-                                    ? Colors.white
-                                    : const Color(0xFF0F172A),
+                              const SizedBox(height: 2),
+                              Text(
+                                'Pola hidup sehari-hari untuk menjaga kondisi jantung',
+                                style: TextStyle(
+                                  fontSize: 11,
+                                  color: isDark
+                                      ? const Color(0xFF94A3B8)
+                                      : const Color(0xFF64748B),
+                                ),
                               ),
-                            ),
-                          ],
+                            ],
+                          ),
                         ),
+                      ],
+                    ),
+                  ),
+
+                  const SizedBox(height: 12),
+
+                  Expanded(
+                    child: SingleChildScrollView(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 20,
+                        vertical: 8,
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          // BANNER RINGKASAN (ROYAL VIOLET)
+                          _buildOverviewCard(
+                            icon: Icons.spa_rounded,
+                            title: 'Kebiasaan Baik Setiap Hari',
+                            description:
+                                'Membahas kebiasaan sehari-hari yang dapat membantu menjaga kondisi jantung tetap stabil, seperti menjaga pola istirahat, menghindari rokok, mengelola stres, dan mengikuti perawatan medis yang dianjurkan.',
+                            color: const Color(0xFF7C3AED),
+                            bgColor: const Color(0xFFF5F3FF),
+                            isDark: isDark,
+                          ),
+
+                          const SizedBox(height: 20),
+
+                          Row(
+                            children: [
+                              Container(
+                                width: 4,
+                                height: 18,
+                                decoration: BoxDecoration(
+                                  color: const Color(0xFF7C3AED),
+                                  borderRadius: BorderRadius.circular(2),
+                                ),
+                              ),
+                              const SizedBox(width: 8),
+                              Text(
+                                'Pilar Kebiasaan Sehat',
+                                style: TextStyle(
+                                  fontSize: 15,
+                                  fontWeight: FontWeight.w700,
+                                  color: isDark
+                                      ? Colors.white
+                                      : const Color(0xFF0F172A),
+                                ),
+                              ),
+                            ],
+                          ),
                         const SizedBox(height: 12),
 
                         // MATERI A: Hindari Rokok (Ruby Red)
@@ -2278,7 +3298,8 @@ class KebiasaanSehatPage extends StatelessWidget {
               ],
             ),
           ),
-        );
+        ),
+      );
       },
     );
   }
