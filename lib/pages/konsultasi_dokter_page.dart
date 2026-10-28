@@ -1,5 +1,8 @@
 import 'dart:async';
+import 'dart:convert';
+import 'dart:typed_data';
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:heartcare/pages/Skrining/screening_input_page.dart';
@@ -68,6 +71,7 @@ class _KonsultasiDokterPageState
   String selectedReminder = "1 hari sebelumnya";
   StreamSubscription? _doctorStatusSub;
   bool _isDoctorOnline = true;
+  final ImagePicker _picker = ImagePicker();
 
   @override
   void initState() {
@@ -269,6 +273,7 @@ class _KonsultasiDokterPageState
 
 
   void _showAttachmentOptions() {
+    final isDark = ThemeService.isDarkMode;
     showModalBottomSheet(
       context: context,
       backgroundColor: Colors.transparent,
@@ -278,10 +283,10 @@ class _KonsultasiDokterPageState
             horizontal: 20,
             vertical: 16,
           ),
-          decoration: const BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.vertical(
-              top: Radius.circular(20),
+          decoration: BoxDecoration(
+            color: isDark ? const Color(0xFF1E293B) : Colors.white,
+            borderRadius: const BorderRadius.vertical(
+              top: Radius.circular(24),
             ),
           ),
           child: SafeArea(
@@ -294,57 +299,87 @@ class _KonsultasiDokterPageState
                     width: 40,
                     height: 4,
                     decoration: BoxDecoration(
-                      color: const Color(0xFFD1D1D1),
+                      color: isDark ? const Color(0xFF475569) : const Color(0xFFCBD5E1),
                       borderRadius: BorderRadius.circular(4),
                     ),
                   ),
                 ),
                 const SizedBox(height: 14),
-                const Text(
-                  "Kirim Lampiran Medis",
-                  style: TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w700,
-                    color: Color(0xFF0F172A),
+                Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(7),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFF0284C7).withValues(alpha: 0.15),
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: const Icon(
+                        Icons.attach_file_rounded,
+                        color: Color(0xFF0284C7),
+                        size: 20,
+                      ),
+                    ),
+                    const SizedBox(width: 10),
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          "Kirim Lampiran & Foto Medis",
+                          style: TextStyle(
+                            fontSize: 14.5,
+                            fontWeight: FontWeight.w700,
+                            color: isDark ? Colors.white : const Color(0xFF0F172A),
+                          ),
+                        ),
+                        Text(
+                          "Bagikan hasil lab, resep, atau catatan dokter",
+                          style: TextStyle(
+                            fontSize: 11,
+                            color: isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 14),
+                _attachmentItem(
+                  icon: Icons.photo_library_rounded,
+                  iconColor: const Color(0xFF0284C7),
+                  bgColor: const Color(0xFF0284C7).withValues(alpha: 0.12),
+                  title: "Pilih dari Galeri (Hasil Lab / EKG)",
+                  subtitle: "Kirim foto hasil lab darah, EKG, rontgen, atau resep",
+                  isDark: isDark,
+                  onTap: () {
+                    Navigator.pop(context);
+                    _pickAndSendImage(ImageSource.gallery);
+                  },
+                ),
+                _attachmentItem(
+                  icon: Icons.camera_alt_rounded,
+                  iconColor: const Color(0xFF10B981),
+                  bgColor: const Color(0xFF10B981).withValues(alpha: 0.12),
+                  title: "Ambil Foto dengan Kamera",
+                  subtitle: "Buka kamera untuk memotret berkas lab atau obat langsung",
+                  isDark: isDark,
+                  onTap: () {
+                    Navigator.pop(context);
+                    _pickAndSendImage(ImageSource.camera);
+                  },
+                ),
+                if (!widget.isDoctorView)
+                  _attachmentItem(
+                    icon: Icons.monitor_heart_rounded,
+                    iconColor: const Color(0xFF6366F1),
+                    bgColor: const Color(0xFF6366F1).withValues(alpha: 0.12),
+                    title: "Hasil Skrining Jantung HeartCare",
+                    subtitle: "Kirim ringkasan skrining risiko jantung AI terakhir",
+                    isDark: isDark,
+                    onTap: () {
+                      Navigator.pop(context);
+                      _sendAttachment("Hasil Skrining Jantung HeartCare (Risiko Tinggi)");
+                    },
                   ),
-                ),
-                const SizedBox(height: 12),
-                _attachmentItem(
-                  icon: Icons.monitor_heart_outlined,
-                  title: "Hasil Skrining Jantung",
-                  subtitle:
-                      "Kirim ringkasan skrining HeartCare terakhir",
-                  onTap: () {
-                    Navigator.pop(context);
-                    _sendAttachment(
-                      "Hasil Skrining Jantung HeartCare (Risiko Tinggi)",
-                    );
-                  },
-                ),
-                _attachmentItem(
-                  icon: Icons.camera_alt_outlined,
-                  title: "Ambil Foto Keluhan / Resep",
-                  subtitle:
-                      "Buka kamera untuk memotret dokumen atau obat",
-                  onTap: () {
-                    Navigator.pop(context);
-                    _sendAttachment(
-                      "Foto Rekam Medis / EKG",
-                    );
-                  },
-                ),
-                _attachmentItem(
-                  icon: Icons.image_outlined,
-                  title: "Pilih dari Galeri",
-                  subtitle:
-                      "Pilih foto hasil laboratorium dari galeri",
-                  onTap: () {
-                    Navigator.pop(context);
-                    _sendAttachment(
-                      "Berkas Hasil Laboratorium",
-                    );
-                  },
-                ),
                 const SizedBox(height: 8),
               ],
             ),
@@ -356,25 +391,28 @@ class _KonsultasiDokterPageState
 
   Widget _attachmentItem({
     required IconData icon,
+    required Color iconColor,
+    required Color bgColor,
     required String title,
     required String subtitle,
+    required bool isDark,
     required VoidCallback onTap,
   }) {
     return InkWell(
       onTap: onTap,
-      borderRadius: BorderRadius.circular(10),
+      borderRadius: BorderRadius.circular(12),
       child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: 8),
+        padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 4),
         child: Row(
           children: [
             Container(
-              width: 38,
-              height: 38,
-              decoration: const BoxDecoration(
-                color: lightBlue,
+              width: 42,
+              height: 42,
+              decoration: BoxDecoration(
+                color: bgColor,
                 shape: BoxShape.circle,
               ),
-              child: Icon(icon, size: 20, color: primaryBlue),
+              child: Icon(icon, size: 22, color: iconColor),
             ),
             const SizedBox(width: 12),
             Expanded(
@@ -383,26 +421,421 @@ class _KonsultasiDokterPageState
                 children: [
                   Text(
                     title,
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 13,
                       fontWeight: FontWeight.w700,
+                      color: isDark ? Colors.white : const Color(0xFF0F172A),
                     ),
                   ),
                   const SizedBox(height: 2),
                   Text(
                     subtitle,
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 11,
-                      color: Colors.grey,
+                      color: isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B),
                     ),
                   ),
                 ],
               ),
             ),
+            Icon(
+              Icons.chevron_right_rounded,
+              color: isDark ? const Color(0xFF64748B) : const Color(0xFF94A3B8),
+              size: 20,
+            ),
           ],
         ),
       ),
     );
+  }
+
+  Future<void> _pickAndSendImage(ImageSource source) async {
+    try {
+      final XFile? file = await _picker.pickImage(
+        source: source,
+        maxWidth: 1024,
+        maxHeight: 1024,
+        imageQuality: 75,
+      );
+      if (file == null) return;
+
+      final bytes = await file.readAsBytes();
+      final base64String = base64Encode(bytes);
+
+      if (!mounted) return;
+      _showImagePreviewAndConfirm(bytes, base64String);
+    } catch (e) {
+      debugPrint('[KonsultasiDokterPage] Gagal mengambil gambar: $e');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Gagal memilih foto: $e'),
+            backgroundColor: const Color(0xFFEF4444),
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      }
+    }
+  }
+
+  void _showImagePreviewAndConfirm(Uint8List bytes, String base64String) {
+    final isDark = ThemeService.isDarkMode;
+    String selectedCategory = "Hasil Laboratorium";
+    final TextEditingController captionCtrl = TextEditingController();
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) {
+        return StatefulBuilder(
+          builder: (context, setModalState) {
+            return Container(
+              padding: EdgeInsets.only(
+                left: 20,
+                right: 20,
+                top: 16,
+                bottom: MediaQuery.of(context).viewInsets.bottom + 20,
+              ),
+              decoration: BoxDecoration(
+                color: isDark ? const Color(0xFF1E293B) : Colors.white,
+                borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+              ),
+              child: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Center(
+                      child: Container(
+                        width: 40,
+                        height: 4,
+                        decoration: BoxDecoration(
+                          color: isDark ? const Color(0xFF475569) : const Color(0xFFCBD5E1),
+                          borderRadius: BorderRadius.circular(4),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 14),
+                    Row(
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.all(8),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFF0284C7).withValues(alpha: 0.15),
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                          child: const Icon(
+                            Icons.photo_library_rounded,
+                            color: Color(0xFF0284C7),
+                            size: 20,
+                          ),
+                        ),
+                        const SizedBox(width: 10),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                "Kirim Foto Berkas Medis",
+                                style: TextStyle(
+                                  fontSize: 15,
+                                  fontWeight: FontWeight.bold,
+                                  color: isDark ? Colors.white : const Color(0xFF0F172A),
+                                ),
+                              ),
+                              Text(
+                                widget.isDoctorView
+                                    ? "Kirim ke pasien: ${widget.patientName ?? 'Pasien'}"
+                                    : "Kirim ke dokter: ${widget.doctorName}",
+                                style: TextStyle(
+                                  fontSize: 11.5,
+                                  color: isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 14),
+
+                    // Preview Gambar
+                    Center(
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(16),
+                        child: Container(
+                          constraints: const BoxConstraints(maxHeight: 220),
+                          width: double.infinity,
+                          decoration: BoxDecoration(
+                            color: isDark ? const Color(0xFF0F172A) : const Color(0xFFF1F5F9),
+                            border: Border.all(
+                              color: isDark ? const Color(0xFF334155) : const Color(0xFFCBD5E1),
+                            ),
+                          ),
+                          child: Image.memory(
+                            bytes,
+                            fit: BoxFit.contain,
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 14),
+
+                    // Kategori Dokumen
+                    Text(
+                      "Pilih Jenis Dokumen:",
+                      style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.bold,
+                        color: isDark ? const Color(0xFFE2E8F0) : const Color(0xFF334155),
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Wrap(
+                      spacing: 8,
+                      runSpacing: 8,
+                      children: [
+                        _categoryChip(
+                          label: "🔬 Hasil Lab",
+                          categoryValue: "Hasil Laboratorium",
+                          selected: selectedCategory == "Hasil Laboratorium",
+                          isDark: isDark,
+                          onTap: () => setModalState(() => selectedCategory = "Hasil Laboratorium"),
+                        ),
+                        _categoryChip(
+                          label: "📈 EKG / Rontgen",
+                          categoryValue: "Hasil EKG / Rontgen",
+                          selected: selectedCategory == "Hasil EKG / Rontgen",
+                          isDark: isDark,
+                          onTap: () => setModalState(() => selectedCategory = "Hasil EKG / Rontgen"),
+                        ),
+                        _categoryChip(
+                          label: "💊 Resep Obat",
+                          categoryValue: "Resep Obat",
+                          selected: selectedCategory == "Resep Obat",
+                          isDark: isDark,
+                          onTap: () => setModalState(() => selectedCategory = "Resep Obat"),
+                        ),
+                        _categoryChip(
+                          label: "📷 Keluhan Fisik",
+                          categoryValue: "Foto Keluhan Fisik",
+                          selected: selectedCategory == "Foto Keluhan Fisik",
+                          isDark: isDark,
+                          onTap: () => setModalState(() => selectedCategory = "Foto Keluhan Fisik"),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 14),
+
+                    // Input Catatan / Keterangan
+                    Container(
+                      decoration: BoxDecoration(
+                        color: isDark ? const Color(0xFF0F172A) : const Color(0xFFF8FAFC),
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(
+                          color: isDark ? const Color(0xFF334155) : const Color(0xFFCBD5E1),
+                        ),
+                      ),
+                      child: TextField(
+                        controller: captionCtrl,
+                        maxLines: 2,
+                        style: TextStyle(
+                          fontSize: 13,
+                          color: isDark ? Colors.white : const Color(0xFF0F172A),
+                        ),
+                        decoration: InputDecoration(
+                          hintText: "Tulis catatan atau keluhan foto ini (opsional)...",
+                          hintStyle: TextStyle(
+                            fontSize: 12.5,
+                            color: isDark ? const Color(0xFF64748B) : const Color(0xFF94A3B8),
+                          ),
+                          contentPadding: const EdgeInsets.symmetric(
+                            horizontal: 14,
+                            vertical: 10,
+                          ),
+                          border: InputBorder.none,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+
+                    // Tombol Aksi
+                    Row(
+                      children: [
+                        Expanded(
+                          flex: 1,
+                          child: OutlinedButton(
+                            onPressed: () => Navigator.pop(context),
+                            style: OutlinedButton.styleFrom(
+                              padding: const EdgeInsets.symmetric(vertical: 13),
+                              side: BorderSide(
+                                color: isDark ? const Color(0xFF475569) : const Color(0xFFCBD5E1),
+                              ),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                            ),
+                            child: Text(
+                              "Batal",
+                              style: TextStyle(
+                                color: isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B),
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 10),
+                        Expanded(
+                          flex: 2,
+                          child: ElevatedButton.icon(
+                            onPressed: () {
+                              Navigator.pop(context);
+                              _sendPhotoMessage(
+                                base64String: base64String,
+                                category: selectedCategory,
+                                caption: captionCtrl.text.trim(),
+                              );
+                            },
+                            icon: const Icon(Icons.send_rounded, size: 18),
+                            label: const Text(
+                              "Kirim Foto",
+                              style: TextStyle(fontWeight: FontWeight.bold),
+                            ),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: const Color(0xFF0284C7),
+                              foregroundColor: Colors.white,
+                              padding: const EdgeInsets.symmetric(vertical: 13),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              elevation: 2,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+
+  Widget _categoryChip({
+    required String label,
+    required String categoryValue,
+    required bool selected,
+    required bool isDark,
+    required VoidCallback onTap,
+  }) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(20),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+        decoration: BoxDecoration(
+          color: selected
+              ? const Color(0xFF0284C7)
+              : (isDark ? const Color(0xFF0F172A) : const Color(0xFFF1F5F9)),
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(
+            color: selected
+                ? const Color(0xFF0284C7)
+                : (isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0)),
+            width: selected ? 1.5 : 1,
+          ),
+        ),
+        child: Text(
+          label,
+          style: TextStyle(
+            fontSize: 11.5,
+            fontWeight: selected ? FontWeight.bold : FontWeight.w500,
+            color: selected
+                ? Colors.white
+                : (isDark ? const Color(0xFFCBD5E1) : const Color(0xFF334155)),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Future<void> _sendPhotoMessage({
+    required String base64String,
+    required String category,
+    String? caption,
+  }) async {
+    if (_activeChatId == null) {
+      await _initChat();
+    }
+    if (_activeChatId == null) return;
+
+    final profile = UserProfileService.instance.currentProfile;
+    final senderRole = widget.isDoctorView ? 'doctor' : 'patient';
+    final senderName = widget.isDoctorView
+        ? widget.doctorName
+        : (widget.patientName ??
+            (profile.nama.isNotEmpty ? profile.nama : 'Pasien HeartCare'));
+
+    final now = DateTime.now();
+    final timeStr =
+        "${now.hour.toString().padLeft(2, '0')}.${now.minute.toString().padLeft(2, '0')}";
+
+    final displayMessage = (caption != null && caption.isNotEmpty)
+        ? caption
+        : "📷 $category";
+
+    final optMsg = ChatMessage(
+      id: 'opt_img_${now.millisecondsSinceEpoch}',
+      senderId: widget.isDoctorView ? 'doctor' : 'patient',
+      senderRole: senderRole,
+      senderName: senderName,
+      message: displayMessage,
+      attachmentType: category,
+      imagePath: base64String,
+      timestamp: now,
+      timeFormatted: timeStr,
+      isRead: false,
+    );
+
+    setState(() {
+      _optimisticMessages.add(optMsg);
+    });
+    _scrollToBottom();
+
+    final success = await ChatService.instance.sendMessage(
+      chatId: _activeChatId!,
+      message: displayMessage,
+      senderRole: senderRole,
+      senderName: senderName,
+      attachmentType: category,
+      imagePath: base64String,
+      patientId: widget.patientId,
+      patientName: widget.patientName ?? profile.nama,
+      doctorId: widget.doctorId,
+      doctorName: widget.doctorName,
+    );
+
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            success
+                ? "Foto $category berhasil dikirim!"
+                : "Foto tersimpan lokal (menunggu sinkronisasi)",
+          ),
+          backgroundColor: success ? const Color(0xFF10B981) : const Color(0xFFF59E0B),
+          duration: const Duration(seconds: 2),
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+    }
+
+    _scrollToBottom();
   }
 
   Future<void> _sendAttachment(String title, {String? imagePath}) async {
@@ -452,6 +885,10 @@ class _KonsultasiDokterPageState
       senderName: senderName,
       attachmentType: title,
       imagePath: path,
+      patientId: widget.patientId,
+      patientName: widget.patientName ?? profile.nama,
+      doctorId: widget.doctorId,
+      doctorName: widget.doctorName,
     );
 
     _scrollToBottom();
@@ -839,10 +1276,10 @@ class _KonsultasiDokterPageState
                                     padding: const EdgeInsets.only(bottom: 16),
                                     child: msg.imagePath != null &&
                                             msg.imagePath!.isNotEmpty
-                                        ? _userImageMessage(
-                                            msg.imagePath!,
-                                            msg.timeFormatted,
-                                            isDark,
+                                        ? _buildImageMessageBubble(
+                                            msg: msg,
+                                            isMyMessage: isMyMessage,
+                                            isDark: isDark,
                                           )
                                         : (isMyMessage
                                             ? _userMessage(
@@ -922,13 +1359,49 @@ class _KonsultasiDokterPageState
                                         horizontal: 16,
                                         vertical: 12,
                                       ),
-                                      suffixIcon: GestureDetector(
+                                      prefixIcon: GestureDetector(
                                         onTap: _showAttachmentOptions,
-                                        child: Icon(
-                                          Icons.camera_alt_outlined,
-                                          size: 22,
-                                          color: isDark ? const Color(0xFF94A3B8) : const Color(0xFF0284C7),
+                                        child: Tooltip(
+                                          message: "Menu Lampiran Medis",
+                                          child: Icon(
+                                            Icons.add_circle_outline_rounded,
+                                            size: 22,
+                                            color: isDark ? const Color(0xFF38BDF8) : const Color(0xFF0284C7),
+                                          ),
                                         ),
+                                      ),
+                                      suffixIcon: Row(
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          GestureDetector(
+                                            onTap: () => _pickAndSendImage(ImageSource.gallery),
+                                            child: Tooltip(
+                                              message: "Kirim Foto dari Galeri (Hasil Lab / EKG)",
+                                              child: Padding(
+                                                padding: const EdgeInsets.symmetric(horizontal: 5),
+                                                child: Icon(
+                                                  Icons.photo_library_outlined,
+                                                  size: 21,
+                                                  color: isDark ? const Color(0xFF94A3B8) : const Color(0xFF0284C7),
+                                                ),
+                                              ),
+                                            ),
+                                          ),
+                                          GestureDetector(
+                                            onTap: () => _pickAndSendImage(ImageSource.camera),
+                                            child: Tooltip(
+                                              message: "Ambil Foto dengan Kamera",
+                                              child: Padding(
+                                                padding: const EdgeInsets.only(left: 3, right: 12),
+                                                child: Icon(
+                                                  Icons.camera_alt_outlined,
+                                                  size: 21,
+                                                  color: isDark ? const Color(0xFF94A3B8) : const Color(0xFF0284C7),
+                                                ),
+                                              ),
+                                            ),
+                                          ),
+                                        ],
                                       ),
                                     ),
                                   ),
@@ -1156,45 +1629,76 @@ class _KonsultasiDokterPageState
   // PESAN GAMBAR USER
   // ==========================================================
 
-  Widget _userImageMessage(
-    String imagePath,
-    String time,
-    bool isDark,
-  ) {
+  // ==========================================================
+  // PESAN GAMBAR / LAMPIRAN MEDIS (HASIL LAB, EKG, RESEP, DLL)
+  // ==========================================================
+
+  Widget _buildImageMessageBubble({
+    required ChatMessage msg,
+    required bool isMyMessage,
+    required bool isDark,
+  }) {
+    final category = msg.attachmentType ?? "Hasil Laboratorium";
+    final isLab = category.toLowerCase().contains("lab");
+    final isEkg = category.toLowerCase().contains("ekg") ||
+        category.toLowerCase().contains("skrining") ||
+        category.toLowerCase().contains("rontgen");
+    final isResep = category.toLowerCase().contains("resep") ||
+        category.toLowerCase().contains("obat");
+
+    final IconData badgeIcon = isLab
+        ? Icons.science_rounded
+        : (isEkg
+            ? Icons.monitor_heart_rounded
+            : (isResep ? Icons.medication_rounded : Icons.photo_library_rounded));
+
+    final Color badgeColor = isLab
+        ? const Color(0xFF0284C7)
+        : (isEkg
+            ? const Color(0xFF6366F1)
+            : (isResep ? const Color(0xFF10B981) : const Color(0xFF0EA5E9)));
+
+    final senderDisplay = msg.senderRole == 'doctor'
+        ? (msg.senderName.isNotEmpty ? msg.senderName : 'Dokter')
+        : (msg.senderName.isNotEmpty ? msg.senderName : 'Pasien');
+
     return Align(
-      alignment: Alignment.centerRight,
+      alignment: isMyMessage ? Alignment.centerRight : Alignment.centerLeft,
       child: Container(
         constraints: BoxConstraints(
-          maxWidth: MediaQuery.of(context).size.width * 0.72,
+          maxWidth: MediaQuery.of(context).size.width * 0.76,
         ),
         decoration: BoxDecoration(
           color: isDark ? const Color(0xFF1E293B) : Colors.white,
-          borderRadius: const BorderRadius.only(
-            topLeft: Radius.circular(18),
-            topRight: Radius.circular(18),
-            bottomLeft: Radius.circular(18),
-            bottomRight: Radius.circular(4),
+          borderRadius: BorderRadius.only(
+            topLeft: const Radius.circular(18),
+            topRight: const Radius.circular(18),
+            bottomLeft: Radius.circular(isMyMessage ? 18 : 4),
+            bottomRight: Radius.circular(isMyMessage ? 4 : 18),
           ),
           border: Border.all(
-            color: isDark ? const Color(0xFF334155) : const Color(0xFFBAE6FD),
-            width: 1.5,
+            color: isMyMessage
+                ? const Color(0xFF0284C7)
+                : (isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0)),
+            width: isMyMessage ? 1.5 : 1,
           ),
           boxShadow: [
             BoxShadow(
-              color: const Color(0xFF0284C7).withValues(alpha: isDark ? 0.2 : 0.12),
+              color: Colors.black.withValues(alpha: isDark ? 0.25 : 0.05),
               blurRadius: 10,
               offset: const Offset(0, 3),
             ),
           ],
         ),
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.end,
+          crossAxisAlignment:
+              isMyMessage ? CrossAxisAlignment.end : CrossAxisAlignment.start,
           children: [
-            // Header tag inside card
+            // Header: Pengirim dan Jenis Lampiran
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
               decoration: BoxDecoration(
-                color: isDark ? const Color(0xFF0F172A) : const Color(0xFFF0F9FF),
+                color: isDark ? const Color(0xFF0F172A) : const Color(0xFFF8FAFC),
                 borderRadius: const BorderRadius.only(
                   topLeft: Radius.circular(16),
                   topRight: Radius.circular(16),
@@ -1203,77 +1707,276 @@ class _KonsultasiDokterPageState
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  const Icon(
-                    Icons.monitor_heart_rounded,
-                    size: 16,
-                    color: Color(0xFF0284C7),
-                  ),
+                  Icon(badgeIcon, size: 15, color: badgeColor),
                   const SizedBox(width: 6),
-                  Text(
-                    "Lampiran Skrining AI",
-                    style: TextStyle(
-                      fontSize: 11.5,
-                      fontWeight: FontWeight.bold,
-                      color: isDark ? const Color(0xFF38BDF8) : const Color(0xFF0284C7),
+                  Flexible(
+                    child: Text(
+                      isMyMessage ? category : "$senderDisplay • $category",
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        fontSize: 11.5,
+                        fontWeight: FontWeight.bold,
+                        color: badgeColor,
+                      ),
                     ),
                   ),
                 ],
               ),
             ),
-            // Image Preview
+
+            // Gambar (Bisa Diklik untuk Fullscreen Zoom)
             Padding(
-              padding: const EdgeInsets.fromLTRB(10, 8, 10, 4),
-              child: ClipRRect(
-                borderRadius: BorderRadius.circular(12),
-                child: Container(
-                  color: isDark ? const Color(0xFF0F172A) : const Color(0xFFF8FAFC),
-                  child: Image.asset(
-                    imagePath,
-                    width: double.infinity,
-                    height: 180,
-                    fit: BoxFit.contain,
-                    errorBuilder: (context, error, stackTrace) {
-                      return Container(
-                        height: 140,
-                        color: isDark ? const Color(0xFF334155) : const Color(0xFFE0F2FE),
-                        alignment: Alignment.center,
-                        child: const Icon(
-                          Icons.image_outlined,
-                          color: Color(0xFF0284C7),
-                          size: 40,
+              padding: const EdgeInsets.fromLTRB(8, 8, 8, 4),
+              child: GestureDetector(
+                onTap: () => _openFullScreenImageViewer(
+                  msg.imagePath!,
+                  category,
+                  msg.message,
+                ),
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(12),
+                  child: Stack(
+                    children: [
+                      Container(
+                        color: isDark
+                            ? const Color(0xFF0F172A)
+                            : const Color(0xFFF1F5F9),
+                        child: _buildChatImage(
+                          msg.imagePath!,
+                          width: double.infinity,
+                          height: 200,
+                          fit: BoxFit.cover,
                         ),
-                      );
-                    },
+                      ),
+                      Positioned(
+                        right: 8,
+                        bottom: 8,
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 8,
+                            vertical: 4,
+                          ),
+                          decoration: BoxDecoration(
+                            color: Colors.black.withValues(alpha: 0.65),
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: const Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(
+                                Icons.zoom_in_rounded,
+                                size: 13,
+                                color: Colors.white,
+                              ),
+                              SizedBox(width: 4),
+                              Text(
+                                "Perbesar",
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 10,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
                 ),
               ),
             ),
-            // Footer Timestamp & Status
+
+            // Keterangan / Pesan Tambahan jika ada
+            if (msg.message.isNotEmpty &&
+                !msg.message.startsWith('📷') &&
+                !msg.message.startsWith('📎'))
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                child: Text(
+                  msg.message,
+                  style: TextStyle(
+                    fontSize: 12.5,
+                    color: isDark ? Colors.white : const Color(0xFF0F172A),
+                  ),
+                ),
+              ),
+
+            // Waktu dan Indikator Centang
             Padding(
-              padding: const EdgeInsets.fromLTRB(12, 4, 12, 8),
+              padding: const EdgeInsets.fromLTRB(12, 2, 12, 8),
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   Text(
-                    time,
+                    msg.timeFormatted,
                     style: TextStyle(
                       fontSize: 10,
                       fontWeight: FontWeight.w500,
-                      color: isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B),
+                      color: isDark
+                          ? const Color(0xFF94A3B8)
+                          : const Color(0xFF64748B),
                     ),
                   ),
-                  const SizedBox(width: 4),
-                  const Icon(
-                    Icons.done_all_rounded,
-                    size: 14,
-                    color: Color(0xFF0284C7),
-                  ),
+                  if (isMyMessage) ...[
+                    const SizedBox(width: 4),
+                    const Icon(
+                      Icons.done_all_rounded,
+                      size: 14,
+                      color: Color(0xFF0284C7),
+                    ),
+                  ],
                 ],
               ),
             ),
           ],
         ),
       ),
+    );
+  }
+
+  Widget _buildChatImage(
+    String path, {
+    double? width,
+    double? height,
+    BoxFit fit = BoxFit.cover,
+  }) {
+    if (path.startsWith('http://') || path.startsWith('https://')) {
+      return Image.network(
+        path,
+        width: width,
+        height: height,
+        fit: fit,
+        errorBuilder: (context, error, stackTrace) => _errorImagePlaceholder(),
+      );
+    }
+    if (path.startsWith('assets/')) {
+      return Image.asset(
+        path,
+        width: width,
+        height: height,
+        fit: fit,
+        errorBuilder: (context, error, stackTrace) => _errorImagePlaceholder(),
+      );
+    }
+    try {
+      final clean = path.contains(',') ? path.split(',').last : path;
+      final bytes = base64Decode(clean);
+      return Image.memory(
+        bytes,
+        width: width,
+        height: height,
+        fit: fit,
+        errorBuilder: (context, error, stackTrace) => _errorImagePlaceholder(),
+      );
+    } catch (_) {
+      return _errorImagePlaceholder();
+    }
+  }
+
+  Widget _errorImagePlaceholder() {
+    return Container(
+      height: 160,
+      width: double.infinity,
+      color: Colors.grey.withValues(alpha: 0.15),
+      alignment: Alignment.center,
+      child: const Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(Icons.broken_image_rounded, color: Colors.grey, size: 36),
+          SizedBox(height: 6),
+          Text(
+            "Gambar tidak dapat dimuat",
+            style: TextStyle(fontSize: 11, color: Colors.grey),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _openFullScreenImageViewer(
+    String imagePath,
+    String title,
+    String caption,
+  ) {
+    showDialog(
+      context: context,
+      barrierColor: Colors.black.withValues(alpha: 0.94),
+      builder: (context) {
+        return Scaffold(
+          backgroundColor: Colors.transparent,
+          appBar: AppBar(
+            backgroundColor: Colors.black45,
+            elevation: 0,
+            leading: IconButton(
+              icon: const Icon(Icons.close_rounded, color: Colors.white, size: 24),
+              onPressed: () => Navigator.pop(context),
+            ),
+            title: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  title,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 15,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                const Text(
+                  "Gunakan 2 jari untuk memperbesar (zoom in)",
+                  style: TextStyle(color: Colors.white70, fontSize: 11),
+                ),
+              ],
+            ),
+          ),
+          body: Stack(
+            children: [
+              Center(
+                child: InteractiveViewer(
+                  panEnabled: true,
+                  boundaryMargin: const EdgeInsets.all(24),
+                  minScale: 0.8,
+                  maxScale: 4.5,
+                  child: _buildChatImage(
+                    imagePath,
+                    fit: BoxFit.contain,
+                  ),
+                ),
+              ),
+              if (caption.isNotEmpty &&
+                  !caption.startsWith('📎') &&
+                  !caption.startsWith('📷'))
+                Positioned(
+                  left: 16,
+                  right: 16,
+                  bottom: 24,
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 12,
+                    ),
+                    decoration: BoxDecoration(
+                      color: Colors.black.withValues(alpha: 0.75),
+                      borderRadius: BorderRadius.circular(14),
+                      border: Border.all(color: Colors.white24),
+                    ),
+                    child: Text(
+                      caption,
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 13,
+                        fontWeight: FontWeight.w500,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                  ),
+                ),
+            ],
+          ),
+        );
+      },
     );
   }
 

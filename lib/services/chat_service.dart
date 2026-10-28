@@ -500,8 +500,10 @@ class ChatService {
     // 2. Perbarui ringkasan room lokal
     final snippet = message.isNotEmpty
         ? message
-        : (attachmentType == 'image'
-            ? '📷 Mengirim foto keluhan'
+        : (imagePath != null && imagePath.isNotEmpty
+            ? (attachmentType != null && attachmentType.isNotEmpty
+                ? '📷 $attachmentType'
+                : '📷 Mengirim foto medis')
             : (attachmentType == 'screening'
                 ? '📊 Mengirim hasil skrining jantung'
                 : '📄 Mengirim lampiran'));
