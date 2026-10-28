@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../services/auth_service.dart';
+import '../widgets/heartcare_auth_widgets.dart';
 import 'login_page.dart';
 
 class CheckEmailPage extends StatefulWidget {
@@ -72,7 +73,7 @@ class _CheckEmailPageState extends State<CheckEmailPage> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(error),
-          backgroundColor: const Color(0xFFE53935),
+          backgroundColor: const Color(0xFFE11D48),
           behavior: SnackBarBehavior.floating,
         ),
       );
@@ -80,7 +81,7 @@ class _CheckEmailPageState extends State<CheckEmailPage> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text('Tautan reset telah dikirim ulang ke ${widget.email}.'),
-          backgroundColor: const Color(0xFF0B9AC1),
+          backgroundColor: const Color(0xFF0284C7),
           behavior: SnackBarBehavior.floating,
         ),
       );
@@ -116,325 +117,357 @@ class _CheckEmailPageState extends State<CheckEmailPage> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.white,
-      body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.symmetric(horizontal: 28),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const SizedBox(height: 35),
+    final isDark = Theme.of(context).brightness == Brightness.dark;
 
-              // ==========================================
-              // TOMBOL KEMBALI
-              // ==========================================
-              GestureDetector(
-                onTap: () {
-                  Navigator.pop(context);
-                },
-                child: Container(
-                  width: 34,
-                  height: 34,
-                  decoration: const BoxDecoration(
-                    color: Color(0xFFF0F0F0),
-                    shape: BoxShape.circle,
-                  ),
-                  child: const Icon(
-                    Icons.chevron_left,
-                    size: 23,
-                    color: Colors.black87,
-                  ),
-                ),
-              ),
-
-              const SizedBox(height: 28),
-
-              // ==========================================
-              // ILUSTRASI / ICON EMAIL
-              // ==========================================
-              Center(
-                child: Container(
-                  width: 80,
-                  height: 80,
+    return HeartCareAuthBackground(
+      showEkg: true,
+      child: Column(
+        children: [
+          // ==========================================
+          // TOP NAVIGATION
+          // ==========================================
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                const HeartCareBackButton(),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
                   decoration: BoxDecoration(
-                    color: const Color(0xFFE6F5FA),
-                    shape: BoxShape.circle,
+                    color: isDark
+                        ? const Color(0xFF1E293B).withValues(alpha: 0.8)
+                        : Colors.white.withValues(alpha: 0.9),
+                    borderRadius: BorderRadius.circular(20),
                     border: Border.all(
-                      color: const Color(0xFF76AFC7).withValues(alpha: 0.4),
-                      width: 1.5,
+                      color: const Color(0xFF0284C7).withValues(alpha: 0.3),
+                      width: 1,
                     ),
                   ),
-                  child: const Icon(
-                    Icons.mark_email_read_outlined,
-                    size: 42,
-                    color: Color(0xFF0B9AC1),
-                  ),
-                ),
-              ),
-
-              const SizedBox(height: 24),
-
-              // ==========================================
-              // JUDUL
-              // ==========================================
-              const Center(
-                child: Text(
-                  'Periksa Email Anda',
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                    fontSize: 23,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.black,
-                  ),
-                ),
-              ),
-
-              const SizedBox(height: 12),
-
-              // ==========================================
-              // KETERANGAN
-              // ==========================================
-              const Center(
-                child: Text(
-                  'Kami telah mengirimkan tautan untuk mengatur ulang kata sandi ke:',
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                    fontSize: 14,
-                    color: Colors.black87,
-                    height: 1.4,
-                  ),
-                ),
-              ),
-
-              const SizedBox(height: 14),
-
-              // ==========================================
-              // KOTAK BADGE EMAIL PENGGUNA
-              // ==========================================
-              Container(
-                width: double.infinity,
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-                decoration: BoxDecoration(
-                  color: const Color(0xFFF1F8FB),
-                  borderRadius: BorderRadius.circular(10),
-                  border: Border.all(
-                    color: const Color(0xFF76AFC7),
-                    width: 1.2,
-                  ),
-                ),
-                child: Row(
-                  children: [
-                    const Icon(
-                      Icons.email_outlined,
-                      color: Color(0xFF147C9C),
-                      size: 20,
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: Text(
-                        widget.email,
-                        style: const TextStyle(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w600,
-                          color: Color(0xFF147C9C),
-                        ),
-                        overflow: TextOverflow.ellipsis,
+                  child: Row(
+                    children: [
+                      const Icon(
+                        Icons.mark_email_read_rounded,
+                        size: 14,
+                        color: Color(0xFF0284C7),
                       ),
-                    ),
-                  ],
-                ),
-              ),
-
-              const SizedBox(height: 24),
-
-              // ==========================================
-              // PANDUAN LANGKAH-LANGKAH
-              // ==========================================
-              Container(
-                width: double.infinity,
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: const Color(0xFFF8FAFC),
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(
-                    color: const Color(0xFFE2E8F0),
-                    width: 1.0,
+                      const SizedBox(width: 6),
+                      Text(
+                        'Cek Email',
+                        style: TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w600,
+                          color: isDark ? const Color(0xFF38BDF8) : const Color(0xFF0284C7),
+                        ),
+                      ),
+                    ],
                   ),
                 ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      children: const [
-                        Icon(
-                          Icons.info_outline_rounded,
-                          size: 18,
-                          color: Color(0xFF0B9AC1),
+                const SizedBox(width: 42),
+              ],
+            ),
+          ),
+
+          // ==========================================
+          // SCROLLABLE CONTENT
+          // ==========================================
+          Expanded(
+            child: SingleChildScrollView(
+              physics: const BouncingScrollPhysics(),
+              padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 10),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  const SizedBox(height: 10),
+
+                  // Hero Icon / Badge
+                  Stack(
+                    alignment: Alignment.center,
+                    children: [
+                      Container(
+                        width: 90,
+                        height: 90,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          color: isDark ? const Color(0xFF131D36) : Colors.white,
+                          border: Border.all(
+                            color: const Color(0xFF0284C7).withValues(alpha: 0.25),
+                            width: 2,
+                          ),
+                          boxShadow: [
+                            BoxShadow(
+                              color: const Color(0xFF0284C7).withValues(alpha: 0.20),
+                              blurRadius: 20,
+                              offset: const Offset(0, 6),
+                            ),
+                          ],
                         ),
-                        SizedBox(width: 8),
-                        Text(
-                          'Langkah Selanjutnya:',
-                          style: TextStyle(
-                            fontSize: 13,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.black87,
+                        child: Center(
+                          child: Container(
+                            width: 58,
+                            height: 58,
+                            decoration: const BoxDecoration(
+                              shape: BoxShape.circle,
+                              gradient: LinearGradient(
+                                colors: [Color(0xFFE0F2FE), Color(0xFFBAE6FD)],
+                              ),
+                            ),
+                            child: const Icon(
+                              Icons.mark_email_read_outlined,
+                              size: 30,
+                              color: Color(0xFF0284C7),
+                            ),
+                          ),
+                        ),
+                      ),
+                      const Positioned(
+                        bottom: 0,
+                        right: 0,
+                        child: HeartPulseBadge(
+                          size: 28,
+                          icon: Icons.favorite_rounded,
+                          glowColor: Color(0xFFE11D48),
+                        ),
+                      ),
+                    ],
+                  ),
+
+                  const SizedBox(height: 20),
+
+                  Text(
+                    'Periksa Email Anda',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      fontSize: 23,
+                      fontWeight: FontWeight.w800,
+                      letterSpacing: -0.3,
+                      color: isDark ? Colors.white : const Color(0xFF0F172A),
+                    ),
+                  ),
+
+                  const SizedBox(height: 8),
+
+                  Text(
+                    'Kami telah mengirimkan tautan untuk mengatur ulang kata sandi ke:',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      fontSize: 13.5,
+                      height: 1.4,
+                      color: isDark ? const Color(0xFF94A3B8) : const Color(0xFF475569),
+                    ),
+                  ),
+
+                  const SizedBox(height: 16),
+
+                  // Email Pill Highlight
+                  Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                    decoration: BoxDecoration(
+                      color: isDark
+                          ? const Color(0xFF131D36).withValues(alpha: 0.85)
+                          : const Color(0xFFF0F9FF),
+                      borderRadius: BorderRadius.circular(14),
+                      border: Border.all(
+                        color: const Color(0xFF0284C7).withValues(alpha: 0.4),
+                        width: 1.2,
+                      ),
+                      boxShadow: [
+                        BoxShadow(
+                          color: const Color(0xFF0284C7).withValues(alpha: 0.08),
+                          blurRadius: 10,
+                          offset: const Offset(0, 2),
+                        ),
+                      ],
+                    ),
+                    child: Row(
+                      children: [
+                        Container(
+                          width: 34,
+                          height: 34,
+                          decoration: BoxDecoration(
+                            color: const Color(0xFF0284C7).withValues(alpha: 0.15),
+                            shape: BoxShape.circle,
+                          ),
+                          child: const Icon(
+                            Icons.email_outlined,
+                            color: Color(0xFF0284C7),
+                            size: 18,
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Text(
+                            widget.email,
+                            style: const TextStyle(
+                              fontSize: 14,
+                              fontWeight: FontWeight.bold,
+                              color: Color(0xFF0284C7),
+                            ),
+                            overflow: TextOverflow.ellipsis,
                           ),
                         ),
                       ],
                     ),
-                    const SizedBox(height: 10),
-                    _buildStepItem('1', 'Buka kotak masuk email Anda.'),
-                    const SizedBox(height: 6),
-                    _buildStepItem('2', 'Buka pesan dari Firebase / HeartCare.'),
-                    const SizedBox(height: 6),
-                    _buildStepItem('3', 'Klik tautan untuk membuat kata sandi baru.'),
-                    const SizedBox(height: 6),
-                    _buildStepItem('4', 'Setelah tersimpan, kembali ke aplikasi dan masuk.'),
-                  ],
-                ),
-              ),
-
-              const SizedBox(height: 28),
-
-              // ==========================================
-              // TOMBOL BUKA APLIKASI EMAIL
-              // ==========================================
-              SizedBox(
-                width: double.infinity,
-                height: 52,
-                child: ElevatedButton.icon(
-                  onPressed: _openEmailApp,
-                  icon: const Icon(Icons.open_in_new, size: 18),
-                  label: const Text(
-                    'Buka Aplikasi Email',
-                    style: TextStyle(
-                      fontSize: 15,
-                      fontWeight: FontWeight.bold,
-                    ),
                   ),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF0B9AC1),
-                    foregroundColor: Colors.white,
-                    elevation: 0,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                  ),
-                ),
-              ),
 
-              const SizedBox(height: 14),
+                  const SizedBox(height: 22),
 
-              // ==========================================
-              // TOMBOL SUDAH RESET / KEMBALI KE LOGIN
-              // ==========================================
-              SizedBox(
-                width: double.infinity,
-                height: 52,
-                child: OutlinedButton(
-                  onPressed: () {
-                    Navigator.pushAndRemoveUntil(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => LoginPage(
-                          initialEmail: widget.email,
-                        ),
-                      ),
-                      (route) => false,
-                    );
-                  },
-                  style: OutlinedButton.styleFrom(
-                    foregroundColor: const Color(0xFF0B9AC1),
-                    side: const BorderSide(
-                      color: Color(0xFF0B9AC1),
-                      width: 1.5,
-                    ),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                  ),
-                  child: const Text(
-                    'Sudah Ubah Password? Masuk Sekarang',
-                    style: TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ),
-              ),
-
-              const SizedBox(height: 24),
-
-              // ==========================================
-              // KIRIM ULANG EMAIL DENGAN COUNTDOWN
-              // ==========================================
-              Center(
-                child: _isResending
-                    ? const SizedBox(
-                        width: 20,
-                        height: 20,
-                        child: CircularProgressIndicator(
-                          strokeWidth: 2,
-                          color: Color(0xFF0B9AC1),
-                        ),
-                      )
-                    : _resendCountdown > 0
-                        ? Text(
-                            'Kirim ulang email dalam $_resendCountdown detik',
-                            style: const TextStyle(
-                              fontSize: 13,
-                              color: Colors.grey,
+                  // ==========================================
+                  // STEPS CARD
+                  // ==========================================
+                  HeartCareCard(
+                    borderRadius: 20,
+                    padding: const EdgeInsets.all(18),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            const Icon(
+                              Icons.info_outline_rounded,
+                              size: 18,
+                              color: Color(0xFF0284C7),
                             ),
-                          )
-                        : GestureDetector(
-                            onTap: _resendEmail,
-                            child: const Text(
-                              'Belum menerima email? Kirim ulang',
+                            const SizedBox(width: 8),
+                            Text(
+                              'Panduan Langkah Pemulihan:',
                               style: TextStyle(
-                                fontSize: 13,
-                                color: Color(0xFF0077CC),
-                                fontWeight: FontWeight.w600,
+                                fontSize: 13.5,
+                                fontWeight: FontWeight.bold,
+                                color: isDark ? Colors.white : const Color(0xFF0F172A),
                               ),
                             ),
-                          ),
-              ),
-
-              const SizedBox(height: 12),
-
-              // ==========================================
-              // TIPS SPAM FOLDER
-              // ==========================================
-              Center(
-                child: Text(
-                  'Tips: Jika email belum muncul, periksa folder Spam atau Promosi.',
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                    fontSize: 12,
-                    color: Colors.grey.shade600,
-                    fontStyle: FontStyle.italic,
+                          ],
+                        ),
+                        const SizedBox(height: 14),
+                        _buildStepItem(isDark, '1', 'Buka kotak masuk aplikasi email Anda.'),
+                        const SizedBox(height: 8),
+                        _buildStepItem(isDark, '2', 'Buka pesan dari Firebase / HeartCare Support.'),
+                        const SizedBox(height: 8),
+                        _buildStepItem(isDark, '3', 'Klik tautan untuk membuat kata sandi baru.'),
+                        const SizedBox(height: 8),
+                        _buildStepItem(isDark, '4', 'Setelah tersimpan, kembali ke aplikasi dan masuk.'),
+                      ],
+                    ),
                   ),
-                ),
-              ),
 
-              const SizedBox(height: 30),
-            ],
+                  const SizedBox(height: 22),
+
+                  // ==========================================
+                  // ACTION BUTTONS
+                  // ==========================================
+                  HeartCareGradientButton(
+                    onPressed: _openEmailApp,
+                    text: 'Buka Aplikasi Email',
+                    icon: Icons.open_in_new_rounded,
+                  ),
+
+                  const SizedBox(height: 12),
+
+                  OutlinedButton(
+                    onPressed: () {
+                      Navigator.pushAndRemoveUntil(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => LoginPage(
+                            initialEmail: widget.email,
+                          ),
+                        ),
+                        (route) => false,
+                      );
+                    },
+                    style: OutlinedButton.styleFrom(
+                      minimumSize: const Size(double.infinity, 50),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(14),
+                      ),
+                      side: const BorderSide(
+                        color: Color(0xFF0284C7),
+                        width: 1.4,
+                      ),
+                      backgroundColor: isDark
+                          ? const Color(0xFF1E293B).withValues(alpha: 0.5)
+                          : Colors.white.withValues(alpha: 0.7),
+                    ),
+                    child: const Text(
+                      'Sudah Ubah Password? Masuk Sekarang',
+                      style: TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.bold,
+                        color: Color(0xFF0284C7),
+                      ),
+                    ),
+                  ),
+
+                  const SizedBox(height: 20),
+
+                  // Resend countdown
+                  Center(
+                    child: _isResending
+                        ? const SizedBox(
+                            width: 22,
+                            height: 22,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2.5,
+                              color: Color(0xFF0284C7),
+                            ),
+                          )
+                        : _resendCountdown > 0
+                            ? Text(
+                                'Kirim ulang email dalam $_resendCountdown detik',
+                                style: TextStyle(
+                                  fontSize: 13,
+                                  color: isDark
+                                      ? const Color(0xFF94A3B8)
+                                      : const Color(0xFF64748B),
+                                ),
+                              )
+                            : GestureDetector(
+                                onTap: _resendEmail,
+                                child: const Text(
+                                  'Belum menerima email? Kirim ulang',
+                                  style: TextStyle(
+                                    fontSize: 13,
+                                    color: Color(0xFF0284C7),
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                              ),
+                  ),
+
+                  const SizedBox(height: 10),
+
+                  Text(
+                    '💡 Tips: Periksa juga folder Spam atau Promosi jika email belum masuk.',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      fontSize: 11.5,
+                      fontStyle: FontStyle.italic,
+                      color: isDark ? const Color(0xFF64748B) : const Color(0xFF94A3B8),
+                    ),
+                  ),
+
+                  const SizedBox(height: 20),
+                ],
+              ),
+            ),
           ),
-        ),
+        ],
       ),
     );
   }
 
-  Widget _buildStepItem(String number, String text) {
+  Widget _buildStepItem(bool isDark, String number, String text) {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Container(
-          width: 18,
-          height: 18,
+          width: 20,
+          height: 20,
           alignment: Alignment.center,
           decoration: const BoxDecoration(
-            color: Color(0xFF0B9AC1),
+            color: Color(0xFF0284C7),
             shape: BoxShape.circle,
           ),
           child: Text(
@@ -450,10 +483,10 @@ class _CheckEmailPageState extends State<CheckEmailPage> {
         Expanded(
           child: Text(
             text,
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 12.5,
-              color: Colors.black87,
-              height: 1.3,
+              height: 1.35,
+              color: isDark ? const Color(0xFFCBD5E1) : const Color(0xFF334155),
             ),
           ),
         ),

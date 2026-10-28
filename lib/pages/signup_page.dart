@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../services/auth_service.dart';
+import '../widgets/heartcare_auth_widgets.dart';
 import 'success_page.dart';
 
 class SignupPage extends StatefulWidget {
@@ -13,17 +14,10 @@ class _SignupPageState extends State<SignupPage> {
   bool _passwordVisible = false;
   bool _confirmPasswordVisible = false;
 
-  final TextEditingController _namaController =
-      TextEditingController();
-
-  final TextEditingController _emailController =
-      TextEditingController();
-
-  final TextEditingController _passwordController =
-      TextEditingController();
-
-  final TextEditingController _confirmPasswordController =
-      TextEditingController();
+  final TextEditingController _namaController = TextEditingController();
+  final TextEditingController _emailController = TextEditingController();
+  final TextEditingController _passwordController = TextEditingController();
+  final TextEditingController _confirmPasswordController = TextEditingController();
 
   bool _isLoading = false;
 
@@ -36,36 +30,60 @@ class _SignupPageState extends State<SignupPage> {
     super.dispose();
   }
 
+  void _showErrorSnackBar(String message) {
+    ScaffoldMessenger.of(context).hideCurrentSnackBar();
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Row(
+          children: [
+            const Icon(Icons.error_outline_rounded, color: Colors.white, size: 20),
+            const SizedBox(width: 10),
+            Expanded(
+              child: Text(
+                message,
+                style: const TextStyle(fontSize: 13.5, color: Colors.white),
+              ),
+            ),
+          ],
+        ),
+        backgroundColor: const Color(0xFFE11D48),
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+        duration: const Duration(seconds: 3),
+      ),
+    );
+  }
+
   Future<void> _daftar() async {
     if (_isLoading) return;
-
-    if (_passwordController.text != _confirmPasswordController.text) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Konfirmasi kata sandi tidak sama.'),
-        ),
-      );
-      return;
-    }
 
     if (_namaController.text.trim().isEmpty ||
         _emailController.text.trim().isEmpty ||
         _passwordController.text.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Mohon lengkapi semua data.'),
-        ),
-      );
+      _showErrorSnackBar('Mohon lengkapi semua data pendaftaran.');
       return;
     }
+
+    if (_passwordController.text != _confirmPasswordController.text) {
+      _showErrorSnackBar('Konfirmasi kata sandi tidak cocok.');
+      return;
+    }
+
+    if (_passwordController.text.length < 6) {
+      _showErrorSnackBar('Kata sandi harus minimal 6 karakter.');
+      return;
+    }
+
+    FocusScope.of(context).unfocus();
 
     setState(() {
       _isLoading = true;
     });
 
     final error = await AuthService.instance.signUp(
-      name: _namaController.text,
-      email: _emailController.text,
+      name: _namaController.text.trim(),
+      email: _emailController.text.trim(),
       password: _passwordController.text,
     );
 
@@ -76,9 +94,7 @@ class _SignupPageState extends State<SignupPage> {
     });
 
     if (error != null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(error)),
-      );
+      _showErrorSnackBar(error);
       return;
     }
 
@@ -92,340 +108,309 @@ class _SignupPageState extends State<SignupPage> {
 
   @override
   Widget build(BuildContext context) {
-    final screenHeight = MediaQuery.of(context).size.height;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
 
-    return Scaffold(
-      backgroundColor: Colors.white,
-
-      body: SizedBox.expand(
-        child: Stack(
-          clipBehavior: Clip.none,
-          children: [
-            // ==========================================
-            // DEKORASI BIRU MUDA DI KIRI BAWAH
-            // ==========================================
-            Positioned(
-              left: -135,
-              top: screenHeight - 285,
-              child: Container(
-                width: 390,
-                height: 390,
-                decoration: BoxDecoration(
-                  color: const Color(0xFFB8DCEE),
-                  borderRadius: BorderRadius.circular(200),
-                ),
-              ),
-            ),
-
-            // ==========================================
-            // ISI HALAMAN
-            // ==========================================
-            SafeArea(
-              child: SingleChildScrollView(
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 28,
+    return HeartCareAuthBackground(
+      showEkg: true,
+      child: Column(
+        children: [
+          // ==========================================
+          // TOP NAVIGATION BAR
+          // ==========================================
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                const HeartCareBackButton(),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                  decoration: BoxDecoration(
+                    color: isDark
+                        ? const Color(0xFF1E293B).withValues(alpha: 0.8)
+                        : Colors.white.withValues(alpha: 0.9),
+                    borderRadius: BorderRadius.circular(20),
+                    border: Border.all(
+                      color: const Color(0xFF0284C7).withValues(alpha: 0.3),
+                      width: 1,
+                    ),
                   ),
-                  child: Column(
+                  child: Row(
                     children: [
-                // =====================================
-                // LOGO
-                // =====================================
-
-                const SizedBox(height: 35),
-
-                Image.asset(
-                  'assets/images/heartcare_logo.png',
-                  width: 80,
-                  height: 80,
-                  fit: BoxFit.contain,
-                ),
-
-                const SizedBox(height: 8),
-
-                // =====================================
-                // JUDUL
-                // =====================================
-
-                const Text(
-                  'Buat Akun Baru',
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                    fontSize: 23,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.black,
-                  ),
-                ),
-
-                const SizedBox(height: 12),
-
-                // =====================================
-                // SUBJUDUL
-                // =====================================
-
-                const Text(
-                  'Daftar Untuk Mulai Menggunakan\n'
-                  'HeartCare',
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                    fontSize: 14,
-                    color: Colors.black87,
-                    height: 1.4,
-                  ),
-                ),
-
-                const SizedBox(height: 30),
-
-                // =====================================
-                // NAMA LENGKAP
-                // =====================================
-
-                _buildLabel('Nama Lengkap'),
-
-                const SizedBox(height: 10),
-
-                _buildTextField(
-                  controller: _namaController,
-                  hintText: 'Masukkan Nama Lengkap',
-                ),
-
-                const SizedBox(height: 20),
-
-                // =====================================
-                // EMAIL / NO HP
-                // =====================================
-
-                _buildLabel('Email atau No. HP'),
-
-                const SizedBox(height: 10),
-
-                _buildTextField(
-                  controller: _emailController,
-                  hintText: 'Masukkan Email atau No. HP',
-                ),
-
-                const SizedBox(height: 20),
-
-                // =====================================
-                // KATA SANDI
-                // =====================================
-
-                _buildLabel('Kata Sandi'),
-
-                const SizedBox(height: 10),
-
-                _buildTextField(
-                  controller: _passwordController,
-                  hintText: 'Masukkan Kata Sandi',
-                  obscureText: !_passwordVisible,
-                  suffixIcon: IconButton(
-                    onPressed: () {
-                      setState(() {
-                        _passwordVisible =
-                            !_passwordVisible;
-                      });
-                    },
-                    icon: Icon(
-                      _passwordVisible
-                          ? Icons.visibility
-                          : Icons.visibility_off,
-                      size: 23,
-                      color: Colors.grey,
-                    ),
-                  ),
-                ),
-
-                const SizedBox(height: 20),
-
-                // =====================================
-                // KONFIRMASI KATA SANDI
-                // =====================================
-
-                _buildLabel('Konfirmasi Kata Sandi'),
-
-                const SizedBox(height: 10),
-
-                _buildTextField(
-                  controller: _confirmPasswordController,
-                  hintText: 'Masukkan Ulang Kata Sandi',
-                  obscureText:
-                      !_confirmPasswordVisible,
-                  suffixIcon: IconButton(
-                    onPressed: () {
-                      setState(() {
-                        _confirmPasswordVisible =
-                            !_confirmPasswordVisible;
-                      });
-                    },
-                    icon: Icon(
-                      _confirmPasswordVisible
-                          ? Icons.visibility
-                          : Icons.visibility_off,
-                      size: 23,
-                      color: Colors.grey,
-                    ),
-                  ),
-                ),
-
-                const SizedBox(height: 30),
-
-                // =====================================
-                // TOMBOL DAFTAR
-                // =====================================
-
-                SizedBox(
-                  width: double.infinity,
-                  height: 55,
-                  child: ElevatedButton(
-                    onPressed: _isLoading ? null : _daftar,
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor:
-                          const Color(0xFF0B9AC1),
-                      foregroundColor: Colors.white,
-                      disabledBackgroundColor:
-                          const Color(0xFF0B9AC1).withValues(alpha: 0.6),
-                      elevation: 0,
-                      shape: RoundedRectangleBorder(
-                        borderRadius:
-                            BorderRadius.circular(8),
+                      const Icon(
+                        Icons.favorite_rounded,
+                        size: 14,
+                        color: Color(0xFFE11D48),
                       ),
-                    ),
-                    child: _isLoading
-                        ? const SizedBox(
-                            width: 24,
-                            height: 24,
-                            child: CircularProgressIndicator(
-                              color: Colors.white,
-                              strokeWidth: 2.5,
-                            ),
-                          )
-                        : const Text(
-                            'Daftar',
-                            style: TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                  ),
-                ),
-
-                const SizedBox(height: 30),
-
-                // =====================================
-                // LOGIN
-                // =====================================
-
-                Row(
-                  mainAxisAlignment:
-                      MainAxisAlignment.center,
-                  children: [
-                    const Text(
-                      'Sudah punya akun? ',
-                      style: TextStyle(
-                        fontSize: 13,
-                        color: Colors.black,
-                      ),
-                    ),
-
-                    GestureDetector(
-                      onTap: () {
-                        Navigator.pop(context);
-                      },
-                      child: const Text(
-                        'Masuk di sini',
+                      const SizedBox(width: 6),
+                      Text(
+                        'Pendaftaran Akun',
                         style: TextStyle(
-                          fontSize: 13,
-                          color: Color(0xFF1689D0),
+                          fontSize: 12,
                           fontWeight: FontWeight.w600,
+                          color: isDark ? const Color(0xFF38BDF8) : const Color(0xFF0284C7),
                         ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
-
-                const SizedBox(height: 30),
+                const SizedBox(width: 42), // Balance for back button
               ],
             ),
           ),
-        ),
-      ),
-    ],
-  ),
-),
-    );
-  }
 
-  // ===========================================
-  // LABEL
-  // ===========================================
+          // ==========================================
+          // SCROLLABLE CONTENT
+          // ==========================================
+          Expanded(
+            child: SingleChildScrollView(
+              physics: const BouncingScrollPhysics(),
+              padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 10),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  // Logo / Header Icon
+                  Container(
+                    width: 76,
+                    height: 76,
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: isDark
+                          ? const Color(0xFF131D36)
+                          : Colors.white,
+                      border: Border.all(
+                        color: const Color(0xFF0284C7).withValues(alpha: 0.25),
+                        width: 2,
+                      ),
+                      boxShadow: [
+                        BoxShadow(
+                          color: const Color(0xFF0284C7).withValues(alpha: 0.18),
+                          blurRadius: 18,
+                          offset: const Offset(0, 4),
+                        ),
+                      ],
+                    ),
+                    child: Image.asset(
+                      'assets/images/heartcare_logo.png',
+                      fit: BoxFit.contain,
+                    ),
+                  ),
 
-  Widget _buildLabel(String text) {
-    return Align(
-      alignment: Alignment.centerLeft,
-      child: Text(
-        text,
-        style: const TextStyle(
-          fontSize: 14,
-          fontWeight: FontWeight.w600,
-          color: Colors.black,
-        ),
-      ),
-    );
-  }
+                  const SizedBox(height: 16),
 
-  // ===========================================
-  // TEXT FIELD
-  // ===========================================
+                  Text(
+                    'Buat Akun Baru',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      fontSize: 23,
+                      fontWeight: FontWeight.w800,
+                      letterSpacing: -0.3,
+                      color: isDark ? Colors.white : const Color(0xFF0F172A),
+                    ),
+                  ),
 
-  Widget _buildTextField({
-    required TextEditingController controller,
-    required String hintText,
-    bool obscureText = false,
-    Widget? suffixIcon,
-  }) {
-    return SizedBox(
-      height: 58,
-      child: TextField(
-        controller: controller,
-        obscureText: obscureText,
+                  const SizedBox(height: 6),
 
-        style: const TextStyle(
-          fontSize: 14,
-          color: Colors.black,
-        ),
+                  Text(
+                    'Langkah awal menjaga kesehatan & ritme jantung Anda',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      fontSize: 13.5,
+                      color: isDark ? const Color(0xFF94A3B8) : const Color(0xFF475569),
+                    ),
+                  ),
 
-        decoration: InputDecoration(
-          hintText: hintText,
+                  const SizedBox(height: 22),
 
-          hintStyle: const TextStyle(
-            fontSize: 14,
-            color: Colors.grey,
-          ),
+                  // ==========================================
+                  // FORM CARD (ELEVATED)
+                  // ==========================================
+                  HeartCareCard(
+                    borderRadius: 24,
+                    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 22),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        // NAMA LENGKAP
+                        HeartCareTextField(
+                          controller: _namaController,
+                          label: 'Nama Lengkap',
+                          hintText: 'Masukkan nama lengkap Anda',
+                          prefixIcon: Icons.person_outline_rounded,
+                          keyboardType: TextInputType.name,
+                          textInputAction: TextInputAction.next,
+                        ),
 
-          contentPadding:
-              const EdgeInsets.symmetric(
-            horizontal: 18,
-            vertical: 16,
-          ),
+                        const SizedBox(height: 16),
 
-          suffixIcon: suffixIcon,
+                        // EMAIL / NO HP
+                        HeartCareTextField(
+                          controller: _emailController,
+                          label: 'Email atau No. HP',
+                          hintText: 'nama@email.com atau 0812...',
+                          prefixIcon: Icons.alternate_email_rounded,
+                          keyboardType: TextInputType.emailAddress,
+                          textInputAction: TextInputAction.next,
+                        ),
 
-          enabledBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(7),
-            borderSide: const BorderSide(
-              color: Color(0xFF76AFC7),
-              width: 1.2,
+                        const SizedBox(height: 16),
+
+                        // KATA SANDI
+                        HeartCareTextField(
+                          controller: _passwordController,
+                          label: 'Kata Sandi',
+                          hintText: 'Minimal 6 karakter',
+                          prefixIcon: Icons.lock_outline_rounded,
+                          obscureText: !_passwordVisible,
+                          textInputAction: TextInputAction.next,
+                          suffixIcon: IconButton(
+                            icon: Icon(
+                              _passwordVisible
+                                  ? Icons.visibility_outlined
+                                  : Icons.visibility_off_outlined,
+                              size: 20,
+                              color: isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B),
+                            ),
+                            onPressed: () {
+                              setState(() {
+                                _passwordVisible = !_passwordVisible;
+                              });
+                            },
+                          ),
+                        ),
+
+                        const SizedBox(height: 16),
+
+                        // KONFIRMASI KATA SANDI
+                        HeartCareTextField(
+                          controller: _confirmPasswordController,
+                          label: 'Konfirmasi Kata Sandi',
+                          hintText: 'Ulangi kata sandi Anda',
+                          prefixIcon: Icons.verified_user_outlined,
+                          obscureText: !_confirmPasswordVisible,
+                          textInputAction: TextInputAction.done,
+                          onSubmitted: (_) => _daftar(),
+                          suffixIcon: IconButton(
+                            icon: Icon(
+                              _confirmPasswordVisible
+                                  ? Icons.visibility_outlined
+                                  : Icons.visibility_off_outlined,
+                              size: 20,
+                              color: isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B),
+                            ),
+                            onPressed: () {
+                              setState(() {
+                                _confirmPasswordVisible = !_confirmPasswordVisible;
+                              });
+                            },
+                          ),
+                        ),
+
+                        const SizedBox(height: 14),
+
+                        // Security Hint Box
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                          decoration: BoxDecoration(
+                            color: isDark
+                                ? const Color(0xFF0F172A).withValues(alpha: 0.6)
+                                : const Color(0xFFF1F5F9),
+                            borderRadius: BorderRadius.circular(10),
+                            border: Border.all(
+                              color: isDark ? const Color(0xFF1E293B) : const Color(0xFFE2E8F0),
+                            ),
+                          ),
+                          child: Row(
+                            children: [
+                              const Icon(
+                                Icons.info_outline_rounded,
+                                size: 16,
+                                color: Color(0xFF0284C7),
+                              ),
+                              const SizedBox(width: 8),
+                              Expanded(
+                                child: Text(
+                                  'Gunakan kombinasi minimal 6 huruf dan angka.',
+                                  style: TextStyle(
+                                    fontSize: 11.5,
+                                    color: isDark
+                                        ? const Color(0xFF94A3B8)
+                                        : const Color(0xFF64748B),
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+
+                        const SizedBox(height: 22),
+
+                        // TOMBOL DAFTAR
+                        HeartCareGradientButton(
+                          onPressed: _daftar,
+                          text: 'Daftar Akun HeartCare',
+                          icon: Icons.how_to_reg_rounded,
+                          isLoading: _isLoading,
+                        ),
+                      ],
+                    ),
+                  ),
+
+                  const SizedBox(height: 20),
+
+                  // ==========================================
+                  // SUDAH PUNYA AKUN? MASUK
+                  // ==========================================
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                    decoration: BoxDecoration(
+                      color: isDark
+                          ? const Color(0xFF131D36).withValues(alpha: 0.7)
+                          : Colors.white.withValues(alpha: 0.8),
+                      borderRadius: BorderRadius.circular(16),
+                      border: Border.all(
+                        color: isDark ? const Color(0xFF1E293B) : const Color(0xFFE2E8F0),
+                        width: 1,
+                      ),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(
+                          'Sudah punya akun? ',
+                          style: TextStyle(
+                            fontSize: 13.5,
+                            color: isDark ? const Color(0xFF94A3B8) : const Color(0xFF475569),
+                          ),
+                        ),
+                        GestureDetector(
+                          onTap: () {
+                            Navigator.pop(context);
+                          },
+                          child: const Text(
+                            'Masuk di sini',
+                            style: TextStyle(
+                              fontSize: 13.5,
+                              fontWeight: FontWeight.bold,
+                              color: Color(0xFF0284C7),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+
+                  const SizedBox(height: 20),
+
+                  const HeartCareTrustBadge(),
+
+                  const SizedBox(height: 12),
+                ],
+              ),
             ),
           ),
-
-          focusedBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(7),
-            borderSide: const BorderSide(
-              color: Color(0xFF147C9C),
-              width: 1.5,
-            ),
-          ),
-        ),
+        ],
       ),
     );
   }
