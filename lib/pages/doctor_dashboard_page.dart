@@ -6,9 +6,9 @@ import '../services/auth_service.dart';
 import '../services/chat_service.dart';
 import '../services/theme_service.dart';
 import '../services/doctor_service.dart';
-import 'home_page.dart';
 import 'konsultasi_dokter_page.dart';
 import 'welcome_page.dart';
+import 'doctor_edit_profile_page.dart';
 
 class DoctorDashboardPage extends StatefulWidget {
   const DoctorDashboardPage({super.key});
@@ -350,8 +350,25 @@ class _DoctorDashboardPageState extends State<DoctorDashboardPage> {
     }
   }
 
+  /// Navigasi ke Halaman / Menu Khusus Edit Profil Dokter
+  Future<void> _openEditProfilePage() async {
+    final updated = await Navigator.push<bool>(
+      context,
+      MaterialPageRoute(
+        builder: (context) => DoctorEditProfilePage(
+          doctorProfile: _doctorProfile,
+        ),
+      ),
+    );
+    if (updated == true || mounted) {
+      await _loadDoctorProfile();
+    }
+  }
+
   /// Sheet Modal Lengkap untuk Edit Profil Dokter (Nama, SIP, Spesialis, Lokasi, Telepon, Bio)
   void _showEditDoctorProfileSheet() {
+    _openEditProfilePage();
+    return;
     final isDark = ThemeService.isDarkMode;
 
     final namaCtrl = TextEditingController(
@@ -709,7 +726,14 @@ class _DoctorDashboardPageState extends State<DoctorDashboardPage> {
         backgroundColor:
             isDark ? const Color(0xFF1E293B) : const Color(0xFF0284C7),
         elevation: 0,
-        titleSpacing: 16,
+        titleSpacing: Navigator.canPop(context) ? 0 : 16,
+        leading: Navigator.canPop(context)
+            ? IconButton(
+                icon: const Icon(Icons.arrow_back_rounded, color: Colors.white),
+                tooltip: 'Kembali',
+                onPressed: () => Navigator.pop(context),
+              )
+            : null,
         title: const Row(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -729,16 +753,6 @@ class _DoctorDashboardPageState extends State<DoctorDashboardPage> {
           ],
         ),
         actions: [
-          IconButton(
-            tooltip: 'Mode Pasien',
-            icon: const Icon(Icons.swap_horiz_rounded, color: Colors.white),
-            onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => const HomePage()),
-              );
-            },
-          ),
           IconButton(
             tooltip: 'Keluar',
             icon: const Icon(Icons.logout_rounded, color: Colors.white),
@@ -933,7 +947,7 @@ class _DoctorDashboardPageState extends State<DoctorDashboardPage> {
                                 children: [
                                   // Tombol Edit Profil
                                   InkWell(
-                                    onTap: _showEditDoctorProfileSheet,
+                                    onTap: _openEditProfilePage,
                                     borderRadius: BorderRadius.circular(20),
                                     child: Container(
                                       padding: const EdgeInsets.symmetric(
@@ -1054,7 +1068,7 @@ class _DoctorDashboardPageState extends State<DoctorDashboardPage> {
                                 ],
                               ),
                               GestureDetector(
-                                onTap: _showEditDoctorProfileSheet,
+                                onTap: _openEditProfilePage,
                                 child: Text(
                                   'Perbarui',
                                   style: TextStyle(
