@@ -10,6 +10,7 @@ import 'riwayat_page.dart';
 import 'signup_page.dart';
 import '../services/theme_service.dart';
 import '../services/doctor_service.dart';
+import '../services/language_service.dart';
 
 class PilihDokterPage extends StatefulWidget {
   const PilihDokterPage({super.key});
@@ -61,12 +62,15 @@ class _PilihDokterPageState extends State<PilihDokterPage> {
 
   @override
   Widget build(BuildContext context) {
-    return ValueListenableBuilder<ThemeMode>(
-      valueListenable: ThemeService.themeModeNotifier,
-      builder: (context, themeMode, _) {
-        final isDark = themeMode == ThemeMode.dark;
+    return ValueListenableBuilder<String>(
+      valueListenable: LanguageService.languageNotifier,
+      builder: (context, _, _) {
+        return ValueListenableBuilder<ThemeMode>(
+          valueListenable: ThemeService.themeModeNotifier,
+          builder: (context, themeMode, _) {
+            final isDark = themeMode == ThemeMode.dark;
 
-        return Scaffold(
+            return Scaffold(
           backgroundColor:
               isDark ? const Color(0xFF0F172A) : const Color(0xFFF8FAFC),
           appBar: AppBar(
@@ -94,7 +98,7 @@ class _PilihDokterPageState extends State<PilihDokterPage> {
             ),
             centerTitle: true,
             title: Text(
-              'Konsultasi Dokter',
+              tr('Konsultasi Dokter', 'Doctor Consultation'),
               style: TextStyle(
                 color: isDark ? Colors.white : const Color(0xFF0F172A),
                 fontSize: 18,
@@ -282,7 +286,7 @@ class _PilihDokterPageState extends State<PilihDokterPage> {
                                 : const Color(0xFF0F172A),
                           ),
                           decoration: InputDecoration(
-                            hintText: 'Cari dokter spesialis terdaftar...',
+                            hintText: tr('Cari dokter spesialis terdaftar...', 'Search registered specialists...'),
                             hintStyle: const TextStyle(
                               color: Color(0xFF94A3B8),
                               fontSize: 14,
@@ -361,7 +365,7 @@ class _PilihDokterPageState extends State<PilihDokterPage> {
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
                           Text(
-                            'Dokter Terdaftar (Real-Time)',
+                            tr('Dokter Terdaftar (Real-Time)', 'Registered Doctors (Real-Time)'),
                             style: TextStyle(
                               fontSize: 15,
                               fontWeight: FontWeight.bold,
@@ -388,7 +392,7 @@ class _PilihDokterPageState extends State<PilihDokterPage> {
                               ),
                             ),
                             child: Text(
-                              '${filteredDoctors.length} Dokter',
+                              tr('${filteredDoctors.length} Dokter', '${filteredDoctors.length} Doctors'),
                               style: TextStyle(
                                 fontSize: 11.5,
                                 fontWeight: FontWeight.bold,
@@ -521,7 +525,7 @@ class _PilihDokterPageState extends State<PilihDokterPage> {
                   _bottomItem(
                     context,
                     Icons.home_outlined,
-                    'Home',
+                    tr('Home', 'Home'),
                     false,
                     isDark: isDark,
                     onTap: () {
@@ -536,7 +540,7 @@ class _PilihDokterPageState extends State<PilihDokterPage> {
                   _bottomItem(
                     context,
                     Icons.favorite_border,
-                    'Skrining',
+                    tr('Skrining', 'Screening'),
                     false,
                     isDark: isDark,
                     onTap: () {
@@ -551,14 +555,14 @@ class _PilihDokterPageState extends State<PilihDokterPage> {
                   _bottomItem(
                     context,
                     Icons.medical_services,
-                    'Dokter',
+                    tr('Dokter', 'Doctors'),
                     true,
                     isDark: isDark,
                   ),
                   _bottomItem(
                     context,
                     Icons.description_outlined,
-                    'Riwayat',
+                    tr('Riwayat', 'History'),
                     false,
                     isDark: isDark,
                     onTap: () {
@@ -573,7 +577,7 @@ class _PilihDokterPageState extends State<PilihDokterPage> {
                   _bottomItem(
                     context,
                     Icons.person_outline,
-                    'Profil',
+                    tr('Profil', 'Profile'),
                     false,
                     isDark: isDark,
                     onTap: () {
@@ -592,6 +596,8 @@ class _PilihDokterPageState extends State<PilihDokterPage> {
         );
       },
     );
+  },
+);
   }
 
   // =========================================================
@@ -777,7 +783,9 @@ class _PilihDokterPageState extends State<PilihDokterPage> {
                       ),
                       const SizedBox(width: 4),
                       Text(
-                        isOnline ? 'Online • Siap Konsultasi' : 'Offline • Tinggalkan Pesan',
+                        isOnline
+                            ? tr('Online • Siap Konsultasi', 'Online • Ready to Consult')
+                            : tr('Offline • Tinggalkan Pesan', 'Offline • Leave Message'),
                         style: TextStyle(
                           fontSize: 10,
                           fontWeight: FontWeight.w600,
@@ -801,7 +809,7 @@ class _PilihDokterPageState extends State<PilihDokterPage> {
                     ),
                     const SizedBox(width: 4),
                     Text(
-                      '${dokter['pengalaman']} pengalaman',
+                      tr('${dokter['pengalaman']} pengalaman', '${dokter['pengalaman']} experience'),
                       style: TextStyle(
                         fontSize: 11,
                         color: isDark
@@ -864,7 +872,7 @@ class _PilihDokterPageState extends State<PilihDokterPage> {
                     ),
                     const SizedBox(height: 2),
                     Text(
-                      isOnline ? 'Chat' : 'Pesan',
+                      isOnline ? tr('Chat', 'Chat') : tr('Pesan', 'Message'),
                       style: const TextStyle(
                         fontSize: 10.5,
                         fontWeight: FontWeight.bold,
@@ -1038,7 +1046,7 @@ class _PilihDokterPageState extends State<PilihDokterPage> {
           ),
           const SizedBox(height: 14),
           Text(
-            'Dokter tidak ditemukan',
+            tr('Dokter tidak ditemukan', 'No doctors found'),
             style: TextStyle(
               fontSize: 16,
               fontWeight: FontWeight.bold,
@@ -1047,7 +1055,7 @@ class _PilihDokterPageState extends State<PilihDokterPage> {
           ),
           const SizedBox(height: 5),
           Text(
-            'Tidak ada dokter terdaftar yang cocok dengan pencarian.',
+            tr('Tidak ada dokter terdaftar yang cocok dengan pencarian.', 'No registered doctors match your search.'),
             style: TextStyle(
               fontSize: 12.5,
               color: isDark

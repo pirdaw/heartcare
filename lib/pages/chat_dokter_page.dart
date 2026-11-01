@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:heartcare/services/language_service.dart';
 
 class ChatDokterStaticPage extends StatefulWidget {
   const ChatDokterStaticPage({super.key});
@@ -573,52 +574,57 @@ class _ChatDokterStaticPageState
   // ==========================================================
 
   Widget _bottomNavigation() {
-    return Container(
-      height: 64,
-      decoration: BoxDecoration(
-        color: Colors.white,
-        border: Border(
-          top: BorderSide(
-            color: Colors.grey.shade300,
+    return ValueListenableBuilder<String>(
+      valueListenable: LanguageService.languageNotifier,
+      builder: (context, _, _) {
+        return Container(
+          height: 64,
+          decoration: BoxDecoration(
+            color: Colors.white,
+            border: Border(
+              top: BorderSide(
+                color: Colors.grey.shade300,
+              ),
+            ),
           ),
-        ),
-      ),
-      child: Row(
-        mainAxisAlignment:
-            MainAxisAlignment.spaceAround,
-        children: [
+          child: Row(
+            mainAxisAlignment:
+                MainAxisAlignment.spaceAround,
+            children: [
 
-          _navItem(
-            Icons.home_outlined,
-            "Home",
-            false,
-          ),
+              _navItem(
+                Icons.home_outlined,
+                tr("Beranda", "Home"),
+                false,
+              ),
 
-          _navItem(
-            Icons.favorite_border,
-            "Skrining",
-            false,
-          ),
+              _navItem(
+                Icons.favorite_border,
+                tr("Skrining", "Screening"),
+                false,
+              ),
 
-          _navItem(
-            Icons.person_outline,
-            "Dokter",
-            true,
-          ),
+              _navItem(
+                Icons.person_outline,
+                tr("Dokter", "Doctors"),
+                true,
+              ),
 
-          _navItem(
-            Icons.description_outlined,
-            "Riwayat",
-            false,
-          ),
+              _navItem(
+                Icons.description_outlined,
+                tr("Riwayat", "History"),
+                false,
+              ),
 
-          _navItem(
-            Icons.person_outline,
-            "Profil",
-            false,
+              _navItem(
+                Icons.person_outline,
+                tr("Profil", "Profile"),
+                false,
+              ),
+            ],
           ),
-        ],
-      ),
+        );
+      },
     );
   }
 

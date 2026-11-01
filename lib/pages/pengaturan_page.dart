@@ -5,6 +5,7 @@ import 'package:heartcare/pages/riwayat_page.dart';
 import 'package:heartcare/pages/Skrining/screening_input_page.dart';
 import '../services/theme_service.dart';
 import '../services/auth_service.dart';
+import '../services/language_service.dart';
 
 class PengaturanPage extends StatefulWidget {
   const PengaturanPage({super.key});
@@ -14,7 +15,7 @@ class PengaturanPage extends StatefulWidget {
 }
 
 class _PengaturanPageState extends State<PengaturanPage> {
-  String selectedLanguage = "Bahasa Indonesia";
+  String selectedLanguage = LanguageService.currentLanguage;
 
   void _showChangePasswordDialog() {
     final oldPassCtrl = TextEditingController();
@@ -93,7 +94,7 @@ class _PengaturanPageState extends State<PengaturanPage> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              "Ubah Kata Sandi",
+                              tr("Ubah Kata Sandi", "Change Password"),
                               style: TextStyle(
                                 fontSize: 16,
                                 fontWeight: FontWeight.bold,
@@ -104,7 +105,7 @@ class _PengaturanPageState extends State<PengaturanPage> {
                             ),
                             const SizedBox(height: 2),
                             Text(
-                              "Masukkan kata sandi baru untuk akun Anda",
+                              tr("Masukkan kata sandi baru untuk akun Anda", "Enter a new password for your account"),
                               style: TextStyle(
                                 fontSize: 11.5,
                                 color: isDark
@@ -118,21 +119,21 @@ class _PengaturanPageState extends State<PengaturanPage> {
                     ),
                     const SizedBox(height: 18),
                     _passField(
-                      "Kata Sandi Lama",
+                      tr("Kata Sandi Lama", "Current Password"),
                       oldPassCtrl,
                       obscureOld,
                       () => setSheetState(() => obscureOld = !obscureOld),
                       isDark: isDark,
                     ),
                     _passField(
-                      "Kata Sandi Baru",
+                      tr("Kata Sandi Baru", "New Password"),
                       newPassCtrl,
                       obscureNew,
                       () => setSheetState(() => obscureNew = !obscureNew),
                       isDark: isDark,
                     ),
                     _passField(
-                      "Konfirmasi Kata Sandi Baru",
+                      tr("Konfirmasi Kata Sandi Baru", "Confirm New Password"),
                       confirmPassCtrl,
                       obscureConfirm,
                       () =>
@@ -173,9 +174,9 @@ class _PengaturanPageState extends State<PengaturanPage> {
                                     newPass.isEmpty ||
                                     confirmPass.isEmpty) {
                                   ScaffoldMessenger.of(context).showSnackBar(
-                                    const SnackBar(
+                                    SnackBar(
                                       content: Text(
-                                          "Semua kolom kata sandi harus diisi"),
+                                          tr("Semua kolom kata sandi harus diisi", "All password fields must be filled")),
                                       backgroundColor: Colors.redAccent,
                                       behavior: SnackBarBehavior.floating,
                                     ),
@@ -184,9 +185,9 @@ class _PengaturanPageState extends State<PengaturanPage> {
                                 }
                                 if (newPass.length < 6) {
                                   ScaffoldMessenger.of(context).showSnackBar(
-                                    const SnackBar(
+                                    SnackBar(
                                       content: Text(
-                                          "Kata sandi baru minimal 6 karakter"),
+                                          tr("Kata sandi baru minimal 6 karakter", "New password must be at least 6 characters")),
                                       backgroundColor: Colors.redAccent,
                                       behavior: SnackBarBehavior.floating,
                                     ),
@@ -195,9 +196,9 @@ class _PengaturanPageState extends State<PengaturanPage> {
                                 }
                                 if (newPass != confirmPass) {
                                   ScaffoldMessenger.of(context).showSnackBar(
-                                    const SnackBar(
+                                    SnackBar(
                                       content: Text(
-                                          "Konfirmasi kata sandi tidak cocok"),
+                                          tr("Konfirmasi kata sandi tidak cocok", "Password confirmation does not match")),
                                       backgroundColor: Colors.redAccent,
                                       behavior: SnackBarBehavior.floating,
                                     ),
@@ -226,10 +227,10 @@ class _PengaturanPageState extends State<PengaturanPage> {
                                 Navigator.pop(sheetContext);
                                 if (!mounted) return;
                                 ScaffoldMessenger.of(context).showSnackBar(
-                                  const SnackBar(
+                                  SnackBar(
                                     content:
-                                        Text("Kata sandi berhasil diperbarui"),
-                                    backgroundColor: Color(0xFF0098B9),
+                                        Text(tr("Kata sandi berhasil diperbarui", "Password updated successfully")),
+                                    backgroundColor: const Color(0xFF0098B9),
                                     behavior: SnackBarBehavior.floating,
                                   ),
                                 );
@@ -251,9 +252,9 @@ class _PengaturanPageState extends State<PengaturanPage> {
                                   strokeWidth: 2,
                                 ),
                               )
-                            : const Text(
-                                "Simpan Kata Sandi",
-                                style: TextStyle(
+                            : Text(
+                                tr("Simpan Kata Sandi", "Save Password"),
+                                style: const TextStyle(
                                   fontSize: 14.5,
                                   fontWeight: FontWeight.bold,
                                 ),
@@ -369,7 +370,7 @@ class _PengaturanPageState extends State<PengaturanPage> {
               ),
               const SizedBox(width: 12),
               Text(
-                "Pilih Bahasa",
+                tr("Pilih Bahasa", "Select Language"),
                 style: TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.bold,
@@ -384,14 +385,14 @@ class _PengaturanPageState extends State<PengaturanPage> {
               Container(
                 margin: const EdgeInsets.only(bottom: 8),
                 decoration: BoxDecoration(
-                  color: selectedLanguage == "Bahasa Indonesia"
+                  color: selectedLanguage == LanguageService.indonesian
                       ? (isDark
                           ? const Color(0xFF0E2A3B)
                           : const Color(0xFFE0F7FC))
                       : Colors.transparent,
                   borderRadius: BorderRadius.circular(12),
                   border: Border.all(
-                    color: selectedLanguage == "Bahasa Indonesia"
+                    color: selectedLanguage == LanguageService.indonesian
                         ? const Color(0xFF0098B9)
                         : (isDark
                             ? const Color(0xFF334155)
@@ -403,32 +404,48 @@ class _PengaturanPageState extends State<PengaturanPage> {
                     "Bahasa Indonesia",
                     style: TextStyle(
                       fontSize: 14,
-                      fontWeight: selectedLanguage == "Bahasa Indonesia"
+                      fontWeight: selectedLanguage == LanguageService.indonesian
                           ? FontWeight.bold
                           : FontWeight.normal,
                       color: isDark ? Colors.white : const Color(0xFF0F172A),
                     ),
                   ),
-                  trailing: selectedLanguage == "Bahasa Indonesia"
+                  trailing: selectedLanguage == LanguageService.indonesian
                       ? const Icon(Icons.check_circle_rounded,
                           color: Color(0xFF0098B9))
                       : null,
-                  onTap: () {
-                    setState(() => selectedLanguage = "Bahasa Indonesia");
-                    Navigator.pop(context);
+                  onTap: () async {
+                    setState(() => selectedLanguage = LanguageService.indonesian);
+                    await LanguageService.setLanguage(LanguageService.indonesian);
+                    if (context.mounted) {
+                      Navigator.pop(context);
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text(
+                            tr(
+                              "Bahasa diubah ke Bahasa Indonesia",
+                              "Language changed to Indonesian",
+                            ),
+                          ),
+                          duration: const Duration(seconds: 1),
+                          backgroundColor: const Color(0xFF0098B9),
+                          behavior: SnackBarBehavior.floating,
+                        ),
+                      );
+                    }
                   },
                 ),
               ),
               Container(
                 decoration: BoxDecoration(
-                  color: selectedLanguage == "English (US)"
+                  color: selectedLanguage == LanguageService.english
                       ? (isDark
                           ? const Color(0xFF0E2A3B)
                           : const Color(0xFFE0F7FC))
                       : Colors.transparent,
                   borderRadius: BorderRadius.circular(12),
                   border: Border.all(
-                    color: selectedLanguage == "English (US)"
+                    color: selectedLanguage == LanguageService.english
                         ? const Color(0xFF0098B9)
                         : (isDark
                             ? const Color(0xFF334155)
@@ -440,19 +457,35 @@ class _PengaturanPageState extends State<PengaturanPage> {
                     "English (US)",
                     style: TextStyle(
                       fontSize: 14,
-                      fontWeight: selectedLanguage == "English (US)"
+                      fontWeight: selectedLanguage == LanguageService.english
                           ? FontWeight.bold
                           : FontWeight.normal,
                       color: isDark ? Colors.white : const Color(0xFF0F172A),
                     ),
                   ),
-                  trailing: selectedLanguage == "English (US)"
+                  trailing: selectedLanguage == LanguageService.english
                       ? const Icon(Icons.check_circle_rounded,
                           color: Color(0xFF0098B9))
                       : null,
-                  onTap: () {
-                    setState(() => selectedLanguage = "English (US)");
-                    Navigator.pop(context);
+                  onTap: () async {
+                    setState(() => selectedLanguage = LanguageService.english);
+                    await LanguageService.setLanguage(LanguageService.english);
+                    if (context.mounted) {
+                      Navigator.pop(context);
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text(
+                            tr(
+                              "Bahasa berhasil diubah ke English (US)",
+                              "Language changed to English (US)",
+                            ),
+                          ),
+                          duration: const Duration(seconds: 1),
+                          backgroundColor: const Color(0xFF0098B9),
+                          behavior: SnackBarBehavior.floating,
+                        ),
+                      );
+                    }
                   },
                 ),
               ),
@@ -468,179 +501,185 @@ class _PengaturanPageState extends State<PengaturanPage> {
     return ValueListenableBuilder<ThemeMode>(
       valueListenable: ThemeService.themeModeNotifier,
       builder: (context, themeMode, _) {
-        final isDark = themeMode == ThemeMode.dark;
+        return ValueListenableBuilder<String>(
+          valueListenable: LanguageService.languageNotifier,
+          builder: (context, activeLang, _) {
+            selectedLanguage = activeLang;
+            final isDark = themeMode == ThemeMode.dark;
 
-        return Scaffold(
-          backgroundColor:
-              isDark ? const Color(0xFF0F172A) : const Color(0xFFF8FAFC),
-          appBar: AppBar(
-            backgroundColor: Colors.transparent,
-            elevation: 0,
-            leading: Padding(
-              padding: const EdgeInsets.all(8.0),
-              child: Container(
-                decoration: BoxDecoration(
-                  color: isDark ? const Color(0xFF1E293B) : Colors.white,
-                  shape: BoxShape.circle,
-                  border: Border.all(
-                    color: isDark
-                        ? const Color(0xFF334155)
-                        : const Color(0xFFE2E8F0),
-                    width: 1,
-                  ),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withValues(alpha: isDark ? 0.2 : 0.04),
-                      blurRadius: 4,
-                      offset: const Offset(0, 1),
-                    ),
-                  ],
-                ),
-                child: IconButton(
-                  padding: EdgeInsets.zero,
-                  icon: Icon(
-                    Icons.chevron_left_rounded,
-                    color: isDark ? Colors.white : const Color(0xFF0F172A),
-                    size: 28,
-                  ),
-                  onPressed: () => Navigator.pop(context),
-                ),
-              ),
-            ),
-            centerTitle: true,
-            title: Text(
-              "Pengaturan",
-              style: TextStyle(
-                fontSize: 17,
-                fontWeight: FontWeight.bold,
-                color: isDark ? Colors.white : const Color(0xFF0F172A),
-              ),
-            ),
-          ),
-          body: Container(
-            decoration: BoxDecoration(
-              color: isDark ? const Color(0xFF0F172A) : const Color(0xFFF8FAFC),
-              gradient: LinearGradient(
-                begin: Alignment.topCenter,
-                end: Alignment.bottomCenter,
-                stops: const [0.0, 0.22, 0.6],
-                colors: isDark
-                    ? const [
-                        Color(0xFF1E293B),
-                        Color(0xFF131D2E),
-                        Color(0xFF0F172A),
-                      ]
-                    : const [
-                        Color(0xFFE8F6FA),
-                        Color(0xFFF4FAFC),
-                        Color(0xFFF8FAFC),
+            return Scaffold(
+              backgroundColor:
+                  isDark ? const Color(0xFF0F172A) : const Color(0xFFF8FAFC),
+              appBar: AppBar(
+                backgroundColor: Colors.transparent,
+                elevation: 0,
+                leading: Padding(
+                  padding: const EdgeInsets.all(8.0),
+                  child: Container(
+                    decoration: BoxDecoration(
+                      color: isDark ? const Color(0xFF1E293B) : Colors.white,
+                      shape: BoxShape.circle,
+                      border: Border.all(
+                        color: isDark
+                            ? const Color(0xFF334155)
+                            : const Color(0xFFE2E8F0),
+                        width: 1,
+                      ),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withValues(alpha: isDark ? 0.2 : 0.04),
+                          blurRadius: 4,
+                          offset: const Offset(0, 1),
+                        ),
                       ],
-              ),
-            ),
-            child: SafeArea(
-              child: SingleChildScrollView(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    // ==========================================================
-                    // SECTION 1: AKUN
-                    // ==========================================================
-                    Text(
-                      "Akun",
-                      style: TextStyle(
-                        fontSize: 15,
-                        fontWeight: FontWeight.bold,
+                    ),
+                    child: IconButton(
+                      padding: EdgeInsets.zero,
+                      icon: Icon(
+                        Icons.chevron_left_rounded,
                         color: isDark ? Colors.white : const Color(0xFF0F172A),
+                        size: 28,
                       ),
+                      onPressed: () => Navigator.pop(context),
                     ),
-                    const SizedBox(height: 12),
-
-                    // CARD UBAH KATA SANDI (DENGAN GRADASI BIRU MUDA)
-                    _pengaturanCard(
-                      icon: Icons.lock_reset_rounded,
-                      title: "Ubah kata sandi",
-                      subtitle: "Perbarui kata sandi akun Anda",
-                      onTap: _showChangePasswordDialog,
-                      isDark: isDark,
-                    ),
-
-                    const SizedBox(height: 22),
-
-                    // ==========================================================
-                    // SECTION 2: LAINNYA
-                    // ==========================================================
-                    Text(
-                      "Lainnya",
-                      style: TextStyle(
-                        fontSize: 15,
-                        fontWeight: FontWeight.bold,
-                        color: isDark ? Colors.white : const Color(0xFF0F172A),
-                      ),
-                    ),
-                    const SizedBox(height: 12),
-
-                    // CARD BAHASA (DENGAN GRADASI BIRU MUDA)
-                    _pengaturanCard(
-                      icon: Icons.language_rounded,
-                      title: "Bahasa",
-                      subtitle: selectedLanguage,
-                      onTap: _showLanguageDialog,
-                      isDark: isDark,
-                    ),
-
-                    // CARD MODE GELAP (DENGAN GRADASI BIRU MUDA & SWITCH)
-                    _pengaturanCard(
-                      icon: Icons.nightlight_round,
-                      title: "Mode Gelap",
-                      subtitle: isDark
-                          ? "Mode gelap sedang aktif"
-                          : "Aktifkan tema tampilan gelap",
-                      onTap: () {
-                        final newVal = !ThemeService.isDarkMode;
-                        ThemeService.toggleTheme(newVal);
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(
-                            content: Text(
-                              newVal
-                                  ? "Mode Gelap diaktifkan"
-                                  : "Mode Terang diaktifkan",
-                            ),
-                            duration: const Duration(seconds: 1),
-                            backgroundColor: const Color(0xFF0098B9),
-                            behavior: SnackBarBehavior.floating,
-                          ),
-                        );
-                      },
-                      trailing: Switch.adaptive(
-                        value: isDark,
-                        activeTrackColor: const Color(0xFF0098B9),
-                        activeThumbColor: Colors.white,
-                        onChanged: (val) {
-                          ThemeService.toggleTheme(val);
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(
-                              content: Text(
-                                val
-                                    ? "Mode Gelap diaktifkan"
-                                    : "Mode Terang diaktifkan",
-                              ),
-                              duration: const Duration(seconds: 1),
-                              backgroundColor: const Color(0xFF0098B9),
-                              behavior: SnackBarBehavior.floating,
-                            ),
-                          );
-                        },
-                      ),
-                      isDark: isDark,
-                    ),
-                  ],
+                  ),
+                ),
+                centerTitle: true,
+                title: Text(
+                  tr("Pengaturan", "Settings"),
+                  style: TextStyle(
+                    fontSize: 17,
+                    fontWeight: FontWeight.bold,
+                    color: isDark ? Colors.white : const Color(0xFF0F172A),
+                  ),
                 ),
               ),
-            ),
-          ),
-          bottomNavigationBar: _buildBottomNav(context, isDark: isDark),
+              body: Container(
+                decoration: BoxDecoration(
+                  color: isDark ? const Color(0xFF0F172A) : const Color(0xFFF8FAFC),
+                  gradient: LinearGradient(
+                    begin: Alignment.topCenter,
+                    end: Alignment.bottomCenter,
+                    stops: const [0.0, 0.22, 0.6],
+                    colors: isDark
+                        ? const [
+                            Color(0xFF1E293B),
+                            Color(0xFF131D2E),
+                            Color(0xFF0F172A),
+                          ]
+                        : const [
+                            Color(0xFFE8F6FA),
+                            Color(0xFFF4FAFC),
+                            Color(0xFFF8FAFC),
+                          ],
+                  ),
+                ),
+                child: SafeArea(
+                  child: SingleChildScrollView(
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        // ==========================================================
+                        // SECTION 1: AKUN
+                        // ==========================================================
+                        Text(
+                          tr("Akun", "Account"),
+                          style: TextStyle(
+                            fontSize: 15,
+                            fontWeight: FontWeight.bold,
+                            color: isDark ? Colors.white : const Color(0xFF0F172A),
+                          ),
+                        ),
+                        const SizedBox(height: 12),
+
+                        // CARD UBAH KATA SANDI (DENGAN GRADASI BIRU MUDA)
+                        _pengaturanCard(
+                          icon: Icons.lock_reset_rounded,
+                          title: tr("Ubah kata sandi", "Change password"),
+                          subtitle: tr("Perbarui kata sandi akun Anda", "Update your account password"),
+                          onTap: _showChangePasswordDialog,
+                          isDark: isDark,
+                        ),
+
+                        const SizedBox(height: 22),
+
+                        // ==========================================================
+                        // SECTION 2: LAINNYA
+                        // ==========================================================
+                        Text(
+                          tr("Lainnya", "Others"),
+                          style: TextStyle(
+                            fontSize: 15,
+                            fontWeight: FontWeight.bold,
+                            color: isDark ? Colors.white : const Color(0xFF0F172A),
+                          ),
+                        ),
+                        const SizedBox(height: 12),
+
+                        // CARD BAHASA (DENGAN GRADASI BIRU MUDA)
+                        _pengaturanCard(
+                          icon: Icons.language_rounded,
+                          title: tr("Bahasa", "Language"),
+                          subtitle: selectedLanguage,
+                          onTap: _showLanguageDialog,
+                          isDark: isDark,
+                        ),
+
+                        // CARD MODE GELAP (DENGAN GRADASI BIRU MUDA & SWITCH)
+                        _pengaturanCard(
+                          icon: Icons.nightlight_round,
+                          title: tr("Mode Gelap", "Dark Mode"),
+                          subtitle: isDark
+                              ? tr("Mode gelap sedang aktif", "Dark mode is currently active")
+                              : tr("Aktifkan tema tampilan gelap", "Enable dark display theme"),
+                          onTap: () {
+                            final newVal = !ThemeService.isDarkMode;
+                            ThemeService.toggleTheme(newVal);
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: Text(
+                                  newVal
+                                      ? tr("Mode Gelap diaktifkan", "Dark Mode enabled")
+                                      : tr("Mode Terang diaktifkan", "Light Mode enabled"),
+                                ),
+                                duration: const Duration(seconds: 1),
+                                backgroundColor: const Color(0xFF0098B9),
+                                behavior: SnackBarBehavior.floating,
+                              ),
+                            );
+                          },
+                          trailing: Switch.adaptive(
+                            value: isDark,
+                            activeTrackColor: const Color(0xFF0098B9),
+                            activeThumbColor: Colors.white,
+                            onChanged: (val) {
+                              ThemeService.toggleTheme(val);
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content: Text(
+                                    val
+                                        ? tr("Mode Gelap diaktifkan", "Dark Mode enabled")
+                                        : tr("Mode Terang diaktifkan", "Light Mode enabled"),
+                                  ),
+                                  duration: const Duration(seconds: 1),
+                                  backgroundColor: const Color(0xFF0098B9),
+                                  behavior: SnackBarBehavior.floating,
+                                ),
+                              );
+                            },
+                          ),
+                          isDark: isDark,
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+              bottomNavigationBar: _buildBottomNav(context, isDark: isDark),
+            );
+          },
         );
       },
     );
@@ -782,13 +821,13 @@ class _PengaturanPageState extends State<PengaturanPage> {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceAround,
         children: [
-          _navItem(context, Icons.home_outlined, "Home", 0, isDark: isDark),
-          _navItem(context, Icons.favorite_border, "Skrining", 1,
+          _navItem(context, Icons.home_outlined, tr("Home", "Home"), 0, isDark: isDark),
+          _navItem(context, Icons.favorite_border, tr("Skrining", "Screening"), 1,
               isDark: isDark),
-          _navItem(context, Icons.person_outline, "Dokter", 2, isDark: isDark),
-          _navItem(context, Icons.description_outlined, "Riwayat", 3,
+          _navItem(context, Icons.person_outline, tr("Dokter", "Doctors"), 2, isDark: isDark),
+          _navItem(context, Icons.description_outlined, tr("Riwayat", "History"), 3,
               isDark: isDark),
-          _navItem(context, Icons.person_rounded, "Profil", 4,
+          _navItem(context, Icons.person_rounded, tr("Profil", "Profile"), 4,
               active: true, isDark: isDark),
         ],
       ),

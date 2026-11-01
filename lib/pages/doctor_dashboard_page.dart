@@ -243,54 +243,6 @@ class _DoctorDashboardPageState extends State<DoctorDashboardPage> {
                     _pickPhoto(ImageSource.camera);
                   },
                 ),
-                const SizedBox(height: 6),
-                ListTile(
-                  leading: Container(
-                    padding: const EdgeInsets.all(10),
-                    decoration: BoxDecoration(
-                      color: isDark
-                          ? const Color(0xFF334155)
-                          : const Color(0xFFF1F5F9),
-                      shape: BoxShape.circle,
-                    ),
-                    child: const Icon(
-                      Icons.refresh_rounded,
-                      color: Color(0xFF64748B),
-                      size: 22,
-                    ),
-                  ),
-                  title: Text(
-                    "Kembalikan ke Foto Bawaan",
-                    style: TextStyle(
-                      fontWeight: FontWeight.w600,
-                      fontSize: 14.5,
-                      color: isDark ? Colors.white : const Color(0xFF0F172A),
-                    ),
-                  ),
-                  onTap: () async {
-                    final messenger = ScaffoldMessenger.of(context);
-                    Navigator.pop(context);
-                    const defaultPhoto = 'assets/images/dokter_nurlitta.jpg';
-                    final uid = _doctorProfile?['uid'] ?? FirebaseAuth.instance.currentUser?.uid;
-                    if (uid != null) {
-                      await DoctorService.instance.updateDoctorPhoto(uid: uid, photoData: defaultPhoto);
-                    }
-                    if (mounted) {
-                      setState(() {
-                        if (_doctorProfile != null) {
-                          _doctorProfile!['foto'] = defaultPhoto;
-                        }
-                      });
-                      messenger.showSnackBar(
-                        const SnackBar(
-                          content: Text("Foto profil dikembalikan ke default"),
-                          backgroundColor: Color(0xFF0284C7),
-                          behavior: SnackBarBehavior.floating,
-                        ),
-                      );
-                    }
-                  },
-                ),
               ],
             ),
           ),
@@ -350,13 +302,20 @@ class _DoctorDashboardPageState extends State<DoctorDashboardPage> {
     }
   }
 
-  /// Sheet Modal Lengkap untuk Edit Profil Dokter (Nama, SIP, Spesialis, Lokasi, Telepon, Bio)
+  /// Sheet Modal Lengkap untuk Edit Profil Dokter (Nama, Jenis Kelamin, SIP, Spesialis, Lokasi, Telepon, Bio)
   void _showEditDoctorProfileSheet() {
     final isDark = ThemeService.isDarkMode;
 
     final namaCtrl = TextEditingController(
       text: _doctorProfile?['nama'] ?? 'dr. Dokter HeartCare',
     );
+    String selectedJenisKelamin =
+        (_doctorProfile?['jenisKelamin'] ?? _doctorProfile?['gender'] ?? 'Laki-laki')
+            .toString();
+    if (selectedJenisKelamin != 'Perempuan') {
+      selectedJenisKelamin = 'Laki-laki';
+    }
+
     final sipCtrl = TextEditingController(
       text: _doctorProfile?['sip'] ?? 'SIP-2026/01/9921',
     );
@@ -387,229 +346,394 @@ class _DoctorDashboardPageState extends State<DoctorDashboardPage> {
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
       builder: (context) {
-        return Container(
-          padding: EdgeInsets.only(
-            left: 20,
-            right: 20,
-            top: 16,
-            bottom: MediaQuery.of(context).viewInsets.bottom + 22,
-          ),
-          decoration: BoxDecoration(
-            color: isDark ? const Color(0xFF1E293B) : Colors.white,
-            borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
-          ),
-          child: SingleChildScrollView(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Center(
-                  child: Container(
-                    width: 42,
-                    height: 4,
-                    decoration: BoxDecoration(
-                      color: isDark
-                          ? const Color(0xFF475569)
-                          : const Color(0xFFCBD5E1),
-                      borderRadius: BorderRadius.circular(4),
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 16),
-                Row(
+        return StatefulBuilder(
+          builder: (context, setSheetState) {
+            return Container(
+              padding: EdgeInsets.only(
+                left: 20,
+                right: 20,
+                top: 16,
+                bottom: MediaQuery.of(context).viewInsets.bottom + 22,
+              ),
+              decoration: BoxDecoration(
+                color: isDark ? const Color(0xFF1E293B) : Colors.white,
+                borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+              ),
+              child: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Container(
-                      width: 40,
-                      height: 40,
-                      decoration: BoxDecoration(
-                        gradient: const LinearGradient(
-                          colors: [Color(0xFF0EA5E9), Color(0xFF0284C7)],
+                    Center(
+                      child: Container(
+                        width: 42,
+                        height: 4,
+                        decoration: BoxDecoration(
+                          color: isDark
+                              ? const Color(0xFF475569)
+                              : const Color(0xFFCBD5E1),
+                          borderRadius: BorderRadius.circular(4),
                         ),
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: const Icon(
-                        Icons.medical_information_rounded,
-                        color: Colors.white,
-                        size: 22,
                       ),
                     ),
-                    const SizedBox(width: 12),
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
+                    const SizedBox(height: 16),
+                    Row(
                       children: [
-                        Text(
-                          "Edit Profil & SIP Dokter",
-                          style: TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.bold,
-                            color: isDark ? Colors.white : const Color(0xFF0F172A),
+                        Container(
+                          width: 40,
+                          height: 40,
+                          decoration: BoxDecoration(
+                            gradient: const LinearGradient(
+                              colors: [Color(0xFF0EA5E9), Color(0xFF0284C7)],
+                            ),
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: const Icon(
+                            Icons.medical_information_rounded,
+                            color: Colors.white,
+                            size: 22,
                           ),
                         ),
-                        const SizedBox(height: 2),
-                        Text(
-                          "Perbarui nama, nomor SIP, dan data praktik",
-                          style: TextStyle(
-                            fontSize: 11.5,
-                            color: isDark
-                                ? const Color(0xFF94A3B8)
-                                : const Color(0xFF64748B),
-                          ),
+                        const SizedBox(width: 12),
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              "Edit Profil & SIP Dokter",
+                              style: TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
+                                color: isDark ? Colors.white : const Color(0xFF0F172A),
+                              ),
+                            ),
+                            const SizedBox(height: 2),
+                            Text(
+                              "Perbarui nama, jenis kelamin, nomor SIP, dan data praktik",
+                              style: TextStyle(
+                                fontSize: 11.5,
+                                color: isDark
+                                    ? const Color(0xFF94A3B8)
+                                    : const Color(0xFF64748B),
+                              ),
+                            ),
+                          ],
                         ),
                       ],
                     ),
+                    const SizedBox(height: 18),
+
+                    _inputField(
+                      "Nama Lengkap Dokter",
+                      namaCtrl,
+                      hint: "Contoh: dr. Valent Pratama, Sp.JP",
+                      helper: "Gelar dr. akan otomatis disesuaikan",
+                      isDark: isDark,
+                    ),
+
+                    // PILIHAN JENIS KELAMIN
+                    Padding(
+                      padding: const EdgeInsets.only(bottom: 12),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            "Jenis Kelamin",
+                            style: TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w600,
+                              color: isDark
+                                  ? const Color(0xFFCBD5E1)
+                                  : const Color(0xFF334155),
+                            ),
+                          ),
+                          const SizedBox(height: 6),
+                          Row(
+                            children: [
+                              Expanded(
+                                child: InkWell(
+                                  onTap: () {
+                                    setSheetState(() {
+                                      selectedJenisKelamin = 'Laki-laki';
+                                    });
+                                  },
+                                  borderRadius: BorderRadius.circular(12),
+                                  child: Container(
+                                    padding: const EdgeInsets.symmetric(vertical: 10),
+                                    decoration: BoxDecoration(
+                                      color: selectedJenisKelamin == 'Laki-laki'
+                                          ? const Color(0xFF0284C7)
+                                              .withValues(alpha: 0.12)
+                                          : (isDark
+                                              ? const Color(0xFF0F172A)
+                                              : const Color(0xFFF8FAFC)),
+                                      borderRadius: BorderRadius.circular(12),
+                                      border: Border.all(
+                                        color: selectedJenisKelamin == 'Laki-laki'
+                                            ? const Color(0xFF0284C7)
+                                            : (isDark
+                                                ? const Color(0xFF334155)
+                                                : const Color(0xFFCBD5E1)),
+                                        width: selectedJenisKelamin == 'Laki-laki'
+                                            ? 1.8
+                                            : 1,
+                                      ),
+                                    ),
+                                    child: Row(
+                                      mainAxisAlignment: MainAxisAlignment.center,
+                                      children: [
+                                        Icon(
+                                          Icons.male_rounded,
+                                          size: 18,
+                                          color: selectedJenisKelamin == 'Laki-laki'
+                                              ? const Color(0xFF0284C7)
+                                              : (isDark
+                                                  ? const Color(0xFF94A3B8)
+                                                  : const Color(0xFF64748B)),
+                                        ),
+                                        const SizedBox(width: 6),
+                                        Text(
+                                          'Laki-laki',
+                                          style: TextStyle(
+                                            fontSize: 12.5,
+                                            fontWeight:
+                                                selectedJenisKelamin == 'Laki-laki'
+                                                    ? FontWeight.bold
+                                                    : FontWeight.w500,
+                                            color: selectedJenisKelamin == 'Laki-laki'
+                                                ? const Color(0xFF0284C7)
+                                                : (isDark
+                                                    ? Colors.white
+                                                    : const Color(0xFF0F172A)),
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(width: 10),
+                              Expanded(
+                                child: InkWell(
+                                  onTap: () {
+                                    setSheetState(() {
+                                      selectedJenisKelamin = 'Perempuan';
+                                    });
+                                  },
+                                  borderRadius: BorderRadius.circular(12),
+                                  child: Container(
+                                    padding: const EdgeInsets.symmetric(vertical: 10),
+                                    decoration: BoxDecoration(
+                                      color: selectedJenisKelamin == 'Perempuan'
+                                          ? const Color(0xFFEC4899)
+                                              .withValues(alpha: 0.12)
+                                          : (isDark
+                                              ? const Color(0xFF0F172A)
+                                              : const Color(0xFFF8FAFC)),
+                                      borderRadius: BorderRadius.circular(12),
+                                      border: Border.all(
+                                        color: selectedJenisKelamin == 'Perempuan'
+                                            ? const Color(0xFFEC4899)
+                                            : (isDark
+                                                ? const Color(0xFF334155)
+                                                : const Color(0xFFCBD5E1)),
+                                        width: selectedJenisKelamin == 'Perempuan'
+                                            ? 1.8
+                                            : 1,
+                                      ),
+                                    ),
+                                    child: Row(
+                                      mainAxisAlignment: MainAxisAlignment.center,
+                                      children: [
+                                        Icon(
+                                          Icons.female_rounded,
+                                          size: 18,
+                                          color: selectedJenisKelamin == 'Perempuan'
+                                              ? const Color(0xFFEC4899)
+                                              : (isDark
+                                                  ? const Color(0xFF94A3B8)
+                                                  : const Color(0xFF64748B)),
+                                        ),
+                                        const SizedBox(width: 6),
+                                        Text(
+                                          'Perempuan',
+                                          style: TextStyle(
+                                            fontSize: 12.5,
+                                            fontWeight:
+                                                selectedJenisKelamin == 'Perempuan'
+                                                    ? FontWeight.bold
+                                                    : FontWeight.w500,
+                                            color: selectedJenisKelamin == 'Perempuan'
+                                                ? const Color(0xFFEC4899)
+                                                : (isDark
+                                                    ? Colors.white
+                                                    : const Color(0xFF0F172A)),
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ),
+
+                    _inputField(
+                      "Nomor SIP yang Berlaku",
+                      sipCtrl,
+                      hint: "Contoh: SIP-9921/2026 atau 1823/SIP/2021",
+                      helper: "Pastikan nomor SIP resmi dan masih aktif",
+                      isDark: isDark,
+                    ),
+                    _inputField(
+                      "Spesialisasi",
+                      spesialisCtrl,
+                      hint: "Contoh: Spesialis Jantung & Pembuluh Darah",
+                      isDark: isDark,
+                    ),
+                    _inputField(
+                      "Lokasi / Rumah Sakit Praktik",
+                      lokasiCtrl,
+                      hint: "Contoh: Klinik Jantung HeartCare / RS Jantung",
+                      isDark: isDark,
+                    ),
+                    _inputField(
+                      "Pengalaman Kerja",
+                      pengalamanCtrl,
+                      hint: "Contoh: 10 tahun",
+                      isDark: isDark,
+                    ),
+                    _inputField(
+                      "No. Telepon / WhatsApp",
+                      teleponCtrl,
+                      hint: "Contoh: +62 812-3456-7890",
+                      keyboardType: TextInputType.phone,
+                      isDark: isDark,
+                    ),
+                    _inputField(
+                      "Tentang Dokter (Bio & Deskripsi)",
+                      tentangCtrl,
+                      hint: "Deskripsi singkat profil dan keahlian Anda...",
+                      maxLines: 3,
+                      isDark: isDark,
+                    ),
+
+                    const SizedBox(height: 16),
+
+                    // TOMBOL SIMPAN
+                    Container(
+                      width: double.infinity,
+                      height: 48,
+                      decoration: BoxDecoration(
+                        gradient: const LinearGradient(
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                          colors: [Color(0xFF0EA5E9), Color(0xFF0284C7)],
+                        ),
+                        borderRadius: BorderRadius.circular(14),
+                        boxShadow: [
+                          BoxShadow(
+                            color: const Color(0xFF0284C7).withValues(alpha: 0.35),
+                            blurRadius: 8,
+                            offset: const Offset(0, 3),
+                          ),
+                        ],
+                      ),
+                      child: ElevatedButton(
+                        onPressed: () async {
+                          final uid = _doctorProfile?['uid'] ??
+                              FirebaseAuth.instance.currentUser?.uid;
+                          if (uid == null || uid.isEmpty) {
+                            Navigator.pop(context);
+                            return;
+                          }
+
+                          final messenger = ScaffoldMessenger.of(context);
+                          final nav = Navigator.of(context);
+
+                          final success =
+                              await DoctorService.instance.updateDoctorProfile(
+                            uid: uid,
+                            nama: namaCtrl.text,
+                            sip: sipCtrl.text,
+                            spesialis: spesialisCtrl.text,
+                            lokasi: lokasiCtrl.text,
+                            pengalaman: pengalamanCtrl.text,
+                            telepon: teleponCtrl.text,
+                            tentang: tentangCtrl.text,
+                            jenisKelamin: selectedJenisKelamin,
+                          );
+
+                          nav.pop();
+                          if (mounted) {
+                            if (success) {
+                              setState(() {
+                                if (_doctorProfile != null) {
+                                  _doctorProfile!['nama'] = namaCtrl.text.trim();
+                                  _doctorProfile!['sip'] = sipCtrl.text.trim();
+                                  _doctorProfile!['spesialis'] =
+                                      spesialisCtrl.text.trim();
+                                  _doctorProfile!['lokasi'] =
+                                      lokasiCtrl.text.trim();
+                                  _doctorProfile!['pengalaman'] =
+                                      pengalamanCtrl.text.trim();
+                                  _doctorProfile!['telepon'] =
+                                      teleponCtrl.text.trim();
+                                  _doctorProfile!['noWa'] =
+                                      teleponCtrl.text.trim();
+                                  _doctorProfile!['whatsapp'] =
+                                      teleponCtrl.text.trim();
+                                  _doctorProfile!['tentang'] =
+                                      tentangCtrl.text.trim();
+                                  _doctorProfile!['jenisKelamin'] =
+                                      selectedJenisKelamin;
+                                }
+                              });
+                              await _loadDoctorProfile();
+                              messenger.showSnackBar(
+                                const SnackBar(
+                                  content: Text(
+                                    "Profil dokter berhasil diperbarui!",
+                                  ),
+                                  backgroundColor: Color(0xFF10B981),
+                                  behavior: SnackBarBehavior.floating,
+                                ),
+                              );
+                            } else {
+                              messenger.showSnackBar(
+                                const SnackBar(
+                                  content: Text("Gagal memperbarui profil dokter."),
+                                  backgroundColor: Color(0xFFEF4444),
+                                  behavior: SnackBarBehavior.floating,
+                                ),
+                              );
+                            }
+                          }
+                        },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.transparent,
+                          foregroundColor: Colors.white,
+                          shadowColor: Colors.transparent,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(14),
+                          ),
+                        ),
+                        child: const Text(
+                          "Simpan Perubahan Profil",
+                          style: TextStyle(
+                            fontSize: 14.5,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                    ),
                   ],
                 ),
-                const SizedBox(height: 18),
-
-                _inputField(
-                  "Nama Lengkap Dokter",
-                  namaCtrl,
-                  hint: "Contoh: dr. Valent Pratama, Sp.JP",
-                  helper: "Gelar dr. akan otomatis disesuaikan",
-                  isDark: isDark,
-                ),
-                _inputField(
-                  "Nomor SIP yang Berlaku",
-                  sipCtrl,
-                  hint: "Contoh: SIP-9921/2026 atau 1823/SIP/2021",
-                  helper: "Pastikan nomor SIP resmi dan masih aktif",
-                  isDark: isDark,
-                ),
-                _inputField(
-                  "Spesialisasi",
-                  spesialisCtrl,
-                  hint: "Contoh: Spesialis Jantung & Pembuluh Darah",
-                  isDark: isDark,
-                ),
-                _inputField(
-                  "Lokasi / Rumah Sakit Praktik",
-                  lokasiCtrl,
-                  hint: "Contoh: Klinik Jantung HeartCare / RS Jantung",
-                  isDark: isDark,
-                ),
-                _inputField(
-                  "Pengalaman Kerja",
-                  pengalamanCtrl,
-                  hint: "Contoh: 10 tahun",
-                  isDark: isDark,
-                ),
-                _inputField(
-                  "No. Telepon / WhatsApp",
-                  teleponCtrl,
-                  hint: "Contoh: +62 812-3456-7890",
-                  keyboardType: TextInputType.phone,
-                  isDark: isDark,
-                ),
-                _inputField(
-                  "Tentang Dokter (Bio & Deskripsi)",
-                  tentangCtrl,
-                  hint: "Deskripsi singkat profil dan keahlian Anda...",
-                  maxLines: 3,
-                  isDark: isDark,
-                ),
-
-                const SizedBox(height: 16),
-
-                // TOMBOL SIMPAN
-                Container(
-                  width: double.infinity,
-                  height: 48,
-                  decoration: BoxDecoration(
-                    gradient: const LinearGradient(
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                      colors: [Color(0xFF0EA5E9), Color(0xFF0284C7)],
-                    ),
-                    borderRadius: BorderRadius.circular(14),
-                    boxShadow: [
-                      BoxShadow(
-                        color: const Color(0xFF0284C7).withValues(alpha: 0.35),
-                        blurRadius: 8,
-                        offset: const Offset(0, 3),
-                      ),
-                    ],
-                  ),
-                  child: ElevatedButton(
-                    onPressed: () async {
-                      final uid = _doctorProfile?['uid'] ??
-                          FirebaseAuth.instance.currentUser?.uid;
-                      if (uid == null || uid.isEmpty) {
-                        Navigator.pop(context);
-                        return;
-                      }
-
-                      final messenger = ScaffoldMessenger.of(context);
-                      final nav = Navigator.of(context);
-
-                      final success =
-                          await DoctorService.instance.updateDoctorProfile(
-                        uid: uid,
-                        nama: namaCtrl.text,
-                        sip: sipCtrl.text,
-                        spesialis: spesialisCtrl.text,
-                        lokasi: lokasiCtrl.text,
-                        pengalaman: pengalamanCtrl.text,
-                        telepon: teleponCtrl.text,
-                        tentang: tentangCtrl.text,
-                      );
-
-                      nav.pop();
-                      if (mounted) {
-                        if (success) {
-                          setState(() {
-                            if (_doctorProfile != null) {
-                              _doctorProfile!['nama'] = namaCtrl.text.trim();
-                              _doctorProfile!['sip'] = sipCtrl.text.trim();
-                              _doctorProfile!['spesialis'] = spesialisCtrl.text.trim();
-                              _doctorProfile!['lokasi'] = lokasiCtrl.text.trim();
-                              _doctorProfile!['pengalaman'] = pengalamanCtrl.text.trim();
-                              _doctorProfile!['telepon'] = teleponCtrl.text.trim();
-                              _doctorProfile!['noWa'] = teleponCtrl.text.trim();
-                              _doctorProfile!['whatsapp'] = teleponCtrl.text.trim();
-                              _doctorProfile!['tentang'] = tentangCtrl.text.trim();
-                            }
-                          });
-                          await _loadDoctorProfile();
-                          messenger.showSnackBar(
-                            const SnackBar(
-                              content: Text(
-                                "Profil dan nomor WhatsApp dokter berhasil diperbarui!",
-                              ),
-                              backgroundColor: Color(0xFF10B981),
-                              behavior: SnackBarBehavior.floating,
-                            ),
-                          );
-                        } else {
-                          messenger.showSnackBar(
-                            const SnackBar(
-                              content: Text("Gagal memperbarui profil dokter."),
-                              backgroundColor: Color(0xFFEF4444),
-                              behavior: SnackBarBehavior.floating,
-                            ),
-                          );
-                        }
-                      }
-                    },
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.transparent,
-                      foregroundColor: Colors.white,
-                      shadowColor: Colors.transparent,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(14),
-                      ),
-                    ),
-                    child: const Text(
-                      "Simpan Perubahan Profil",
-                      style: TextStyle(
-                        fontSize: 14.5,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
+              ),
+            );
+          },
         );
       },
     );
@@ -686,424 +810,731 @@ class _DoctorDashboardPageState extends State<DoctorDashboardPage> {
   @override
   Widget build(BuildContext context) {
     final isDark = ThemeService.isDarkMode;
-    final doctorName = _doctorProfile?['nama'] ?? 'dr. Dokter HeartCare';
+    final doctorName = _doctorProfile?['nama'] ??
+        _doctorProfile?['name'] ??
+        FirebaseAuth.instance.currentUser?.displayName ??
+        'dr. Dokter HeartCare';
     final doctorSpecialty =
         _doctorProfile?['spesialis'] ?? 'Spesialis Jantung & Pembuluh Darah';
     final doctorPhoto =
-        _doctorProfile?['foto'] ?? 'assets/images/dokter_nurlitta.jpg';
+        _doctorProfile?['foto'] ?? '';
     final doctorSip = _doctorProfile?['sip'] ?? 'SIP-2026/01/9921';
     final doctorLokasi = _doctorProfile?['lokasi'] ?? 'Klinik Jantung HeartCare';
     final doctorPengalaman = _doctorProfile?['pengalaman'] ?? '10 tahun';
+    final doctorJenisKelamin = (_doctorProfile?['jenisKelamin'] ??
+            _doctorProfile?['gender'] ??
+            'Laki-laki')
+        .toString();
     final doctorTelepon = (_doctorProfile?['telepon'] ??
             _doctorProfile?['noWa'] ??
             _doctorProfile?['whatsapp'] ??
             '')
         .toString()
         .trim();
-    final doctorUid = _doctorProfile?['uid'];
+    final doctorUid = _doctorProfile?['uid'] ??
+        _doctorProfile?['id'] ??
+        FirebaseAuth.instance.currentUser?.uid;
 
     return Scaffold(
       backgroundColor:
           isDark ? const Color(0xFF0F172A) : const Color(0xFFF8FAFC),
       appBar: AppBar(
-        backgroundColor:
-            isDark ? const Color(0xFF1E293B) : const Color(0xFF0284C7),
+        backgroundColor: Colors.transparent,
         elevation: 0,
+        scrolledUnderElevation: 0,
         titleSpacing: 16,
-        title: const Row(
+        title: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(Icons.health_and_safety_rounded, color: Colors.white, size: 20),
-            SizedBox(width: 8),
-            Flexible(
-              child: Text(
-                'Portal Dokter',
-                overflow: TextOverflow.ellipsis,
-                style: TextStyle(
-                  color: Colors.white,
-                  fontWeight: FontWeight.bold,
-                  fontSize: 17,
+            Container(
+              padding: const EdgeInsets.all(7),
+              decoration: BoxDecoration(
+                gradient: const LinearGradient(
+                  colors: [Color(0xFF38BDF8), Color(0xFF0284C7)],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
                 ),
+                borderRadius: BorderRadius.circular(10),
+                boxShadow: [
+                  BoxShadow(
+                    color: const Color(0xFF0284C7).withValues(alpha: 0.25),
+                    blurRadius: 6,
+                    offset: const Offset(0, 2),
+                  ),
+                ],
+              ),
+              child: const Icon(
+                Icons.health_and_safety_rounded,
+                color: Colors.white,
+                size: 19,
+              ),
+            ),
+            const SizedBox(width: 10),
+            Text(
+              'Portal Dokter',
+              style: TextStyle(
+                color: isDark ? Colors.white : const Color(0xFF0F172A),
+                fontWeight: FontWeight.w800,
+                fontSize: 18,
+                letterSpacing: -0.3,
               ),
             ),
           ],
         ),
         actions: [
-          IconButton(
-            tooltip: 'Mode Pasien',
-            icon: const Icon(Icons.swap_horiz_rounded, color: Colors.white),
-            onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => const HomePage()),
-              );
-            },
+          // TOMBOL MODE PASIEN
+          Container(
+            margin: const EdgeInsets.symmetric(vertical: 8),
+            decoration: BoxDecoration(
+              color: isDark
+                  ? const Color(0xFF1E293B).withValues(alpha: 0.8)
+                  : Colors.white.withValues(alpha: 0.95),
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(
+                color: isDark
+                    ? const Color(0xFF334155)
+                    : const Color(0xFFBAE6FD),
+                width: 1.2,
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: const Color(0xFF0284C7).withValues(alpha: 0.06),
+                  blurRadius: 6,
+                  offset: const Offset(0, 2),
+                ),
+              ],
+            ),
+            child: Material(
+              color: Colors.transparent,
+              child: InkWell(
+                borderRadius: BorderRadius.circular(12),
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => const HomePage()),
+                  );
+                },
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(
+                        Icons.swap_horiz_rounded,
+                        color: isDark
+                            ? const Color(0xFF38BDF8)
+                            : const Color(0xFF0284C7),
+                        size: 18,
+                      ),
+                      const SizedBox(width: 4),
+                      Text(
+                        'Mode Pasien',
+                        style: TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w700,
+                          color: isDark
+                              ? const Color(0xFF38BDF8)
+                              : const Color(0xFF0284C7),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
           ),
-          IconButton(
-            tooltip: 'Keluar',
-            icon: const Icon(Icons.logout_rounded, color: Colors.white),
-            onPressed: _showLogoutDialog,
+          const SizedBox(width: 8),
+          // TOMBOL KELUAR
+          Container(
+            margin: const EdgeInsets.only(top: 8, bottom: 8, right: 16),
+            decoration: BoxDecoration(
+              color: isDark
+                  ? const Color(0xFF3B1219).withValues(alpha: 0.6)
+                  : const Color(0xFFFFF1F2),
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(
+                color: isDark ? const Color(0xFF881337) : const Color(0xFFFECDD3),
+                width: 1.2,
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: const Color(0xFFE11D48).withValues(alpha: 0.08),
+                  blurRadius: 6,
+                  offset: const Offset(0, 2),
+                ),
+              ],
+            ),
+            child: Material(
+              color: Colors.transparent,
+              child: InkWell(
+                borderRadius: BorderRadius.circular(12),
+                onTap: _showLogoutDialog,
+                child: const Padding(
+                  padding: EdgeInsets.all(8),
+                  child: Icon(
+                    Icons.logout_rounded,
+                    color: Color(0xFFE11D48),
+                    size: 18,
+                  ),
+                ),
+              ),
+            ),
           ),
         ],
       ),
-      body: _isLoading
-          ? const Center(child: CircularProgressIndicator())
-          : RefreshIndicator(
-              onRefresh: _loadDoctorProfile,
-              child: SingleChildScrollView(
-                physics: const AlwaysScrollableScrollPhysics(),
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    // =========================================================
-                    // KARTU PROFIL UTAMA DOKTER
-                    // =========================================================
-                    Container(
-                      padding: const EdgeInsets.all(16),
-                      decoration: BoxDecoration(
-                        gradient: LinearGradient(
-                          begin: Alignment.topLeft,
-                          end: Alignment.bottomRight,
-                          colors: isDark
-                              ? const [Color(0xFF1E293B), Color(0xFF0F172A)]
-                              : const [Color(0xFF0284C7), Color(0xFF0369A1)],
-                        ),
-                        borderRadius: BorderRadius.circular(18),
-                        boxShadow: [
-                          BoxShadow(
-                            color: const Color(0xFF0284C7).withValues(alpha: 0.3),
-                            blurRadius: 12,
-                            offset: const Offset(0, 4),
-                          ),
-                        ],
-                      ),
-                      child: Column(
-                        children: [
-                          Row(
-                            children: [
-                              // Avatar Dokter dengan Badge Ubah Foto
-                              GestureDetector(
-                                onTap: _showPhotoPickerOptions,
-                                child: Stack(
-                                  children: [
-                                    Container(
-                                      width: 64,
-                                      height: 64,
+      body: Container(
+        width: double.infinity,
+        height: double.infinity,
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: isDark
+                ? const [
+                    Color(0xFF1E293B),
+                    Color(0xFF162032),
+                    Color(0xFF111927),
+                    Color(0xFF0F172A),
+                  ]
+                : const [
+                    Color(0xFFE0F2FE),
+                    Color(0xFFEDF6FD),
+                    Color(0xFFF3F8FD),
+                    Color(0xFFF8FAFC),
+                  ],
+          ),
+        ),
+        child: SafeArea(
+          child: Stack(
+            children: [
+              // Ornamen ambient glow lembut persis seperti Home Page
+              Positioned(
+                top: -40,
+                right: -30,
+                child: Container(
+                  width: 220,
+                  height: 220,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: const Color(0xFF38BDF8)
+                        .withValues(alpha: isDark ? 0.04 : 0.16),
+                  ),
+                ),
+              ),
+              Positioned(
+                top: 260,
+                left: -60,
+                child: Container(
+                  width: 200,
+                  height: 200,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: const Color(0xFF0EA5E9)
+                        .withValues(alpha: isDark ? 0.03 : 0.08),
+                  ),
+                ),
+              ),
+              Positioned(
+                bottom: 120,
+                right: -50,
+                child: Container(
+                  width: 200,
+                  height: 200,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: const Color(0xFF0284C7)
+                        .withValues(alpha: isDark ? 0.03 : 0.06),
+                  ),
+                ),
+              ),
+
+              _isLoading
+                  ? const Center(child: CircularProgressIndicator())
+                  : RefreshIndicator(
+                      onRefresh: _loadDoctorProfile,
+                      child: SingleChildScrollView(
+                        physics: const AlwaysScrollableScrollPhysics(),
+                        padding:
+                            const EdgeInsets.fromLTRB(16, 6, 16, 24),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            // =========================================================
+                            // KARTU PROFIL UTAMA DOKTER (KONSISTEN DENGAN HERO HOME)
+                            // =========================================================
+                            Container(
+                              width: double.infinity,
+                              decoration: BoxDecoration(
+                                gradient: LinearGradient(
+                                  begin: Alignment.topLeft,
+                                  end: Alignment.bottomRight,
+                                  colors: isDark
+                                      ? const [Color(0xFF1E293B), Color(0xFF0F172A)]
+                                      : const [
+                                          Color(0xFF38BDF8),
+                                          Color(0xFF0EA5E9),
+                                          Color(0xFF0284C7),
+                                        ],
+                                ),
+                                borderRadius: BorderRadius.circular(20),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: const Color(0xFF0EA5E9).withValues(alpha: 0.28),
+                                    blurRadius: 16,
+                                    offset: const Offset(0, 6),
+                                  ),
+                                ],
+                              ),
+                              child: Stack(
+                                children: [
+                                  // Background decorative circles
+                                  Positioned(
+                                    right: -25,
+                                    top: -25,
+                                    child: Container(
+                                      width: 140,
+                                      height: 140,
                                       decoration: BoxDecoration(
                                         shape: BoxShape.circle,
-                                        color: const Color(0xFF0369A1),
-                                        border: Border.all(
-                                          color: Colors.white,
-                                          width: 2.2,
-                                        ),
-                                      ),
-                                      clipBehavior: Clip.antiAlias,
-                                      child: DoctorService.buildDoctorImage(
-                                        doctorPhoto,
-                                        width: 64,
-                                        height: 64,
-                                        isDark: isDark,
+                                        color: Colors.white.withValues(alpha: 0.10),
                                       ),
                                     ),
-                                    // BADGE KAMERA
-                                    Positioned(
-                                      left: 0,
-                                      bottom: 0,
-                                      child: Container(
-                                        padding: const EdgeInsets.all(3.5),
-                                        decoration: BoxDecoration(
-                                          color: Colors.black.withValues(alpha: 0.65),
-                                          shape: BoxShape.circle,
-                                          border: Border.all(
-                                            color: Colors.white,
-                                            width: 1.2,
-                                          ),
-                                        ),
-                                        child: const Icon(
-                                          Icons.camera_alt_rounded,
-                                          size: 11,
-                                          color: Colors.white,
-                                        ),
-                                      ),
-                                    ),
-                                    // INDIKATOR STATUS ONLINE / OFFLINE
-                                    Positioned(
-                                      right: 1,
-                                      bottom: 1,
-                                      child: Container(
-                                        width: 15,
-                                        height: 15,
-                                        decoration: BoxDecoration(
-                                          color: _isOnline
-                                              ? const Color(0xFF10B981)
-                                              : const Color(0xFF94A3B8),
-                                          shape: BoxShape.circle,
-                                          border: Border.all(
-                                            color: Colors.white,
-                                            width: 2,
-                                          ),
-                                        ),
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-
-                              const SizedBox(width: 12),
-
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                      doctorName,
-                                      maxLines: 1,
-                                      overflow: TextOverflow.ellipsis,
-                                      style: const TextStyle(
-                                        fontSize: 16,
-                                        fontWeight: FontWeight.bold,
-                                        color: Colors.white,
-                                      ),
-                                    ),
-                                    const SizedBox(height: 3),
-                                    Text(
-                                      doctorSpecialty,
-                                      maxLines: 1,
-                                      overflow: TextOverflow.ellipsis,
-                                      style: const TextStyle(
-                                        fontSize: 12,
-                                        color: Color(0xFFE0F2FE),
-                                      ),
-                                    ),
-                                    const SizedBox(height: 2),
-                                    Text(
-                                      "SIP: $doctorSip",
-                                      maxLines: 1,
-                                      overflow: TextOverflow.ellipsis,
-                                      style: const TextStyle(
-                                        fontSize: 11,
-                                        color: Color(0xFFBAE6FD),
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ],
-                          ),
-                          const SizedBox(height: 12),
-                          const Divider(color: Colors.white24, height: 1),
-                          const SizedBox(height: 10),
-
-                          // STATUS KONSULTASI & TOMBOL EDIT PROFIL
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              // Status online/offline text
-                              Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  Icon(
-                                    _isOnline
-                                        ? Icons.check_circle_rounded
-                                        : Icons.pause_circle_filled_rounded,
-                                    color: _isOnline
-                                        ? const Color(0xFF4ADE80)
-                                        : const Color(0xFFCBD5E1),
-                                    size: 16,
                                   ),
-                                  const SizedBox(width: 6),
-                                  Text(
-                                    _isOnline
-                                        ? "Siap Konsultasi"
-                                        : "Sedang Offline",
-                                    style: const TextStyle(
-                                      color: Colors.white,
-                                      fontSize: 12,
-                                      fontWeight: FontWeight.w600,
+                                  Positioned(
+                                    right: 35,
+                                    bottom: -35,
+                                    child: Container(
+                                      width: 100,
+                                      height: 100,
+                                      decoration: BoxDecoration(
+                                        shape: BoxShape.circle,
+                                        color: Colors.white.withValues(alpha: 0.08),
+                                      ),
+                                    ),
+                                  ),
+
+                                  Padding(
+                                    padding: const EdgeInsets.all(16),
+                                    child: Column(
+                                      children: [
+                                        Row(
+                                          children: [
+                                            // Avatar Dokter dengan Badge Ubah Foto
+                                            GestureDetector(
+                                              onTap: _showPhotoPickerOptions,
+                                              child: Stack(
+                                                children: [
+                                                  Container(
+                                                    width: 66,
+                                                    height: 66,
+                                                    decoration: BoxDecoration(
+                                                      shape: BoxShape.circle,
+                                                      color: Colors.white.withValues(alpha: 0.2),
+                                                      border: Border.all(
+                                                        color: Colors.white,
+                                                        width: 2.2,
+                                                      ),
+                                                      boxShadow: [
+                                                        BoxShadow(
+                                                          color: Colors.black.withValues(alpha: 0.15),
+                                                          blurRadius: 8,
+                                                          offset: const Offset(0, 2),
+                                                        ),
+                                                      ],
+                                                    ),
+                                                    clipBehavior: Clip.antiAlias,
+                                                    child: DoctorService.buildDoctorImage(
+                                                      doctorPhoto,
+                                                      width: 66,
+                                                      height: 66,
+                                                      isDark: isDark,
+                                                    ),
+                                                  ),
+                                                  // BADGE KAMERA
+                                                  Positioned(
+                                                    left: 0,
+                                                    bottom: 0,
+                                                    child: Container(
+                                                      padding: const EdgeInsets.all(4),
+                                                      decoration: BoxDecoration(
+                                                        color: Colors.black.withValues(alpha: 0.65),
+                                                        shape: BoxShape.circle,
+                                                        border: Border.all(
+                                                          color: Colors.white,
+                                                          width: 1.2,
+                                                        ),
+                                                      ),
+                                                      child: const Icon(
+                                                        Icons.camera_alt_rounded,
+                                                        size: 11,
+                                                        color: Colors.white,
+                                                      ),
+                                                    ),
+                                                  ),
+                                                  // INDIKATOR STATUS ONLINE / OFFLINE
+                                                  Positioned(
+                                                    right: 1,
+                                                    bottom: 1,
+                                                    child: Container(
+                                                      width: 15,
+                                                      height: 15,
+                                                      decoration: BoxDecoration(
+                                                        color: _isOnline
+                                                            ? const Color(0xFF10B981)
+                                                            : const Color(0xFF94A3B8),
+                                                        shape: BoxShape.circle,
+                                                        border: Border.all(
+                                                          color: Colors.white,
+                                                          width: 2,
+                                                        ),
+                                                      ),
+                                                    ),
+                                                  ),
+                                                ],
+                                              ),
+                                            ),
+
+                                            const SizedBox(width: 14),
+
+                                            Expanded(
+                                              child: Column(
+                                                crossAxisAlignment: CrossAxisAlignment.start,
+                                                children: [
+                                                  Text(
+                                                    doctorName,
+                                                    maxLines: 1,
+                                                    overflow: TextOverflow.ellipsis,
+                                                    style: const TextStyle(
+                                                      fontSize: 16.5,
+                                                      fontWeight: FontWeight.w800,
+                                                      color: Colors.white,
+                                                      letterSpacing: -0.2,
+                                                    ),
+                                                  ),
+                                                  const SizedBox(height: 3),
+                                                  Text(
+                                                    doctorSpecialty,
+                                                    maxLines: 1,
+                                                    overflow: TextOverflow.ellipsis,
+                                                    style: const TextStyle(
+                                                      fontSize: 12.5,
+                                                      color: Color(0xFFE0F2FE),
+                                                    ),
+                                                  ),
+                                                  const SizedBox(height: 5),
+                                                  Row(
+                                                    children: [
+                                                      Flexible(
+                                                        child: Text(
+                                                          "SIP: $doctorSip",
+                                                          maxLines: 1,
+                                                          overflow: TextOverflow.ellipsis,
+                                                          style: const TextStyle(
+                                                            fontSize: 11,
+                                                            color: Color(0xFFBAE6FD),
+                                                            fontWeight: FontWeight.w600,
+                                                          ),
+                                                        ),
+                                                      ),
+                                                      const SizedBox(width: 8),
+                                                      Container(
+                                                        padding: const EdgeInsets.symmetric(
+                                                          horizontal: 7,
+                                                          vertical: 2,
+                                                        ),
+                                                        decoration: BoxDecoration(
+                                                          color: Colors.white.withValues(alpha: 0.22),
+                                                          borderRadius: BorderRadius.circular(10),
+                                                          border: Border.all(
+                                                            color: Colors.white.withValues(alpha: 0.4),
+                                                            width: 0.8,
+                                                          ),
+                                                        ),
+                                                        child: Row(
+                                                          mainAxisSize: MainAxisSize.min,
+                                                          children: [
+                                                            Icon(
+                                                              doctorJenisKelamin == 'Perempuan'
+                                                                  ? Icons.female_rounded
+                                                                  : Icons.male_rounded,
+                                                              size: 12,
+                                                              color: Colors.white,
+                                                            ),
+                                                            const SizedBox(width: 3),
+                                                            Text(
+                                                              doctorJenisKelamin,
+                                                              style: const TextStyle(
+                                                                fontSize: 10,
+                                                                fontWeight: FontWeight.w700,
+                                                                color: Colors.white,
+                                                              ),
+                                                            ),
+                                                          ],
+                                                        ),
+                                                      ),
+                                                    ],
+                                                  ),
+                                                ],
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                        const SizedBox(height: 14),
+                                        const Divider(color: Colors.white24, height: 1),
+                                        const SizedBox(height: 12),
+
+                                        // STATUS KONSULTASI & TOMBOL EDIT PROFIL
+                                        Row(
+                                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                          children: [
+                                            // Status online/offline text
+                                            Container(
+                                              padding: const EdgeInsets.symmetric(
+                                                horizontal: 9,
+                                                vertical: 4,
+                                              ),
+                                              decoration: BoxDecoration(
+                                                color: Colors.white.withValues(alpha: 0.2),
+                                                borderRadius: BorderRadius.circular(16),
+                                                border: Border.all(
+                                                  color: Colors.white.withValues(alpha: 0.35),
+                                                  width: 0.8,
+                                                ),
+                                              ),
+                                              child: Row(
+                                                mainAxisSize: MainAxisSize.min,
+                                                children: [
+                                                  Icon(
+                                                    _isOnline
+                                                        ? Icons.check_circle_rounded
+                                                        : Icons.pause_circle_filled_rounded,
+                                                    color: _isOnline
+                                                        ? const Color(0xFF4ADE80)
+                                                        : Colors.white70,
+                                                    size: 14,
+                                                  ),
+                                                  const SizedBox(width: 5),
+                                                  Text(
+                                                    _isOnline
+                                                        ? "Siap Konsultasi"
+                                                        : "Sedang Offline",
+                                                    style: const TextStyle(
+                                                      color: Colors.white,
+                                                      fontSize: 11.5,
+                                                      fontWeight: FontWeight.bold,
+                                                    ),
+                                                  ),
+                                                ],
+                                              ),
+                                            ),
+
+                                            // Tombol Edit Profil & Switch Status
+                                            Row(
+                                              mainAxisSize: MainAxisSize.min,
+                                              children: [
+                                                // Tombol Edit Profil
+                                                InkWell(
+                                                  onTap: _showEditDoctorProfileSheet,
+                                                  borderRadius: BorderRadius.circular(20),
+                                                  child: Container(
+                                                    padding: const EdgeInsets.symmetric(
+                                                      horizontal: 10,
+                                                      vertical: 5,
+                                                    ),
+                                                    decoration: BoxDecoration(
+                                                      color: Colors.white,
+                                                      borderRadius: BorderRadius.circular(20),
+                                                      boxShadow: [
+                                                        BoxShadow(
+                                                          color: Colors.black.withValues(alpha: 0.08),
+                                                          blurRadius: 6,
+                                                          offset: const Offset(0, 2),
+                                                        ),
+                                                      ],
+                                                    ),
+                                                    child: const Row(
+                                                      mainAxisSize: MainAxisSize.min,
+                                                      children: [
+                                                        Icon(
+                                                          Icons.edit_rounded,
+                                                          color: Color(0xFF0284C7),
+                                                          size: 13,
+                                                        ),
+                                                        SizedBox(width: 4),
+                                                        Text(
+                                                          "Edit Profil",
+                                                          style: TextStyle(
+                                                            color: Color(0xFF0284C7),
+                                                            fontSize: 11.5,
+                                                            fontWeight: FontWeight.w800,
+                                                          ),
+                                                        ),
+                                                      ],
+                                                    ),
+                                                  ),
+                                                ),
+
+                                                const SizedBox(width: 6),
+
+                                                // Tombol Toggle Online/Offline
+                                                InkWell(
+                                                  onTap: _toggleOnlineStatus,
+                                                  borderRadius: BorderRadius.circular(20),
+                                                  child: Container(
+                                                    padding: const EdgeInsets.symmetric(
+                                                      horizontal: 10,
+                                                      vertical: 5,
+                                                    ),
+                                                    decoration: BoxDecoration(
+                                                      color: _isOnline
+                                                          ? Colors.black.withValues(alpha: 0.22)
+                                                          : const Color(0xFF10B981),
+                                                      borderRadius: BorderRadius.circular(20),
+                                                      border: Border.all(
+                                                        color: Colors.white.withValues(alpha: 0.4),
+                                                        width: 1,
+                                                      ),
+                                                    ),
+                                                    child: Text(
+                                                      _isOnline ? "Ubah Offline" : "Online-kan",
+                                                      style: const TextStyle(
+                                                        color: Colors.white,
+                                                        fontSize: 11.5,
+                                                        fontWeight: FontWeight.bold,
+                                                      ),
+                                                    ),
+                                                  ),
+                                                ),
+                                              ],
+                                            ),
+                                          ],
+                                        ),
+                                      ],
                                     ),
                                   ),
                                 ],
                               ),
+                            ),
 
-                              // Tombol Edit Profil & Switch Status
-                              Row(
-                                mainAxisSize: MainAxisSize.min,
+                            const SizedBox(height: 14),
+
+                            // =========================================================
+                            // DETAIL DATA DOKTER & SIP AKTIF
+                            // =========================================================
+                            Container(
+                              padding: const EdgeInsets.all(15),
+                              decoration: BoxDecoration(
+                                color: isDark ? const Color(0xFF1E293B) : Colors.white,
+                                borderRadius: BorderRadius.circular(18),
+                                border: Border.all(
+                                  color: isDark
+                                      ? const Color(0xFF334155)
+                                      : const Color(0xFFBAE6FD).withValues(alpha: 0.6),
+                                  width: 1.2,
+                                ),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: const Color(0xFF0284C7).withValues(alpha: 0.05),
+                                    blurRadius: 10,
+                                    offset: const Offset(0, 3),
+                                  ),
+                                ],
+                              ),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-                                  // Tombol Edit Profil
-                                  InkWell(
-                                    onTap: _showEditDoctorProfileSheet,
-                                    borderRadius: BorderRadius.circular(20),
-                                    child: Container(
-                                      padding: const EdgeInsets.symmetric(
-                                        horizontal: 9,
-                                        vertical: 4.5,
-                                      ),
-                                      decoration: BoxDecoration(
-                                        color: Colors.white.withValues(alpha: 0.18),
-                                        borderRadius: BorderRadius.circular(20),
-                                        border: Border.all(
-                                          color: Colors.white30,
-                                          width: 1,
-                                        ),
-                                      ),
-                                      child: const Row(
-                                        mainAxisSize: MainAxisSize.min,
+                                  Row(
+                                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                    children: [
+                                      Row(
                                         children: [
-                                          Icon(
-                                            Icons.edit_rounded,
-                                            color: Colors.white,
-                                            size: 12,
+                                          Container(
+                                            padding: const EdgeInsets.all(5),
+                                            decoration: BoxDecoration(
+                                              color: const Color(0xFF0284C7).withValues(alpha: 0.12),
+                                              borderRadius: BorderRadius.circular(8),
+                                            ),
+                                            child: const Icon(
+                                              Icons.badge_rounded,
+                                              size: 16,
+                                              color: Color(0xFF0284C7),
+                                            ),
                                           ),
-                                          SizedBox(width: 4),
+                                          const SizedBox(width: 8),
                                           Text(
-                                            "Edit Profil",
+                                            'Informasi Praktik & SIP',
                                             style: TextStyle(
-                                              color: Colors.white,
-                                              fontSize: 11,
+                                              fontSize: 14,
                                               fontWeight: FontWeight.bold,
+                                              color: isDark
+                                                  ? Colors.white
+                                                  : const Color(0xFF0F172A),
                                             ),
                                           ),
                                         ],
                                       ),
-                                    ),
+                                      GestureDetector(
+                                        onTap: _showEditDoctorProfileSheet,
+                                        child: Text(
+                                          'Perbarui',
+                                          style: TextStyle(
+                                            fontSize: 12.5,
+                                            fontWeight: FontWeight.bold,
+                                            color: isDark
+                                                ? const Color(0xFF38BDF8)
+                                                : const Color(0xFF0284C7),
+                                          ),
+                                        ),
+                                      ),
+                                    ],
                                   ),
-
-                                  const SizedBox(width: 6),
-
-                                  // Tombol Toggle Online/Offline
-                                  InkWell(
-                                    onTap: _toggleOnlineStatus,
-                                    borderRadius: BorderRadius.circular(20),
-                                    child: Container(
-                                      padding: const EdgeInsets.symmetric(
-                                        horizontal: 9,
-                                        vertical: 4.5,
-                                      ),
-                                      decoration: BoxDecoration(
-                                        color: _isOnline
-                                            ? Colors.black.withValues(alpha: 0.22)
-                                            : const Color(0xFF10B981),
-                                        borderRadius: BorderRadius.circular(20),
-                                        border: Border.all(
-                                          color: Colors.white30,
-                                          width: 1,
-                                        ),
-                                      ),
-                                      child: Text(
-                                        _isOnline ? "Ubah Offline" : "Online-kan",
-                                        style: const TextStyle(
-                                          color: Colors.white,
-                                          fontSize: 11,
-                                          fontWeight: FontWeight.bold,
-                                        ),
-                                      ),
-                                    ),
+                                  const SizedBox(height: 12),
+                                  Divider(
+                                    height: 1,
+                                    color: isDark ? const Color(0xFF334155) : const Color(0xFFF1F5F9),
+                                  ),
+                                  const SizedBox(height: 12),
+                                  _infoItem(
+                                    icon: Icons.verified_rounded,
+                                    label: 'Nomor SIP',
+                                    value: doctorSip,
+                                    isDark: isDark,
+                                  ),
+                                  _infoItem(
+                                    icon: doctorJenisKelamin == 'Perempuan'
+                                        ? Icons.female_rounded
+                                        : Icons.male_rounded,
+                                    label: 'Jenis Kelamin',
+                                    value: doctorJenisKelamin,
+                                    isDark: isDark,
+                                  ),
+                                  _infoItem(
+                                    icon: Icons.local_hospital_rounded,
+                                    label: 'Lokasi Praktik',
+                                    value: doctorLokasi,
+                                    isDark: isDark,
+                                  ),
+                                  _infoItem(
+                                    icon: Icons.work_outline_rounded,
+                                    label: 'Pengalaman',
+                                    value: doctorPengalaman,
+                                    isDark: isDark,
+                                  ),
+                                  _infoItem(
+                                    icon: Icons.phone_rounded,
+                                    label: 'Telepon / WhatsApp',
+                                    value: doctorTelepon.isNotEmpty ? doctorTelepon : 'Belum diisi',
+                                    isDark: isDark,
                                   ),
                                 ],
                               ),
-                            ],
-                          ),
-                        ],
-                      ),
-                    ),
+                            ),
 
-                    const SizedBox(height: 14),
+                            const SizedBox(height: 14),
 
-                    // =========================================================
-                    // DETAIL DATA DOKTER & SIP AKTIF
-                    // =========================================================
-                    Container(
-                      padding: const EdgeInsets.all(14),
-                      decoration: BoxDecoration(
-                        color: isDark ? const Color(0xFF1E293B) : Colors.white,
-                        borderRadius: BorderRadius.circular(16),
-                        border: Border.all(
-                          color: isDark
-                              ? const Color(0xFF334155)
-                              : const Color(0xFFE2E8F0),
-                        ),
-                      ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              Row(
-                                children: [
-                                  Icon(
-                                    Icons.badge_rounded,
-                                    size: 18,
-                                    color: isDark
-                                        ? const Color(0xFF38BDF8)
-                                        : const Color(0xFF0284C7),
-                                  ),
-                                  const SizedBox(width: 6),
-                                  Text(
-                                    'Informasi Praktik & SIP',
-                                    style: TextStyle(
-                                      fontSize: 13.5,
-                                      fontWeight: FontWeight.bold,
-                                      color: isDark
-                                          ? Colors.white
-                                          : const Color(0xFF0F172A),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                              GestureDetector(
-                                onTap: _showEditDoctorProfileSheet,
-                                child: Text(
-                                  'Perbarui',
-                                  style: TextStyle(
-                                    fontSize: 12,
-                                    fontWeight: FontWeight.bold,
-                                    color: isDark
-                                        ? const Color(0xFF38BDF8)
-                                        : const Color(0xFF0284C7),
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                          const SizedBox(height: 10),
-                          const Divider(height: 1),
-                          const SizedBox(height: 10),
-                          _infoItem(
-                            icon: Icons.verified_rounded,
-                            label: 'Nomor SIP',
-                            value: doctorSip,
-                            isDark: isDark,
-                          ),
-                          _infoItem(
-                            icon: Icons.local_hospital_rounded,
-                            label: 'Lokasi Praktik',
-                            value: doctorLokasi,
-                            isDark: isDark,
-                          ),
-                          _infoItem(
-                            icon: Icons.work_outline_rounded,
-                            label: 'Pengalaman',
-                            value: doctorPengalaman,
-                            isDark: isDark,
-                          ),
-                          _infoItem(
-                            icon: Icons.phone_rounded,
-                            label: 'Telepon / WhatsApp',
-                            value: doctorTelepon.isNotEmpty ? doctorTelepon : 'Belum diisi',
-                            isDark: isDark,
-                          ),
-                        ],
-                      ),
-                    ),
-
-                    const SizedBox(height: 14),
-
-                    // STATISTIK KILAT
-                    Row(
-                      children: [
+                            // STATISTIK KILAT
+                            Row(
+                              children: [
                         Expanded(
                           child: _statCard(
                             isDark: isDark,
@@ -1474,6 +1905,10 @@ class _DoctorDashboardPageState extends State<DoctorDashboardPage> {
                 ),
               ),
             ),
+            ],
+          ),
+        ),
+      ),
     );
   }
 
@@ -1484,20 +1919,20 @@ class _DoctorDashboardPageState extends State<DoctorDashboardPage> {
     required bool isDark,
   }) {
     return Padding(
-      padding: const EdgeInsets.only(bottom: 8),
+      padding: const EdgeInsets.only(bottom: 9),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Icon(
             icon,
-            size: 15,
-            color: isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B),
+            size: 16,
+            color: isDark ? const Color(0xFF38BDF8) : const Color(0xFF0284C7),
           ),
-          const SizedBox(width: 8),
+          const SizedBox(width: 9),
           Text(
             '$label: ',
             style: TextStyle(
-              fontSize: 12,
+              fontSize: 12.5,
               fontWeight: FontWeight.w600,
               color: isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B),
             ),
@@ -1506,7 +1941,7 @@ class _DoctorDashboardPageState extends State<DoctorDashboardPage> {
             child: Text(
               value,
               style: TextStyle(
-                fontSize: 12,
+                fontSize: 12.5,
                 fontWeight: FontWeight.bold,
                 color: isDark ? Colors.white : const Color(0xFF0F172A),
               ),
@@ -1525,23 +1960,33 @@ class _DoctorDashboardPageState extends State<DoctorDashboardPage> {
     required String value,
   }) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
       decoration: BoxDecoration(
         color: isDark ? const Color(0xFF1E293B) : Colors.white,
-        borderRadius: BorderRadius.circular(14),
+        borderRadius: BorderRadius.circular(16),
         border: Border.all(
-          color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0),
+          color: isDark
+              ? const Color(0xFF334155)
+              : const Color(0xFFBAE6FD).withValues(alpha: 0.6),
+          width: 1.2,
         ),
+        boxShadow: [
+          BoxShadow(
+            color: const Color(0xFF0284C7).withValues(alpha: 0.04),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
       ),
       child: Row(
         children: [
           Container(
-            padding: const EdgeInsets.all(7),
+            padding: const EdgeInsets.all(7.5),
             decoration: BoxDecoration(
               color: color.withValues(alpha: 0.12),
               borderRadius: BorderRadius.circular(10),
             ),
-            child: Icon(icon, color: color, size: 18),
+            child: Icon(icon, color: color, size: 19),
           ),
           const SizedBox(width: 8),
           Expanded(

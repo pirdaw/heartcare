@@ -5,6 +5,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:heartcare/pages/Skrining/screening_input_page.dart';
 import 'package:heartcare/pages/profil_page.dart';
 import 'package:heartcare/services/theme_service.dart';
+import 'package:heartcare/services/language_service.dart';
 import '../services/user_profile_service.dart';
 import '../services/chat_service.dart';
 import '../services/doctor_service.dart';
@@ -1306,77 +1307,82 @@ class _KonsultasiDokterPageState
   // ==========================================================
 
   Widget _bottomNavigation(bool isDark) {
-    return Container(
-      height: 64,
-      decoration: BoxDecoration(
-        color: isDark ? const Color(0xFF0F172A) : Colors.white,
-        border: Border(
-          top: BorderSide(
-            color: isDark ? const Color(0xFF1E293B) : Colors.grey.shade300,
+    return ValueListenableBuilder<String>(
+      valueListenable: LanguageService.languageNotifier,
+      builder: (context, _, _) {
+        return Container(
+          height: 64,
+          decoration: BoxDecoration(
+            color: isDark ? const Color(0xFF0F172A) : Colors.white,
+            border: Border(
+              top: BorderSide(
+                color: isDark ? const Color(0xFF1E293B) : Colors.grey.shade300,
+              ),
+            ),
           ),
-        ),
-      ),
-      child: Row(
-        mainAxisAlignment:
-            MainAxisAlignment.spaceAround,
-        children: [
+          child: Row(
+            mainAxisAlignment:
+                MainAxisAlignment.spaceAround,
+            children: [
 
-          _navItem(
-            isDark,
-            Icons.home_outlined,
-            "Home",
-            false,
-            onTap: _backToHome,
-          ),
+              _navItem(
+                isDark,
+                Icons.home_outlined,
+                tr("Beranda", "Home"),
+                false,
+                onTap: _backToHome,
+              ),
 
-          _navItem(
-            isDark,
-            Icons.favorite_border,
-            "Skrining",
-            false,
-            onTap: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => const ScreeningInputPage(),
-                ),
-              );
-            },
-          ),
+              _navItem(
+                isDark,
+                Icons.favorite_border,
+                tr("Skrining", "Screening"),
+                false,
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const ScreeningInputPage(),
+                    ),
+                  );
+                },
+              ),
 
-          _navItem(
-            isDark,
-            Icons.person_outline,
-            "Dokter",
-            true,
-            onTap: () {
-              Navigator.pop(context);
-            },
-          ),
+              _navItem(
+                isDark,
+                Icons.person_outline,
+                tr("Dokter", "Doctors"),
+                true,
+                onTap: () {
+                  Navigator.pop(context);
+                },
+              ),
 
-          _navItem(
-            isDark,
-            Icons.description_outlined,
-            "Riwayat",
-            false,
-          ),
+              _navItem(
+                isDark,
+                Icons.description_outlined,
+                tr("Riwayat", "History"),
+                false,
+              ),
 
-          _navItem(
-            isDark,
-            Icons.person_outline,
-            "Profil",
-            false,
-            onTap: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => const ProfilPage(),
-                ),
-              );
-            },
+              _navItem(
+                isDark,
+                Icons.person_outline,
+                tr("Profil", "Profile"),
+                false,
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const ProfilPage(),
+                    ),
+                  );
+                },
+              ),
+            ],
           ),
-        ],
-      ),
+        );
+      },
     );
   }
 

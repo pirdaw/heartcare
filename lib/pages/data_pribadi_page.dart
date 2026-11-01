@@ -5,6 +5,7 @@ import 'package:heartcare/pages/riwayat_page.dart';
 import 'package:heartcare/pages/Skrining/screening_input_page.dart';
 import '../services/theme_service.dart';
 import '../services/user_profile_service.dart';
+import '../services/language_service.dart';
 
 class DataPribadiPage extends StatefulWidget {
   const DataPribadiPage({super.key});
@@ -53,9 +54,9 @@ class _DataPribadiPageState extends State<DataPribadiPage> {
         initialDate: initialDate,
         firstDate: DateTime(1900),
         lastDate: now,
-        helpText: 'PILIH TANGGAL LAHIR',
-        confirmText: 'PILIH',
-        cancelText: 'BATAL',
+        helpText: tr('PILIH TANGGAL LAHIR', 'SELECT DATE OF BIRTH'),
+        confirmText: tr('PILIH', 'SELECT'),
+        cancelText: tr('BATAL', 'CANCEL'),
         builder: (context, child) {
           return Theme(
             data: Theme.of(context).copyWith(
@@ -70,10 +71,16 @@ class _DataPribadiPageState extends State<DataPribadiPage> {
         },
       );
       if (picked != null) {
-        const months = [
-          'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni',
-          'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'
-        ];
+        final isEn = LanguageService.isEnglish;
+        final months = isEn
+            ? const [
+                'January', 'February', 'March', 'April', 'May', 'June',
+                'July', 'August', 'September', 'October', 'November', 'December'
+              ]
+            : const [
+                'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni',
+                'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'
+              ];
         ttlCtrl.text = '${picked.day} ${months[picked.month - 1]} ${picked.year}';
       }
     }
@@ -142,7 +149,7 @@ class _DataPribadiPageState extends State<DataPribadiPage> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          "Ubah Data Pribadi",
+                          tr("Ubah Data Pribadi", "Edit Personal Data"),
                           style: TextStyle(
                             fontSize: 16,
                             fontWeight: FontWeight.bold,
@@ -151,7 +158,7 @@ class _DataPribadiPageState extends State<DataPribadiPage> {
                         ),
                         const SizedBox(height: 2),
                         Text(
-                          "Perbarui informasi identitas diri Anda",
+                          tr("Perbarui informasi identitas diri Anda", "Update your personal identity information"),
                           style: TextStyle(
                             fontSize: 11.5,
                             color: isDark
@@ -164,10 +171,10 @@ class _DataPribadiPageState extends State<DataPribadiPage> {
                   ],
                 ),
                 const SizedBox(height: 18),
-                _inputField("Nama Lengkap", namaCtrl, isDark: isDark),
-                _inputField("Jenis Kelamin", jkCtrl, isDark: isDark),
+                _inputField(tr("Nama Lengkap", "Full Name"), namaCtrl, isDark: isDark),
+                _inputField(tr("Jenis Kelamin", "Gender"), jkCtrl, isDark: isDark),
                 _inputField(
-                  "Tempat, Tanggal Lahir",
+                  tr("Tempat, Tanggal Lahir", "Place, Date of Birth"),
                   ttlCtrl,
                   isDark: isDark,
                   suffixIcon: IconButton(
@@ -179,15 +186,15 @@ class _DataPribadiPageState extends State<DataPribadiPage> {
                     onPressed: pickDate,
                   ),
                 ),
-                _inputField("Alamat", alamatCtrl, isDark: isDark),
+                _inputField(tr("Alamat", "Address"), alamatCtrl, isDark: isDark),
                 _inputField(
-                  "No. Telepon",
+                  tr("No. Telepon", "Phone Number"),
                   telpCtrl,
                   isDark: isDark,
                   keyboardType: TextInputType.phone,
                 ),
                 _inputField(
-                  "Email",
+                  tr("Email", "Email"),
                   emailCtrl,
                   isDark: isDark,
                   keyboardType: TextInputType.emailAddress,
@@ -224,9 +231,9 @@ class _DataPribadiPageState extends State<DataPribadiPage> {
                       if (context.mounted) {
                         Navigator.pop(context);
                         ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                            content: Text("Data pribadi berhasil diperbarui & disimpan di Firestore"),
-                            backgroundColor: Color(0xFF0098B9),
+                          SnackBar(
+                            content: Text(tr("Data pribadi berhasil diperbarui", "Personal data updated successfully")),
+                            backgroundColor: const Color(0xFF0098B9),
                           ),
                         );
                       }
@@ -239,9 +246,9 @@ class _DataPribadiPageState extends State<DataPribadiPage> {
                         borderRadius: BorderRadius.circular(14),
                       ),
                     ),
-                    child: const Text(
-                      "Simpan Perubahan",
-                      style: TextStyle(
+                    child: Text(
+                      tr("Simpan Perubahan", "Save Changes"),
+                      style: const TextStyle(
                         fontSize: 14.5,
                         fontWeight: FontWeight.bold,
                       ),
@@ -322,282 +329,287 @@ class _DataPribadiPageState extends State<DataPribadiPage> {
 
   @override
   Widget build(BuildContext context) {
-    return ValueListenableBuilder<ThemeMode>(
-      valueListenable: ThemeService.themeModeNotifier,
-      builder: (context, themeMode, _) {
-        final isDark = themeMode == ThemeMode.dark;
+    return ValueListenableBuilder<String>(
+      valueListenable: LanguageService.languageNotifier,
+      builder: (context, currentLang, _) {
+        return ValueListenableBuilder<ThemeMode>(
+          valueListenable: ThemeService.themeModeNotifier,
+          builder: (context, themeMode, _) {
+            final isDark = themeMode == ThemeMode.dark;
 
-        return Scaffold(
-          backgroundColor:
-              isDark ? const Color(0xFF0F172A) : const Color(0xFFF8FAFC),
-          appBar: AppBar(
-            backgroundColor: Colors.transparent,
-            elevation: 0,
-            leading: Padding(
-              padding: const EdgeInsets.all(8.0),
-              child: Container(
-                decoration: BoxDecoration(
-                  color: isDark ? const Color(0xFF1E293B) : Colors.white,
-                  shape: BoxShape.circle,
-                  border: Border.all(
-                    color: isDark
-                        ? const Color(0xFF334155)
-                        : const Color(0xFFE2E8F0),
-                    width: 1,
-                  ),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withValues(alpha: isDark ? 0.2 : 0.04),
-                      blurRadius: 4,
-                      offset: const Offset(0, 1),
-                    ),
-                  ],
-                ),
-                child: IconButton(
-                  padding: EdgeInsets.zero,
-                  icon: Icon(
-                    Icons.chevron_left_rounded,
-                    color: isDark ? Colors.white : const Color(0xFF0F172A),
-                    size: 28,
-                  ),
-                  onPressed: () => Navigator.pop(context),
-                ),
-              ),
-            ),
-            centerTitle: true,
-            title: Text(
-              "Data Pribadi",
-              style: TextStyle(
-                fontSize: 17,
-                fontWeight: FontWeight.bold,
-                color: isDark ? Colors.white : const Color(0xFF0F172A),
-              ),
-            ),
-          ),
-          body: Container(
-            decoration: BoxDecoration(
-              color: isDark ? const Color(0xFF0F172A) : const Color(0xFFF8FAFC),
-              gradient: LinearGradient(
-                begin: Alignment.topCenter,
-                end: Alignment.bottomCenter,
-                stops: const [0.0, 0.22, 0.6],
-                colors: isDark
-                    ? const [
-                        Color(0xFF1E293B),
-                        Color(0xFF131D2E),
-                        Color(0xFF0F172A),
-                      ]
-                    : const [
-                        Color(0xFFE8F6FA),
-                        Color(0xFFF4FAFC),
-                        Color(0xFFF8FAFC),
+            return Scaffold(
+              backgroundColor:
+                  isDark ? const Color(0xFF0F172A) : const Color(0xFFF8FAFC),
+              appBar: AppBar(
+                backgroundColor: Colors.transparent,
+                elevation: 0,
+                leading: Padding(
+                  padding: const EdgeInsets.all(8.0),
+                  child: Container(
+                    decoration: BoxDecoration(
+                      color: isDark ? const Color(0xFF1E293B) : Colors.white,
+                      shape: BoxShape.circle,
+                      border: Border.all(
+                        color: isDark
+                            ? const Color(0xFF334155)
+                            : const Color(0xFFE2E8F0),
+                        width: 1,
+                      ),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withValues(alpha: isDark ? 0.2 : 0.04),
+                          blurRadius: 4,
+                          offset: const Offset(0, 1),
+                        ),
                       ],
-              ),
-            ),
-            child: SafeArea(
-              child: SingleChildScrollView(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    // KARTU HEADER RINGKASAN DENGAN GRADASI BIRU MUDA
-                    Container(
-                      margin: const EdgeInsets.only(bottom: 20),
-                      padding: const EdgeInsets.all(16),
-                      decoration: BoxDecoration(
-                        gradient: LinearGradient(
-                          begin: Alignment.topLeft,
-                          end: Alignment.bottomRight,
-                          colors: isDark
-                              ? const [
-                                  Color(0xFF1E293B),
-                                  Color(0xFF0E2536),
-                                ]
-                              : const [
-                                  Color(0xFFE2F7FB),
-                                  Color(0xFFC7EBF4),
-                                ],
-                        ),
-                        borderRadius: BorderRadius.circular(16),
-                        border: Border.all(
-                          color: isDark
-                              ? const Color(0xFF1E3A5F)
-                              : const Color(0xFFBCE6F1),
-                          width: 1.2,
-                        ),
-                        boxShadow: [
-                          BoxShadow(
-                            color: (isDark ? Colors.black : const Color(0xFF0098B9))
-                                .withValues(alpha: isDark ? 0.25 : 0.08),
-                            blurRadius: 8,
-                            offset: const Offset(0, 3),
-                          ),
-                        ],
-                      ),
-                      child: Row(
-                        children: [
-                          Container(
-                            width: 48,
-                            height: 48,
-                            decoration: BoxDecoration(
-                              color: isDark ? const Color(0xFF0F172A) : Colors.white,
-                              shape: BoxShape.circle,
-                              boxShadow: [
-                                BoxShadow(
-                                  color: (isDark
-                                          ? Colors.black
-                                          : const Color(0xFF0098B9))
-                                      .withValues(alpha: 0.15),
-                                  blurRadius: 6,
-                                  offset: const Offset(0, 2),
-                                ),
-                              ],
-                            ),
-                            child: const Icon(
-                              Icons.badge_rounded,
-                              color: Color(0xFF0098B9),
-                              size: 26,
-                            ),
-                          ),
-                          const SizedBox(width: 14),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  _profile.nama.isNotEmpty
-                                      ? _profile.nama
-                                      : "Pengguna",
-                                  style: TextStyle(
-                                    fontSize: 15,
-                                    fontWeight: FontWeight.bold,
-                                    color: isDark
-                                        ? Colors.white
-                                        : const Color(0xFF0F172A),
-                                  ),
-                                ),
-                                const SizedBox(height: 3),
-                                Text(
-                                  "Identitas Akun HeartCare Terverifikasi",
-                                  style: TextStyle(
-                                    fontSize: 11.5,
-                                    color: isDark
-                                        ? const Color(0xFF94A3B8)
-                                        : const Color(0xFF0284C7),
-                                    fontWeight: FontWeight.w600,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ],
-                      ),
                     ),
-
-                    Text(
-                      "Informasi Pribadi",
-                      style: TextStyle(
-                        fontSize: 15,
-                        fontWeight: FontWeight.bold,
+                    child: IconButton(
+                      padding: EdgeInsets.zero,
+                      icon: Icon(
+                        Icons.chevron_left_rounded,
                         color: isDark ? Colors.white : const Color(0xFF0F172A),
+                        size: 28,
                       ),
+                      onPressed: () => Navigator.pop(context),
                     ),
-                    const SizedBox(height: 12),
-
-                    // CARD DATA PRIBADI (GRADIENT ACCENT BORDER & CLEAN ROWS)
-                    Container(
-                      decoration: BoxDecoration(
-                        color: isDark ? const Color(0xFF1E293B) : Colors.white,
-                        borderRadius: BorderRadius.circular(16),
-                        border: Border.all(
-                          color: isDark
-                              ? const Color(0xFF334155)
-                              : const Color(0xFFBCE6F1),
-                          width: 1.2,
-                        ),
-                        boxShadow: [
-                          BoxShadow(
-                            color: (isDark ? Colors.black : const Color(0xFF0098B9))
-                                .withValues(alpha: isDark ? 0.2 : 0.05),
-                            blurRadius: 8,
-                            offset: const Offset(0, 2),
+                  ),
+                ),
+                centerTitle: true,
+                title: Text(
+                  tr("Data Pribadi", "Personal Data"),
+                  style: TextStyle(
+                    fontSize: 17,
+                    fontWeight: FontWeight.bold,
+                    color: isDark ? Colors.white : const Color(0xFF0F172A),
+                  ),
+                ),
+              ),
+              body: Container(
+                decoration: BoxDecoration(
+                  color: isDark ? const Color(0xFF0F172A) : const Color(0xFFF8FAFC),
+                  gradient: LinearGradient(
+                    begin: Alignment.topCenter,
+                    end: Alignment.bottomCenter,
+                    stops: const [0.0, 0.22, 0.6],
+                    colors: isDark
+                        ? const [
+                            Color(0xFF1E293B),
+                            Color(0xFF131D2E),
+                            Color(0xFF0F172A),
+                          ]
+                        : const [
+                            Color(0xFFE8F6FA),
+                            Color(0xFFF4FAFC),
+                            Color(0xFFF8FAFC),
+                          ],
+                  ),
+                ),
+                child: SafeArea(
+                  child: SingleChildScrollView(
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        // KARTU HEADER RINGKASAN DENGAN GRADASI BIRU MUDA
+                        Container(
+                          margin: const EdgeInsets.only(bottom: 20),
+                          padding: const EdgeInsets.all(16),
+                          decoration: BoxDecoration(
+                            gradient: LinearGradient(
+                              begin: Alignment.topLeft,
+                              end: Alignment.bottomRight,
+                              colors: isDark
+                                  ? const [
+                                      Color(0xFF1E293B),
+                                      Color(0xFF0E2536),
+                                    ]
+                                  : const [
+                                      Color(0xFFE2F7FB),
+                                      Color(0xFFC7EBF4),
+                                    ],
+                            ),
+                            borderRadius: BorderRadius.circular(16),
+                            border: Border.all(
+                              color: isDark
+                                  ? const Color(0xFF1E3A5F)
+                                  : const Color(0xFFBCE6F1),
+                              width: 1.2,
+                            ),
+                            boxShadow: [
+                              BoxShadow(
+                                color: (isDark ? Colors.black : const Color(0xFF0098B9))
+                                    .withValues(alpha: isDark ? 0.25 : 0.08),
+                                blurRadius: 8,
+                                offset: const Offset(0, 3),
+                              ),
+                            ],
                           ),
-                        ],
-                      ),
-                      child: Column(
-                        children: [
-                          _dataRow("Nama Lengkap", _profile.nama,
-                              isFirst: true, isDark: isDark),
-                          _divider(isDark),
-                          _dataRow("Jenis Kelamin", _profile.jenisKelamin, isDark: isDark),
-                          _divider(isDark),
-                          _dataRow("Tempat, Tanggal Lahir", _profile.ttl, isDark: isDark),
-                          _divider(isDark),
-                          _dataRow("Alamat", _profile.alamat, isDark: isDark),
-                          _divider(isDark),
-                          _dataRow("No. Telepon", _profile.telepon, isDark: isDark),
-                          _divider(isDark),
-                          _dataRow("Email", _profile.email,
-                              isLast: true, isDark: isDark),
-                        ],
-                      ),
-                    ),
-
-                    const SizedBox(height: 24),
-
-                    // TOMBOL UBAH DATA (GRADIENT BUTTON)
-                    Container(
-                      width: double.infinity,
-                      height: 48,
-                      decoration: BoxDecoration(
-                        gradient: const LinearGradient(
-                          begin: Alignment.topLeft,
-                          end: Alignment.bottomRight,
-                          colors: [Color(0xFF0098B9), Color(0xFF0284C7)],
-                        ),
-                        borderRadius: BorderRadius.circular(14),
-                        boxShadow: [
-                          BoxShadow(
-                            color: const Color(0xFF0098B9).withValues(alpha: 0.35),
-                            blurRadius: 8,
-                            offset: const Offset(0, 3),
+                          child: Row(
+                            children: [
+                              Container(
+                                width: 48,
+                                height: 48,
+                                decoration: BoxDecoration(
+                                  color: isDark ? const Color(0xFF0F172A) : Colors.white,
+                                  shape: BoxShape.circle,
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: (isDark
+                                              ? Colors.black
+                                              : const Color(0xFF0098B9))
+                                          .withValues(alpha: 0.15),
+                                      blurRadius: 6,
+                                      offset: const Offset(0, 2),
+                                    ),
+                                  ],
+                                ),
+                                child: const Icon(
+                                  Icons.badge_rounded,
+                                  color: Color(0xFF0098B9),
+                                  size: 26,
+                                ),
+                              ),
+                              const SizedBox(width: 14),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      _profile.nama.isNotEmpty
+                                          ? _profile.nama
+                                          : tr("Pengguna", "User"),
+                                      style: TextStyle(
+                                        fontSize: 15,
+                                        fontWeight: FontWeight.bold,
+                                        color: isDark
+                                            ? Colors.white
+                                            : const Color(0xFF0F172A),
+                                      ),
+                                    ),
+                                    const SizedBox(height: 3),
+                                    Text(
+                                      tr("Identitas Akun HeartCare Terverifikasi", "Verified HeartCare Account Identity"),
+                                      style: TextStyle(
+                                        fontSize: 11.5,
+                                        color: isDark
+                                            ? const Color(0xFF94A3B8)
+                                            : const Color(0xFF0284C7),
+                                        fontWeight: FontWeight.w600,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ],
                           ),
-                        ],
-                      ),
-                      child: ElevatedButton(
-                        onPressed: _showEditSheet,
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.transparent,
-                          foregroundColor: Colors.white,
-                          shadowColor: Colors.transparent,
-                          shape: RoundedRectangleBorder(
+                        ),
+
+                        Text(
+                          tr("Informasi Pribadi", "Personal Information"),
+                          style: TextStyle(
+                            fontSize: 15,
+                            fontWeight: FontWeight.bold,
+                            color: isDark ? Colors.white : const Color(0xFF0F172A),
+                          ),
+                        ),
+                        const SizedBox(height: 12),
+
+                        // CARD DATA PRIBADI (GRADIENT ACCENT BORDER & CLEAN ROWS)
+                        Container(
+                          decoration: BoxDecoration(
+                            color: isDark ? const Color(0xFF1E293B) : Colors.white,
+                            borderRadius: BorderRadius.circular(16),
+                            border: Border.all(
+                              color: isDark
+                                  ? const Color(0xFF334155)
+                                  : const Color(0xFFBCE6F1),
+                              width: 1.2,
+                            ),
+                            boxShadow: [
+                              BoxShadow(
+                                color: (isDark ? Colors.black : const Color(0xFF0098B9))
+                                    .withValues(alpha: isDark ? 0.2 : 0.05),
+                                blurRadius: 8,
+                                offset: const Offset(0, 2),
+                              ),
+                            ],
+                          ),
+                          child: Column(
+                            children: [
+                              _dataRow(tr("Nama Lengkap", "Full Name"), _profile.nama,
+                                  isFirst: true, isDark: isDark),
+                              _divider(isDark),
+                              _dataRow(tr("Jenis Kelamin", "Gender"), _profile.jenisKelamin, isDark: isDark),
+                              _divider(isDark),
+                              _dataRow(tr("Tempat, Tanggal Lahir", "Place, Date of Birth"), _profile.ttl, isDark: isDark),
+                              _divider(isDark),
+                              _dataRow(tr("Alamat", "Address"), _profile.alamat, isDark: isDark),
+                              _divider(isDark),
+                              _dataRow(tr("No. Telepon", "Phone Number"), _profile.telepon, isDark: isDark),
+                              _divider(isDark),
+                              _dataRow(tr("Email", "Email"), _profile.email,
+                                  isLast: true, isDark: isDark),
+                            ],
+                          ),
+                        ),
+
+                        const SizedBox(height: 24),
+
+                        // TOMBOL UBAH DATA (GRADIENT BUTTON)
+                        Container(
+                          width: double.infinity,
+                          height: 48,
+                          decoration: BoxDecoration(
+                            gradient: const LinearGradient(
+                              begin: Alignment.topLeft,
+                              end: Alignment.bottomRight,
+                              colors: [Color(0xFF0098B9), Color(0xFF0284C7)],
+                            ),
                             borderRadius: BorderRadius.circular(14),
+                            boxShadow: [
+                              BoxShadow(
+                                color: const Color(0xFF0098B9).withValues(alpha: 0.35),
+                                blurRadius: 8,
+                                offset: const Offset(0, 3),
+                              ),
+                            ],
                           ),
-                        ),
-                        child: const Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Icon(Icons.edit_rounded, size: 18),
-                            SizedBox(width: 8),
-                            Text(
-                              "Ubah Data Pribadi",
-                              style: TextStyle(
-                                fontSize: 14.5,
-                                fontWeight: FontWeight.bold,
+                          child: ElevatedButton(
+                            onPressed: _showEditSheet,
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.transparent,
+                              foregroundColor: Colors.white,
+                              shadowColor: Colors.transparent,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(14),
                               ),
                             ),
-                          ],
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                const Icon(Icons.edit_rounded, size: 18),
+                                const SizedBox(width: 8),
+                                Text(
+                                  tr("Ubah Data Pribadi", "Edit Personal Data"),
+                                  style: const TextStyle(
+                                    fontSize: 14.5,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
                         ),
-                      ),
+                        const SizedBox(height: 20),
+                      ],
                     ),
-                    const SizedBox(height: 20),
-                  ],
+                  ),
                 ),
               ),
-            ),
-          ),
-          bottomNavigationBar: _buildBottomNav(context, isDark: isDark),
+              bottomNavigationBar: _buildBottomNav(context, isDark: isDark),
+            );
+          },
         );
       },
     );
@@ -641,7 +653,7 @@ class _DataPribadiPageState extends State<DataPribadiPage> {
                   ),
                   const SizedBox(height: 3),
                   Text(
-                    value.trim().isNotEmpty ? value : "Belum diisi",
+                    value.trim().isNotEmpty ? value : tr("Belum diisi", "Not set"),
                     style: TextStyle(
                       fontSize: 13,
                       fontWeight: FontWeight.w600,
@@ -683,13 +695,13 @@ class _DataPribadiPageState extends State<DataPribadiPage> {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceAround,
         children: [
-          _navItem(context, Icons.home_outlined, "Home", 0, isDark: isDark),
-          _navItem(context, Icons.favorite_border, "Skrining", 1,
+          _navItem(context, Icons.home_outlined, tr("Home", "Home"), 0, isDark: isDark),
+          _navItem(context, Icons.favorite_border, tr("Skrining", "Screening"), 1,
               isDark: isDark),
-          _navItem(context, Icons.person_outline, "Dokter", 2, isDark: isDark),
-          _navItem(context, Icons.description_outlined, "Riwayat", 3,
+          _navItem(context, Icons.person_outline, tr("Dokter", "Doctors"), 2, isDark: isDark),
+          _navItem(context, Icons.description_outlined, tr("Riwayat", "History"), 3,
               isDark: isDark),
-          _navItem(context, Icons.person_rounded, "Profil", 4,
+          _navItem(context, Icons.person_rounded, tr("Profil", "Profile"), 4,
               active: true, isDark: isDark),
         ],
       ),

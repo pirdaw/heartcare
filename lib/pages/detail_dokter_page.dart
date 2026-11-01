@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:heartcare/services/theme_service.dart';
 import 'package:heartcare/services/doctor_service.dart';
+import 'package:heartcare/services/language_service.dart';
 import 'home_page.dart';
 import 'konsultasi_dokter_page.dart';
 import 'pilih_jadwal_page.dart';
@@ -38,43 +39,46 @@ class DetailDokterPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ValueListenableBuilder<ThemeMode>(
-      valueListenable: ThemeService.themeModeNotifier,
-      builder: (context, themeMode, _) {
-        final isDark = themeMode == ThemeMode.dark;
+    return ValueListenableBuilder<String>(
+      valueListenable: LanguageService.languageNotifier,
+      builder: (context, _, _) {
+        return ValueListenableBuilder<ThemeMode>(
+          valueListenable: ThemeService.themeModeNotifier,
+          builder: (context, themeMode, _) {
+            final isDark = themeMode == ThemeMode.dark;
 
-        return Scaffold(
-          backgroundColor: isDark ? const Color(0xFF0F172A) : const Color(0xFFF8FAFC),
-          appBar: AppBar(
-            backgroundColor: isDark ? const Color(0xFF1E293B) : Colors.white,
-            elevation: 0,
-            scrolledUnderElevation: 1,
-            shadowColor: Colors.black12,
-            leading: Padding(
-              padding: const EdgeInsets.all(8.0),
-              child: Material(
-                color: isDark ? const Color(0xFF0F172A) : const Color(0xFFF1F5F9),
-                borderRadius: BorderRadius.circular(12),
-                child: InkWell(
-                  borderRadius: BorderRadius.circular(12),
-                  onTap: () => Navigator.pop(context),
-                  child: Icon(
-                    Icons.arrow_back_ios_new_rounded,
-                    color: isDark ? Colors.white : const Color(0xFF0F172A),
-                    size: 18,
+            return Scaffold(
+              backgroundColor: isDark ? const Color(0xFF0F172A) : const Color(0xFFF8FAFC),
+              appBar: AppBar(
+                backgroundColor: isDark ? const Color(0xFF1E293B) : Colors.white,
+                elevation: 0,
+                scrolledUnderElevation: 1,
+                shadowColor: Colors.black12,
+                leading: Padding(
+                  padding: const EdgeInsets.all(8.0),
+                  child: Material(
+                    color: isDark ? const Color(0xFF0F172A) : const Color(0xFFF1F5F9),
+                    borderRadius: BorderRadius.circular(12),
+                    child: InkWell(
+                      borderRadius: BorderRadius.circular(12),
+                      onTap: () => Navigator.pop(context),
+                      child: Icon(
+                        Icons.arrow_back_ios_new_rounded,
+                        color: isDark ? Colors.white : const Color(0xFF0F172A),
+                        size: 18,
+                      ),
+                    ),
                   ),
                 ),
-              ),
-            ),
-            centerTitle: true,
-            title: Text(
-              'Detail Dokter',
-              style: TextStyle(
-                color: isDark ? Colors.white : const Color(0xFF0F172A),
-                fontSize: 17,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
+                centerTitle: true,
+                title: Text(
+                  tr('Detail Dokter', 'Doctor Details'),
+                  style: TextStyle(
+                    color: isDark ? Colors.white : const Color(0xFF0F172A),
+                    fontSize: 17,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
             actions: [
               IconButton(
                 onPressed: () {
@@ -572,7 +576,7 @@ class DetailDokterPage extends StatelessWidget {
                   _bottomNavItem(
                     isDark: isDark,
                     icon: Icons.home_outlined,
-                    label: 'Home',
+                    label: tr('Beranda', 'Home'),
                     active: false,
                     onTap: () {
                       Navigator.pushAndRemoveUntil(
@@ -585,7 +589,7 @@ class DetailDokterPage extends StatelessWidget {
                   _bottomNavItem(
                     isDark: isDark,
                     icon: Icons.favorite_border,
-                    label: 'Skrining',
+                    label: tr('Skrining', 'Screening'),
                     active: false,
                     onTap: () {
                       Navigator.pop(context);
@@ -594,7 +598,7 @@ class DetailDokterPage extends StatelessWidget {
                   _bottomNavItem(
                     isDark: isDark,
                     icon: Icons.medical_services,
-                    label: 'Dokter',
+                    label: tr('Dokter', 'Doctors'),
                     active: true,
                     onTap: () {
                       Navigator.pop(context);
@@ -603,13 +607,13 @@ class DetailDokterPage extends StatelessWidget {
                   _bottomNavItem(
                     isDark: isDark,
                     icon: Icons.description_outlined,
-                    label: 'Riwayat',
+                    label: tr('Riwayat', 'History'),
                     active: false,
                   ),
                   _bottomNavItem(
                     isDark: isDark,
                     icon: Icons.person_outline,
-                    label: 'Profil',
+                    label: tr('Profil', 'Profile'),
                     active: false,
                     onTap: () {
                       Navigator.push(
@@ -625,6 +629,8 @@ class DetailDokterPage extends StatelessWidget {
             ),
           ),
         );
+      },
+    );
       },
     );
   }

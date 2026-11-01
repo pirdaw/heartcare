@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../services/theme_service.dart';
+import '../services/language_service.dart';
 import 'article_detail_page.dart';
 
 class ArtikelKesehatanPage extends StatefulWidget {
@@ -79,12 +80,15 @@ class _ArtikelKesehatanPageState extends State<ArtikelKesehatanPage> {
   Widget build(BuildContext context) {
     final filtered = _filteredArticles;
 
-    return ValueListenableBuilder<ThemeMode>(
-      valueListenable: ThemeService.themeModeNotifier,
-      builder: (context, themeMode, _) {
-        final isDark = themeMode == ThemeMode.dark;
+    return ValueListenableBuilder<String>(
+      valueListenable: LanguageService.languageNotifier,
+      builder: (context, _, _) {
+        return ValueListenableBuilder<ThemeMode>(
+          valueListenable: ThemeService.themeModeNotifier,
+          builder: (context, themeMode, _) {
+            final isDark = themeMode == ThemeMode.dark;
 
-        return Scaffold(
+            return Scaffold(
           backgroundColor:
               isDark ? const Color(0xFF0F172A) : const Color(0xFFF8FAFC),
           body: Stack(
@@ -198,7 +202,7 @@ class _ArtikelKesehatanPageState extends State<ArtikelKesehatanPage> {
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 Text(
-                                  'Artikel Kesehatan',
+                                  tr('Artikel Kesehatan', 'Health Articles'),
                                   style: TextStyle(
                                     fontSize: 19.5,
                                     fontWeight: FontWeight.bold,
@@ -210,7 +214,7 @@ class _ArtikelKesehatanPageState extends State<ArtikelKesehatanPage> {
                                 ),
                                 const SizedBox(height: 2),
                                 Text(
-                                  'Kumpulan artikel & tips seputar kesehatan jantung',
+                                  tr('Kumpulan artikel & tips seputar kesehatan jantung', 'Collection of articles & tips on heart health'),
                                   style: TextStyle(
                                     fontSize: 12.5,
                                     color: isDark
@@ -271,7 +275,7 @@ class _ArtikelKesehatanPageState extends State<ArtikelKesehatanPage> {
                                       : const Color(0xFF0F172A),
                                 ),
                                 decoration: InputDecoration(
-                                  hintText: 'Cari artikel kesehatan...',
+                                  hintText: tr('Cari artikel kesehatan...', 'Search health articles...'),
                                   hintStyle: TextStyle(
                                     color: isDark
                                         ? const Color(0xFF64748B)
@@ -359,7 +363,7 @@ class _ArtikelKesehatanPageState extends State<ArtikelKesehatanPage> {
                                     ),
                                   ),
                                   child: Text(
-                                    '${filtered.length} Artikel',
+                                    tr('${filtered.length} Artikel', '${filtered.length} Articles'),
                                     style: TextStyle(
                                       fontSize: 11.5,
                                       fontWeight: FontWeight.bold,
@@ -404,6 +408,8 @@ class _ArtikelKesehatanPageState extends State<ArtikelKesehatanPage> {
         );
       },
     );
+  },
+);
   }
 
   // WIDGET CHIP FILTER KATEGORI (GAYA DOKTER PAGE)
@@ -719,7 +725,7 @@ class _ArtikelKesehatanPageState extends State<ArtikelKesehatanPage> {
             ),
             const SizedBox(height: 12),
             Text(
-              'Artikel tidak ditemukan',
+              tr('Artikel tidak ditemukan', 'No articles found'),
               style: TextStyle(
                 fontSize: 15.5,
                 fontWeight: FontWeight.bold,
@@ -728,7 +734,7 @@ class _ArtikelKesehatanPageState extends State<ArtikelKesehatanPage> {
             ),
             const SizedBox(height: 4),
             Text(
-              'Coba gunakan kata kunci pencarian yang lain.',
+              tr('Coba gunakan kata kunci pencarian yang lain.', 'Try searching with different keywords.'),
               style: TextStyle(
                 fontSize: 12.5,
                 color:

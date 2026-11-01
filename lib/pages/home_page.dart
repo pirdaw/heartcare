@@ -11,6 +11,7 @@ import 'profil_page.dart';
 import '../services/profile_service.dart';
 import '../services/theme_service.dart';
 import '../services/user_profile_service.dart';
+import '../services/language_service.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -110,12 +111,15 @@ class _HomePageState extends State<HomePage> {
 
   @override
   Widget build(BuildContext context) {
-    return ValueListenableBuilder<ThemeMode>(
-      valueListenable: ThemeService.themeModeNotifier,
-      builder: (context, themeMode, _) {
-        final isDark = themeMode == ThemeMode.dark;
+    return ValueListenableBuilder<String>(
+      valueListenable: LanguageService.languageNotifier,
+      builder: (context, _, _) {
+        return ValueListenableBuilder<ThemeMode>(
+          valueListenable: ThemeService.themeModeNotifier,
+          builder: (context, themeMode, _) {
+            final isDark = themeMode == ThemeMode.dark;
 
-        return Scaffold(
+            return Scaffold(
           backgroundColor: isDark ? const Color(0xFF0F172A) : const Color(0xFFF8FAFC),
           body: Container(
             decoration: BoxDecoration(
@@ -273,7 +277,7 @@ class _HomePageState extends State<HomePage> {
                                     final profile = UserProfileService.instance.currentProfile;
                                     final firstName = profile.nama.trim().isNotEmpty
                                         ? profile.nama.trim().split(' ').first
-                                        : 'Pengguna';
+                                        : tr('Pengguna', 'User');
                                     return Column(
                                       crossAxisAlignment: CrossAxisAlignment.start,
                                       children: [
@@ -281,7 +285,7 @@ class _HomePageState extends State<HomePage> {
                                           children: [
                                             Flexible(
                                               child: Text(
-                                                'Hallo, $firstName...',
+                                                tr('Hallo, $firstName...', 'Hello, $firstName...'),
                                                 maxLines: 1,
                                                 overflow: TextOverflow.ellipsis,
                                                 style: TextStyle(
@@ -310,18 +314,18 @@ class _HomePageState extends State<HomePage> {
                                                     width: 1,
                                                   ),
                                                 ),
-                                                child: const Row(
+                                                child: Row(
                                                   mainAxisSize: MainAxisSize.min,
                                                   children: [
-                                                    Icon(
+                                                    const Icon(
                                                       Icons.edit_note_rounded,
                                                       size: 13,
                                                       color: Color(0xFFEA580C),
                                                     ),
-                                                    SizedBox(width: 3),
+                                                    const SizedBox(width: 3),
                                                     Text(
-                                                      'Lengkapi data',
-                                                      style: TextStyle(
+                                                      tr('Lengkapi data', 'Complete profile'),
+                                                      style: const TextStyle(
                                                         fontSize: 10,
                                                         fontWeight: FontWeight.w700,
                                                         color: Color(0xFFEA580C),
@@ -335,7 +339,7 @@ class _HomePageState extends State<HomePage> {
                                         ),
                                         const SizedBox(height: 2),
                                         Text(
-                                          'Yuk cek kesehatan jantungmu!',
+                                          tr('Yuk cek kesehatan jantungmu!', "Let's check your heart health!"),
                                           style: TextStyle(
                                             fontSize: 11.5,
                                             color: isDark
@@ -491,10 +495,10 @@ class _HomePageState extends State<HomePage> {
                                   color: Color(0xFF94A3B8),
                                 ),
                                 const SizedBox(width: 10),
-                                const Expanded(
+                                Expanded(
                                   child: Text(
-                                    'Cari dokter, artikel edukasi, atau obat...',
-                                    style: TextStyle(
+                                    tr('Cari dokter, artikel edukasi, atau obat...', 'Search doctors, articles, or medicines...'),
+                                    style: const TextStyle(
                                       fontSize: 12.5,
                                       color: Color(0xFF94A3B8),
                                     ),
@@ -623,9 +627,9 @@ class _HomePageState extends State<HomePage> {
                                       ),
                                     ),
                                     const SizedBox(height: 10),
-                                    const Text(
-                                      'Skrining Risiko Jantung',
-                                      style: TextStyle(
+                                    Text(
+                                      tr('Skrining Risiko Jantung', 'Heart Risk Screening'),
+                                      style: const TextStyle(
                                         fontSize: 18,
                                         fontWeight: FontWeight.bold,
                                         color: Colors.white,
@@ -634,7 +638,7 @@ class _HomePageState extends State<HomePage> {
                                     ),
                                     const SizedBox(height: 6),
                                     Text(
-                                      'Kenali faktor risiko jantung Anda melalui skrining kesehatan sederhana menggunakan aplikasi.',
+                                      tr('Kenali faktor risiko jantung Anda melalui skrining kesehatan sederhana menggunakan aplikasi.', 'Identify your heart risk factors through a simple health screening in the app.'),
                                       style: TextStyle(
                                         fontSize: 12,
                                         height: 1.38,
@@ -666,18 +670,18 @@ class _HomePageState extends State<HomePage> {
                                             borderRadius: BorderRadius.circular(10),
                                           ),
                                         ),
-                                        child: const Row(
+                                        child: Row(
                                           mainAxisSize: MainAxisSize.min,
                                           children: [
                                             Text(
-                                              'Mulai Skrining',
-                                              style: TextStyle(
+                                              tr('Mulai Skrining', 'Start Screening'),
+                                              style: const TextStyle(
                                                 fontSize: 13,
                                                 fontWeight: FontWeight.bold,
                                               ),
                                             ),
-                                            SizedBox(width: 4),
-                                            Icon(
+                                            const SizedBox(width: 4),
+                                            const Icon(
                                               Icons.arrow_forward_rounded,
                                               size: 15,
                                             ),
@@ -718,7 +722,7 @@ class _HomePageState extends State<HomePage> {
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
                             Text(
-                              'Layanan Kesehatan',
+                              tr('Layanan Kesehatan', 'Health Services'),
                               style: TextStyle(
                                 fontSize: 16,
                                 fontWeight: FontWeight.bold,
@@ -726,7 +730,7 @@ class _HomePageState extends State<HomePage> {
                               ),
                             ),
                             Text(
-                              'Fitur Utama',
+                              tr('Fitur Utama', 'Main Features'),
                               style: TextStyle(
                                 fontSize: 12,
                                 fontWeight: FontWeight.w500,
@@ -745,9 +749,11 @@ class _HomePageState extends State<HomePage> {
                             Expanded(
                               child: _serviceCard(
                                 icon: Icons.alarm_rounded,
-                                title: 'Pengingat Obat',
-                                description:
-                                    'Atur alarm dan jadwal minum obat tepat waktu.',
+                                title: tr('Pengingat Obat', 'Medication Reminder'),
+                                description: tr(
+                                  'Atur alarm dan jadwal minum obat tepat waktu.',
+                                  'Set alarms and schedules to take meds on time.',
+                                ),
                                 isDark: isDark,
                                 onTap: () {
                                   Navigator.push(
@@ -764,9 +770,11 @@ class _HomePageState extends State<HomePage> {
                             Expanded(
                               child: _serviceCard(
                                 icon: Icons.medical_services_rounded,
-                                title: 'Konsultasi Dokter',
-                                description:
-                                    'Konsultasikan kondisi kesehatan Anda dengan dokter.',
+                                title: tr('Konsultasi Dokter', 'Doctor Consultation'),
+                                description: tr(
+                                  'Konsultasikan kondisi kesehatan Anda dengan dokter.',
+                                  'Consult your health conditions with doctors.',
+                                ),
                                 isDark: isDark,
                                 onTap: () {
                                   Navigator.push(
@@ -787,9 +795,11 @@ class _HomePageState extends State<HomePage> {
                         // BARIS 2 LAYANAN: SATU CARD EDUKASI KESEHATAN
                         _horizontalServiceCard(
                           icon: Icons.menu_book_rounded,
-                          title: 'Edukasi Kesehatan',
-                          description:
-                              'Dapatkan informasi dan tips menjaga kesehatan Anda.',
+                          title: tr('Edukasi Kesehatan', 'Health Education'),
+                          description: tr(
+                            'Dapatkan informasi dan tips menjaga kesehatan Anda.',
+                            'Get information and tips to stay healthy.',
+                          ),
                           isDark: isDark,
                           onTap: () {
                             Navigator.push(
@@ -808,7 +818,7 @@ class _HomePageState extends State<HomePage> {
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
                             Text(
-                              'Pengingat Jadwal Terdekat',
+                              tr('Pengingat Jadwal Terdekat', 'Upcoming Reminders'),
                               style: TextStyle(
                                 fontSize: 16,
                                 fontWeight: FontWeight.bold,
@@ -831,7 +841,7 @@ class _HomePageState extends State<HomePage> {
                                 tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                               ),
                               child: Text(
-                                'Lihat Semua',
+                                tr('Lihat Semua', 'View All'),
                                 style: TextStyle(
                                   fontSize: 12,
                                   fontWeight: FontWeight.w600,
@@ -1029,9 +1039,9 @@ class _HomePageState extends State<HomePage> {
                                                 BorderRadius.circular(8),
                                           ),
                                         ),
-                                        child: const Text(
-                                          'Jadwal',
-                                          style: TextStyle(
+                                        child: Text(
+                                          tr('Jadwal', 'Schedule'),
+                                          style: const TextStyle(
                                             fontSize: 11.5,
                                             fontWeight: FontWeight.bold,
                                           ),
@@ -1068,7 +1078,7 @@ class _HomePageState extends State<HomePage> {
                                             CrossAxisAlignment.start,
                                         children: [
                                           Text(
-                                            'Belum ada jadwal obat',
+                                            tr('Belum ada jadwal obat', 'No medication schedule yet'),
                                             style: TextStyle(
                                               fontSize: 13.5,
                                               fontWeight: FontWeight.bold,
@@ -1079,7 +1089,7 @@ class _HomePageState extends State<HomePage> {
                                           ),
                                           const SizedBox(height: 2),
                                           Text(
-                                            'Atur pengingat agar minum obat tepat waktu',
+                                            tr('Atur pengingat agar minum obat tepat waktu', 'Set reminders to take medicines on time'),
                                             style: TextStyle(
                                               fontSize: 11,
                                               color: isDark
@@ -1135,9 +1145,9 @@ class _HomePageState extends State<HomePage> {
                                                 BorderRadius.circular(8),
                                           ),
                                         ),
-                                        child: const Text(
-                                          'Atur',
-                                          style: TextStyle(
+                                        child: Text(
+                                          tr('Atur', 'Set Up'),
+                                          style: const TextStyle(
                                             fontSize: 11.5,
                                             fontWeight: FontWeight.bold,
                                           ),
@@ -1157,7 +1167,7 @@ class _HomePageState extends State<HomePage> {
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
                             Text(
-                              'Artikel Edukasi Populer',
+                              tr('Artikel Edukasi Populer', 'Popular Articles'),
                               style: TextStyle(
                                 fontSize: 16,
                                 fontWeight: FontWeight.bold,
@@ -1180,7 +1190,7 @@ class _HomePageState extends State<HomePage> {
                                 tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                               ),
                               child: Text(
-                                'Lihat Semua',
+                                tr('Lihat Semua', 'View All'),
                                 style: TextStyle(
                                   fontSize: 12,
                                   fontWeight: FontWeight.w600,
@@ -1197,10 +1207,11 @@ class _HomePageState extends State<HomePage> {
                           context,
                           imageUrl:
                               'https://images.unsplash.com/photo-1530026405186-ed1f139313f8?w=500',
-                          category: 'Penyakit Jantung',
-                          title:
+                          category: tr('Penyakit Jantung', 'Heart Disease'),
+                          title: tr(
                               'Mengenal Penyakit Jantung Koroner: Gejala & Pencegahan Dini',
-                          duration: '5 menit baca',
+                              'Understanding Coronary Heart Disease: Symptoms & Early Prevention'),
+                          duration: tr('5 menit baca', '5 min read'),
                           content:
                               'Penyakit jantung koroner adalah kondisi ketika pembuluh darah yang berfungsi mengalirkan darah dan oksigen ke otot jantung mengalami penyempitan atau penyumbatan.\n\nKondisi ini umumnya terjadi akibat penumpukan lemak atau plak kolesterol pada dinding pembuluh arteri koroner. Menjaga pola makan seimbang dan berolahraga rutin adalah kunci utama pencegahan.',
                           isDark: isDark,
@@ -1212,10 +1223,11 @@ class _HomePageState extends State<HomePage> {
                           context,
                           imageUrl:
                               'https://images.unsplash.com/photo-1490645935967-10de6ba17061?w=500',
-                          category: 'Pola Hidup',
-                          title:
+                          category: tr('Pola Hidup', 'Lifestyle'),
+                          title: tr(
                               '5 Pilihan Makanan Sehat Terbaik untuk Kekuatan Jantung Anda',
-                          duration: '3 menit baca',
+                              '5 Best Healthy Food Choices for Heart Strength'),
+                          duration: tr('3 menit baca', '3 min read'),
                           content:
                               'Menjaga kesehatan jantung dapat dimulai dari pilihan makanan sehari-hari seperti ikan salmon kaya asam lemak omega-3, oatmeal, buah beri antioksidan, kacang almond, dan sayuran hijau seperti bayam.',
                           isDark: isDark,
@@ -1293,7 +1305,7 @@ class _HomePageState extends State<HomePage> {
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
                                     Text(
-                                      'Tips Jantung Sehat Hari Ini',
+                                      tr('Tips Jantung Sehat Hari Ini', "Today's Healthy Heart Tip"),
                                       style: TextStyle(
                                         fontSize: 13,
                                         fontWeight: FontWeight.bold,
@@ -1302,7 +1314,10 @@ class _HomePageState extends State<HomePage> {
                                     ),
                                     const SizedBox(height: 3),
                                     Text(
-                                      'Batasi konsumsi garam maksimal 1 sendok teh (5 gram) per hari dan rutin jalan santai 30 menit untuk menjaga elastisitas pembuluh darah.',
+                                      tr(
+                                        'Batasi konsumsi garam maksimal 1 sendok teh (5 gram) per hari dan rutin jalan santai 30 menit untuk menjaga elastisitas pembuluh darah.',
+                                        'Limit salt intake to max 1 teaspoon (5 grams) per day and walk briskly for 30 minutes to maintain blood vessel elasticity.',
+                                      ),
                                       style: TextStyle(
                                         fontSize: 11.5,
                                         height: 1.35,
@@ -1348,31 +1363,31 @@ class _HomePageState extends State<HomePage> {
                     children: [
                       _bottomItem(
                         icon: Icons.home,
-                        label: 'Home',
+                        label: tr('Home', 'Home'),
                         index: 0,
                         isDark: isDark,
                       ),
                       _bottomItem(
                         icon: Icons.favorite_border,
-                        label: 'Skrining',
+                        label: tr('Skrining', 'Screening'),
                         index: 1,
                         isDark: isDark,
                       ),
                       _bottomItem(
                         icon: Icons.medical_services_outlined,
-                        label: 'Dokter',
+                        label: tr('Dokter', 'Doctors'),
                         index: 2,
                         isDark: isDark,
                       ),
                       _bottomItem(
                         icon: Icons.description_outlined,
-                        label: 'Riwayat',
+                        label: tr('Riwayat', 'History'),
                         index: 3,
                         isDark: isDark,
                       ),
                       _bottomItem(
                         icon: Icons.person_outline,
-                        label: 'Profil',
+                        label: tr('Profil', 'Profile'),
                         index: 4,
                         isDark: isDark,
                       ),
@@ -1385,10 +1400,12 @@ class _HomePageState extends State<HomePage> {
         ),
       ),
     ),
-      );
-    },
   );
-}
+            },
+          );
+        },
+      );
+    }
 
 
   // WIDGET HELPER: SERVICE CARDS (GRADASI BIRU ELEGAN)

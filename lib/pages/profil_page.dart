@@ -12,6 +12,7 @@ import '../services/profile_service.dart';
 import '../services/theme_service.dart';
 import '../services/auth_service.dart';
 import '../services/user_profile_service.dart';
+import '../services/language_service.dart';
 
 class ProfilPage extends StatefulWidget {
   const ProfilPage({super.key});
@@ -43,9 +44,9 @@ class _ProfilPageState extends State<ProfilPage> {
 
     setState(() {});
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text("Foto profil berhasil diperbarui"),
-        backgroundColor: Color(0xFF0098B9),
+      SnackBar(
+        content: Text(tr("Foto profil berhasil diperbarui", "Profile photo updated successfully")),
+        backgroundColor: const Color(0xFF0098B9),
         behavior: SnackBarBehavior.floating,
       ),
     );
@@ -57,9 +58,9 @@ class _ProfilPageState extends State<ProfilPage> {
 
     setState(() {});
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text("Foto profil berhasil diperbarui"),
-        backgroundColor: Color(0xFF0098B9),
+      SnackBar(
+        content: Text(tr("Foto profil berhasil diperbarui", "Profile photo updated successfully")),
+        backgroundColor: const Color(0xFF0098B9),
         behavior: SnackBarBehavior.floating,
       ),
     );
@@ -95,7 +96,7 @@ class _ProfilPageState extends State<ProfilPage> {
                 ),
                 const SizedBox(height: 16),
                 Text(
-                  "Ubah Foto Profil",
+                  tr("Ubah Foto Profil", "Change Profile Photo"),
                   style: TextStyle(
                     fontSize: 17,
                     fontWeight: FontWeight.bold,
@@ -119,7 +120,7 @@ class _ProfilPageState extends State<ProfilPage> {
                     ),
                   ),
                   title: Text(
-                    "Pilih dari Galeri",
+                    tr("Pilih dari Galeri", "Choose from Gallery"),
                     style: TextStyle(
                       fontWeight: FontWeight.w600,
                       fontSize: 14.5,
@@ -127,7 +128,7 @@ class _ProfilPageState extends State<ProfilPage> {
                     ),
                   ),
                   subtitle: Text(
-                    "Ambil foto dari album atau galeri HP",
+                    tr("Ambil foto dari album atau galeri HP", "Select photo from your phone gallery"),
                     style: TextStyle(
                       fontSize: 12,
                       color: isDark
@@ -157,7 +158,7 @@ class _ProfilPageState extends State<ProfilPage> {
                     ),
                   ),
                   title: Text(
-                    "Ambil Foto (Kamera)",
+                    tr("Ambil Foto (Kamera)", "Take Photo (Camera)"),
                     style: TextStyle(
                       fontWeight: FontWeight.w600,
                       fontSize: 14.5,
@@ -165,7 +166,7 @@ class _ProfilPageState extends State<ProfilPage> {
                     ),
                   ),
                   subtitle: Text(
-                    "Buka kamera dan ambil foto baru",
+                    tr("Buka kamera dan ambil foto baru", "Open camera and take a new photo"),
                     style: TextStyle(
                       fontSize: 12,
                       color: isDark
@@ -195,16 +196,16 @@ class _ProfilPageState extends State<ProfilPage> {
                         size: 22,
                       ),
                     ),
-                    title: const Text(
-                      "Hapus Foto Profil",
-                      style: TextStyle(
+                    title: Text(
+                      tr("Hapus Foto Profil", "Remove Profile Photo"),
+                      style: const TextStyle(
                         fontWeight: FontWeight.w600,
                         fontSize: 14.5,
                         color: Color(0xFFEF4444),
                       ),
                     ),
                     subtitle: Text(
-                      "Kembalikan ke foto profil bawaan",
+                      tr("Kembalikan ke foto profil bawaan", "Reset to default profile photo"),
                       style: TextStyle(
                         fontSize: 12,
                         color: isDark
@@ -218,10 +219,10 @@ class _ProfilPageState extends State<ProfilPage> {
                       if (mounted) setState(() {});
                       if (context.mounted) {
                         ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
+                          SnackBar(
                             content:
-                                Text("Foto profil berhasil dikembalikan ke bawaan"),
-                            backgroundColor: Color(0xFF64748B),
+                                Text(tr("Foto profil berhasil dikembalikan ke bawaan", "Profile photo reset to default")),
+                            backgroundColor: const Color(0xFF64748B),
                             behavior: SnackBarBehavior.floating,
                           ),
                         );
@@ -274,7 +275,7 @@ class _ProfilPageState extends State<ProfilPage> {
 
                 // JUDUL
                 Text(
-                  "Konfirmasi Log Out",
+                  tr("Konfirmasi Log Out", "Confirm Log Out"),
                   textAlign: TextAlign.center,
                   style: TextStyle(
                     fontSize: 16,
@@ -286,7 +287,7 @@ class _ProfilPageState extends State<ProfilPage> {
 
                 // SUBTITLE
                 Text(
-                  "Apakah Anda yakin ingin keluar\ndari akun?",
+                  tr("Apakah Anda yakin ingin keluar\ndari akun?", "Are you sure you want to log out\nof your account?"),
                   textAlign: TextAlign.center,
                   style: TextStyle(
                     fontSize: 12.5,
@@ -318,7 +319,7 @@ class _ProfilPageState extends State<ProfilPage> {
                             ),
                           ),
                           child: Text(
-                            "Batal",
+                            tr("Batal", "Cancel"),
                             style: TextStyle(
                               fontSize: 13,
                               fontWeight: FontWeight.w600,
@@ -358,9 +359,9 @@ class _ProfilPageState extends State<ProfilPage> {
                               borderRadius: BorderRadius.circular(20),
                             ),
                           ),
-                          child: const Text(
-                            "Keluar",
-                            style: TextStyle(
+                          child: Text(
+                            tr("Keluar", "Log Out"),
+                            style: const TextStyle(
                               fontSize: 13,
                               fontWeight: FontWeight.bold,
                             ),
@@ -384,341 +385,345 @@ class _ProfilPageState extends State<ProfilPage> {
     return ValueListenableBuilder<ThemeMode>(
       valueListenable: ThemeService.themeModeNotifier,
       builder: (context, themeMode, _) {
-        final isDark = themeMode == ThemeMode.dark;
+        return ValueListenableBuilder<String>(
+          valueListenable: LanguageService.languageNotifier,
+          builder: (context, lang, _) {
+            final isDark = themeMode == ThemeMode.dark;
 
-        return Scaffold(
-          backgroundColor:
-              isDark ? const Color(0xFF0F172A) : const Color(0xFFF8FAFC),
-          appBar: AppBar(
-            backgroundColor: Colors.transparent,
-            elevation: 0,
-            automaticallyImplyLeading: false,
-            centerTitle: true,
-            title: Text(
-              "Profil",
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-                color: isDark ? Colors.white : const Color(0xFF0F172A),
+            return Scaffold(
+              backgroundColor:
+                  isDark ? const Color(0xFF0F172A) : const Color(0xFFF8FAFC),
+              appBar: AppBar(
+                backgroundColor: Colors.transparent,
+                elevation: 0,
+                automaticallyImplyLeading: false,
+                centerTitle: true,
+                title: Text(
+                  tr("Profil", "Profile"),
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    color: isDark ? Colors.white : const Color(0xFF0F172A),
+                  ),
+                ),
               ),
-            ),
-          ),
-          body: Container(
-            decoration: BoxDecoration(
-              color: isDark ? const Color(0xFF0F172A) : const Color(0xFFF8FAFC),
-              gradient: LinearGradient(
-                begin: Alignment.topCenter,
-                end: Alignment.bottomCenter,
-                stops: const [0.0, 0.22, 0.6],
-                colors: isDark
-                    ? const [
-                        Color(0xFF1E293B),
-                        Color(0xFF131D2E),
-                        Color(0xFF0F172A),
-                      ]
-                    : const [
-                        Color(0xFFE8F6FA),
-                        Color(0xFFF4FAFC),
-                        Color(0xFFF8FAFC),
-                      ],
-              ),
-            ),
-            child: SafeArea(
-              child: SingleChildScrollView(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 22, vertical: 12),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  children: [
-                    const SizedBox(height: 6),
+              body: Container(
+                decoration: BoxDecoration(
+                  color: isDark ? const Color(0xFF0F172A) : const Color(0xFFF8FAFC),
+                  gradient: LinearGradient(
+                    begin: Alignment.topCenter,
+                    end: Alignment.bottomCenter,
+                    stops: const [0.0, 0.22, 0.6],
+                    colors: isDark
+                        ? const [
+                            Color(0xFF1E293B),
+                            Color(0xFF131D2E),
+                            Color(0xFF0F172A),
+                          ]
+                        : const [
+                            Color(0xFFE8F6FA),
+                            Color(0xFFF4FAFC),
+                            Color(0xFFF8FAFC),
+                          ],
+                  ),
+                ),
+                child: SafeArea(
+                  child: SingleChildScrollView(
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 22, vertical: 12),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      children: [
+                        const SizedBox(height: 6),
 
-                    // AVATAR PROFIL DENGAN BADGE KAMERA
-                    Center(
-                      child: GestureDetector(
-                        onTap: _showPhotoPickerOptions,
-                        child: Stack(
-                          alignment: Alignment.bottomRight,
-                          children: [
-                            Container(
-                              width: 116,
-                              height: 116,
-                              decoration: BoxDecoration(
-                                color: isDark
-                                    ? const Color(0xFF1E293B)
-                                    : const Color(0xFFD6EFF6),
-                                shape: BoxShape.circle,
-                                border: Border.all(
-                                  color: const Color(0xFF0098B9)
-                                      .withValues(alpha: 0.28),
-                                  width: 3,
-                                ),
-                              ),
-                              clipBehavior: Clip.antiAlias,
-                              child: ValueListenableBuilder<String?>(
-                                valueListenable:
-                                    ProfileService.profileImageNotifier,
-                                builder: (context, imagePath, _) {
-                                  final provider =
-                                      ProfileService.getImageProvider(imagePath);
-                                  if (provider != null) {
-                                    return Image(
-                                      image: provider,
-                                      fit: BoxFit.cover,
-                                      errorBuilder:
-                                          (context, error, stackTrace) {
-                                        return Image.asset(
-                                          'assets/images/profile_woman.png',
+                        // AVATAR PROFIL DENGAN BADGE KAMERA
+                        Center(
+                          child: GestureDetector(
+                            onTap: _showPhotoPickerOptions,
+                            child: Stack(
+                              alignment: Alignment.bottomRight,
+                              children: [
+                                Container(
+                                  width: 116,
+                                  height: 116,
+                                  decoration: BoxDecoration(
+                                    color: isDark
+                                        ? const Color(0xFF1E293B)
+                                        : const Color(0xFFD6EFF6),
+                                    shape: BoxShape.circle,
+                                    border: Border.all(
+                                      color: const Color(0xFF0098B9)
+                                          .withValues(alpha: 0.28),
+                                      width: 3,
+                                    ),
+                                  ),
+                                  clipBehavior: Clip.antiAlias,
+                                  child: ValueListenableBuilder<String?>(
+                                    valueListenable:
+                                        ProfileService.profileImageNotifier,
+                                    builder: (context, imagePath, _) {
+                                      final provider =
+                                          ProfileService.getImageProvider(imagePath);
+                                      if (provider != null) {
+                                        return Image(
+                                          image: provider,
                                           fit: BoxFit.cover,
+                                          errorBuilder:
+                                              (context, error, stackTrace) {
+                                            return Image.asset(
+                                              'assets/images/profile_woman.png',
+                                              fit: BoxFit.cover,
+                                            );
+                                          },
                                         );
-                                      },
-                                    );
-                                  }
-                                  return Image.asset(
-                                    'assets/images/profile_woman.png',
-                                    fit: BoxFit.cover,
-                                    errorBuilder:
-                                        (context, error, stackTrace) {
-                                      return const Icon(
-                                        Icons.person,
-                                        size: 64,
-                                        color: Color(0xFF0098B9),
+                                      }
+                                      return Image.asset(
+                                        'assets/images/profile_woman.png',
+                                        fit: BoxFit.cover,
+                                        errorBuilder:
+                                            (context, error, stackTrace) {
+                                          return const Icon(
+                                            Icons.person,
+                                            size: 64,
+                                            color: Color(0xFF0098B9),
+                                          );
+                                        },
                                       );
                                     },
-                                  );
-                                },
-                              ),
-                            ),
-                            Positioned(
-                              right: 0,
-                              bottom: 0,
-                              child: Container(
-                                width: 36,
-                                height: 36,
-                                decoration: BoxDecoration(
-                                  gradient: const LinearGradient(
-                                    begin: Alignment.topLeft,
-                                    end: Alignment.bottomRight,
-                                    colors: [
-                                      Color(0xFF0098B9),
-                                      Color(0xFF0284C7),
-                                    ],
                                   ),
-                                  shape: BoxShape.circle,
-                                  border: Border.all(
-                                    color: Colors.white,
-                                    width: 2,
-                                  ),
-                                  boxShadow: [
-                                    BoxShadow(
-                                      color: const Color(0xFF0098B9)
-                                          .withValues(alpha: 0.35),
-                                      blurRadius: 6,
-                                      offset: const Offset(0, 2),
+                                ),
+                                Positioned(
+                                  right: 0,
+                                  bottom: 0,
+                                  child: Container(
+                                    width: 36,
+                                    height: 36,
+                                    decoration: BoxDecoration(
+                                      gradient: const LinearGradient(
+                                        begin: Alignment.topLeft,
+                                        end: Alignment.bottomRight,
+                                        colors: [
+                                          Color(0xFF0098B9),
+                                          Color(0xFF0284C7),
+                                        ],
+                                      ),
+                                      shape: BoxShape.circle,
+                                      border: Border.all(
+                                        color: Colors.white,
+                                        width: 2,
+                                      ),
+                                      boxShadow: [
+                                        BoxShadow(
+                                          color: const Color(0xFF0098B9)
+                                              .withValues(alpha: 0.35),
+                                          blurRadius: 6,
+                                          offset: const Offset(0, 2),
+                                        ),
+                                      ],
                                     ),
-                                  ],
+                                    child: const Icon(
+                                      Icons.camera_alt_outlined,
+                                      size: 18,
+                                      color: Colors.white,
+                                    ),
+                                  ),
                                 ),
-                                child: const Icon(
-                                  Icons.camera_alt_outlined,
-                                  size: 18,
-                                  color: Colors.white,
-                                ),
-                              ),
+                              ],
                             ),
-                          ],
+                          ),
                         ),
-                      ),
-                    ),
 
-                    const SizedBox(height: 16),
+                        const SizedBox(height: 16),
 
-                    // NAMA LENGKAP
-                    // NAMA LENGKAP
-                    Text(
-                      profile.nama.isNotEmpty ? profile.nama : "Pengguna",
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                        color: isDark ? Colors.white : const Color(0xFF0F172A),
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-
-                    // TELEPON
-                    Text(
-                      profile.telepon.isNotEmpty ? profile.telepon : "-",
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: isDark
-                            ? const Color(0xFF94A3B8)
-                            : const Color(0xFF64748B),
-                      ),
-                    ),
-                    const SizedBox(height: 2),
-
-                    // EMAIL
-                    Text(
-                      profile.email.isNotEmpty ? profile.email : "-",
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: isDark
-                            ? const Color(0xFF94A3B8)
-                            : const Color(0xFF64748B),
-                      ),
-                    ),
-                    const SizedBox(height: 26),
-
-                    // SECTION: INFORMASI (MENU DENGAN GRADASI BIRU MUDA)
-                    Align(
-                      alignment: Alignment.centerLeft,
-                      child: Text(
-                        "Informasi Akun",
-                        style: TextStyle(
-                          fontSize: 15,
-                          fontWeight: FontWeight.bold,
-                          color: isDark ? Colors.white : const Color(0xFF0F172A),
+                        // NAMA LENGKAP
+                        Text(
+                          profile.nama.isNotEmpty ? profile.nama : tr("Pengguna", "User"),
+                          style: TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                            color: isDark ? Colors.white : const Color(0xFF0F172A),
+                          ),
                         ),
-                      ),
-                    ),
-                    const SizedBox(height: 12),
+                        const SizedBox(height: 4),
 
-                    _menuCard(
-                      icon: Icons.person_rounded,
-                      title: "Data Pribadi",
-                      subtitle: "Informasi identitas dan kontak",
-                      trailing: !profile.isDataPribadiComplete
-                          ? _buildIncompleteBadge()
-                          : null,
-                      onTap: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => const DataPribadiPage(),
+                        // TELEPON
+                        Text(
+                          profile.telepon.isNotEmpty ? profile.telepon : "-",
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: isDark
+                                ? const Color(0xFF94A3B8)
+                                : const Color(0xFF64748B),
                           ),
-                        );
-                      },
-                      isDark: isDark,
-                    ),
-                    _menuCard(
-                      icon: Icons.favorite_rounded,
-                      title: "Data Kesehatan",
-                      subtitle: "Riwayat medis dan kondisi kesehatan",
-                      trailing: !profile.isDataKesehatanComplete
-                          ? _buildIncompleteBadge()
-                          : null,
-                      onTap: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => const DataKesehatanPage(),
-                          ),
-                        );
-                      },
-                      isDark: isDark,
-                    ),
-                    _menuCard(
-                      icon: Icons.settings_rounded,
-                      title: "Pengaturan",
-                      subtitle: "Preferensi notifikasi, bahasa, dan keamanan",
-                      onTap: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => const PengaturanPage(),
-                          ),
-                        );
-                      },
-                      isDark: isDark,
-                    ),
-                    _menuCard(
-                      icon: Icons.info_rounded,
-                      title: "Tentang Aplikasi",
-                      subtitle: "Versi dan informasi aplikasi HeartCare",
-                      onTap: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => const TentangAplikasiPage(),
-                          ),
-                        );
-                      },
-                      isDark: isDark,
-                    ),
-
-                    const SizedBox(height: 24),
-
-                    // TOMBOL KELUAR
-                    Container(
-                      width: double.infinity,
-                      height: 48,
-                      decoration: BoxDecoration(
-                        gradient: LinearGradient(
-                          begin: Alignment.topLeft,
-                          end: Alignment.bottomRight,
-                          colors: isDark
-                              ? const [
-                                  Color(0xFF2D151B),
-                                  Color(0xFF231116),
-                                ]
-                              : const [
-                                  Color(0xFFFFF1F2),
-                                  Color(0xFFFFE4E6),
-                                ],
                         ),
-                        borderRadius: BorderRadius.circular(14),
-                        border: Border.all(
-                          color: isDark
-                              ? const Color(0xFF4C1D24)
-                              : const Color(0xFFFECDD3),
-                          width: 1.2,
-                        ),
-                        boxShadow: [
-                          BoxShadow(
-                            color: const Color(0xFFE11D48)
-                                .withValues(alpha: isDark ? 0.12 : 0.06),
-                            blurRadius: 6,
-                            offset: const Offset(0, 2),
+                        const SizedBox(height: 2),
+
+                        // EMAIL
+                        Text(
+                          profile.email.isNotEmpty ? profile.email : "-",
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: isDark
+                                ? const Color(0xFF94A3B8)
+                                : const Color(0xFF64748B),
                           ),
-                        ],
-                      ),
-                      child: Material(
-                        color: Colors.transparent,
-                        child: InkWell(
-                          onTap: () => _showLogoutDialog(context),
-                          borderRadius: BorderRadius.circular(14),
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Icon(
-                                Icons.logout_rounded,
-                                size: 19,
-                                color: isDark
-                                    ? const Color(0xFFF87171)
-                                    : const Color(0xFFE11D48),
+                        ),
+                        const SizedBox(height: 26),
+
+                        // SECTION: INFORMASI (MENU DENGAN GRADASI BIRU MUDA)
+                        Align(
+                          alignment: Alignment.centerLeft,
+                          child: Text(
+                            tr("Informasi Akun", "Account Information"),
+                            style: TextStyle(
+                              fontSize: 15,
+                              fontWeight: FontWeight.bold,
+                              color: isDark ? Colors.white : const Color(0xFF0F172A),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 12),
+
+                        _menuCard(
+                          icon: Icons.person_rounded,
+                          title: tr("Data Pribadi", "Personal Information"),
+                          subtitle: tr("Informasi identitas dan kontak", "Identity and contact information"),
+                          trailing: !profile.isDataPribadiComplete
+                              ? _buildIncompleteBadge()
+                              : null,
+                          onTap: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => const DataPribadiPage(),
                               ),
-                              const SizedBox(width: 8),
-                              Text(
-                                "Keluar dari Akun",
-                                style: TextStyle(
-                                  fontSize: 14,
-                                  fontWeight: FontWeight.bold,
-                                  color: isDark
-                                      ? const Color(0xFFF87171)
-                                      : const Color(0xFFE11D48),
-                                ),
+                            );
+                          },
+                          isDark: isDark,
+                        ),
+                        _menuCard(
+                          icon: Icons.favorite_rounded,
+                          title: tr("Data Kesehatan", "Health Data"),
+                          subtitle: tr("Riwayat medis dan kondisi kesehatan", "Medical history and health conditions"),
+                          trailing: !profile.isDataKesehatanComplete
+                              ? _buildIncompleteBadge()
+                              : null,
+                          onTap: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => const DataKesehatanPage(),
+                              ),
+                            );
+                          },
+                          isDark: isDark,
+                        ),
+                        _menuCard(
+                          icon: Icons.settings_rounded,
+                          title: tr("Pengaturan", "Settings"),
+                          subtitle: tr("Preferensi notifikasi, bahasa, dan keamanan", "Notification, language, and security preferences"),
+                          onTap: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => const PengaturanPage(),
+                              ),
+                            );
+                          },
+                          isDark: isDark,
+                        ),
+                        _menuCard(
+                          icon: Icons.info_rounded,
+                          title: tr("Tentang Aplikasi", "About Application"),
+                          subtitle: tr("Versi dan informasi aplikasi HeartCare", "HeartCare application version and info"),
+                          onTap: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => const TentangAplikasiPage(),
+                              ),
+                            );
+                          },
+                          isDark: isDark,
+                        ),
+
+                        const SizedBox(height: 24),
+
+                        // TOMBOL KELUAR
+                        Container(
+                          width: double.infinity,
+                          height: 48,
+                          decoration: BoxDecoration(
+                            gradient: LinearGradient(
+                              begin: Alignment.topLeft,
+                              end: Alignment.bottomRight,
+                              colors: isDark
+                                  ? const [
+                                      Color(0xFF2D151B),
+                                      Color(0xFF231116),
+                                    ]
+                                  : const [
+                                      Color(0xFFFFF1F2),
+                                      Color(0xFFFFE4E6),
+                                    ],
+                            ),
+                            borderRadius: BorderRadius.circular(14),
+                            border: Border.all(
+                              color: isDark
+                                  ? const Color(0xFF4C1D24)
+                                  : const Color(0xFFFECDD3),
+                              width: 1.2,
+                            ),
+                            boxShadow: [
+                              BoxShadow(
+                                color: const Color(0xFFE11D48)
+                                    .withValues(alpha: isDark ? 0.12 : 0.06),
+                                blurRadius: 6,
+                                offset: const Offset(0, 2),
                               ),
                             ],
                           ),
+                          child: Material(
+                            color: Colors.transparent,
+                            child: InkWell(
+                              onTap: () => _showLogoutDialog(context),
+                              borderRadius: BorderRadius.circular(14),
+                              child: Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Icon(
+                                    Icons.logout_rounded,
+                                    size: 19,
+                                    color: isDark
+                                        ? const Color(0xFFF87171)
+                                        : const Color(0xFFE11D48),
+                                  ),
+                                  const SizedBox(width: 8),
+                                  Text(
+                                    tr("Keluar dari Akun", "Log Out from Account"),
+                                    style: TextStyle(
+                                      fontSize: 14,
+                                      fontWeight: FontWeight.bold,
+                                      color: isDark
+                                          ? const Color(0xFFF87171)
+                                          : const Color(0xFFE11D48),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
                         ),
-                      ),
-                    ),
 
-                    const SizedBox(height: 24),
-                  ],
+                        const SizedBox(height: 24),
+                      ],
+                    ),
+                  ),
                 ),
               ),
-            ),
-          ),
-          bottomNavigationBar: _buildBottomNav(context, isDark: isDark),
+              bottomNavigationBar: _buildBottomNav(context, isDark: isDark),
+            );
+          },
         );
       },
     );
@@ -855,9 +860,9 @@ class _ProfilPageState extends State<ProfilPage> {
         borderRadius: BorderRadius.circular(10),
         border: Border.all(color: const Color(0xFFFDBA74), width: 1),
       ),
-      child: const Text(
-        'Lengkapi',
-        style: TextStyle(
+      child: Text(
+        tr('Lengkapi', 'Complete'),
+        style: const TextStyle(
           fontSize: 10,
           fontWeight: FontWeight.w700,
           color: Color(0xFFEA580C),
@@ -880,13 +885,13 @@ class _ProfilPageState extends State<ProfilPage> {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceAround,
         children: [
-          _navItem(context, Icons.home_outlined, "Home", 0, isDark: isDark),
-          _navItem(context, Icons.favorite_border, "Skrining", 1,
+          _navItem(context, Icons.home_outlined, tr("Home", "Home"), 0, isDark: isDark),
+          _navItem(context, Icons.favorite_border, tr("Skrining", "Screening"), 1,
               isDark: isDark),
-          _navItem(context, Icons.person_outline, "Dokter", 2, isDark: isDark),
-          _navItem(context, Icons.description_outlined, "Riwayat", 3,
+          _navItem(context, Icons.person_outline, tr("Dokter", "Doctors"), 2, isDark: isDark),
+          _navItem(context, Icons.description_outlined, tr("Riwayat", "History"), 3,
               isDark: isDark),
-          _navItem(context, Icons.person_rounded, "Profil", 4,
+          _navItem(context, Icons.person_rounded, tr("Profil", "Profile"), 4,
               active: true, isDark: isDark),
         ],
       ),

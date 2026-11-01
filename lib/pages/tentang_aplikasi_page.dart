@@ -4,6 +4,7 @@ import 'package:heartcare/pages/dokter_page.dart';
 import 'package:heartcare/pages/riwayat_page.dart';
 import 'package:heartcare/pages/Skrining/screening_input_page.dart';
 import '../services/theme_service.dart';
+import '../services/language_service.dart';
 
 class TentangAplikasiPage extends StatelessWidget {
   const TentangAplikasiPage({super.key});
@@ -13,55 +14,58 @@ class TentangAplikasiPage extends StatelessWidget {
     return ValueListenableBuilder<ThemeMode>(
       valueListenable: ThemeService.themeModeNotifier,
       builder: (context, themeMode, _) {
-        final isDark = themeMode == ThemeMode.dark;
+        return ValueListenableBuilder<String>(
+          valueListenable: LanguageService.languageNotifier,
+          builder: (context, lang, _) {
+            final isDark = themeMode == ThemeMode.dark;
 
-        return Scaffold(
-          backgroundColor:
-              isDark ? const Color(0xFF0F172A) : const Color(0xFFF8FAFC),
-          appBar: AppBar(
-            backgroundColor: Colors.transparent,
-            elevation: 0,
-            leading: Padding(
-              padding: const EdgeInsets.all(8.0),
-              child: Container(
-                decoration: BoxDecoration(
-                  color: isDark ? const Color(0xFF1E293B) : Colors.white,
-                  shape: BoxShape.circle,
-                  border: Border.all(
-                    color: isDark
-                        ? const Color(0xFF334155)
-                        : const Color(0xFFE2E8F0),
-                    width: 1,
-                  ),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withValues(alpha: isDark ? 0.2 : 0.04),
-                      blurRadius: 4,
-                      offset: const Offset(0, 1),
+            return Scaffold(
+              backgroundColor:
+                  isDark ? const Color(0xFF0F172A) : const Color(0xFFF8FAFC),
+              appBar: AppBar(
+                backgroundColor: Colors.transparent,
+                elevation: 0,
+                leading: Padding(
+                  padding: const EdgeInsets.all(8.0),
+                  child: Container(
+                    decoration: BoxDecoration(
+                      color: isDark ? const Color(0xFF1E293B) : Colors.white,
+                      shape: BoxShape.circle,
+                      border: Border.all(
+                        color: isDark
+                            ? const Color(0xFF334155)
+                            : const Color(0xFFE2E8F0),
+                        width: 1,
+                      ),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withValues(alpha: isDark ? 0.2 : 0.04),
+                          blurRadius: 4,
+                          offset: const Offset(0, 1),
+                        ),
+                      ],
                     ),
-                  ],
-                ),
-                child: IconButton(
-                  padding: EdgeInsets.zero,
-                  icon: Icon(
-                    Icons.chevron_left_rounded,
-                    color: isDark ? Colors.white : const Color(0xFF0F172A),
-                    size: 28,
+                    child: IconButton(
+                      padding: EdgeInsets.zero,
+                      icon: Icon(
+                        Icons.chevron_left_rounded,
+                        color: isDark ? Colors.white : const Color(0xFF0F172A),
+                        size: 28,
+                      ),
+                      onPressed: () => Navigator.pop(context),
+                    ),
                   ),
-                  onPressed: () => Navigator.pop(context),
+                ),
+                centerTitle: true,
+                title: Text(
+                  tr("Tentang Aplikasi", "About Application"),
+                  style: TextStyle(
+                    fontSize: 17,
+                    fontWeight: FontWeight.bold,
+                    color: isDark ? Colors.white : const Color(0xFF0F172A),
+                  ),
                 ),
               ),
-            ),
-            centerTitle: true,
-            title: Text(
-              "Tentang Aplikasi",
-              style: TextStyle(
-                fontSize: 17,
-                fontWeight: FontWeight.bold,
-                color: isDark ? Colors.white : const Color(0xFF0F172A),
-              ),
-            ),
-          ),
           body: Container(
             decoration: BoxDecoration(
               color: isDark ? const Color(0xFF0F172A) : const Color(0xFFF8FAFC),
@@ -168,7 +172,10 @@ class TentangAplikasiPage extends StatelessWidget {
                           ),
                           const SizedBox(height: 14),
                           Text(
-                            "Aplikasi yang membantu pengguna melakukan skrining dini kesehatan jantung, berkonsultasi dengan tenaga kesehatan, serta memantau kondisi jantung secara mudah dan praktis untuk mendukung pencegahan penyakit jantung.",
+                            tr(
+                              "Aplikasi yang membantu pengguna melakukan skrining dini kesehatan jantung, berkonsultasi dengan tenaga kesehatan, serta memantau kondisi jantung secara mudah dan praktis untuk mendukung pencegahan penyakit jantung.",
+                              "An application that helps users perform early heart health screening, consult with healthcare professionals, and monitor heart conditions easily and conveniently to support heart disease prevention.",
+                            ),
                             style: TextStyle(
                               fontSize: 12.5,
                               height: 1.5,
@@ -233,7 +240,7 @@ class TentangAplikasiPage extends StatelessWidget {
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
                                     Text(
-                                      "Visi",
+                                      tr("Visi", "Vision"),
                                       style: TextStyle(
                                         fontSize: 14,
                                         fontWeight: FontWeight.bold,
@@ -244,7 +251,10 @@ class TentangAplikasiPage extends StatelessWidget {
                                     ),
                                     const SizedBox(height: 6),
                                     Text(
-                                      "Menjadi platform layanan kesehatan jantung yang terpercaya dalam membantu masyarakat melakukan skrining dini, konsultasi kesehatan, dan pemantauan kondisi jantung secara mudah, cepat, dan berkelanjutan.",
+                                      tr(
+                                        "Menjadi platform layanan kesehatan jantung yang terpercaya dalam membantu masyarakat melakukan skrining dini, konsultasi kesehatan, dan pemantauan kondisi jantung secara mudah, cepat, dan berkelanjutan.",
+                                        "To become a trusted heart health service platform helping the community perform early screening, health consultation, and heart condition monitoring easily, quickly, and sustainably.",
+                                      ),
                                       style: TextStyle(
                                         fontSize: 12,
                                         height: 1.45,
@@ -294,7 +304,7 @@ class TentangAplikasiPage extends StatelessWidget {
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
                                     Text(
-                                      "Misi",
+                                      tr("Misi", "Mission"),
                                       style: TextStyle(
                                         fontSize: 14,
                                         fontWeight: FontWeight.bold,
@@ -305,17 +315,26 @@ class TentangAplikasiPage extends StatelessWidget {
                                     ),
                                     const SizedBox(height: 8),
                                     _bulletItem(
-                                      "Menyediakan layanan skrining kesehatan jantung secara mudah dan cepat untuk membantu deteksi dini faktor risiko penyakit jantung.",
+                                      tr(
+                                        "Menyediakan layanan skrining kesehatan jantung secara mudah dan cepat untuk membantu deteksi dini faktor risiko penyakit jantung.",
+                                        "Provide easy and fast heart health screening services to aid early detection of heart disease risk factors.",
+                                      ),
                                       isDark: isDark,
                                     ),
                                     const SizedBox(height: 6),
                                     _bulletItem(
-                                      "Memberikan akses konsultasi kesehatan dengan tenaga kesehatan secara praktis melalui platform digital.",
+                                      tr(
+                                        "Memberikan akses konsultasi kesehatan dengan tenaga kesehatan secara praktis melalui platform digital.",
+                                        "Provide practical access to health consultations with healthcare professionals through a digital platform.",
+                                      ),
                                       isDark: isDark,
                                     ),
                                     const SizedBox(height: 6),
                                     _bulletItem(
-                                      "Menyajikan informasi dan edukasi kesehatan jantung yang akurat, mudah dipahami, dan berbasis praktik kesehatan.",
+                                      tr(
+                                        "Menyajikan informasi dan edukasi kesehatan jantung yang akurat, mudah dipahami, dan berbasis praktik kesehatan.",
+                                        "Present accurate, easy-to-understand, and evidence-based heart health education and information.",
+                                      ),
                                       isDark: isDark,
                                     ),
                                   ],
@@ -336,6 +355,8 @@ class TentangAplikasiPage extends StatelessWidget {
         );
       },
     );
+  },
+);
   }
 
   Widget _bulletItem(String text, {bool isDark = false}) {
@@ -378,13 +399,13 @@ class TentangAplikasiPage extends StatelessWidget {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceAround,
         children: [
-          _navItem(context, Icons.home_outlined, "Home", 0, isDark: isDark),
-          _navItem(context, Icons.favorite_border, "Skrining", 1,
+          _navItem(context, Icons.home_outlined, tr("Home", "Home"), 0, isDark: isDark),
+          _navItem(context, Icons.favorite_border, tr("Skrining", "Screening"), 1,
               isDark: isDark),
-          _navItem(context, Icons.person_outline, "Dokter", 2, isDark: isDark),
-          _navItem(context, Icons.description_outlined, "Riwayat", 3,
+          _navItem(context, Icons.person_outline, tr("Dokter", "Doctors"), 2, isDark: isDark),
+          _navItem(context, Icons.description_outlined, tr("Riwayat", "History"), 3,
               isDark: isDark),
-          _navItem(context, Icons.person_rounded, "Profil", 4,
+          _navItem(context, Icons.person_rounded, tr("Profil", "Profile"), 4,
               active: true, isDark: isDark),
         ],
       ),
