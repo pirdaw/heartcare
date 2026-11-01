@@ -19,16 +19,15 @@ class _ArtikelKesehatanPageState extends State<ArtikelKesehatanPage> {
 
   final List<Map<String, dynamic>> _articles = [
     {
-      'image':
-          'https://images.unsplash.com/photo-1530026405186-ed1f139313f8?w=800',
+      'image': 'assets/images/jantung_koroner_edukasi.jpg',
       'category': 'Penyakit Jantung',
-      'title': 'Mengenal Penyakit Jantung Koroner',
+      'title': 'Mengenal Penyakit Jantung Koroner: Gejala & Pencegahan Dini',
       'description':
-          'Penyakit jantung koroner merupakan salah satu penyakit yang perlu diwaspadai karena dapat memengaruhi fungsi jantung dalam memompa darah ke seluruh tubuh.',
-      'date': '08 September 2026',
-      'duration': '5 menit baca',
+          'Kajian komprehensif mengenai mekanisme aterosklerosis, gejala klinis angina pectoris, faktor risiko utama, dan protokol pencegahan dini berdasarkan bukti ilmiah.',
+      'date': '22 September 2026',
+      'duration': '6 menit baca',
       'content':
-          'Penyakit jantung koroner adalah kondisi ketika pembuluh darah yang berfungsi mengalirkan darah dan oksigen ke otot jantung mengalami penyempitan atau penyumbatan. Kondisi ini dapat menyebabkan aliran darah menuju jantung menjadi berkurang.\n\nPenyempitan pembuluh darah umumnya terjadi akibat penumpukan lemak atau plak pada dinding pembuluh darah.\n\nBeberapa faktor dapat meningkatkan risiko penyakit jantung, antara lain tekanan darah tinggi, kolesterol tinggi, kurang aktivitas fisik, dan pola makan kurang sehat.',
+          'Penyakit jantung koroner (PJK) adalah kondisi ketika pembuluh darah arteri koroner yang menyuplai darah dan oksigen ke otot jantung mengalami penyempitan atau penyumbatan akibat aterosklerosis.\n\nKondisi ini membatasi aliran darah ke miokardium dan berisiko memicu serangan jantung mendadak. Memahami gejala awal seperti angina pectoris serta melakukan pencegahan dini adalah langkah krusial menurunkan risiko.',
     },
     {
       'image':
@@ -589,23 +588,41 @@ class _ArtikelKesehatanPageState extends State<ArtikelKesehatanPage> {
                   ),
                   child: ClipRRect(
                     borderRadius: BorderRadius.circular(12.5),
-                    child: Image.network(
-                      item['image'],
-                      width: 90,
-                      height: 90,
-                      fit: BoxFit.cover,
-                      errorBuilder: (context, error, stackTrace) {
-                        return Center(
-                          child: Icon(
-                            Icons.article_outlined,
-                            size: 36,
-                            color: isDark
-                                ? const Color(0xFF38BDF8)
-                                : brandPrimary,
+                    child: (item['image'] as String).startsWith('http')
+                        ? Image.network(
+                            item['image'],
+                            width: 90,
+                            height: 90,
+                            fit: BoxFit.cover,
+                            errorBuilder: (context, error, stackTrace) {
+                              return Center(
+                                child: Icon(
+                                  Icons.article_outlined,
+                                  size: 36,
+                                  color: isDark
+                                      ? const Color(0xFF38BDF8)
+                                      : brandPrimary,
+                                ),
+                              );
+                            },
+                          )
+                        : Image.asset(
+                            item['image'],
+                            width: 90,
+                            height: 90,
+                            fit: BoxFit.cover,
+                            errorBuilder: (context, error, stackTrace) {
+                              return Center(
+                                child: Icon(
+                                  Icons.article_outlined,
+                                  size: 36,
+                                  color: isDark
+                                      ? const Color(0xFF38BDF8)
+                                      : brandPrimary,
+                                ),
+                              );
+                            },
                           ),
-                        );
-                      },
-                    ),
                   ),
                 ),
 

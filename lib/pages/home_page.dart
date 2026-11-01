@@ -454,7 +454,7 @@ class _HomePageState extends State<HomePage> {
 
                         const SizedBox(height: 18),
 
-                        // 2. QUICK SEARCH BAR
+// 2. QUICK SEARCH BAR
                         GestureDetector(
                           onTap: () {
                             Navigator.push(
@@ -1205,15 +1205,14 @@ class _HomePageState extends State<HomePage> {
 
                         _featuredArticleItem(
                           context,
-                          imageUrl:
-                              'https://images.unsplash.com/photo-1530026405186-ed1f139313f8?w=500',
+imageUrl: 'assets/images/jantung_koroner_edukasi.jpg',
                           category: tr('Penyakit Jantung', 'Heart Disease'),
                           title: tr(
                               'Mengenal Penyakit Jantung Koroner: Gejala & Pencegahan Dini',
                               'Understanding Coronary Heart Disease: Symptoms & Early Prevention'),
-                          duration: tr('5 menit baca', '5 min read'),
+                          duration: tr('6 menit baca', '6 min read'),
                           content:
-                              'Penyakit jantung koroner adalah kondisi ketika pembuluh darah yang berfungsi mengalirkan darah dan oksigen ke otot jantung mengalami penyempitan atau penyumbatan.\n\nKondisi ini umumnya terjadi akibat penumpukan lemak atau plak kolesterol pada dinding pembuluh arteri koroner. Menjaga pola makan seimbang dan berolahraga rutin adalah kunci utama pencegahan.',
+                              'Penyakit jantung koroner (PJK) terjadi akibat penyempitan arteri koroner oleh penumpukan plak ateroma kolesterol (aterosklerosis). Pelajari tanda khas angina pectoris, 7 faktor risiko utama menurut kajian jurnal medis, serta protokol pencegahan dini untuk melindungi fungsi jantung Anda.',
                           isDark: isDark,
                         ),
 
@@ -1756,23 +1755,41 @@ final Color borderColor = isDark ? const Color(0xFF1E3A5F) : const Color(0xFFBAE
           children: [
             ClipRRect(
               borderRadius: BorderRadius.circular(10),
-              child: Image.network(
-                imageUrl,
-                width: 72,
-                height: 72,
-                fit: BoxFit.cover,
-                errorBuilder: (context, error, stackTrace) {
-                  return Container(
-                    width: 72,
-                    height: 72,
-                    color: isDark ? const Color(0xFF0F2B3E) : const Color(0xFFE8F7FB),
-                    child: Icon(
-                      Icons.article_outlined,
-                      color: isDark ? const Color(0xFF38BDF8) : const Color(0xFF0098B9),
+              child: imageUrl.startsWith('http')
+                  ? Image.network(
+                      imageUrl,
+                      width: 72,
+                      height: 72,
+                      fit: BoxFit.cover,
+                      errorBuilder: (context, error, stackTrace) {
+                        return Container(
+                          width: 72,
+                          height: 72,
+                          color: isDark ? const Color(0xFF0F2B3E) : const Color(0xFFE8F7FB),
+                          child: Icon(
+                            Icons.article_outlined,
+                            color: isDark ? const Color(0xFF38BDF8) : const Color(0xFF0098B9),
+                          ),
+                        );
+                      },
+                    )
+                  : Image.asset(
+                      imageUrl,
+                      width: 72,
+                      height: 72,
+                      fit: BoxFit.cover,
+                      errorBuilder: (context, error, stackTrace) {
+                        return Container(
+                          width: 72,
+                          height: 72,
+                          color: isDark ? const Color(0xFF0F2B3E) : const Color(0xFFE8F7FB),
+                          child: Icon(
+                            Icons.article_outlined,
+                            color: isDark ? const Color(0xFF38BDF8) : const Color(0xFF0098B9),
+                          ),
+                        );
+                      },
                     ),
-                  );
-                },
-              ),
             ),
             const SizedBox(width: 12),
             Expanded(
