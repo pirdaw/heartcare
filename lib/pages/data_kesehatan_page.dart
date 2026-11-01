@@ -558,54 +558,42 @@ class _DataKesehatanPageState extends State<DataKesehatanPage> {
     bool isLast = false,
     bool isDark = false,
   }) {
-    return InkWell(
-      onTap: _showEditSheet,
-      borderRadius: BorderRadius.vertical(
-        top: isFirst ? const Radius.circular(16) : Radius.zero,
-        bottom: isLast ? const Radius.circular(16) : Radius.zero,
-      ),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-        child: Row(
-          children: [
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    label,
-                    style: TextStyle(
-                      fontSize: 12,
-                      fontWeight: FontWeight.bold,
-                      color: isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B),
-                    ),
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+      child: Row(
+        children: [
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  label,
+                  style: TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.bold,
+                    color: isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B),
                   ),
-                  const SizedBox(height: 3),
-                  Text(
-                    value.trim().isNotEmpty ? value : "Belum diisi",
-                    style: TextStyle(
-                      fontSize: 13,
-                      fontWeight: FontWeight.w600,
-                      color: value.trim().isNotEmpty
-                          ? (isDark ? Colors.white : const Color(0xFF0F172A))
-                          : (isDark
-                              ? const Color(0xFF64748B)
-                              : const Color(0xFF94A3B8)),
-                      fontStyle: value.trim().isNotEmpty
-                          ? FontStyle.normal
-                          : FontStyle.italic,
-                    ),
+                ),
+                const SizedBox(height: 3),
+                Text(
+                  value.trim().isNotEmpty ? value : "Belum diisi",
+                  style: TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w600,
+                    color: value.trim().isNotEmpty
+                        ? (isDark ? Colors.white : const Color(0xFF0F172A))
+                        : (isDark
+                            ? const Color(0xFF64748B)
+                            : const Color(0xFF94A3B8)),
+                    fontStyle: value.trim().isNotEmpty
+                        ? FontStyle.normal
+                        : FontStyle.italic,
                   ),
-                ],
-              ),
+                ),
+              ],
             ),
-            Icon(
-              Icons.chevron_right_rounded,
-              size: 20,
-              color: isDark ? const Color(0xFF64748B) : const Color(0xFF94A3B8),
-            ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
