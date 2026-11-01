@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'Skrining/screening_model.dart';
 import 'package:heartcare/services/theme_service.dart';
 import 'package:heartcare/services/doctor_service.dart';
 import 'home_page.dart';
@@ -17,6 +18,8 @@ class DetailDokterPage extends StatelessWidget {
   final String tentang;
   final bool isOnline;
   final String telepon;
+  final ScreeningData? screeningData;
+  final HeartRiskResult? riskResult;
 
   const DetailDokterPage({
     super.key,
@@ -31,6 +34,8 @@ class DetailDokterPage extends StatelessWidget {
         'Berpengalaman dalam memberikan pemeriksaan dan penanganan komprehensif terhadap berbagai kondisi jantung dan kardiovaskular.',
     this.isOnline = true,
     this.telepon = '',
+    this.screeningData,
+    this.riskResult,
   });
 
   static const Color brandPrimary = Color(0xFF0284C7);
@@ -457,6 +462,8 @@ class DetailDokterPage extends StatelessWidget {
                                       doctorName: nama,
                                       doctorSpecialty: spesialis,
                                       doctorPhoto: imagePath,
+                                      initialScreeningData: screeningData,
+                                      initialRiskResult: riskResult,
                                     ),
                                   ),
                                 );

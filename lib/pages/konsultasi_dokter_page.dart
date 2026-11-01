@@ -6,6 +6,8 @@ import 'package:image_picker/image_picker.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:heartcare/pages/Skrining/screening_input_page.dart';
+import 'package:heartcare/pages/Skrining/screening_model.dart';
+import 'package:heartcare/pages/riwayat_model.dart';
 import 'package:heartcare/pages/profil_page.dart';
 import 'package:heartcare/services/theme_service.dart';
 import '../services/user_profile_service.dart';
@@ -38,6 +40,8 @@ class KonsultasiDokterPage extends StatefulWidget {
   final String? patientName;
   final String? patientPhoto;
   final String? patientId;
+  final ScreeningData? initialScreeningData;
+  final HeartRiskResult? initialRiskResult;
 
   const KonsultasiDokterPage({
     super.key,
@@ -50,6 +54,8 @@ class KonsultasiDokterPage extends StatefulWidget {
     this.patientName,
     this.patientPhoto,
     this.patientId,
+    this.initialScreeningData,
+    this.initialRiskResult,
   });
 
   @override
@@ -67,6 +73,7 @@ class _KonsultasiDokterPageState
   String? _activeChatId;
   bool _isLoadingChat = false;
   final bool _isDoctorTyping = false;
+  bool _hasSharedInitialScreening = false;
   final List<ChatMessage> _optimisticMessages = [];
   String selectedReminder = "1 hari sebelumnya";
   StreamSubscription? _doctorStatusSub;
@@ -377,7 +384,7 @@ class _KonsultasiDokterPageState
                     isDark: isDark,
                     onTap: () {
                       Navigator.pop(context);
-                      _sendAttachment("Hasil Skrining Jantung HeartCare (Risiko Tinggi)");
+                      _promptShareScreening();
                     },
                   ),
                 const SizedBox(height: 8),
@@ -445,6 +452,780 @@ class _KonsultasiDokterPageState
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  void _promptShareScreening() {
+    final screeningData = widget.initialScreeningData ?? RiwayatService().latestScreeningData;
+    final riskResult = widget.initialRiskResult ?? RiwayatService().latestRiskResult;
+    final isDark = ThemeService.isDarkMode;
+
+    if (screeningData == null) {
+      showModalBottomSheet(
+        context: context,
+        backgroundColor: Colors.transparent,
+        builder: (ctx) => Container(
+          padding: const EdgeInsets.all(22),
+          decoration: BoxDecoration(
+            color: isDark ? const Color(0xFF1E293B) : Colors.white,
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                width: 40,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0),
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+              const SizedBox(height: 18),
+              Container(
+                width: 60,
+                height: 60,
+                decoration: BoxDecoration(
+                  color: const Color(0xFF0284C7).withValues(alpha: 0.12),
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(Icons.monitor_heart_outlined, color: Color(0xFF0284C7), size: 32),
+              ),
+              const SizedBox(height: 14),
+              Text(
+                "Belum Ada Data Skrining",
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                  color: isDark ? Colors.white : const Color(0xFF0F172A),
+                ),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                "Anda belum melakukan skrining mandiri. Lakukan skrining risiko penyakit jantung terlebih dahulu untuk membagikan hasilnya kepada dokter.",
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontSize: 13,
+                  color: isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B),
+                ),
+              ),
+              const SizedBox(height: 20),
+              SizedBox(
+                width: double.infinity,
+                height: 46,
+                child: ElevatedButton.icon(
+                  onPressed: () {
+                    Navigator.pop(ctx);
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (_) => const ScreeningInputPage()),
+                    );
+                  },
+                  icon: const Icon(Icons.favorite_rounded, size: 18),
+                  label: const Text("Mulai Skrining Sekarang", style: TextStyle(fontWeight: FontWeight.bold)),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFF0284C7),
+                    foregroundColor: Colors.white,
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
+      return;
+    }
+
+    final activeResult = riskResult ??
+        HeartRiskResult(
+          level: RiskLevel.low,
+          title: 'RISIKO RENDAH',
+          subtitle: 'Kondisi jantung dalam batas normal',
+          description: '',
+          advice: '',
+          statusColor: const Color(0xFF0D9488),
+          backgroundColor: const Color(0xFFCCFBF1),
+        );
+
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      isScrollControlled: true,
+      builder: (ctx) => Container(
+        padding: const EdgeInsets.fromLTRB(20, 16, 20, 24),
+        decoration: BoxDecoration(
+          color: isDark ? const Color(0xFF1E293B) : Colors.white,
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Center(
+              child: Container(
+                width: 40,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0),
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+            ),
+            const SizedBox(height: 16),
+            Row(
+              children: [
+                Container(
+                  width: 44,
+                  height: 44,
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF6366F1).withValues(alpha: 0.15),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: const Icon(Icons.monitor_heart_rounded, color: Color(0xFF6366F1), size: 24),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        "Bagikan Hasil Skrining AI",
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                          color: isDark ? Colors.white : const Color(0xFF0F172A),
+                        ),
+                      ),
+                      Text(
+                        "Kepada ${widget.doctorName}",
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 16),
+            Container(
+              padding: const EdgeInsets.all(14),
+              decoration: BoxDecoration(
+                color: isDark ? const Color(0xFF0F172A) : activeResult.backgroundColor.withValues(alpha: 0.6),
+                borderRadius: BorderRadius.circular(14),
+                border: Border.all(color: activeResult.statusColor.withValues(alpha: 0.5)),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        activeResult.title,
+                        style: TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.bold,
+                          color: activeResult.statusColor,
+                        ),
+                      ),
+                      if (activeResult.probability != null)
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                          decoration: BoxDecoration(
+                            color: activeResult.statusColor.withValues(alpha: 0.15),
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: Text(
+                            "AI Prob: ${(activeResult.probability! * 100).toStringAsFixed(1)}%",
+                            style: TextStyle(
+                              fontSize: 11,
+                              fontWeight: FontWeight.bold,
+                              color: activeResult.statusColor,
+                            ),
+                          ),
+                        ),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    activeResult.subtitle,
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: isDark ? const Color(0xFFE2E8F0) : const Color(0xFF1E293B),
+                    ),
+                  ),
+                  const Divider(height: 16),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: _miniCardInfo("Tekanan Darah", screeningData.displayBloodPressure, isDark),
+                      ),
+                      Expanded(
+                        child: _miniCardInfo("Kolesterol", screeningData.displayCholesterol, isDark),
+                      ),
+                      Expanded(
+                        child: _miniCardInfo("Detak Maks", screeningData.displayMaxHeartRate, isDark),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 6),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: _miniCardInfo("Nyeri Dada", screeningData.displayChestPainType, isDark),
+                      ),
+                      Expanded(
+                        child: _miniCardInfo("EKG Istirahat", screeningData.displayEcg, isDark),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 20),
+            Row(
+              children: [
+                Expanded(
+                  child: OutlinedButton(
+                    onPressed: () => Navigator.pop(ctx),
+                    style: OutlinedButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                    ),
+                    child: const Text("Batal"),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  flex: 2,
+                  child: ElevatedButton.icon(
+                    onPressed: () {
+                      Navigator.pop(ctx);
+                      _sendScreeningData(screeningData, activeResult);
+                    },
+                    icon: const Icon(Icons.send_rounded, size: 18),
+                    label: const Text("Kirim ke Dokter", style: TextStyle(fontWeight: FontWeight.bold)),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFF0284C7),
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _miniCardInfo(String label, String value, bool isDark) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          label,
+          style: TextStyle(
+            fontSize: 10,
+            color: isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B),
+          ),
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+        ),
+        const SizedBox(height: 1),
+        Text(
+          value,
+          style: TextStyle(
+            fontSize: 11.5,
+            fontWeight: FontWeight.bold,
+            color: isDark ? Colors.white : const Color(0xFF0F172A),
+          ),
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+        ),
+      ],
+    );
+  }
+
+  Future<void> _sendScreeningData(ScreeningData data, HeartRiskResult result) async {
+    if (_activeChatId == null) {
+      await _initChat();
+    }
+    if (_activeChatId == null) return;
+
+    final profile = UserProfileService.instance.currentProfile;
+    final senderRole = widget.isDoctorView ? 'doctor' : 'patient';
+    final senderName = widget.isDoctorView
+        ? widget.doctorName
+        : (widget.patientName ??
+            (profile.nama.isNotEmpty ? profile.nama : 'Pasien'));
+
+    final reportText = data.toDoctorReport(
+      patientName: senderName,
+      result: result,
+    );
+
+    final now = DateTime.now();
+    final timeStr =
+        "${now.hour.toString().padLeft(2, '0')}.${now.minute.toString().padLeft(2, '0')}";
+
+    final optMsg = ChatMessage(
+      id: 'opt_scr_${now.millisecondsSinceEpoch}',
+      senderId: widget.isDoctorView ? 'doctor' : 'patient',
+      senderRole: senderRole,
+      senderName: senderName,
+      message: reportText,
+      attachmentType: 'screening',
+      imagePath: 'assets/images/screening_jantung.png',
+      timestamp: now,
+      timeFormatted: timeStr,
+      isRead: false,
+    );
+
+    setState(() {
+      _optimisticMessages.add(optMsg);
+    });
+    _scrollToBottom();
+
+    await ChatService.instance.sendMessage(
+      chatId: _activeChatId!,
+      message: reportText,
+      senderRole: senderRole,
+      senderName: senderName,
+      attachmentType: 'screening',
+      imagePath: 'assets/images/screening_jantung.png',
+      patientId: widget.patientId,
+      patientName: widget.patientName ?? profile.nama,
+      doctorId: widget.doctorId,
+      doctorName: widget.doctorName,
+    );
+
+    _scrollToBottom();
+
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text("Data skrining jantung berhasil dibagikan ke dokter!"),
+          backgroundColor: Color(0xFF10B981),
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+    }
+  }
+
+  Widget _buildScreeningMessageBubble({
+    required ChatMessage msg,
+    required bool isMyMessage,
+    required bool isDark,
+  }) {
+    final text = msg.message;
+    final isHigh = text.contains('RISIKO TINGGI');
+    final isModerate = text.contains('RISIKO SEDANG');
+
+    final Color statusColor = isHigh
+        ? const Color(0xFFDC2626)
+        : (isModerate ? const Color(0xFFD97706) : const Color(0xFF0D9488));
+
+    final Color badgeBg = isHigh
+        ? const Color(0xFFFFE4E6)
+        : (isModerate ? const Color(0xFFFEF3C7) : const Color(0xFFCCFBF1));
+
+    final String statusText = isHigh
+        ? 'RISIKO TINGGI'
+        : (isModerate ? 'RISIKO SEDANG' : 'RISIKO RENDAH');
+
+    String bp = '-';
+    String chol = '-';
+    String hr = '-';
+    String cp = '-';
+
+    for (final line in text.split('\n')) {
+      if (line.contains('Tekanan Darah')) {
+        bp = line.replaceAll('• Tekanan Darah Istirahat:', '').replaceAll('• Tekanan Darah:', '').trim();
+      } else if (line.contains('Kolesterol Total')) {
+        chol = line.replaceAll('• Kolesterol Total:', '').trim();
+      } else if (line.contains('Detak Jantung')) {
+        hr = line.replaceAll('• Detak Jantung Maksimum:', '').replaceAll('• Detak Jantung Maks:', '').trim();
+      } else if (line.contains('Tipe Nyeri Dada')) {
+        cp = line.replaceAll('• Tipe Nyeri Dada:', '').trim();
+      }
+    }
+
+    return Align(
+      alignment: isMyMessage ? Alignment.centerRight : Alignment.centerLeft,
+      child: Container(
+        constraints: BoxConstraints(
+          maxWidth: MediaQuery.of(context).size.width * 0.82,
+        ),
+        margin: const EdgeInsets.symmetric(vertical: 4),
+        decoration: BoxDecoration(
+          color: isDark ? const Color(0xFF1E293B) : Colors.white,
+          borderRadius: BorderRadius.only(
+            topLeft: const Radius.circular(18),
+            topRight: const Radius.circular(18),
+            bottomLeft: Radius.circular(isMyMessage ? 18 : 4),
+            bottomRight: Radius.circular(isMyMessage ? 4 : 18),
+          ),
+          border: Border.all(
+            color: isMyMessage
+                ? const Color(0xFF0284C7)
+                : (isDark ? const Color(0xFF334155) : const Color(0xFFCBD5E1)),
+            width: 1.5,
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: isDark ? 0.25 : 0.05),
+              blurRadius: 10,
+              offset: const Offset(0, 3),
+            ),
+          ],
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+              decoration: BoxDecoration(
+                color: isDark ? const Color(0xFF0F172A) : const Color(0xFFF8FAFC),
+                borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
+              ),
+              child: Row(
+                children: [
+                  Container(
+                    width: 32,
+                    height: 32,
+                    decoration: BoxDecoration(
+                      color: statusColor.withValues(alpha: 0.15),
+                      shape: BoxShape.circle,
+                    ),
+                    child: Icon(Icons.monitor_heart_rounded, size: 18, color: statusColor),
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text(
+                          "Hasil Skrining Jantung AI",
+                          style: TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.bold,
+                            color: Color(0xFF0284C7),
+                          ),
+                        ),
+                        Text(
+                          msg.senderRole == 'patient'
+                              ? "Dibagikan oleh Pasien"
+                              : "Catatan Skrining",
+                          style: TextStyle(
+                            fontSize: 10,
+                            color: isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                    decoration: BoxDecoration(
+                      color: badgeBg,
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(color: statusColor.withValues(alpha: 0.4)),
+                    ),
+                    child: Text(
+                      statusText,
+                      style: TextStyle(
+                        fontSize: 10,
+                        fontWeight: FontWeight.w800,
+                        color: statusColor,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(14, 10, 14, 6),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(10),
+                    decoration: BoxDecoration(
+                      color: isDark ? const Color(0xFF0F172A) : const Color(0xFFF1F5F9),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: _miniCardInfo("Tekanan Darah", bp, isDark),
+                        ),
+                        Container(width: 1, height: 26, color: isDark ? Colors.white12 : Colors.black12),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: _miniCardInfo("Kolesterol", chol, isDark),
+                        ),
+                        Container(width: 1, height: 26, color: isDark ? Colors.white12 : Colors.black12),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: _miniCardInfo("Detak Maks", hr, isDark),
+                        ),
+                      ],
+                    ),
+                  ),
+                  if (cp != '-') ...[
+                    const SizedBox(height: 6),
+                    Text(
+                      "• Nyeri Dada: $cp",
+                      style: TextStyle(
+                        fontSize: 11,
+                        color: isDark ? const Color(0xFFCBD5E1) : const Color(0xFF334155),
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ],
+                ],
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(14, 4, 14, 10),
+              child: SizedBox(
+                width: double.infinity,
+                height: 38,
+                child: ElevatedButton.icon(
+                  onPressed: () => _showFullScreeningDetailModal(context, msg.message, isDark),
+                  icon: const Icon(Icons.assignment_outlined, size: 15),
+                  label: const Text(
+                    "Lihat Detail Skrining Lengkap",
+                    style: TextStyle(fontSize: 11.5, fontWeight: FontWeight.bold),
+                  ),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFF0284C7),
+                    foregroundColor: Colors.white,
+                    elevation: 0,
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                  ),
+                ),
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.only(right: 12, bottom: 6),
+              child: Align(
+                alignment: Alignment.centerRight,
+                child: Text(
+                  msg.timeFormatted,
+                  style: TextStyle(
+                    fontSize: 9.5,
+                    color: isDark ? const Color(0xFF64748B) : const Color(0xFF94A3B8),
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _showFullScreeningDetailModal(BuildContext context, String fullReport, bool isDark) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (ctx) {
+        return Container(
+          height: MediaQuery.of(context).size.height * 0.85,
+          decoration: BoxDecoration(
+            color: isDark ? const Color(0xFF0F172A) : const Color(0xFFF8FAFC),
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+          ),
+          child: Column(
+            children: [
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
+                decoration: BoxDecoration(
+                  color: isDark ? const Color(0xFF1E293B) : Colors.white,
+                  borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+                  border: Border(bottom: BorderSide(color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0))),
+                ),
+                child: Row(
+                  children: [
+                    Container(
+                      width: 36,
+                      height: 36,
+                      decoration: const BoxDecoration(
+                        color: Color(0xFFE0F2FE),
+                        shape: BoxShape.circle,
+                      ),
+                      child: const Icon(Icons.monitor_heart_rounded, color: Color(0xFF0284C7), size: 20),
+                    ),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            "Detail Rekam Skrining AI",
+                            style: TextStyle(
+                              fontSize: 15,
+                              fontWeight: FontWeight.bold,
+                              color: isDark ? Colors.white : const Color(0xFF0F172A),
+                            ),
+                          ),
+                          Text(
+                            "Data 11 Parameter Klinis Pasien",
+                            style: TextStyle(
+                              fontSize: 11,
+                              color: isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    IconButton(
+                      icon: const Icon(Icons.close_rounded),
+                      onPressed: () => Navigator.pop(ctx),
+                      color: isDark ? Colors.white : const Color(0xFF0F172A),
+                    ),
+                  ],
+                ),
+              ),
+              Expanded(
+                child: SingleChildScrollView(
+                  padding: const EdgeInsets.all(18),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Container(
+                        width: double.infinity,
+                        padding: const EdgeInsets.all(16),
+                        decoration: BoxDecoration(
+                          color: isDark ? const Color(0xFF1E293B) : Colors.white,
+                          borderRadius: BorderRadius.circular(16),
+                          border: Border.all(
+                            color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0),
+                          ),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withValues(alpha: isDark ? 0.2 : 0.04),
+                              blurRadius: 8,
+                              offset: const Offset(0, 2),
+                            ),
+                          ],
+                        ),
+                        child: SelectableText(
+                          fullReport,
+                          style: TextStyle(
+                            fontSize: 13,
+                            height: 1.55,
+                            color: isDark ? const Color(0xFFE2E8F0) : const Color(0xFF1E293B),
+                            fontFamily: 'monospace',
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                      SizedBox(
+                        width: double.infinity,
+                        height: 46,
+                        child: ElevatedButton(
+                          onPressed: () => Navigator.pop(ctx),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: const Color(0xFF0284C7),
+                            foregroundColor: Colors.white,
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                          ),
+                          child: const Text("Tutup", style: TextStyle(fontWeight: FontWeight.bold)),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildInitialScreeningBanner(bool isDark) {
+    final result = widget.initialRiskResult;
+    final color = result?.statusColor ?? const Color(0xFF0284C7);
+
+    return Container(
+      margin: const EdgeInsets.fromLTRB(14, 8, 14, 4),
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: isDark ? const Color(0xFF1E293B) : const Color(0xFFE0F2FE),
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: color, width: 1.2),
+      ),
+      child: Row(
+        children: [
+          Icon(Icons.monitor_heart_rounded, color: color, size: 28),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  "Hasil Skrining: ${result?.title ?? 'Tersedia'}",
+                  style: TextStyle(
+                    fontSize: 12.5,
+                    fontWeight: FontWeight.bold,
+                    color: isDark ? Colors.white : const Color(0xFF0F172A),
+                  ),
+                ),
+                Text(
+                  "Bagikan data 11 parameter ke dokter agar evaluasi klinis dapat dilakukan.",
+                  style: TextStyle(
+                    fontSize: 11,
+                    color: isDark ? const Color(0xFF94A3B8) : const Color(0xFF475569),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(width: 8),
+          ElevatedButton(
+            onPressed: () {
+              if (widget.initialScreeningData != null) {
+                _sendScreeningData(
+                  widget.initialScreeningData!,
+                  widget.initialRiskResult ?? HeartRiskAnalyzer.resultFor(0.1),
+                );
+                setState(() {
+                  _hasSharedInitialScreening = true;
+                });
+              }
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFF0284C7),
+              foregroundColor: Colors.white,
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+              minimumSize: const Size(0, 32),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+            ),
+            child: const Text("Kirim", style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold)),
+          ),
+          IconButton(
+            padding: EdgeInsets.zero,
+            constraints: const BoxConstraints(),
+            icon: const Icon(Icons.close, size: 16),
+            onPressed: () {
+              setState(() {
+                _hasSharedInitialScreening = true;
+              });
+            },
+          ),
+        ],
       ),
     );
   }
@@ -1080,6 +1861,8 @@ class _KonsultasiDokterPageState
                   // ==================================================
                   // PENGINGAT JIKA DOKTER SEDANG OFFLINE (UNTUK PASIEN)
                   // ==================================================
+                  if (widget.initialScreeningData != null && !_hasSharedInitialScreening)
+                    _buildInitialScreeningBanner(isDark),
                   if (!widget.isDoctorView && !_isDoctorOnline)
                     Container(
                       margin: const EdgeInsets.fromLTRB(14, 8, 14, 4),
@@ -1274,7 +2057,17 @@ class _KonsultasiDokterPageState
 
                                   return Padding(
                                     padding: const EdgeInsets.only(bottom: 16),
-                                    child: msg.imagePath != null &&
+                                    child: (msg.attachmentType == 'screening' ||
+                                            (msg.attachmentType != null &&
+                                                msg.attachmentType!.toLowerCase().contains('skrining')) ||
+                                            msg.message.contains('LAPORAN HASIL SKRINING JANTUNG') ||
+                                            msg.message.contains('LAPORAN SKRINING JANTUNG'))
+                                        ? _buildScreeningMessageBubble(
+                                            msg: msg,
+                                            isMyMessage: isMyMessage,
+                                            isDark: isDark,
+                                          )
+                                        : msg.imagePath != null &&
                                             msg.imagePath!.isNotEmpty
                                         ? _buildImageMessageBubble(
                                             msg: msg,
