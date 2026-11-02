@@ -210,7 +210,10 @@ class ScreeningResultPage extends StatelessWidget {
                               Navigator.push(
                                 context,
                                 MaterialPageRoute(
-                                  builder: (context) => const PilihDokterPage(),
+                                  builder: (context) => PilihDokterPage(
+                                    initialScreeningData: data,
+                                    initialRiskResult: result,
+                                  ),
                                 ),
                               );
                             },

@@ -1,4 +1,9 @@
+import 'dart:convert';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:heartcare/pages/Skrining/screening_model.dart';
 
 enum RiwayatType { skrining, konsultasi }
@@ -220,5 +225,86 @@ class RiwayatService {
 
     // Sisipkan di posisi teratas riwayat
     _items.insert(0, newItem);
+    _latestScreeningData = data;
+    _latestRiskResult = result;
+    _saveLatestToLocal(data, result, newItem);
+    _saveToFirestore(data, result, newItem);
+  }
+
+  ScreeningData? _latestScreeningData;
+  HeartRiskResult? _latestRiskResult;
+
+  ScreeningData? get latestScreeningData {
+    if (_latestScreeningData != null) return _latestScreeningData;
+    for (final it in _items) {
+      if (it.type == RiwayatType.skrining && it.screeningData != null) {
+        return it.screeningData;
+      }
+    }
+    return null;
+  }
+
+  HeartRiskResult? get latestRiskResult {
+    if (_latestRiskResult != null) return _latestRiskResult;
+    for (final it in _items) {
+      if (it.type == RiwayatType.skrining && it.riskResult != null) {
+        return it.riskResult;
+      }
+    }
+    return null;
+  }
+
+  RiwayatItem? getLatestScreeningItem() {
+    for (final it in _items) {
+      if (it.type == RiwayatType.skrining && it.screeningData != null) {
+        return it;
+      }
+    }
+    return null;
+  }
+
+  Future<void> _saveLatestToLocal(
+    ScreeningData data,
+    HeartRiskResult result,
+    RiwayatItem item,
+  ) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString('heartcare_latest_screening_data', data.toJson());
+      await prefs.setString('heartcare_latest_screening_result', result.toJson());
+      await prefs.setString('heartcare_latest_screening_date', item.date);
+    } catch (e) {
+      debugPrint('[RiwayatService] Error saving to local: $e');
+    }
+  }
+
+  Future<void> _saveToFirestore(
+    ScreeningData data,
+    HeartRiskResult result,
+    RiwayatItem item,
+  ) async {
+    try {
+      final user = FirebaseAuth.instance.currentUser;
+      if (user == null) return;
+      await FirebaseFirestore.instance
+          .collection('users')
+          .doc(user.uid)
+          .collection('screenings')
+          .doc(item.id)
+          .set({
+        'id': item.id,
+        'userId': user.uid,
+        'date': item.date,
+        'timestamp': FieldValue.serverTimestamp(),
+        'status': item.status,
+        'title': item.title,
+        'riskLevel': result.level.name,
+        'riskProbability': result.probability,
+        'screeningData': data.toMap(),
+        'riskResult': result.toMap(),
+      });
+    } catch (e) {
+      debugPrint('[RiwayatService] Error saving to Firestore: $e');
+    }
   }
 }

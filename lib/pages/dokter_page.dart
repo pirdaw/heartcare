@@ -8,12 +8,20 @@ import 'profil_page.dart';
 import 'screening_intro_page.dart';
 import 'riwayat_page.dart';
 import 'signup_page.dart';
+import 'Skrining/screening_model.dart';
 import '../services/theme_service.dart';
 import '../services/doctor_service.dart';
 import '../services/language_service.dart';
 
 class PilihDokterPage extends StatefulWidget {
-  const PilihDokterPage({super.key});
+  final ScreeningData? initialScreeningData;
+  final HeartRiskResult? initialRiskResult;
+
+  const PilihDokterPage({
+    super.key,
+    this.initialScreeningData,
+    this.initialRiskResult,
+  });
 
   @override
   State<PilihDokterPage> createState() => _PilihDokterPageState();
@@ -244,6 +252,53 @@ class _PilihDokterPageState extends State<PilihDokterPage> {
               return SafeArea(
                 child: Column(
                   children: [
+                    if (widget.initialScreeningData != null)
+                      Padding(
+                        padding: const EdgeInsets.fromLTRB(20, 8, 20, 4),
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                          decoration: BoxDecoration(
+                            color: isDark ? const Color(0xFF1E293B) : const Color(0xFFE0F2FE),
+                            borderRadius: BorderRadius.circular(14),
+                            border: Border.all(
+                              color: isDark ? const Color(0xFF38BDF8) : const Color(0xFF0284C7),
+                              width: 1.2,
+                            ),
+                          ),
+                          child: Row(
+                            children: [
+                              Icon(
+                                Icons.monitor_heart_rounded,
+                                color: widget.initialRiskResult?.statusColor ?? const Color(0xFF0284C7),
+                                size: 26,
+                              ),
+                              const SizedBox(width: 10),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      "Data Skrining AI Terlampir",
+                                      style: TextStyle(
+                                        fontSize: 13,
+                                        fontWeight: FontWeight.bold,
+                                        color: isDark ? Colors.white : const Color(0xFF0F172A),
+                                      ),
+                                    ),
+                                    Text(
+                                      "Pilih dokter untuk otomatis membagikan hasil skrining jantung Anda.",
+                                      style: TextStyle(
+                                        fontSize: 11,
+                                        color: isDark ? const Color(0xFF94A3B8) : const Color(0xFF475569),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
                     // =========================================================
                     // SEARCH BAR
                     // =========================================================
@@ -463,6 +518,8 @@ class _PilihDokterPageState extends State<PilihDokterPage> {
                                                         dokter['whatsapp'] ??
                                                         '')
                                                     .toString(),
+                                                screeningData: widget.initialScreeningData,
+                                                riskResult: widget.initialRiskResult,
                                               ),
                                             ),
                                           );
@@ -485,6 +542,8 @@ class _PilihDokterPageState extends State<PilihDokterPage> {
                                                   doctorSpecialty:
                                                       dokter['spesialis']
                                                           as String,
+                                                  initialScreeningData: widget.initialScreeningData,
+                                                  initialRiskResult: widget.initialRiskResult,
                                                 ),
                                               ),
                                             );

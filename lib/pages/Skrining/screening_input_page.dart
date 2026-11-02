@@ -66,9 +66,140 @@ class _ScreeningInputPageState extends State<ScreeningInputPage> {
   }
 
   // ============================================================
+  // VALIDASI INPUT PER STEP
+  // ============================================================
+  String? _validateCurrentStep() {
+    switch (_currentStep) {
+      case 1:
+        final ageStr = _ageController.text.trim();
+        if (ageStr.isEmpty) {
+          return 'Mohon masukkan usia Anda terlebih dahulu.';
+        }
+        final age = int.tryParse(ageStr);
+        if (age == null || age <= 0 || age > 120) {
+          return 'Mohon masukkan usia yang valid (1 - 120 tahun).';
+        }
+        if (_selectedGender == null || _selectedGender!.trim().isEmpty) {
+          return 'Mohon pilih jenis kelamin Anda (Laki-laki / Perempuan).';
+        }
+        return null;
+
+      case 2:
+        if (_selectedChestPain == null || _selectedChestPain!.trim().isEmpty) {
+          return 'Mohon pilih jenis nyeri dada yang Anda rasakan (Pertanyaan 1).';
+        }
+        final bpStr = _systolicController.text.trim();
+        if (bpStr.isEmpty) {
+          return 'Mohon masukkan nilai tekanan darah sistolik (Pertanyaan 2).';
+        }
+        final bp = double.tryParse(bpStr);
+        if (bp == null || bp <= 0) {
+          return 'Mohon masukkan nilai tekanan darah yang valid (contoh: 120).';
+        }
+        final cholStr = _cholesterolController.text.trim();
+        if (cholStr.isEmpty) {
+          return 'Mohon masukkan kadar kolesterol total (Pertanyaan 3).';
+        }
+        final chol = double.tryParse(cholStr);
+        if (chol == null || chol <= 0) {
+          return 'Mohon masukkan kadar kolesterol yang valid (contoh: 200).';
+        }
+        return null;
+
+      case 3:
+        if (_fastingBloodSugar == null || _fastingBloodSugar!.trim().isEmpty) {
+          return 'Mohon pilih jawaban gula darah puasa (Pertanyaan 4).';
+        }
+        if (_restingEcg == null || _restingEcg!.trim().isEmpty) {
+          return 'Mohon pilih hasil pemeriksaan EKG saat istirahat (Pertanyaan 5).';
+        }
+        final hrStr = _maxHeartRateController.text.trim();
+        if (hrStr.isEmpty) {
+          return 'Mohon masukkan detak jantung maksimum (Pertanyaan 6).';
+        }
+        final hr = double.tryParse(hrStr);
+        if (hr == null || hr <= 0) {
+          return 'Mohon masukkan detak jantung maksimum yang valid (contoh: 150).';
+        }
+        return null;
+
+      case 4:
+        if (_exerciseAngina == null || _exerciseAngina!.trim().isEmpty) {
+          return 'Mohon pilih jawaban nyeri dada saat aktivitas (Pertanyaan 7).';
+        }
+        final oldpeakStr = _oldpeakController.text.trim().replaceAll(',', '.');
+        if (oldpeakStr.isEmpty) {
+          return 'Mohon masukkan nilai depresi ST / oldpeak (Pertanyaan 8).';
+        }
+        final oldpeak = double.tryParse(oldpeakStr);
+        if (oldpeak == null || oldpeak < 0) {
+          return 'Mohon masukkan nilai oldpeak yang valid (contoh: 1.0 atau 0).';
+        }
+        if (_stSlope == null || _stSlope!.trim().isEmpty) {
+          return 'Mohon pilih kemiringan segmen ST (Pertanyaan 9).';
+        }
+        return null;
+
+      case 5:
+        if (_majorVessels == null) {
+          return 'Mohon pilih jumlah pembuluh darah utama (Pertanyaan 10).';
+        }
+        if (_thal == null || _thal!.trim().isEmpty) {
+          return 'Mohon pilih hasil pemeriksaan thal (Pertanyaan 11).';
+        }
+        return null;
+
+      default:
+        return null;
+    }
+  }
+
+  void _showValidationError(String message) {
+    ScaffoldMessenger.of(context).hideCurrentSnackBar();
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Row(
+          children: [
+            const Icon(
+              Icons.warning_amber_rounded,
+              color: Colors.white,
+              size: 22,
+            ),
+            const SizedBox(width: 10),
+            Expanded(
+              child: Text(
+                message,
+                style: const TextStyle(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w600,
+                  color: Colors.white,
+                ),
+              ),
+            ),
+          ],
+        ),
+        backgroundColor: const Color(0xFFDC2626),
+        behavior: SnackBarBehavior.floating,
+        elevation: 4,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(12),
+        ),
+        margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        duration: const Duration(seconds: 3),
+      ),
+    );
+  }
+
+  // ============================================================
   // NAVIGASI STEP
   // ============================================================
   Future<void> _onNextStep() async {
+    final error = _validateCurrentStep();
+    if (error != null) {
+      _showValidationError(error);
+      return;
+    }
+
     if (_currentStep < _totalSteps) {
       setState(() {
         _currentStep++;
@@ -1077,7 +1208,7 @@ class _ScreeningInputPageState extends State<ScreeningInputPage> {
 
               const SizedBox(height: 16),
 
-              // Pilihan angka melingkar: 0, 1, 2, 3, 4
+              // Pilihan angka melingkar: 0, 1, 2, 3
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceAround,
                 children: [
@@ -1085,7 +1216,6 @@ class _ScreeningInputPageState extends State<ScreeningInputPage> {
                   _buildMajorVesselOption(1, isDark),
                   _buildMajorVesselOption(2, isDark),
                   _buildMajorVesselOption(3, isDark),
-                  _buildMajorVesselOption(4, isDark),
                 ],
               ),
             ],
