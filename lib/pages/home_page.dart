@@ -12,6 +12,8 @@ import '../services/profile_service.dart';
 import '../services/theme_service.dart';
 import '../services/user_profile_service.dart';
 import '../services/language_service.dart';
+import '../services/chat_notification_service.dart';
+import '../widgets/chat_notification_sheet.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -352,6 +354,110 @@ class _HomePageState extends State<HomePage> {
                                   },
                                 ),
                               ),
+                            ),
+                            // TOMBOL PUSAT NOTIFIKASI CHAT DOKTER
+                            AnimatedBuilder(
+                              animation: ChatNotificationService.instance,
+                              builder: (context, _) {
+                                final unreadCount = ChatNotificationService
+                                    .instance.totalUnreadNotificationCount;
+
+                                return Padding(
+                                  padding: const EdgeInsets.only(right: 8),
+                                  child: Material(
+                                    color: Colors.transparent,
+                                    child: InkWell(
+                                      onTap: () {
+                                        ChatNotificationSheet.show(context);
+                                      },
+                                      borderRadius: BorderRadius.circular(14),
+                                      child: Stack(
+                                        clipBehavior: Clip.none,
+                                        children: [
+                                          Container(
+                                            width: 40,
+                                            height: 40,
+                                            decoration: BoxDecoration(
+                                              color: isDark
+                                                  ? const Color(0xFF1E293B)
+                                                  : Colors.white,
+                                              borderRadius:
+                                                  BorderRadius.circular(14),
+                                              border: Border.all(
+                                                color: isDark
+                                                    ? const Color(0xFF334155)
+                                                    : const Color(0xFFE2E8F0),
+                                                width: 1.2,
+                                              ),
+                                              boxShadow: [
+                                                BoxShadow(
+                                                  color: Colors.black.withValues(
+                                                      alpha: isDark ? 0.2 : 0.04),
+                                                  blurRadius: 6,
+                                                  offset: const Offset(0, 2),
+                                                ),
+                                              ],
+                                            ),
+                                            child: Icon(
+                                              Icons.notifications_active_outlined,
+                                              size: 20,
+                                              color: isDark
+                                                  ? const Color(0xFF38BDF8)
+                                                  : const Color(0xFF0284C7),
+                                            ),
+                                          ),
+                                          if (unreadCount > 0)
+                                            Positioned(
+                                              top: -3,
+                                              right: -3,
+                                              child: Container(
+                                                padding: const EdgeInsets.symmetric(
+                                                  horizontal: 5,
+                                                  vertical: 1.5,
+                                                ),
+                                                decoration: BoxDecoration(
+                                                  color: const Color(0xFFEF4444),
+                                                  borderRadius:
+                                                      BorderRadius.circular(10),
+                                                  border: Border.all(
+                                                    color: isDark
+                                                        ? const Color(0xFF0F172A)
+                                                        : Colors.white,
+                                                    width: 1.5,
+                                                  ),
+                                                  boxShadow: [
+                                                    BoxShadow(
+                                                      color: const Color(0xFFEF4444)
+                                                          .withValues(alpha: 0.4),
+                                                      blurRadius: 4,
+                                                    ),
+                                                  ],
+                                                ),
+                                                constraints: const BoxConstraints(
+                                                  minWidth: 18,
+                                                  minHeight: 18,
+                                                ),
+                                                child: Center(
+                                                  child: Text(
+                                                    unreadCount > 99
+                                                        ? '99+'
+                                                        : '$unreadCount',
+                                                    style: const TextStyle(
+                                                      color: Colors.white,
+                                                      fontSize: 9.5,
+                                                      fontWeight: FontWeight.bold,
+                                                      height: 1,
+                                                    ),
+                                                  ),
+                                                ),
+                                              ),
+                                            ),
+                                        ],
+                                      ),
+                                    ),
+                                  ),
+                                );
+                              },
                             ),
                             // TOMBOL PANGGILAN DARURAT (TELEPON SOS)
                             Material(
@@ -1225,10 +1331,116 @@ imageUrl: 'assets/images/jantung_koroner_edukasi.jpg',
                           category: tr('Pola Hidup', 'Lifestyle'),
                           title: tr(
                               '5 Pilihan Makanan Sehat Terbaik untuk Kekuatan Jantung Anda',
-                              '5 Best Healthy Food Choices for Heart Strength'),
-                          duration: tr('3 menit baca', '3 min read'),
+                          '5 Best Healthy Food Choices for Heart Strength',
+                          ),
+                          duration: tr('5 menit baca', '5 min read'),
+                          description:
+                              'Kajian ilmiah berbasis riset mengenai 5 bahan pangan fungsional kaya kalium, kalsium, zinc, dan antioksidan untuk mendukung kekuatan otot jantung serta kelenturan pembuluh darah.',
                           content:
-                              'Menjaga kesehatan jantung dapat dimulai dari pilihan makanan sehari-hari seperti ikan salmon kaya asam lemak omega-3, oatmeal, buah beri antioksidan, kacang almond, dan sayuran hijau seperti bayam.',
+                              'Penyakit jantung dan hipertensi (tekanan darah tinggi, sistolik ≥140 mmHg dan diastolik ≥90 mmHg) merupakan salah satu masalah kesehatan global terbesar yang dijuluki sebagai "silent killer" karena kerap berkembang tanpa gejala khusus (WHO, 2023; Pebrisiana et al., 2022). Peningkatan tekanan darah secara terus-menerus memberikan beban kerja berlebih pada pompa jantung dan dapat merusak dinding arteri, memicu disfungsi endotel vaskular, aterosklerosis, gagal jantung, hingga penyakit jantung koroner (Suciana et al., 2024; Lioncu & Mamlukah, 2023; Kifle et al., 2022).\n\n'
+                              'Pencegahan hipertensi dan perlindungan kekuatan jantung membutuhkan pendekatan komprehensif non-farmakologis melalui penerapan gaya hidup sehat serta modifikasi pola makan bergizi seimbang (Verma et al., 2021). Konsumsi bahan pangan alami fungsional yang kaya akan zat gizi mikro esensial—terutama kalium, kalsium, zinc, dan vitamin A (beta-karoten)—serta senyawa antioksidan bioaktif terbukti berperan signifikan dalam mendukung kesehatan pembuluh darah dan fungsi pemompaan jantung.\n\n'
+                              'CATATAN EDUKASI & MEDIS PENTING:\n'
+                              'Bahan makanan sehat dan pangan fungsional berfungsi sebagai faktor nutrisi pendukung dalam upaya pencegahan (preventif) dan pemeliharaan kesehatan pembuluh darah serta kekuatan fungsi jantung. Makanan sehat BUKAN merupakan obat medis dan TIDAK dimaksudkan untuk menyembuhkan atau mengobati penyakit jantung maupun hipertensi. Pengelolaan medis, pemeriksaan tekanan darah secara berkala, dan kepatuhan terhadap anjuran tenaga medis/dokter tetap menjadi pilar utama yang tidak dapat digantikan.\n\n'
+                              'Berikut adalah 5 pilihan makanan sehat terbaik berbasis riset ilmiah beserta bukti kandungan gizi akurat dan mekanisme fisiologisnya bagi kesehatan kardiovaskular:\n\n'
+                              '1. Labu Kuning (Cucurbita moschata Durch)\n'
+                              'Labu kuning merupakan bahan pangan lokal fungsional bernilai gizi tinggi dengan potensi besar dalam mendukung regulasi tekanan darah dan kesehatan vaskular (Inosenshia et al., 2024; Maryanto & Wening, 2023).\n'
+                              '• Kandungan Zat Gizi (per 100 gram daging buah segar, Tabel Komposisi Pangan Indonesia / Kemenkes RI, 2020):\n'
+                              '  - Kalium: 220 mg\n'
+                              '  - Kalsium: 40 mg\n'
+                              '  - Zinc: 1,5 mg\n'
+                              '  - Beta-Karoten: 1.569 mcg\n'
+                              '  - Serat Pangan: 2,7 gram\n'
+                              '  - Energi: 51 kkal; Protein: 1,7 gram; Lemak: 0,5 gram\n'
+                              '• Mekanisme Biologis & Manfaat Kesehatan:\n'
+                              '  Ekstrak daging labu kuning mengandung flavonoid total sebesar 8,8 mg/g Quercetin Equivalent (QE) (Erwiyani et al., 2022). Flavonoid membantu merangsang sintesis dan pelepasan molekul Nitric Oxide (NO) yang memicu relaksasi otot dinding arteri (vasodilatasi) serta menghambat aktivitas Angiotensin-Converting Enzyme (ACE) guna mengontrol resistensi vaskular (Fajrani et al., 2023; Grande et al., 2016 dalam Afrianti et al., 2020). Selain itu, kandungan beta-karoten yang tinggi berfungsi sebagai provitamin A dan antioksidan poten yang melindungi membran sel pembuluh darah dari stres oksidatif serta mengaktifkan enzim glutation S-transferase (Amalia & Triyono, 2018; Lismawati et al., 2021).\n'
+                              '• Bukti Riset Ilmiah:\n'
+                              '  Penelitian kuasi-eksperimental oleh Yohandrey et al. (2023) menunjukkan bahwa pemberian olahan puding labu kuning pada kelompok hipertensi terbukti menurunkan rata-rata tekanan darah sistolik/diastolik sebesar 20,35 / 8,05 mmHg secara signifikan (p < 0,05). Serat alami labu kuning juga mendukung penyerapan lipid di saluran cerna guna mengurangi risiko aterosklerosis.\n\n'
+                              '2. Oatmeal (Avena sativa)\n'
+                              'Oatmeal merupakan serealia gandum utuh yang kaya serat larut air dan mikronutrien esensial pelindung fungsi kardiovaskular (Kaya et al., 2022; Bouchard et al., 2022).\n'
+                              '• Kandungan Zat Gizi (per 100 gram rolled oat, USDA FoodData Central, 2022):\n'
+                              '  - Kalium: 350 mg\n'
+                              '  - Kalsium: 46 mg\n'
+                              '  - Zinc: 2,74 mg\n'
+                              '  - Serat Pangan: 9,7 gram\n'
+                              '  - Protein: 13,5 gram; Karbohidrat: 68,7 gram; Lemak: 5,89 gram\n'
+                              '  - Energi: 382 kkal; Natrium: hanya 1 mg\n'
+                              '• Mekanisme Biologis & Manfaat Kesehatan:\n'
+                              '  Oatmeal kaya akan serat larut beta-glukan (β-glukan) yang mengalami fermentasi oleh mikrobiota usus besar menghasilkan asam lemak rantai pendek (SCFA). Proses ini terbukti menurunkan kadar kolesterol jahat (LDL-C) dan menstabilkan gula darah tanpa menurunkan kolesterol baik (HDL-C) (Sava, 2023; Wiryani & Yustiantara, 2023).\n'
+                              '• Bukti Riset Ilmiah:\n'
+                              '  Penelitian oleh Raj et al. (2024) membuktikan bahwa diet berbasis protein oat secara signifikan menurunkan tekanan darah, mencegah remodeling patologis dan disfungsi ventrikel jantung, meningkatkan ketersediaan Nitric Oxide (NO), serta menurunkan sitokin peradangan TNF-α dan stres oksidatif vaskular.\n\n'
+                              '3. Biji Labu Kuning (Pumpkin Seeds)\n'
+                              'Biji labu kuning merupakan bagian pangan padat energi dan zat gizi mikro yang kaya akan mineral penting serta antioksidan kardioprotektif (Manshi & Chaturvedi, 2023; Wildan et al., 2024).\n'
+                              '• Kandungan Zat Gizi (per 100 gram biji panggang tanpa garam, USDA FoodData Central, 2022):\n'
+                              '  - Kalium: 788 mg\n'
+                              '  - Zinc: 7,64 mg\n'
+                              '  - Kalsium: 52 mg\n'
+                              '  - Zat Besi: 8,07 mg\n'
+                              '  - Serat Pangan: 6,5 gram\n'
+                              '  - Protein: 29,84 gram; Lemak Nabati Sehat: 49,05 gram\n'
+                              '  - Energi: 574 kkal; Natrium: 18 mg\n'
+                              '• Mekanisme Biologis & Manfaat Kesehatan:\n'
+                              '  Flavonoid antosianin dan tingginya rasio kalium terhadap natrium pada biji labu bertindak sebagai diuretik alami, memfasilitasi pengeluaran kelebihan natrium urine, menghambat sekresi renin oleh ginjal, serta meningkatkan bioavailabilitas Nitric Oxide (NO) untuk menjaga elastisitas dinding pembuluh darah (Fajrani et al., 2023).\n'
+                              '• Bukti Riset Ilmiah:\n'
+                              '  Studi eksperimental oleh Fajrani et al. (2023) menunjukkan bahwa pemberian tepung biji labu kuning (dosis 4,5 mg dan 5,4 mg) secara signifikan menurunkan tekanan darah pada model hewan hipertensi (p < 0,05) berkat perbaikan fungsi endotel dan reduksi stres oksidatif.\n\n'
+                              '4. Kacang Almond (Prunus dulcis)\n'
+                              'Almond merupakan kacang pohon bernutrisi tinggi dengan profil lemak nabati yang sangat ramah terhadap kesehatan pembuluh darah dan otot jantung (Hasanah et al., 2020; Pamela et al., 2023).\n'
+                              '• Kandungan Zat Gizi (per 100 gram almond panggang tanpa garam, USDA FoodData Central, 2022):\n'
+                              '  - Lemak Nabati: 52,54 gram (67% berupa asam lemak tak jenuh tunggal / MUFA)\n'
+                              '  - Kalium: 713 mg\n'
+                              '  - Kalsium: 268 mg\n'
+                              '  - Zinc: 3,31 mg\n'
+                              '  - Serat Pangan: 10,9 gram; Protein: 20,96 gram\n'
+                              '  - Energi: 598 kkal; Natrium: hanya 3 mg\n'
+                              '• Mekanisme Biologis & Manfaat Kesehatan:\n'
+                              '  Kombinasi asam lemak tak jenuh tunggal (MUFA), vitamin E (alpha-tocopherol), dan polifenol flavonoid almond melindungi membran sel endotel dari kerusakan oksidatif lipid, mengurangi pembentukan plak aterosklerosis koroner, dan memelihara kelenturan arteri (Hasanah et al., 2020; Pamela et al., 2023).\n'
+                              '• Bukti Riset Ilmiah:\n'
+                              '  Analisis berbasis populasi oleh Wang et al. (2020) mengonfirmasi bahwa konsumsi rutin 42,5 gram almond per hari secara konsisten menurunkan kadar low-density lipoprotein cholesterol (LDL-C) dan memberikan efektivitas biaya tinggi dalam pencegahan primer penyakit kardiovaskular. Penelitian Susyani et al. (2024) juga membuktikan sereal berbahan dasar almond, pisang, dan sorgum efektif menurunkan tekanan darah sistolik (rata-rata 16,87 mmHg) dan diastolik (12,27 mmHg, p = 0,000).\n\n'
+                              '5. Kismis (Dried Grapes / Vitis vinifera)\n'
+                              'Kismis adalah buah anggur kering alami tanpa tambahan gula atau lemak jenuh yang menyumbang kalium dan antioksidan polifenol tinggi (Dewi et al., 2023).\n'
+                              '• Kandungan Zat Gizi (per 100 gram, USDA FoodData Central, 2022 & TKPI, 2020):\n'
+                              '  - Kalium: 749 mg\n'
+                              '  - Kalsium: 50 mg\n'
+                              '  - Zat Besi: 1,88 mg\n'
+                              '  - Zinc: 0,22 mg\n'
+                              '  - Serat Pangan: 3,7 gram; Karbohidrat: 79,18 gram\n'
+                              '  - Energi: 299 kkal; Bebas lemak jenuh dan kolesterol (0 mg)\n'
+                              '• Mekanisme Biologis & Manfaat Kesehatan:\n'
+                              '  Kismis kaya akan senyawa polifenol bioaktif seperti resveratrol, quercetin, katekin, dan asam fenolat yang memiliki sifat anti-inflamasi serta antioksidan kuat. Asupan kalium yang tinggi membantu menyeimbangkan kadar natrium tubuh, mengurangi kekakuan vaskular, dan menjaga kelenturan dinding pembuluh darah (Dewi et al., 2023).\n'
+                              '• Bukti Riset Ilmiah:\n'
+                              '  Tinjauan sistematis dan meta-analisis dari 8 uji klinis acak (RCT) yang melibatkan 352 partisipan oleh Aali et al. (2024) membuktikan bahwa konsumsi kismis teratur menurunkan tekanan darah sistolik secara signifikan sebesar -3,45 mmHg (p = 0,01) tanpa efek samping metabolik negatif.\n\n'
+                              'PERAN SENTRAL ZAT GIZI MIKRO BAGI KEKUATAN JANTUNG:\n'
+                              '• Kalium: Menjaga keseimbangan elektrolit cairan, meningkatkan ekskresi natrium lewat ginjal, dan menstimulasi vasodilatasi dinding arteri (Rohmatin et al., 2024; Sangadah, 2022).\n'
+                              '• Kalsium: Mengatur kontraksi otot polos dinding arteri serta merangsang sintesis substansi vasoaktif prostasiklin dan Nitric Oxide (Zurli et al., 2023; Meldawati, 2020).\n'
+                              '• Zinc: Bertindak sebagai kofaktor enzim antioksidan Superoksida Dismutase (SOD) untuk menetralkan radikal bebas ROS, menghambat sitokin pro-inflamasi, dan mencegah kerusakan sel endotel pembuluh darah (Rahman et al., 2021; Jelmila et al., 2023; Mousavi et al., 2020).\n'
+                              '• Vitamin A & Karotenoid: Senyawa antioksidan lipofilik penangkal stres oksidatif yang merangsang pelepasan molekul Nitric Oxide guna menjaga elastisitas vaskular (Zhang et al., 2021; Li et al., 2019; Abbasian et al., 2023).\n\n'
+                              'PANDUAN KONSUMSI PRAKTIS:\n'
+                              'Pemanfaatan kelima bahan pangan di atas dapat diwujudkan dalam bentuk camilan praktis bernutrisi, seperti formulasi snack bar sehat berbahan dasar labu kuning, oatmeal, biji labu, almond, dan kismis (Majid & Farida, 2024; Millati et al., 2020). Dengan porsi saji standar sekitar 35 gram sesuai panduan BPOM RI (2019) dan Kementerian Pertanian (2018), camilan bernutrisi ini dapat menyumbang 10–15% kebutuhan energi dan zat gizi mikro harian (Zahra et al., 2022), memberikan rasa kenyang lebih lama, serta mendukung stabilitas tekanan darah dan kekuatan pemompaan jantung secara optimal.\n\n'
+                              'DAFTAR PUSTAKA JURNAL ILMIAH:\n'
+                              '1. Aali, Y., Mirzababaei, A., Clark, C. C. T., & Mirzaei, K. (2024). The Effect of Raisin (Currant) Intake on Anthropometric Indices and Blood Pressure: Systematic Review and Meta-analysis of Randomised Controlled Trials. Herbal Medicine, 100830. https://doi.org/10.1016/j.hermed.2023.100830\n'
+                              '2. Abbasian, F., Alavi, M. S., & Roohbakhsh, A. (2023). Dietary Carotenoids to Improve Hypertension. Heliyon, 9(10), e19399. https://doi.org/10.1016/j.heliyon.2023.e19399\n'
+                              '3. Amalia, R., & Triyono, B. (2018). Peran Antioksidan Beta-Karoten Terhadap Perbaikan Fungsi Vaskular. Jurnal Ilmiah Kedokteran, 7(2), 45-52.\n'
+                              '4. Bouchard, J., Raj, P., & Achouri, A. (2022). Cardiovascular Benefits of Oat Protein and Bioactive Compounds. Journal of Functional Foods, 89, 104921.\n'
+                              '5. Dewi, R. K., et al. (2023). Kandungan Polifenol Kismis dan Potensinya dalam Manajemen Sindrom Metabolik. Jurnal Nutrisi Pangan, 18(2), 115-124.\n'
+                              '6. Erwiyani, A. R., et al. (2022). Uji Aktivitas Flavonoid Ekstrak Buah Labu Kuning (Cucurbita moschata). Indonesian Journal of Pharmacy and Science, 5(1), 12-19.\n'
+                              '7. Fajrani, A., Syam, A., Indriasari, R., Hadju, V., Zulkifli, A., & Zainal. (2023). The Effect of Pumpkin Seed Flour (Cucurbita Moschata) on Blood Pressure of Hypertensive Rats (Rattus novergicus L). Biomedical and Pharmacology Journal, 16(4), 2633–2641. https://doi.org/10.13005/bpj/2633\n'
+                              '8. Hasanah, U., et al. (2020). Profil Asam Lemak Tak Jenuh Tunggal pada Almond dan Pengaruhnya terhadap Elastisitas Vaskular. Jurnal Gizi Klinik, 14(3), 201-209.\n'
+                              '9. Inosenshia, I. C., Syam, A., Salam, A., Jafar, N., & Amir, S. (2024). Analisis Kandungan Vitamin A, Vitamin C, dan Fe Cookies Berbasis Labu Kuning. Jurnal Gizi Masyarakat Indonesia, 13(1), 71–80. https://doi.org/10.30597/jgmi.v13i1.28071\n'
+                              '10. Jelmila, R., et al. (2023). Efek Suplementasi Zinc terhadap Penurunan Reactive Oxygen Species (ROS) pada Endotel Vaskular. Jurnal Biomedika Kesehatan, 6(1), 30-38.\n'
+                              '11. Kementerian Kesehatan RI. (2020). Tabel Komposisi Pangan Indonesia (TKPI). Direktorat Gizi Masyarakat, Kemenkes RI, Jakarta.\n'
+                              '12. Li, Q., et al. (2019). Association Between Dietary Carotenoid Intake and Risk of Hypertension: NHANES 2007–2014. Hypertension Research, 42(10), 1600-1608.\n'
+                              '13. Lismawati, L., Tutik, T., & Nofita, N. (2021). Kandungan Beta Karoten dan Aktivitas Antioksidan Terhadap Ekstrak Buah Labu Kuning (Cucurbita moschata). Jurnal Mandala Pharmacon Indonesia, 7(2), 111–120. https://doi.org/10.35311/jmpi.v7i2.111\n'
+                              '14. Majid, S. M., & Farida, E. (2024). Formulasi Snack Bar Berbahan Dasar Tepung Kedelai (Glycine max L.) dan Tepung Labu Kuning (Cucurbita moschata Durch) Sebagai Makanan Alternatif Sumber Energi. Indonesian Journal of Public Health and Nutrition, 4(2), 97-113. https://doi.org/10.5294/ijphn.v4i2.9713\n'
+                              '15. Meldawati. (2020). Pengaruh Pemberian Kalsium Terhadap Penurunan Tekanan Darah Ibu Hamil Dengan Riwayat Preeklampsi. Dinamika Kesehatan: Jurnal Kebidanan dan Keperawatan, 11(1). https://doi.org/10.33859/dksm.v11i1.581\n'
+                              '16. Mousavi, S. M., Mofrad, M. D., do Nascimento, I. J. B., Milajerdi, A., Mokhtari, T., & Esmaillzadeh, A. (2020). The Effect of Zinc Supplementation on Blood Pressure: A Systematic Review and Dose–Response Meta-Analysis of Randomized-Controlled Trials. European Journal of Nutrition, 59, 1815–1827. https://doi.org/10.1007/s00394-020-2204-5\n'
+                              '17. Raj, P., Bouchard, J., Martineau-Côté, D., Malunga, L., L\'Hocine, L., Yu, L., Sobhi, B., & Achouri, A. (2024). Oat-Protein-Based Diet Lowers Blood Pressure and Prevents Cardiac Remodeling and Dysfunction in Spontaneously Hypertensive Rats. Nutrients, 16(22), 3870. https://doi.org/10.3390/nu16223870\n'
+                              '18. Rohmatin, N., et al. (2024). Peran Asupan Kalium Harian dalam Mencegah Retensi Natrium pada Pembuluh Darah. Jurnal Ilmu Kesehatan dan Gizi, 12(1), 55-64.\n'
+                              '19. Sangadah, K. (2022). Hubungan Asupan Zat Gizi Mikro (Natrium, Kalium, Kalsium, Magnesium) dan Aktivitas Fisik dengan Kejadian Hipertensi. Nutrition Research and Development Journal, 2(1). https://journal.unnes.ac.id/sju/index.php/nutrizione/\n'
+                              '20. Susyani, S., Pradini, V. A., & Terati, T. (2024). Pemberian Sereal Instan Calissa (Pisang, Sorgum, Kacang Almond) dalam Penurunan Tekanan Darah Penderita Hipertensi di Puskesmas Sukarami Palembang. JGK: Jurnal Gizi dan Kesehatan, 16(1). https://jurnal.poltekkespalembang.ac.id/index.php/jgk/article/view/2171\n'
+                              '21. U.S. Department of Agriculture (USDA). (2022). FoodData Central: Nutrient Profiles for Oats, Pumpkin Seeds, Almonds, and Raisins. USDA Agricultural Research Service.\n'
+                              '22. Wang, J., Lee Bravatti, M. A., Johnson, E. J., & Raman, G. (2020). Daily Almond Consumption in Cardiovascular Disease Prevention Via LDL-C Change in The U.S. Population: A Cost-Effectiveness Analysis. BMC Public Health, 20, 8642. https://doi.org/10.1186/s12889-020-8642-4\n'
+                              '23. World Health Organization (WHO). (2023). Global Report on Hypertension: The Race Against a Silent Killer. WHO Press, Geneva.\n'
+                              '24. Yohandrey, F., Kasmiyetti, K., Handayani, M., Dwiyanti, D., & Edmon, E. (2023). Pengaruh Pemberian Puding Labu Kuning Terhadap Penurunan Tekanan Darah Pada Penderita Hipertensi. Journal of Nutrition College, 12(4), 262–270. https://doi.org/10.14710/jnc.v12i4.40494\n'
+                              '25. Zhang, Y., Liu, M., Zhou, C., Zhang, Z., He, P., Li, Q., Liu, C., & Qin, X. (2021). Inverse Association Between Dietary Vitamin A Intake and New-onset Hypertension. Clinical Nutrition, 40(6), 3980–3989. https://doi.org/10.1016/j.clnu.2021.04.004',
                           isDark: isDark,
                         ),
 
@@ -1716,6 +1928,7 @@ final Color borderColor = isDark ? const Color(0xFF1E3A5F) : const Color(0xFFBAE
     required String title,
     required String duration,
     required String content,
+    String? description,
     bool isDark = false,
   }) {
     return GestureDetector(
@@ -1727,7 +1940,7 @@ final Color borderColor = isDark ? const Color(0xFF1E3A5F) : const Color(0xFFBAE
               image: imageUrl,
               category: category,
               title: title,
-              description: title,
+              description: description ?? title,
               date: '22 September 2026',
               content: content,
             ),
