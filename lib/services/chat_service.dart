@@ -5,6 +5,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'doctor_service.dart';
+import 'chat_notification_service.dart';
 
 class ChatMessage {
   final String id;
@@ -546,6 +547,31 @@ class ChatService {
       _saveRoomToLocal(updatedRoom);
     }
 
+    // Trigger notifikasi real-time & simpan riwayat notifikasi lokal
+    final docName = doctorName ?? existingRoom?.doctorName ?? 'dr. Nurlitta Dwi';
+    final docPhoto = existingRoom?.doctorPhoto ?? 'assets/images/dokter_nurlitta.jpg';
+    final docSpec = existingRoom?.doctorSpecialty ?? 'Spesialis Jantung';
+    final pName = patientName ?? existingRoom?.patientName ?? 'Pasien HeartCare';
+
+    ChatNotificationService.instance.notifyIncomingMessage(
+      conversationDoctorName: docName,
+      doctorPhoto: docPhoto,
+      doctorSpecialty: docSpec,
+      patientName: pName,
+      senderRole: senderRole == 'doctor'
+          ? ChatSenderRole.doctor
+          : ChatSenderRole.patient,
+      senderName: senderName,
+      message: message.isNotEmpty
+          ? message
+          : (attachmentType == 'image'
+              ? '📷 Mengirim foto keluhan'
+              : (attachmentType == 'screening'
+                  ? '📊 Mengirim hasil skrining jantung'
+                  : '📄 Mengirim lampiran')),
+      time: timeStr,
+    );
+
     // 3. Simpan ke Firestore secara background
     bool isCloudSuccess = false;
     try {
@@ -884,6 +910,14 @@ class ChatService {
         );
         _localRooms[chatId] = updated;
         _saveRoomToLocal(updated);
+
+        // Sinkronkan ke ChatNotificationService
+        ChatNotificationService.instance.markAsRead(
+          room.doctorName,
+          viewerRole: currentRole == 'doctor'
+              ? ChatSenderRole.doctor
+              : ChatSenderRole.patient,
+        );
       }
 
       final roomRef = _firestore.collection('chats').doc(chatId);
