@@ -5,6 +5,7 @@ import 'package:heartcare/pages/riwayat_page.dart';
 import 'package:heartcare/pages/Skrining/screening_input_page.dart';
 import '../services/theme_service.dart';
 import '../services/auth_service.dart';
+import '../services/notification_service.dart';
 
 class PengaturanPage extends StatefulWidget {
   const PengaturanPage({super.key});
@@ -15,6 +16,279 @@ class PengaturanPage extends StatefulWidget {
 
 class _PengaturanPageState extends State<PengaturanPage> {
   String selectedLanguage = "Bahasa Indonesia";
+
+  @override
+  void initState() {
+    super.initState();
+    NotificationService.instance.addListener(_onNotifUpdate);
+  }
+
+  @override
+  void dispose() {
+    NotificationService.instance.removeListener(_onNotifUpdate);
+    super.dispose();
+  }
+
+  void _onNotifUpdate() {
+    if (mounted) setState(() {});
+  }
+
+  void _showNotificationTestSheet() {
+    final isDark = ThemeService.isDarkMode;
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) {
+        return Container(
+          padding: const EdgeInsets.fromLTRB(20, 16, 20, 30),
+          decoration: BoxDecoration(
+            color: isDark ? const Color(0xFF1E293B) : Colors.white,
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Center(
+                child: Container(
+                  width: 40,
+                  height: 4,
+                  decoration: BoxDecoration(
+                    color: isDark
+                        ? const Color(0xFF475569)
+                        : const Color(0xFFCBD5E1),
+                    borderRadius: BorderRadius.circular(2),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 16),
+              Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF0284C7).withValues(alpha: 0.15),
+                      shape: BoxShape.circle,
+                    ),
+                    child: const Icon(
+                      Icons.notifications_active_rounded,
+                      color: Color(0xFF0284C7),
+                      size: 22,
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          "Uji Coba Notifikasi Pop-up Layar",
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                            color: isDark
+                                ? Colors.white
+                                : const Color(0xFF0F172A),
+                          ),
+                        ),
+                        Text(
+                          "Ketuk salah satu untuk melihat banner di atas layar HP",
+                          style: TextStyle(
+                            fontSize: 11.5,
+                            color: isDark
+                                ? const Color(0xFF94A3B8)
+                                : const Color(0xFF64748B),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 18),
+              // 1. Chat Dokter ke Pasien
+              _buildTestNotifTile(
+                icon: Icons.medical_services_rounded,
+                iconColor: const Color(0xFF0284C7),
+                bgColor: const Color(0xFFE0F2FE),
+                title: "1. Chat Dokter ke Pasien",
+                subtitle: "Pesan anjuran dan resep dari dokter spesialis jantung",
+                onTap: () {
+                  Navigator.pop(context);
+                  NotificationService.instance.showDoctorChatNotification(
+                    context: this.context,
+                    doctorName: "dr. Nurlitta Dwi, Sp.JP",
+                    message:
+                        "Halo, obat kardio diminum teratur pagi ini dan kurangi garam ya.",
+                    doctorSpecialty: "Spesialis Jantung & Pembuluh Darah",
+                    doctorPhoto: "assets/images/dokter_nurlitta.jpg",
+                  );
+                },
+                isDark: isDark,
+              ),
+              // 2. Chat Pasien ke Dokter
+              _buildTestNotifTile(
+                icon: Icons.person_pin_rounded,
+                iconColor: const Color(0xFF0284C7),
+                bgColor: const Color(0xFFE0F2FE),
+                title: "2. Chat Pasien ke Dokter",
+                subtitle: "Pasien Valentino mengirim pertanyaan keluhan konsultasi",
+                onTap: () {
+                  Navigator.pop(context);
+                  NotificationService.instance.showPatientChatNotification(
+                    context: this.context,
+                    patientName: "Valentino (Pasien)",
+                    message:
+                        "Dok, hasil tensi saya pagi ini 125/80 mmHg, apakah sudah aman?",
+                    patientPhoto: "assets/images/profile_woman.png",
+                  );
+                },
+                isDark: isDark,
+              ),
+              // 3. Pengingat Jadwal Konsultasi
+              _buildTestNotifTile(
+                icon: Icons.event_available_rounded,
+                iconColor: const Color(0xFF0D9488),
+                bgColor: const Color(0xFFCCFBF1),
+                title: "3. Pengingat Jadwal Konsultasi",
+                subtitle: "Sesi konsultasi dokter dijadwalkan pukul 10:00 WIB",
+                onTap: () {
+                  Navigator.pop(context);
+                  NotificationService.instance
+                      .showConsultationReminderNotification(
+                    context: this.context,
+                    doctorName: "dr. Nurlitta Dwi, Sp.JP",
+                    scheduledTime: "Jumat, 18 September 2026 pukul 10:00 WIB",
+                    doctorPhoto: "assets/images/dokter_nurlitta.jpg",
+                    doctorSpecialty: "Spesialis Jantung",
+                  );
+                },
+                isDark: isDark,
+              ),
+              // 4. Pengingat Minum Obat
+              _buildTestNotifTile(
+                icon: Icons.medication_rounded,
+                iconColor: const Color(0xFFD97706),
+                bgColor: const Color(0xFFFEF3C7),
+                title: "4. Pengingat Minum Obat",
+                subtitle: "Waktunya minum Aspirin Kardio 100 mg (1 tablet)",
+                onTap: () {
+                  Navigator.pop(context);
+                  NotificationService.instance
+                      .showMedicineReminderNotification(
+                    context: this.context,
+                    medicineName: "Aspirin Kardio 100 mg",
+                    dosage: "1 Tablet",
+                    instruction: "Setelah sarapan pagi",
+                    time: "08.00",
+                  );
+                },
+                isDark: isDark,
+              ),
+              // 5. Edukasi Kesehatan Jantung
+              _buildTestNotifTile(
+                icon: Icons.health_and_safety_rounded,
+                iconColor: const Color(0xFF7C3AED),
+                bgColor: const Color(0xFFEDE9FE),
+                title: "5. Edukasi Kesehatan Jantung",
+                subtitle: "Kiat harian: Batasi garam < 5g dan tidur cukup",
+                onTap: () {
+                  Navigator.pop(context);
+                  NotificationService.instance
+                      .showHealthEducationNotification(
+                    context: this.context,
+                    title: "Kiat Jantung Hari Ini",
+                    message:
+                        "Batasi asupan garam < 5g (1 sdt) per hari untuk menjaga tekanan darah dan elastisitas arteri jantung.",
+                  );
+                },
+                isDark: isDark,
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildTestNotifTile({
+    required IconData icon,
+    required Color iconColor,
+    required Color bgColor,
+    required String title,
+    required String subtitle,
+    required VoidCallback onTap,
+    required bool isDark,
+  }) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 10),
+      decoration: BoxDecoration(
+        color: isDark ? const Color(0xFF0F172A) : const Color(0xFFF8FAFC),
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(
+          color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0),
+          width: 1,
+        ),
+      ),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(14),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+            child: Row(
+              children: [
+                Container(
+                  width: 38,
+                  height: 38,
+                  decoration: BoxDecoration(
+                    color: bgColor,
+                    shape: BoxShape.circle,
+                  ),
+                  child: Icon(icon, color: iconColor, size: 20),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        title,
+                        style: TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.bold,
+                          color: isDark
+                              ? Colors.white
+                              : const Color(0xFF0F172A),
+                        ),
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        subtitle,
+                        style: TextStyle(
+                          fontSize: 11,
+                          color: isDark
+                              ? const Color(0xFF94A3B8)
+                              : const Color(0xFF64748B),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                Icon(
+                  Icons.play_circle_fill_rounded,
+                  color: iconColor,
+                  size: 26,
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
 
   void _showChangePasswordDialog() {
     final oldPassCtrl = TextEditingController();
@@ -569,7 +843,176 @@ class _PengaturanPageState extends State<PengaturanPage> {
                     const SizedBox(height: 22),
 
                     // ==========================================================
-                    // SECTION 2: LAINNYA
+                    // SECTION 2: NOTIFIKASI POP-UP LAYAR HP
+                    // ==========================================================
+                    Row(
+                      children: [
+                        Text(
+                          "Notifikasi Pop-up Layar",
+                          style: TextStyle(
+                            fontSize: 15,
+                            fontWeight: FontWeight.bold,
+                            color: isDark ? Colors.white : const Color(0xFF0F172A),
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 7, vertical: 2),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFF0284C7).withValues(alpha: 0.15),
+                            borderRadius: BorderRadius.circular(6),
+                          ),
+                          child: const Text(
+                            "Heads-Up",
+                            style: TextStyle(
+                              fontSize: 10,
+                              fontWeight: FontWeight.bold,
+                              color: Color(0xFF0284C7),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 12),
+
+                    // CARD UJI COBA NOTIFIKASI POP-UP
+                    _pengaturanCard(
+                      icon: Icons.notifications_active_rounded,
+                      title: "Uji Coba Notifikasi Pop-up",
+                      subtitle: "Simulasi 5 jenis notifikasi melayang di atas layar",
+                      onTap: _showNotificationTestSheet,
+                      trailing: Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 10, vertical: 6),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFF0284C7),
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        child: const Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(
+                              Icons.play_arrow_rounded,
+                              size: 15,
+                              color: Colors.white,
+                            ),
+                            SizedBox(width: 3),
+                            Text(
+                              "Tes",
+                              style: TextStyle(
+                                fontSize: 11,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.white,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      isDark: isDark,
+                    ),
+
+                    // TOGGLE CHAT DOKTER & PASIEN
+                    _pengaturanCard(
+                      icon: Icons.chat_rounded,
+                      title: "Notifikasi Chat Pasien & Dokter",
+                      subtitle: NotificationService.instance.enableChat
+                          ? "Pop-up aktif saat pesan baru diterima"
+                          : "Pop-up chat dinonaktifkan",
+                      onTap: () {
+                        final val = !NotificationService.instance.enableChat;
+                        NotificationService.instance
+                            .setNotificationPreference(enableChat: val);
+                      },
+                      trailing: Switch.adaptive(
+                        value: NotificationService.instance.enableChat,
+                        activeTrackColor: const Color(0xFF0098B9),
+                        activeThumbColor: Colors.white,
+                        onChanged: (val) {
+                          NotificationService.instance
+                              .setNotificationPreference(enableChat: val);
+                        },
+                      ),
+                      isDark: isDark,
+                    ),
+
+                    // TOGGLE PENGINGAT MINUM OBAT
+                    _pengaturanCard(
+                      icon: Icons.medication_rounded,
+                      title: "Pengingat Minum Obat",
+                      subtitle: NotificationService.instance.enableMedicine
+                          ? "Pop-up aktif sesuai jam minum obat"
+                          : "Pop-up pengingat obat dinonaktifkan",
+                      onTap: () {
+                        final val = !NotificationService.instance.enableMedicine;
+                        NotificationService.instance
+                            .setNotificationPreference(enableMedicine: val);
+                      },
+                      trailing: Switch.adaptive(
+                        value: NotificationService.instance.enableMedicine,
+                        activeTrackColor: const Color(0xFF0098B9),
+                        activeThumbColor: Colors.white,
+                        onChanged: (val) {
+                          NotificationService.instance
+                              .setNotificationPreference(enableMedicine: val);
+                        },
+                      ),
+                      isDark: isDark,
+                    ),
+
+                    // TOGGLE PENGINGAT JADWAL KONSULTASI
+                    _pengaturanCard(
+                      icon: Icons.event_available_rounded,
+                      title: "Pengingat Jadwal Konsultasi",
+                      subtitle: NotificationService.instance.enableConsultation
+                          ? "Pop-up aktif sebelum sesi temu dokter"
+                          : "Pop-up jadwal konsultasi dinonaktifkan",
+                      onTap: () {
+                        final val =
+                            !NotificationService.instance.enableConsultation;
+                        NotificationService.instance
+                            .setNotificationPreference(enableConsultation: val);
+                      },
+                      trailing: Switch.adaptive(
+                        value: NotificationService.instance.enableConsultation,
+                        activeTrackColor: const Color(0xFF0098B9),
+                        activeThumbColor: Colors.white,
+                        onChanged: (val) {
+                          NotificationService.instance
+                              .setNotificationPreference(enableConsultation: val);
+                        },
+                      ),
+                      isDark: isDark,
+                    ),
+
+                    // TOGGLE EDUKASI KESEHATAN JANTUNG
+                    _pengaturanCard(
+                      icon: Icons.health_and_safety_rounded,
+                      title: "Edukasi & Tips Jantung Harian",
+                      subtitle: NotificationService.instance.enableEducation
+                          ? "Pop-up kiat kesehatan aktif berkala"
+                          : "Pop-up edukasi dinonaktifkan",
+                      onTap: () {
+                        final val = !NotificationService.instance.enableEducation;
+                        NotificationService.instance
+                            .setNotificationPreference(enableEducation: val);
+                      },
+                      trailing: Switch.adaptive(
+                        value: NotificationService.instance.enableEducation,
+                        activeTrackColor: const Color(0xFF0098B9),
+                        activeThumbColor: Colors.white,
+                        onChanged: (val) {
+                          NotificationService.instance
+                              .setNotificationPreference(enableEducation: val);
+                        },
+                      ),
+                      isDark: isDark,
+                    ),
+
+                    const SizedBox(height: 22),
+
+                    // ==========================================================
+                    // SECTION 3: LAINNYA
                     // ==========================================================
                     Text(
                       "Lainnya",

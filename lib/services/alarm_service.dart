@@ -1,4 +1,3 @@
-import 'dart:io' show Platform;
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 
@@ -9,7 +8,7 @@ class AlarmService {
   /// Memeriksa apakah perangkat mendukung alarm bawaan HP (Android)
   static bool get isSupported {
     if (kIsWeb) return false;
-    return Platform.isAndroid;
+    return defaultTargetPlatform == TargetPlatform.android;
   }
 
   /// Membuka aplikasi Jam / Alarm di HP

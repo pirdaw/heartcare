@@ -4,8 +4,11 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:image_picker/image_picker.dart';
 import '../services/auth_service.dart';
 import '../services/chat_service.dart';
+import '../services/profile_service.dart';
+import '../services/user_profile_service.dart';
 import '../services/theme_service.dart';
 import '../services/doctor_service.dart';
+import '../services/notification_service.dart';
 import 'home_page.dart';
 import 'konsultasi_dokter_page.dart';
 import 'welcome_page.dart';
@@ -26,6 +29,7 @@ class _DoctorDashboardPageState extends State<DoctorDashboardPage> {
   @override
   void initState() {
     super.initState();
+    ChatService.instance.setActiveRole('doctor');
     _doctorProfile = AuthService.instance.getFastDoctorProfile();
     _isOnline = _doctorProfile?['isOnline'] ?? true;
     _loadDoctorProfile();
@@ -1163,6 +1167,58 @@ class _DoctorDashboardPageState extends State<DoctorDashboardPage> {
                           ),
                         ),
                         const SizedBox(width: 8),
+                        // TOMBOL TES NOTIFIKASI POP-UP PESAN PASIEN
+                        InkWell(
+                          onTap: () {
+                            NotificationService.instance
+                                .showPatientChatNotification(
+                              context: context,
+                              patientName: "Valentino (Pasien)",
+                              message:
+                                  "Dok, tekanan darah saya pagi ini 128/82 mmHg, apakah aman?",
+                              patientPhoto: "assets/images/profile_woman.png",
+                              doctorName: doctorName,
+                              doctorPhoto: doctorPhoto,
+                            );
+                          },
+                          borderRadius: BorderRadius.circular(8),
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 8,
+                              vertical: 4,
+                            ),
+                            decoration: BoxDecoration(
+                              color: const Color(0xFF0284C7)
+                                  .withValues(alpha: 0.15),
+                              borderRadius: BorderRadius.circular(8),
+                              border: Border.all(
+                                color: const Color(0xFF0284C7)
+                                    .withValues(alpha: 0.35),
+                                width: 1,
+                              ),
+                            ),
+                            child: const Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Icon(
+                                  Icons.notifications_active_rounded,
+                                  size: 11,
+                                  color: Color(0xFF0284C7),
+                                ),
+                                SizedBox(width: 4),
+                                Text(
+                                  "Tes Pop-up Chat",
+                                  style: TextStyle(
+                                    fontSize: 10,
+                                    fontWeight: FontWeight.bold,
+                                    color: Color(0xFF0284C7),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 6),
                         Container(
                           padding: const EdgeInsets.symmetric(
                             horizontal: 8,
@@ -1316,18 +1372,29 @@ class _DoctorDashboardPageState extends State<DoctorDashboardPage> {
                                 leading: Stack(
                                   children: [
                                     Container(
-                                      width: 44,
-                                      height: 44,
+                                      width: 46,
+                                      height: 46,
                                       decoration: BoxDecoration(
                                         color: isDark
                                             ? const Color(0xFF0F2B3E)
                                             : const Color(0xFFE0F2FE),
                                         shape: BoxShape.circle,
+                                        border: Border.all(
+                                          color: hasUnread
+                                              ? const Color(0xFF0284C7)
+                                              : (isDark
+                                                  ? const Color(0xFF334155)
+                                                  : const Color(0xFFBAE6FD)),
+                                          width: hasUnread ? 2 : 1.2,
+                                        ),
                                       ),
-                                      child: const Icon(
-                                        Icons.person_rounded,
-                                        color: Color(0xFF0284C7),
-                                        size: 26,
+                                      clipBehavior: Clip.antiAlias,
+                                      child: ProfileService.buildPatientImage(
+                                        room.patientPhoto,
+                                        patientId: room.patientId,
+                                        width: 46,
+                                        height: 46,
+                                        isDark: isDark,
                                       ),
                                     ),
                                     if (hasUnread)
@@ -1335,8 +1402,8 @@ class _DoctorDashboardPageState extends State<DoctorDashboardPage> {
                                         top: 0,
                                         right: 0,
                                         child: Container(
-                                          width: 11,
-                                          height: 11,
+                                          width: 12,
+                                          height: 12,
                                           decoration: BoxDecoration(
                                             color: const Color(0xFF0284C7),
                                             shape: BoxShape.circle,
@@ -1458,6 +1525,7 @@ class _DoctorDashboardPageState extends State<DoctorDashboardPage> {
                                         doctorSpecialty: room.doctorSpecialty,
                                         patientName: room.patientName,
                                         patientId: room.patientId,
+                                        patientPhoto: room.patientPhoto,
                                       ),
                                     ),
                                   );

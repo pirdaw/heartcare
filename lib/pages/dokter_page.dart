@@ -11,6 +11,8 @@ import 'signup_page.dart';
 import 'Skrining/screening_model.dart';
 import '../services/theme_service.dart';
 import '../services/doctor_service.dart';
+import '../services/user_profile_service.dart';
+import '../services/profile_service.dart';
 
 class PilihDokterPage extends StatefulWidget {
   final ScreeningData? initialScreeningData;
@@ -524,6 +526,11 @@ class _PilihDokterPageState extends State<PilihDokterPage> {
                                           dokter: dokter,
                                           isDark: isDark,
                                           onDirectChat: () {
+                                            final userProfile =
+                                                UserProfileService.instance.currentProfile;
+                                            final patientPhoto = userProfile.fotoProfil.isNotEmpty
+                                                ? userProfile.fotoProfil
+                                                : (ProfileService.instance.currentImagePath ?? '');
                                             Navigator.push(
                                               context,
                                               MaterialPageRoute(
@@ -538,6 +545,8 @@ class _PilihDokterPageState extends State<PilihDokterPage> {
                                                   doctorSpecialty:
                                                       dokter['spesialis']
                                                           as String,
+                                                  patientName: userProfile.nama,
+                                                  patientPhoto: patientPhoto,
                                                   initialScreeningData: widget.initialScreeningData,
                                                   initialRiskResult: widget.initialRiskResult,
                                                 ),

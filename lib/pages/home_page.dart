@@ -11,6 +11,8 @@ import 'profil_page.dart';
 import '../services/profile_service.dart';
 import '../services/theme_service.dart';
 import '../services/user_profile_service.dart';
+import '../services/notification_service.dart';
+import '../services/chat_service.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -28,8 +30,23 @@ class _HomePageState extends State<HomePage> {
   @override
   void initState() {
     super.initState();
+    ChatService.instance.setActiveRole('patient');
     UserProfileService.instance.addListener(_onProfileChanged);
     _reminderController.addListener(_onReminderChanged);
+
+    // Otomatis munculkan notifikasi pop-up melayang di atas layar HP saat aplikasi dibuka
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      Future.delayed(const Duration(milliseconds: 1500), () {
+        if (mounted) {
+          NotificationService.instance.showHealthEducationNotification(
+            context: context,
+            title: "Tips Jantung Hari Ini",
+            message:
+                "Jaga elastisitas arteri jantung dengan aktivitas aerobik 30 menit sehari & batasi asupan garam.",
+          );
+        }
+      });
+    });
   }
 
   @override
@@ -349,6 +366,52 @@ class _HomePageState extends State<HomePage> {
                                 ),
                               ),
                             ),
+                             // TOMBOL NOTIFIKASI POP-UP / TIPS JANTUNG
+                            Material(
+                              color: Colors.transparent,
+                              child: InkWell(
+                                onTap: () {
+                                  NotificationService.instance
+                                      .showHealthEducationNotification(
+                                    context: context,
+                                    title: "Kiat Jantung Hari Ini",
+                                    message:
+                                        "Jalan santai atau aktivitas aerobik 30 menit sehari dapat memperkuat otot jantung Anda.",
+                                  );
+                                },
+                                borderRadius: BorderRadius.circular(14),
+                                child: Container(
+                                  padding: const EdgeInsets.all(9),
+                                  decoration: BoxDecoration(
+                                    color: isDark
+                                        ? const Color(0xFF1E293B)
+                                        : Colors.white,
+                                    borderRadius: BorderRadius.circular(14),
+                                    border: Border.all(
+                                      color: isDark
+                                          ? const Color(0xFF334155)
+                                          : const Color(0xFFE2E8F0),
+                                      width: 1.2,
+                                    ),
+                                    boxShadow: [
+                                      BoxShadow(
+                                        color: Colors.black.withValues(
+                                            alpha: isDark ? 0.2 : 0.06),
+                                        blurRadius: 8,
+                                        offset: const Offset(0, 2),
+                                      ),
+                                    ],
+                                  ),
+                                  child: const Icon(
+                                    Icons.notifications_active_rounded,
+                                    size: 20,
+                                    color: Color(0xFF0284C7),
+                                  ),
+                                ),
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+
                             // TOMBOL PANGGILAN DARURAT (TELEPON SOS)
                             Material(
                               color: Colors.transparent,
@@ -448,7 +511,12 @@ class _HomePageState extends State<HomePage> {
                           ],
                         ),
 
-                        const SizedBox(height: 18),
+                        const SizedBox(height: 14),
+
+                        // CARD INTERAKTIF UJI COBA NOTIFIKASI POP-UP DI ATAS HP
+                        _buildNotificationTestBanner(isDark),
+
+                        const SizedBox(height: 4),
 
                         // 2. QUICK SEARCH BAR
                         GestureDetector(
@@ -1853,6 +1921,207 @@ final Color borderColor = isDark ? const Color(0xFF1E3A5F) : const Color(0xFFBAE
                 fontSize: 11,
                 fontWeight: active ? FontWeight.bold : FontWeight.normal,
                 color: active ? activeColor : inactiveColor,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // WIDGET HELPER: BANNER UJI NOTIFIKASI POP-UP DI ATAS HP
+  Widget _buildNotificationTestBanner(bool isDark) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 14),
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+      decoration: BoxDecoration(
+        color: isDark ? const Color(0xFF1E293B) : Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: isDark ? const Color(0xFF334155) : const Color(0xFFBAE6FD),
+          width: 1.2,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color:
+                const Color(0xFF0284C7).withValues(alpha: isDark ? 0.2 : 0.08),
+            blurRadius: 10,
+            offset: const Offset(0, 3),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(6),
+                decoration: BoxDecoration(
+                  color: const Color(0xFF0284C7).withValues(alpha: 0.15),
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(
+                  Icons.notifications_active_rounded,
+                  color: Color(0xFF0284C7),
+                  size: 16,
+                ),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  "Tes Notifikasi Pop-up Di Atas HP",
+                  style: TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.bold,
+                    color: isDark ? Colors.white : const Color(0xFF0F172A),
+                  ),
+                ),
+              ),
+              Container(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                decoration: BoxDecoration(
+                  color: const Color(0xFF10B981).withValues(alpha: 0.15),
+                  borderRadius: BorderRadius.circular(6),
+                ),
+                child: const Text(
+                  "Pop-Up",
+                  style: TextStyle(
+                    fontSize: 9.5,
+                    fontWeight: FontWeight.bold,
+                    color: Color(0xFF10B981),
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 10),
+          SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            child: Row(
+              children: [
+                _buildQuickNotifPill(
+                  icon: Icons.medical_services_rounded,
+                  label: "Chat Dokter",
+                  color: const Color(0xFF0284C7),
+                  onTap: () {
+                    NotificationService.instance.showDoctorChatNotification(
+                      context: context,
+                      doctorName: "dr. Nurlitta Dwi, Sp.JP",
+                      message:
+                          "Halo! Tolong resep obat kardio diminum teratur pagi ini ya.",
+                      doctorPhoto: "assets/images/dokter_nurlitta.jpg",
+                      doctorSpecialty: "Spesialis Jantung",
+                    );
+                  },
+                  isDark: isDark,
+                ),
+                const SizedBox(width: 6),
+                _buildQuickNotifPill(
+                  icon: Icons.person_pin_rounded,
+                  label: "Chat Pasien",
+                  color: const Color(0xFF0284C7),
+                  onTap: () {
+                    NotificationService.instance.showPatientChatNotification(
+                      context: context,
+                      patientName: "Valentino (Pasien)",
+                      message: "Dok, tekanan darah saya pagi ini 128/82 mmHg.",
+                      patientPhoto: "assets/images/profile_woman.png",
+                    );
+                  },
+                  isDark: isDark,
+                ),
+                const SizedBox(width: 6),
+                _buildQuickNotifPill(
+                  icon: Icons.medication_rounded,
+                  label: "Minum Obat",
+                  color: const Color(0xFFD97706),
+                  onTap: () {
+                    NotificationService.instance
+                        .showMedicineReminderNotification(
+                      context: context,
+                      medicineName: "Aspirin Kardio 100 mg",
+                      dosage: "1 Tablet",
+                      instruction: "Setelah sarapan pagi",
+                      time: "08.00",
+                    );
+                  },
+                  isDark: isDark,
+                ),
+                const SizedBox(width: 6),
+                _buildQuickNotifPill(
+                  icon: Icons.event_available_rounded,
+                  label: "Jadwal",
+                  color: const Color(0xFF0D9488),
+                  onTap: () {
+                    NotificationService.instance
+                        .showConsultationReminderNotification(
+                      context: context,
+                      doctorName: "dr. Nurlitta Dwi, Sp.JP",
+                      scheduledTime:
+                          "Jumat, 18 September 2026 pukul 10:00 WIB",
+                      doctorPhoto: "assets/images/dokter_nurlitta.jpg",
+                      doctorSpecialty: "Spesialis Jantung",
+                    );
+                  },
+                  isDark: isDark,
+                ),
+                const SizedBox(width: 6),
+                _buildQuickNotifPill(
+                  icon: Icons.health_and_safety_rounded,
+                  label: "Edukasi",
+                  color: const Color(0xFF7C3AED),
+                  onTap: () {
+                    NotificationService.instance
+                        .showHealthEducationNotification(
+                      context: context,
+                      title: "Kiat Jantung Hari Ini",
+                      message:
+                          "Batasi konsumsi garam < 5g per hari untuk elastisitas arteri jantung.",
+                    );
+                  },
+                  isDark: isDark,
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildQuickNotifPill({
+    required IconData icon,
+    required String label,
+    required Color color,
+    required VoidCallback onTap,
+    required bool isDark,
+  }) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(10),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+        decoration: BoxDecoration(
+          color: color.withValues(alpha: isDark ? 0.2 : 0.1),
+          borderRadius: BorderRadius.circular(10),
+          border: Border.all(
+            color: color.withValues(alpha: isDark ? 0.35 : 0.25),
+            width: 1,
+          ),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(icon, size: 14, color: color),
+            const SizedBox(width: 5),
+            Text(
+              label,
+              style: TextStyle(
+                fontSize: 11.5,
+                fontWeight: FontWeight.w700,
+                color: color,
               ),
             ),
           ],

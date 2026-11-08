@@ -3,6 +3,8 @@ import 'package:heartcare/pages/riwayat_model.dart';
 import 'package:heartcare/pages/konsultasi_dokter_page.dart';
 import 'package:heartcare/pages/dokter_page.dart';
 import 'package:heartcare/services/theme_service.dart';
+import '../services/user_profile_service.dart';
+import '../services/profile_service.dart';
 
 class DetailRiwayatKonsultasiPage extends StatelessWidget {
   final RiwayatItem item;
@@ -147,6 +149,11 @@ class DetailRiwayatKonsultasiPage extends StatelessWidget {
                               child: InkWell(
                                 borderRadius: BorderRadius.circular(14),
                                 onTap: () {
+                                  final userProfile =
+                                      UserProfileService.instance.currentProfile;
+                                  final patientPhoto = userProfile.fotoProfil.isNotEmpty
+                                      ? userProfile.fotoProfil
+                                      : (ProfileService.instance.currentImagePath ?? '');
                                   Navigator.push(
                                     context,
                                     MaterialPageRoute(
@@ -158,6 +165,8 @@ class DetailRiwayatKonsultasiPage extends StatelessWidget {
                                             'Spesialis Jantung',
                                         doctorPhoto: item.doctorImage ??
                                             'assets/images/dokter_nurlitta.jpg',
+                                        patientName: userProfile.nama,
+                                        patientPhoto: patientPhoto,
                                       ),
                                     ),
                                   );

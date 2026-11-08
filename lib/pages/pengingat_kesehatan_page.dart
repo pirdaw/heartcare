@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:heartcare/services/theme_service.dart';
 import '../services/alarm_service.dart';
+import '../services/notification_service.dart';
 
 // MODEL DATA OBAT & PENGINGAT
 class MedicineReminder {
@@ -181,6 +182,15 @@ class HealthReminderController extends ChangeNotifier {
           if (cleanTime == currentFormattedTime ||
               cleanTime == currentFormattedColon.replaceAll(':', '.')) {
             _lastTriggeredMinute = currentFormattedTime;
+            // Pemicu notifikasi pop-up melayang di atas layar HP (Heads-Up Banner)
+            try {
+              NotificationService.instance.showMedicineReminderNotification(
+                medicineName: med.name,
+                dosage: '${med.amount} ${med.unit}',
+                instruction: med.schedule,
+                time: timeStr,
+              );
+            } catch (_) {}
             if (onReminderTriggered != null) {
               onReminderTriggered!(med, timeStr);
             }
@@ -709,6 +719,50 @@ class _PengingatKesehatanPageState extends State<PengingatKesehatanPage> {
                 ),
               ),
               const Spacer(),
+              // Tombol Uji Pop-up Notifikasi Minum Obat
+              InkWell(
+                onTap: () {
+                  NotificationService.instance.showMedicineReminderNotification(
+                    context: context,
+                    medicineName: hasMed ? nextMed.name : "Aspirin Kardio 100 mg",
+                    dosage: hasMed ? "${nextMed.amount} ${nextMed.unit}" : "1 Tablet",
+                    instruction: hasMed ? nextMed.schedule : "Setelah sarapan pagi",
+                    time: nextTime != '--.--' ? nextTime : "08.00",
+                  );
+                },
+                borderRadius: BorderRadius.circular(8),
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withValues(alpha: 0.25),
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(
+                      color: Colors.white.withValues(alpha: 0.4),
+                      width: 1,
+                    ),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: const [
+                      Icon(
+                        Icons.notifications_active_rounded,
+                        color: Colors.white,
+                        size: 13,
+                      ),
+                      SizedBox(width: 4),
+                      Text(
+                        'Tes Pop-up',
+                        style: TextStyle(
+                          fontSize: 10.5,
+                          fontWeight: FontWeight.w700,
+                          color: Colors.white,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              const SizedBox(width: 6),
               InkWell(
                 onTap: () => AlarmService.openAlarmApp(),
                 borderRadius: BorderRadius.circular(8),
@@ -2351,6 +2405,19 @@ class _TambahObatFormPageState extends State<TambahObatFormPage> {
         );
       }
 
+      // Munculkan notifikasi pop-up melayang di atas layar HP untuk konfirmasi pengingat obat aktif
+      try {
+        NotificationService.instance.showMedicineReminderNotification(
+          context: context,
+          medicineName: updatedMedicine.name,
+          dosage: '${updatedMedicine.amount} ${updatedMedicine.unit}',
+          instruction: updatedMedicine.schedule,
+          time: updatedMedicine.reminderTimes.isNotEmpty
+              ? updatedMedicine.reminderTimes.first
+              : null,
+        );
+      } catch (_) {}
+
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -2407,6 +2474,19 @@ class _TambahObatFormPageState extends State<TambahObatFormPage> {
           reminderTimes: newMedicine.reminderTimes,
         );
       }
+
+      // Munculkan notifikasi pop-up melayang di atas layar HP untuk konfirmasi pengingat obat aktif
+      try {
+        NotificationService.instance.showMedicineReminderNotification(
+          context: context,
+          medicineName: newMedicine.name,
+          dosage: '${newMedicine.amount} ${newMedicine.unit}',
+          instruction: newMedicine.schedule,
+          time: newMedicine.reminderTimes.isNotEmpty
+              ? newMedicine.reminderTimes.first
+              : null,
+        );
+      } catch (_) {}
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(

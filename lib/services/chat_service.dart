@@ -5,6 +5,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'doctor_service.dart';
+import 'notification_service.dart';
 
 class ChatMessage {
   final String id;
@@ -236,11 +237,12 @@ class ChatRoom {
 class ChatService {
   ChatService._() {
     _loadCache();
+    initGlobalChatNotificationListener();
   }
   static final ChatService instance = ChatService._();
 
-  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
-  final FirebaseAuth _auth = FirebaseAuth.instance;
+  FirebaseFirestore get _firestore => FirebaseFirestore.instance;
+  FirebaseAuth get _auth => FirebaseAuth.instance;
 
   // In-memory instant message cache
   final Map<String, List<ChatMessage>> _localMessages = {};
@@ -248,6 +250,179 @@ class ChatService {
 
   static const String _prefPrefixMessages = 'chat_messages_v2_';
   static const String _prefKeyRooms = 'chat_rooms_cache_v2';
+
+  /// ID unik per sesi / tab browser untuk membedakan port Chrome yang berbeda
+  static final String instanceSessionId =
+      'sess_${DateTime.now().microsecondsSinceEpoch}_${(1000 + (DateTime.now().millisecondsSinceEpoch % 9000))}';
+
+  /// Role aktif portal saat ini ('patient' atau 'doctor')
+  String _activeRole = 'patient';
+  String get activeRole => _activeRole;
+
+  void setActiveRole(String role) {
+    final clean = role.toLowerCase().trim();
+    if (clean.isNotEmpty) {
+      _activeRole = clean;
+      debugPrint(
+          '[ChatService] Active portal role disetel ke: $_activeRole (Session: $instanceSessionId)');
+    }
+  }
+
+  StreamSubscription? _incomingChatSub;
+  StreamSubscription? _authSubscription;
+  final Set<String> _notifiedMessageKeys = {};
+  DateTime _listenerStartTime = DateTime.now();
+
+  /// Mengaktifkan listener notifikasi chat real-time yang bekerja lintas port Chrome & perangkat
+  void initGlobalChatNotificationListener() {
+    _authSubscription?.cancel();
+    try {
+      _authSubscription = _auth.authStateChanges().listen((user) {
+        if (user != null) {
+          _startFirestoreChatsListener();
+        }
+      });
+    } catch (_) {}
+
+    _startFirestoreChatsListener();
+  }
+
+  void _startFirestoreChatsListener() {
+    if (_incomingChatSub != null) {
+      _incomingChatSub!.cancel();
+      _incomingChatSub = null;
+    }
+
+    _listenerStartTime = DateTime.now().subtract(const Duration(seconds: 2));
+
+    try {
+      debugPrint(
+          '[ChatService] Memulai listener chat real-time (Session: $instanceSessionId, Role: $_activeRole)...');
+      _incomingChatSub = _firestore.collection('chats').snapshots().listen(
+        (snapshot) {
+          _handleIncomingChatsSnapshot(snapshot);
+        },
+        onError: (err) {
+          debugPrint('[ChatService] Info listener chat: $err');
+        },
+      );
+    } catch (e) {
+      debugPrint('[ChatService] Exception starting chat listener: $e');
+    }
+  }
+
+  void _handleIncomingChatsSnapshot(QuerySnapshot snapshot) {
+    for (final change in snapshot.docChanges) {
+      if (change.type != DocumentChangeType.added &&
+          change.type != DocumentChangeType.modified) {
+        continue;
+      }
+
+      final doc = change.doc;
+      final data = doc.data() as Map<String, dynamic>?;
+      if (data == null) continue;
+
+      final lastMessage = (data['lastMessage'] as String? ?? '').trim();
+      if (lastMessage.isEmpty) continue;
+
+      final lastSenderRole =
+          (data['lastSenderRole'] as String? ?? '').trim().toLowerCase();
+      // Abaikan status baca pesan
+      if (lastSenderRole.contains('read') || lastSenderRole.isEmpty) {
+        continue;
+      }
+
+      final senderSessionId = (data['senderSessionId'] as String? ?? '').trim();
+      final lastSenderId = (data['lastSenderId'] as String? ?? '').trim();
+      final currentUid = _auth.currentUser?.uid ?? '';
+
+      // 1. CEK IDENTITAS PENGIRIM:
+      // Jika dikirim dari tab/port browser ini, JANGAN beri notifikasi ke pengirim sendiri!
+      if (senderSessionId.isNotEmpty && senderSessionId == instanceSessionId) {
+        continue;
+      }
+
+      // Jika UID pengirim sama dengan UID user saat ini DAN role pengirim sama dengan portal ini, lewati
+      if (currentUid.isNotEmpty &&
+          lastSenderId.isNotEmpty &&
+          currentUid == lastSenderId &&
+          lastSenderRole == _activeRole) {
+        continue;
+      }
+
+      // 2. CEK ROLE PORTAL:
+      // Notifikasi HANYA masuk ke portal lawan bicara!
+      // - Dokter kirim -> notifikasi hanya masuk ke portal PASIEN (bukan portal dokter)
+      // - Pasien kirim -> notifikasi hanya masuk ke portal DOKTER (bukan portal pasien)
+      if (lastSenderRole == _activeRole) {
+        continue;
+      }
+
+      // 3. CEK TIMESTAMP:
+      // Hanya notifikasi pesan yang masuk setelah listener ini aktif (cegah popup pesan lama saat buka aplikasi)
+      DateTime msgTime = DateTime.now();
+      final rawTs = data['lastMessageTime'];
+      final rawLocalTs = data['lastMessageLocalTime'];
+      if (rawTs is Timestamp) {
+        msgTime = rawTs.toDate();
+      } else if (rawLocalTs is num) {
+        msgTime = DateTime.fromMillisecondsSinceEpoch(rawLocalTs.toInt());
+      }
+
+      if (msgTime.isBefore(_listenerStartTime)) {
+        continue;
+      }
+
+      // 4. CEK DUPLIKAT:
+      final msgKey =
+          "${doc.id}_${data['lastMessageId'] ?? rawLocalTs ?? msgTime.millisecondsSinceEpoch}";
+      if (_notifiedMessageKeys.contains(msgKey)) {
+        continue;
+      }
+      _notifiedMessageKeys.add(msgKey);
+
+      if (_notifiedMessageKeys.length > 500) {
+        _notifiedMessageKeys.clear();
+        _notifiedMessageKeys.add(msgKey);
+      }
+
+      // 5. MUNCULKAN NOTIFIKASI POP-UP DI ATAS HP SESUAI TUJUAN PENERIMA!
+      debugPrint(
+          '[ChatService] Menampilkan notifikasi chat masuk untuk portal: $_activeRole dari pengirim: $lastSenderRole');
+
+      if (_activeRole == 'doctor' && lastSenderRole == 'patient') {
+        // Pasien kirim ke dokter -> POP-UP DI PORTAL DOKTER
+        NotificationService.instance.showPatientChatNotification(
+          patientName: (data['patientName'] as String?)?.isNotEmpty == true
+              ? data['patientName']
+              : ((data['lastSenderName'] as String?)?.isNotEmpty == true
+                  ? data['lastSenderName']
+                  : 'Pasien HeartCare'),
+          message: lastMessage,
+          patientPhoto: data['patientPhoto'] as String?,
+          patientId: data['patientId'] as String?,
+          chatId: doc.id,
+          doctorName: data['doctorName'] as String?,
+          doctorPhoto: data['doctorPhoto'] as String?,
+          doctorSpecialty: data['doctorSpecialty'] as String?,
+        );
+      } else if (_activeRole == 'patient' && lastSenderRole == 'doctor') {
+        // Dokter kirim ke pasien -> POP-UP DI PORTAL PASIEN
+        NotificationService.instance.showDoctorChatNotification(
+          doctorName: (data['doctorName'] as String?)?.isNotEmpty == true
+              ? data['doctorName']
+              : ((data['lastSenderName'] as String?)?.isNotEmpty == true
+                  ? data['lastSenderName']
+                  : 'Dokter HeartCare'),
+          message: lastMessage,
+          doctorPhoto: data['doctorPhoto'] as String?,
+          doctorSpecialty: data['doctorSpecialty'] as String?,
+          chatId: doc.id,
+          doctorId: data['doctorId'] as String?,
+        );
+      }
+    }
+  }
 
   Future<void> _loadCache() async {
     try {
@@ -276,7 +451,10 @@ class ChatService {
     String? patientName,
     String? patientPhoto,
   }) async {
-    final currentUser = _auth.currentUser;
+    User? currentUser;
+    try {
+      currentUser = _auth.currentUser;
+    } catch (_) {}
     final resolvedPatientId = patientId ??
         currentUser?.uid ??
         currentUser?.email?.replaceAll(RegExp(r'[^a-zA-Z0-9]'), '_') ??
@@ -398,6 +576,58 @@ class ChatService {
             isRead: false,
           ),
         );
+      } else {
+        // Dokumen chat sudah ada: periksa apakah ada update foto atau nama pasien terbaru
+        final existingData = docSnap.data();
+        final currentPhotoInDoc =
+            (existingData?['patientPhoto'] as String?)?.trim() ?? '';
+        final currentNameInDoc =
+            (existingData?['patientName'] as String?)?.trim() ?? '';
+
+        final Map<String, dynamic> updates = {};
+        if (patientPhoto != null &&
+            patientPhoto.trim().isNotEmpty &&
+            patientPhoto.trim() != currentPhotoInDoc) {
+          updates['patientPhoto'] = patientPhoto.trim();
+        }
+        if (patientName != null &&
+            patientName.trim().isNotEmpty &&
+            patientName.trim() != currentNameInDoc) {
+          updates['patientName'] = patientName.trim();
+        }
+
+        if (updates.isNotEmpty) {
+          updates['updatedAt'] = FieldValue.serverTimestamp();
+          await chatDocRef.set(updates, SetOptions(merge: true));
+        }
+
+        // Perbarui memory cache ruangan jika ada foto terbaru
+        final inMem = _localRooms[chatId];
+        if (inMem != null &&
+            patientPhoto != null &&
+            patientPhoto.trim().isNotEmpty &&
+            inMem.patientPhoto != patientPhoto.trim()) {
+          final updatedMem = ChatRoom(
+            id: inMem.id,
+            patientId: inMem.patientId,
+            patientName: (patientName != null && patientName.isNotEmpty)
+                ? patientName
+                : inMem.patientName,
+            patientPhoto: patientPhoto.trim(),
+            doctorId: inMem.doctorId,
+            doctorName: inMem.doctorName,
+            doctorPhoto: inMem.doctorPhoto,
+            doctorSpecialty: inMem.doctorSpecialty,
+            lastMessage: inMem.lastMessage,
+            lastMessageTime: inMem.lastMessageTime,
+            lastSenderRole: inMem.lastSenderRole,
+            unreadCountDoctor: inMem.unreadCountDoctor,
+            unreadCountPatient: inMem.unreadCountPatient,
+            updatedAt: DateTime.now(),
+          );
+          _localRooms[chatId] = updatedMem;
+          _saveRoomToLocal(updatedMem);
+        }
       }
     } catch (e) {
       debugPrint('[ChatService] getOrCreateChatRoom error: $e');
@@ -469,10 +699,14 @@ class ChatService {
     String? imagePath,
     String? patientId,
     String? patientName,
+    String? patientPhoto,
     String? doctorId,
     String? doctorName,
   }) async {
-    final currentUser = _auth.currentUser;
+    User? currentUser;
+    try {
+      currentUser = _auth.currentUser;
+    } catch (_) {}
     final senderId = currentUser?.uid ??
         (senderRole == 'doctor' ? 'doctor_user' : 'patient_user');
 
@@ -509,12 +743,16 @@ class ChatService {
                 : '📄 Mengirim lampiran'));
 
     final existingRoom = _localRooms[chatId];
+    final resolvedPhoto = (patientPhoto != null && patientPhoto.isNotEmpty)
+        ? patientPhoto
+        : (existingRoom?.patientPhoto ?? '');
+
     if (existingRoom != null) {
       final updatedRoom = ChatRoom(
         id: existingRoom.id,
         patientId: existingRoom.patientId,
         patientName: existingRoom.patientName,
-        patientPhoto: existingRoom.patientPhoto,
+        patientPhoto: resolvedPhoto,
         doctorId: existingRoom.doctorId,
         doctorName: existingRoom.doctorName,
         doctorPhoto: existingRoom.doctorPhoto,
@@ -565,6 +803,9 @@ class ChatService {
         'lastMessageLocalTime': now.millisecondsSinceEpoch,
         'lastSenderRole': senderRole,
         'lastSenderId': senderId,
+        'lastSenderName': senderName,
+        'lastMessageId': msgId,
+        'senderSessionId': instanceSessionId,
         'updatedAt': FieldValue.serverTimestamp(),
         if (senderRole == 'patient')
           'unreadCountDoctor': FieldValue.increment(1),
@@ -575,7 +816,7 @@ class ChatService {
       if (existingRoom != null) {
         roomPayload['patientId'] = existingRoom.patientId;
         roomPayload['patientName'] = existingRoom.patientName;
-        roomPayload['patientPhoto'] = existingRoom.patientPhoto;
+        roomPayload['patientPhoto'] = resolvedPhoto;
         roomPayload['doctorId'] = existingRoom.doctorId;
         roomPayload['doctorName'] = existingRoom.doctorName;
         roomPayload['doctorPhoto'] = existingRoom.doctorPhoto;
@@ -583,6 +824,7 @@ class ChatService {
       } else {
         if (patientId != null && patientId.isNotEmpty) roomPayload['patientId'] = patientId;
         if (patientName != null && patientName.isNotEmpty) roomPayload['patientName'] = patientName;
+        if (resolvedPhoto.isNotEmpty) roomPayload['patientPhoto'] = resolvedPhoto;
         if (doctorId != null && doctorId.isNotEmpty) roomPayload['doctorId'] = doctorId;
         if (doctorName != null && doctorName.isNotEmpty) roomPayload['doctorName'] = doctorName;
       }
@@ -599,6 +841,58 @@ class ChatService {
     }
 
     return isCloudSuccess;
+  }
+
+  /// Memperbarui foto profil pasien di seluruh ruang chat lokal dan Firestore
+  Future<void> updatePatientPhotoInAllChats(
+      String patientId, String newPhoto) async {
+    if (patientId.isEmpty) return;
+
+    final cleanPId = _cleanId(patientId);
+
+    // 1. Perbarui semua room di memori lokal
+    for (final key in _localRooms.keys.toList()) {
+      final room = _localRooms[key]!;
+      if (_cleanId(room.patientId).contains(cleanPId) ||
+          cleanPId.contains(_cleanId(room.patientId))) {
+        final updated = ChatRoom(
+          id: room.id,
+          patientId: room.patientId,
+          patientName: room.patientName,
+          patientPhoto: newPhoto,
+          doctorId: room.doctorId,
+          doctorName: room.doctorName,
+          doctorPhoto: room.doctorPhoto,
+          doctorSpecialty: room.doctorSpecialty,
+          lastMessage: room.lastMessage,
+          lastMessageTime: room.lastMessageTime,
+          lastSenderRole: room.lastSenderRole,
+          unreadCountDoctor: room.unreadCountDoctor,
+          unreadCountPatient: room.unreadCountPatient,
+          updatedAt: DateTime.now(),
+        );
+        _localRooms[key] = updated;
+        _saveRoomToLocal(updated);
+      }
+    }
+
+    // 2. Perbarui dokumen chats di Firestore
+    try {
+      final querySnap = await _firestore
+          .collection('chats')
+          .where('patientId', isEqualTo: patientId)
+          .get()
+          .timeout(const Duration(seconds: 4));
+
+      for (final doc in querySnap.docs) {
+        await doc.reference.set({
+          'patientPhoto': newPhoto,
+          'updatedAt': FieldValue.serverTimestamp(),
+        }, SetOptions(merge: true));
+      }
+    } catch (e) {
+      debugPrint('[ChatService] updatePatientPhotoInAllChats error: $e');
+    }
   }
 
   /// Helper deterministik untuk menghitung chatId

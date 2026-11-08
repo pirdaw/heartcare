@@ -5,6 +5,8 @@ import 'package:flutter/foundation.dart' show kIsWeb;
 import 'firebase_options.dart';
 import 'pages/welcome_page.dart';
 import 'services/theme_service.dart';
+import 'services/notification_service.dart';
+import 'services/chat_service.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -19,6 +21,9 @@ Future<void> main() async {
     );
   }
 
+  // Aktifkan listener notifikasi chat real-time multi-port & multi-device
+  ChatService.instance.initGlobalChatNotificationListener();
+
   runApp(const HeartCareApp());
 }
 
@@ -31,6 +36,11 @@ class HeartCareApp extends StatelessWidget {
       valueListenable: ThemeService.themeModeNotifier,
       builder: (context, themeMode, _) {
         return MaterialApp(
+          navigatorKey: NotificationService.navigatorKey,
+          builder: (context, child) {
+            NotificationService.setContext(context);
+            return child ?? const SizedBox();
+          },
           debugShowCheckedModeBanner: false,
           title: 'HeartCare',
           themeMode: themeMode,

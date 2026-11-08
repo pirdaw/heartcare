@@ -123,8 +123,8 @@ class UserProfileService extends ChangeNotifier {
   static final UserProfileService _instance = UserProfileService._internal();
   factory UserProfileService() => _instance;
 
-  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
-  final FirebaseAuth _auth = FirebaseAuth.instance;
+  FirebaseFirestore get _firestore => FirebaseFirestore.instance;
+  FirebaseAuth get _auth => FirebaseAuth.instance;
 
   final Map<String, UserProfileData> _cache = {};
   StreamSubscription<DocumentSnapshot<Map<String, dynamic>>>?
@@ -132,18 +132,20 @@ class UserProfileService extends ChangeNotifier {
   String? _subscribedUid;
 
   UserProfileService._internal() {
-    final initialUser = _auth.currentUser;
-    if (initialUser != null && initialUser.uid.isNotEmpty) {
-      _subscribeToFirestore(initialUser.uid);
-    }
-
-    _auth.authStateChanges().listen((user) {
-      if (user != null && user.uid.isNotEmpty) {
-        _subscribeToFirestore(user.uid);
-      } else {
-        _unsubscribeFromFirestore();
+    try {
+      final initialUser = _auth.currentUser;
+      if (initialUser != null && initialUser.uid.isNotEmpty) {
+        _subscribeToFirestore(initialUser.uid);
       }
-    });
+
+      _auth.authStateChanges().listen((user) {
+        if (user != null && user.uid.isNotEmpty) {
+          _subscribeToFirestore(user.uid);
+        } else {
+          _unsubscribeFromFirestore();
+        }
+      });
+    } catch (_) {}
   }
 
   static UserProfileService get instance => _instance;

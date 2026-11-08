@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:heartcare/services/theme_service.dart';
 import 'dokter_page.dart';
+import '../services/notification_service.dart';
 
 // ============================================================================
 // MODEL UNTUK FAKTA STATISTIK CEPAT
@@ -1518,31 +1519,69 @@ class _EducationPageState extends State<EducationPage> {
                   ),
                 ],
               ),
-              InkWell(
-                onTap: _nextTip,
-                borderRadius: BorderRadius.circular(8),
-                child: Padding(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
-                  child: Row(
-                    children: [
-                      const Icon(
-                        Icons.refresh_rounded,
-                        size: 13,
-                        color: Color(0xFF0284C7),
+              Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  InkWell(
+                    onTap: () {
+                      NotificationService.instance.showHealthEducationNotification(
+                        context: context,
+                        title: "Kiat Jantung Hari Ini",
+                        message: _dailyTips[_currentTipIndex],
+                      );
+                    },
+                    borderRadius: BorderRadius.circular(8),
+                    child: Padding(
+                      padding:
+                          const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
+                      child: Row(
+                        children: const [
+                          Icon(
+                            Icons.notifications_active_rounded,
+                            size: 13,
+                            color: Color(0xFF7C3AED),
+                          ),
+                          SizedBox(width: 3),
+                          Text(
+                            'Kirim Pop-up',
+                            style: TextStyle(
+                              fontSize: 10.5,
+                              fontWeight: FontWeight.w700,
+                              color: Color(0xFF7C3AED),
+                            ),
+                          ),
+                        ],
                       ),
-                      const SizedBox(width: 3),
-                      const Text(
-                        'Ganti Kiat',
-                        style: TextStyle(
-                          fontSize: 10.5,
-                          fontWeight: FontWeight.w700,
-                          color: Color(0xFF0284C7),
-                        ),
-                      ),
-                    ],
+                    ),
                   ),
-                ),
+                  const SizedBox(width: 4),
+                  InkWell(
+                    onTap: _nextTip,
+                    borderRadius: BorderRadius.circular(8),
+                    child: Padding(
+                      padding:
+                          const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
+                      child: Row(
+                        children: const [
+                          Icon(
+                            Icons.refresh_rounded,
+                            size: 13,
+                            color: Color(0xFF0284C7),
+                          ),
+                          SizedBox(width: 3),
+                          Text(
+                            'Ganti Kiat',
+                            style: TextStyle(
+                              fontSize: 10.5,
+                              fontWeight: FontWeight.w700,
+                              color: Color(0xFF0284C7),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ],
               ),
             ],
           ),

@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'Skrining/screening_model.dart';
 import 'package:heartcare/services/theme_service.dart';
 import 'package:heartcare/services/doctor_service.dart';
+import '../services/user_profile_service.dart';
+import '../services/profile_service.dart';
 import 'home_page.dart';
 import 'konsultasi_dokter_page.dart';
 import 'pilih_jadwal_page.dart';
@@ -454,6 +456,11 @@ class DetailDokterPage extends StatelessWidget {
                             child: InkWell(
                               borderRadius: BorderRadius.circular(14),
                               onTap: () {
+                                final userProfile =
+                                    UserProfileService.instance.currentProfile;
+                                final patientPhoto = userProfile.fotoProfil.isNotEmpty
+                                    ? userProfile.fotoProfil
+                                    : (ProfileService.instance.currentImagePath ?? '');
                                 Navigator.push(
                                   context,
                                   MaterialPageRoute(
@@ -462,6 +469,8 @@ class DetailDokterPage extends StatelessWidget {
                                       doctorName: nama,
                                       doctorSpecialty: spesialis,
                                       doctorPhoto: imagePath,
+                                      patientName: userProfile.nama,
+                                      patientPhoto: patientPhoto,
                                       initialScreeningData: screeningData,
                                       initialRiskResult: riskResult,
                                     ),

@@ -1,11 +1,11 @@
 import 'dart:async';
 import 'dart:convert';
-import 'dart:io';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'platform_file_helper.dart';
 
 /// Layanan terpusat untuk registrasi, sinkronisasi, dan penemuan akun dokter autentik
 /// dengan sinkronisasi Firestore (users & doctors) + Cache Lokal (SharedPreferences).
@@ -560,24 +560,18 @@ class DoctorService {
     }
 
     // 4. File lokal di perangkat (jika bukan Web)
-    if (!kIsWeb) {
-      try {
-        final file = File(trimmed);
-        if (file.existsSync()) {
-          return Image.file(
-            file,
-            width: width,
-            height: height,
-            fit: fit,
-            errorBuilder: (context, error, stackTrace) => Icon(
-              Icons.person_rounded,
-              size: width != null ? width * 0.6 : 36,
-              color: isDark ? const Color(0xFF38BDF8) : const Color(0xFF0284C7),
-            ),
-          );
-        }
-      } catch (_) {}
-    }
+    final fileWidget = buildPlatformFileImageWidget(
+      trimmed,
+      width: width,
+      height: height,
+      fit: fit,
+      errorBuilder: (context, error, stackTrace) => Icon(
+        Icons.person_rounded,
+        size: width != null ? width * 0.6 : 36,
+        color: isDark ? const Color(0xFF38BDF8) : const Color(0xFF0284C7),
+      ),
+    );
+    if (fileWidget != null) return fileWidget;
 
     // Default icon
     return Icon(

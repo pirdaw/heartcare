@@ -10,9 +10,11 @@ import 'package:heartcare/pages/Skrining/screening_model.dart';
 import 'package:heartcare/pages/riwayat_model.dart';
 import 'package:heartcare/pages/profil_page.dart';
 import 'package:heartcare/services/theme_service.dart';
+import '../services/profile_service.dart';
 import '../services/user_profile_service.dart';
 import '../services/chat_service.dart';
 import '../services/doctor_service.dart';
+import '../services/notification_service.dart';
 
 class ChatItem {
   final String message;
@@ -71,6 +73,8 @@ class _KonsultasiDokterPageState
       ScrollController();
 
   String? _activeChatId;
+  String? _patientPhoto;
+  String? _patientName;
   bool _isLoadingChat = false;
   final bool _isDoctorTyping = false;
   bool _hasSharedInitialScreening = false;
@@ -83,15 +87,47 @@ class _KonsultasiDokterPageState
   @override
   void initState() {
     super.initState();
+    ChatService.instance.setActiveRole(widget.isDoctorView ? 'doctor' : 'patient');
+    _patientPhoto = widget.patientPhoto;
+    _patientName = widget.patientName;
+
+    if (!widget.isDoctorView) {
+      UserProfileData? profile;
+      try {
+        profile = UserProfileService.instance.currentProfile;
+      } catch (_) {}
+      if (_patientPhoto == null || _patientPhoto!.isEmpty) {
+        _patientPhoto = (profile != null && profile.fotoProfil.isNotEmpty)
+            ? profile.fotoProfil
+            : ProfileService.instance.currentImagePath;
+      }
+      if (_patientName == null || _patientName!.isEmpty) {
+        _patientName = (profile != null && profile.nama.isNotEmpty)
+            ? profile.nama
+            : 'Pasien HeartCare';
+      }
+    } else if (widget.patientId != null && widget.patientId!.isNotEmpty) {
+      if (_patientPhoto == null || _patientPhoto!.isEmpty) {
+        ProfileService.fetchPatientPhotoFromFirestore(widget.patientId!);
+      }
+    }
+
     _listenDoctorOnlineStatus();
     // Pre-komputasi activeChatId secara instan pada frame pertama
     if (widget.chatId != null && widget.chatId!.isNotEmpty) {
       _activeChatId = widget.chatId;
     } else {
-      final profile = UserProfileService.instance.currentProfile;
+      UserProfileData? profile;
+      try {
+        profile = UserProfileService.instance.currentProfile;
+      } catch (_) {}
+      String? currentUid;
+      try {
+        currentUid = FirebaseAuth.instance.currentUser?.uid;
+      } catch (_) {}
       final patientId = widget.patientId ??
-          FirebaseAuth.instance.currentUser?.uid ??
-          (profile.nama.isNotEmpty
+          currentUid ??
+          ((profile != null && profile.nama.isNotEmpty)
               ? profile.nama
                   .replaceAll(RegExp(r'[^a-zA-Z0-9]'), '_')
                   .toLowerCase()
@@ -110,6 +146,20 @@ class _KonsultasiDokterPageState
     try {
       if (widget.chatId != null && widget.chatId!.isNotEmpty) {
         _activeChatId = widget.chatId;
+        final cached = ChatService.instance.getCachedRooms();
+        for (final r in cached) {
+          if (r.id == widget.chatId) {
+            if ((_patientPhoto == null || _patientPhoto!.isEmpty) &&
+                r.patientPhoto.isNotEmpty) {
+              _patientPhoto = r.patientPhoto;
+            }
+            if ((_patientName == null || _patientName!.isEmpty) &&
+                r.patientName.isNotEmpty) {
+              _patientName = r.patientName;
+            }
+            break;
+          }
+        }
       } else {
         final profile = UserProfileService.instance.currentProfile;
         final resolvedId = await ChatService.instance
@@ -121,7 +171,11 @@ class _KonsultasiDokterPageState
               patientId: widget.patientId,
               patientName: widget.patientName ??
                   (profile.nama.isNotEmpty ? profile.nama : 'Pasien HeartCare'),
-              patientPhoto: widget.patientPhoto ?? profile.fotoProfil,
+              patientPhoto: _patientPhoto ??
+                  widget.patientPhoto ??
+                  (profile.fotoProfil.isNotEmpty
+                      ? profile.fotoProfil
+                      : (ProfileService.instance.currentImagePath ?? '')),
             )
             .timeout(
               const Duration(seconds: 2),
@@ -256,7 +310,12 @@ class _KonsultasiDokterPageState
       senderRole: senderRole,
       senderName: senderName,
       patientId: widget.patientId,
-      patientName: widget.patientName ?? profile.nama,
+      patientName: _patientName ?? widget.patientName ?? profile.nama,
+      patientPhoto: _patientPhoto ??
+          widget.patientPhoto ??
+          (profile.fotoProfil.isNotEmpty
+              ? profile.fotoProfil
+              : ProfileService.instance.currentImagePath),
       doctorId: widget.doctorId,
       doctorName: widget.doctorName,
     );
@@ -277,7 +336,6 @@ class _KonsultasiDokterPageState
 
     _scrollToBottom();
   }
-
 
   void _showAttachmentOptions() {
     final isDark = ThemeService.isDarkMode;
@@ -801,7 +859,12 @@ class _KonsultasiDokterPageState
       attachmentType: 'screening',
       imagePath: 'assets/images/screening_jantung.png',
       patientId: widget.patientId,
-      patientName: widget.patientName ?? profile.nama,
+      patientName: _patientName ?? widget.patientName ?? profile.nama,
+      patientPhoto: _patientPhoto ??
+          widget.patientPhoto ??
+          (profile.fotoProfil.isNotEmpty
+              ? profile.fotoProfil
+              : ProfileService.instance.currentImagePath),
       doctorId: widget.doctorId,
       doctorName: widget.doctorName,
     );
@@ -1596,7 +1659,12 @@ class _KonsultasiDokterPageState
       attachmentType: category,
       imagePath: base64String,
       patientId: widget.patientId,
-      patientName: widget.patientName ?? profile.nama,
+      patientName: _patientName ?? widget.patientName ?? profile.nama,
+      patientPhoto: _patientPhoto ??
+          widget.patientPhoto ??
+          (profile.fotoProfil.isNotEmpty
+              ? profile.fotoProfil
+              : ProfileService.instance.currentImagePath),
       doctorId: widget.doctorId,
       doctorName: widget.doctorName,
     );
@@ -1667,7 +1735,12 @@ class _KonsultasiDokterPageState
       attachmentType: title,
       imagePath: path,
       patientId: widget.patientId,
-      patientName: widget.patientName ?? profile.nama,
+      patientName: _patientName ?? widget.patientName ?? profile.nama,
+      patientPhoto: _patientPhoto ??
+          widget.patientPhoto ??
+          (profile.fotoProfil.isNotEmpty
+              ? profile.fotoProfil
+              : ProfileService.instance.currentImagePath),
       doctorId: widget.doctorId,
       doctorName: widget.doctorName,
     );
@@ -1749,14 +1822,25 @@ class _KonsultasiDokterPageState
                             ? Container(
                                 width: 44,
                                 height: 44,
-                                decoration: const BoxDecoration(
-                                  color: Color(0xFFE0F2FE),
+                                decoration: BoxDecoration(
+                                  color: isDark
+                                      ? const Color(0xFF0F2B3E)
+                                      : const Color(0xFFE0F2FE),
                                   shape: BoxShape.circle,
+                                  border: Border.all(
+                                    color: isDark
+                                        ? const Color(0xFF334155)
+                                        : const Color(0xFFBAE6FD),
+                                    width: 1.5,
+                                  ),
                                 ),
-                                child: const Icon(
-                                  Icons.person_rounded,
-                                  color: Color(0xFF0284C7),
-                                  size: 26,
+                                clipBehavior: Clip.antiAlias,
+                                child: ProfileService.buildPatientImage(
+                                  _patientPhoto ?? widget.patientPhoto,
+                                  patientId: widget.patientId,
+                                  width: 44,
+                                  height: 44,
+                                  isDark: isDark,
                                 ),
                               )
                             : _doctorImage(
@@ -1790,7 +1874,7 @@ class _KonsultasiDokterPageState
 
                               Text(
                                 widget.isDoctorView
-                                    ? (widget.patientName ?? "Pasien HeartCare")
+                                    ? (_patientName ?? widget.patientName ?? "Pasien HeartCare")
                                     : widget.doctorName,
                                 style: TextStyle(
                                   fontSize: 14.5,
@@ -2269,14 +2353,25 @@ class _KonsultasiDokterPageState
             ? Container(
                 width: 32,
                 height: 32,
-                decoration: const BoxDecoration(
-                  color: Color(0xFFE0F2FE),
+                decoration: BoxDecoration(
+                  color: isDark
+                      ? const Color(0xFF0F2B3E)
+                      : const Color(0xFFE0F2FE),
                   shape: BoxShape.circle,
+                  border: Border.all(
+                    color: isDark
+                        ? const Color(0xFF334155)
+                        : const Color(0xFFBAE6FD),
+                    width: 1,
+                  ),
                 ),
-                child: const Icon(
-                  Icons.person_rounded,
-                  color: Color(0xFF0284C7),
-                  size: 20,
+                clipBehavior: Clip.antiAlias,
+                child: ProfileService.buildPatientImage(
+                  _patientPhoto ?? widget.patientPhoto,
+                  patientId: widget.patientId,
+                  width: 32,
+                  height: 32,
+                  isDark: isDark,
                 ),
               )
             : _doctorImage(
@@ -3182,6 +3277,18 @@ class _KonsultasiDokterPageState
                           onPressed: () {
                             Navigator.pop(context);
 
+                            try {
+                              NotificationService.instance
+                                  .showConsultationReminderNotification(
+                                doctorName: widget.doctorName,
+                                scheduledTime:
+                                    "Jumat, 18 September 2026 pukul 10:00 WIB ($selectedReminder)",
+                                doctorPhoto: widget.doctorPhoto,
+                                doctorSpecialty: widget.doctorSpecialty,
+                                chatId: _activeChatId,
+                              );
+                            } catch (_) {}
+
                             Future.delayed(
                               const Duration(
                                 milliseconds: 150,
@@ -3211,6 +3318,52 @@ class _KonsultasiDokterPageState
                               color: Colors.white,
                               fontWeight:
                                   FontWeight.w700,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+
+                    const SizedBox(height: 8),
+
+                    // TOMBOL TES POP-UP CHAT DOKTER
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                      child: SizedBox(
+                        width: double.infinity,
+                        height: 38,
+                        child: ElevatedButton.icon(
+                          onPressed: () {
+                            Navigator.pop(context);
+                            NotificationService.instance
+                                .showDoctorChatNotification(
+                              context: context,
+                              doctorName: widget.doctorName,
+                              message:
+                                  "Halo, saya sedang memeriksa data konsultasi Anda. Mohon minum obat secara teratur ya.",
+                              doctorPhoto: widget.doctorPhoto,
+                              doctorSpecialty: widget.doctorSpecialty,
+                              chatId: _activeChatId,
+                            );
+                          },
+                          icon: const Icon(
+                            Icons.notifications_active_rounded,
+                            size: 16,
+                            color: Colors.white,
+                          ),
+                          label: const Text(
+                            "Tes Pop-up Chat Masuk Dokter",
+                            style: TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.white,
+                            ),
+                          ),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: const Color(0xFF0D9488),
+                            elevation: 0,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(10),
                             ),
                           ),
                         ),

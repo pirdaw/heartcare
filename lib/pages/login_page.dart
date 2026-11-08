@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../services/auth_service.dart';
+import '../services/chat_service.dart';
 import 'doctor_dashboard_page.dart';
 import 'forgot_password_page.dart';
 import 'home_page.dart';
@@ -97,6 +98,7 @@ class _LoginPageState extends State<LoginPage> {
     if (!mounted) return;
 
     if (role == 'doctor' || _isDoctorMode) {
+      ChatService.instance.setActiveRole('doctor');
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(
@@ -104,6 +106,7 @@ class _LoginPageState extends State<LoginPage> {
         ),
       );
     } else {
+      ChatService.instance.setActiveRole('patient');
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(
