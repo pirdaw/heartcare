@@ -8,11 +8,25 @@ import 'profil_page.dart';
 import 'screening_intro_page.dart';
 import 'riwayat_page.dart';
 import 'signup_page.dart';
+import 'Skrining/screening_model.dart';
 import '../services/theme_service.dart';
 import '../services/doctor_service.dart';
 
+import '../services/language_service.dart';
+
+import '../services/chat_notification_service.dart';
+import '../widgets/chat_notification_sheet.dart';
+
+
 class PilihDokterPage extends StatefulWidget {
-  const PilihDokterPage({super.key});
+  final ScreeningData? initialScreeningData;
+  final HeartRiskResult? initialRiskResult;
+
+  const PilihDokterPage({
+    super.key,
+    this.initialScreeningData,
+    this.initialRiskResult,
+  });
 
   @override
   State<PilihDokterPage> createState() => _PilihDokterPageState();
@@ -61,12 +75,15 @@ class _PilihDokterPageState extends State<PilihDokterPage> {
 
   @override
   Widget build(BuildContext context) {
-    return ValueListenableBuilder<ThemeMode>(
-      valueListenable: ThemeService.themeModeNotifier,
-      builder: (context, themeMode, _) {
-        final isDark = themeMode == ThemeMode.dark;
+    return ValueListenableBuilder<String>(
+      valueListenable: LanguageService.languageNotifier,
+      builder: (context, _, _) {
+        return ValueListenableBuilder<ThemeMode>(
+          valueListenable: ThemeService.themeModeNotifier,
+          builder: (context, themeMode, _) {
+            final isDark = themeMode == ThemeMode.dark;
 
-        return Scaffold(
+            return Scaffold(
           backgroundColor:
               isDark ? const Color(0xFF0F172A) : const Color(0xFFF8FAFC),
           appBar: AppBar(
@@ -94,7 +111,7 @@ class _PilihDokterPageState extends State<PilihDokterPage> {
             ),
             centerTitle: true,
             title: Text(
-              'Konsultasi Dokter',
+              tr('Konsultasi Dokter', 'Doctor Consultation'),
               style: TextStyle(
                 color: isDark ? Colors.white : const Color(0xFF0F172A),
                 fontSize: 18,
@@ -102,6 +119,65 @@ class _PilihDokterPageState extends State<PilihDokterPage> {
               ),
             ),
             actions: [
+              // Tombol Chat Notifications
+              ListenableBuilder(
+                listenable: ChatNotificationService.instance,
+                builder: (context, _) {
+                  final unread = ChatNotificationService.instance.totalUnreadNotificationCount;
+                  return Padding(
+                    padding: const EdgeInsets.only(right: 8),
+                    child: Material(
+                      color: isDark ? const Color(0xFF1E293B) : const Color(0xFFF1F5F9),
+                      borderRadius: BorderRadius.circular(12),
+                      child: InkWell(
+                        borderRadius: BorderRadius.circular(12),
+                        onTap: () => ChatNotificationSheet.show(context),
+                        child: Container(
+                          width: 38,
+                          height: 38,
+                          alignment: Alignment.center,
+                          child: Stack(
+                            clipBehavior: Clip.none,
+                            children: [
+                              Icon(
+                                Icons.notifications_outlined,
+                                size: 20,
+                                color: isDark ? Colors.white : const Color(0xFF0F172A),
+                              ),
+                              if (unread > 0)
+                                Positioned(
+                                  top: -4,
+                                  right: -4,
+                                  child: Container(
+                                    padding: const EdgeInsets.all(3),
+                                    constraints: const BoxConstraints(
+                                      minWidth: 16,
+                                      minHeight: 16,
+                                    ),
+                                    decoration: const BoxDecoration(
+                                      color: Color(0xFFEF4444),
+                                      shape: BoxShape.circle,
+                                    ),
+                                    alignment: Alignment.center,
+                                    child: Text(
+                                      unread > 9 ? '9+' : '$unread',
+                                      style: const TextStyle(
+                                        color: Colors.white,
+                                        fontSize: 9,
+                                        fontWeight: FontWeight.bold,
+                                        height: 1,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+                  );
+                },
+              ),
               // Tombol tambah / daftar dokter baru
               Padding(
                 padding: const EdgeInsets.only(right: 12),
@@ -240,6 +316,53 @@ class _PilihDokterPageState extends State<PilihDokterPage> {
               return SafeArea(
                 child: Column(
                   children: [
+                    if (widget.initialScreeningData != null)
+                      Padding(
+                        padding: const EdgeInsets.fromLTRB(20, 8, 20, 4),
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                          decoration: BoxDecoration(
+                            color: isDark ? const Color(0xFF1E293B) : const Color(0xFFE0F2FE),
+                            borderRadius: BorderRadius.circular(14),
+                            border: Border.all(
+                              color: isDark ? const Color(0xFF38BDF8) : const Color(0xFF0284C7),
+                              width: 1.2,
+                            ),
+                          ),
+                          child: Row(
+                            children: [
+                              Icon(
+                                Icons.monitor_heart_rounded,
+                                color: widget.initialRiskResult?.statusColor ?? const Color(0xFF0284C7),
+                                size: 26,
+                              ),
+                              const SizedBox(width: 10),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      "Data Skrining AI Terlampir",
+                                      style: TextStyle(
+                                        fontSize: 13,
+                                        fontWeight: FontWeight.bold,
+                                        color: isDark ? Colors.white : const Color(0xFF0F172A),
+                                      ),
+                                    ),
+                                    Text(
+                                      "Pilih dokter untuk otomatis membagikan hasil skrining jantung Anda.",
+                                      style: TextStyle(
+                                        fontSize: 11,
+                                        color: isDark ? const Color(0xFF94A3B8) : const Color(0xFF475569),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
                     // =========================================================
                     // SEARCH BAR
                     // =========================================================
@@ -282,7 +405,7 @@ class _PilihDokterPageState extends State<PilihDokterPage> {
                                 : const Color(0xFF0F172A),
                           ),
                           decoration: InputDecoration(
-                            hintText: 'Cari dokter spesialis terdaftar...',
+                            hintText: tr('Cari dokter spesialis terdaftar...', 'Search registered specialists...'),
                             hintStyle: const TextStyle(
                               color: Color(0xFF94A3B8),
                               fontSize: 14,
@@ -361,7 +484,7 @@ class _PilihDokterPageState extends State<PilihDokterPage> {
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
                           Text(
-                            'Dokter Terdaftar (Real-Time)',
+                            tr('Dokter Terdaftar (Real-Time)', 'Registered Doctors (Real-Time)'),
                             style: TextStyle(
                               fontSize: 15,
                               fontWeight: FontWeight.bold,
@@ -388,7 +511,7 @@ class _PilihDokterPageState extends State<PilihDokterPage> {
                               ),
                             ),
                             child: Text(
-                              '${filteredDoctors.length} Dokter',
+                              tr('${filteredDoctors.length} Dokter', '${filteredDoctors.length} Doctors'),
                               style: TextStyle(
                                 fontSize: 11.5,
                                 fontWeight: FontWeight.bold,
@@ -459,6 +582,8 @@ class _PilihDokterPageState extends State<PilihDokterPage> {
                                                         dokter['whatsapp'] ??
                                                         '')
                                                     .toString(),
+                                                screeningData: widget.initialScreeningData,
+                                                riskResult: widget.initialRiskResult,
                                               ),
                                             ),
                                           );
@@ -481,6 +606,8 @@ class _PilihDokterPageState extends State<PilihDokterPage> {
                                                   doctorSpecialty:
                                                       dokter['spesialis']
                                                           as String,
+                                                  initialScreeningData: widget.initialScreeningData,
+                                                  initialRiskResult: widget.initialRiskResult,
                                                 ),
                                               ),
                                             );
@@ -521,7 +648,7 @@ class _PilihDokterPageState extends State<PilihDokterPage> {
                   _bottomItem(
                     context,
                     Icons.home_outlined,
-                    'Home',
+                    tr('Home', 'Home'),
                     false,
                     isDark: isDark,
                     onTap: () {
@@ -536,7 +663,7 @@ class _PilihDokterPageState extends State<PilihDokterPage> {
                   _bottomItem(
                     context,
                     Icons.favorite_border,
-                    'Skrining',
+                    tr('Skrining', 'Screening'),
                     false,
                     isDark: isDark,
                     onTap: () {
@@ -551,14 +678,14 @@ class _PilihDokterPageState extends State<PilihDokterPage> {
                   _bottomItem(
                     context,
                     Icons.medical_services,
-                    'Dokter',
+                    tr('Dokter', 'Doctors'),
                     true,
                     isDark: isDark,
                   ),
                   _bottomItem(
                     context,
                     Icons.description_outlined,
-                    'Riwayat',
+                    tr('Riwayat', 'History'),
                     false,
                     isDark: isDark,
                     onTap: () {
@@ -573,7 +700,7 @@ class _PilihDokterPageState extends State<PilihDokterPage> {
                   _bottomItem(
                     context,
                     Icons.person_outline,
-                    'Profil',
+                    tr('Profil', 'Profile'),
                     false,
                     isDark: isDark,
                     onTap: () {
@@ -592,6 +719,8 @@ class _PilihDokterPageState extends State<PilihDokterPage> {
         );
       },
     );
+  },
+);
   }
 
   // =========================================================
@@ -777,7 +906,9 @@ class _PilihDokterPageState extends State<PilihDokterPage> {
                       ),
                       const SizedBox(width: 4),
                       Text(
-                        isOnline ? 'Online • Siap Konsultasi' : 'Offline • Tinggalkan Pesan',
+                        isOnline
+                            ? tr('Online • Siap Konsultasi', 'Online • Ready to Consult')
+                            : tr('Offline • Tinggalkan Pesan', 'Offline • Leave Message'),
                         style: TextStyle(
                           fontSize: 10,
                           fontWeight: FontWeight.w600,
@@ -801,7 +932,7 @@ class _PilihDokterPageState extends State<PilihDokterPage> {
                     ),
                     const SizedBox(width: 4),
                     Text(
-                      '${dokter['pengalaman']} pengalaman',
+                      tr('${dokter['pengalaman']} pengalaman', '${dokter['pengalaman']} experience'),
                       style: TextStyle(
                         fontSize: 11,
                         color: isDark
@@ -818,63 +949,108 @@ class _PilihDokterPageState extends State<PilihDokterPage> {
           const SizedBox(width: 8),
 
           // TOMBOL CHAT / PESAN
-          Material(
-            color: Colors.transparent,
-            child: InkWell(
-              borderRadius: BorderRadius.circular(12),
-              onTap: onDirectChat,
-              child: Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 10,
-                  vertical: 8,
-                ),
-                decoration: BoxDecoration(
-                  gradient: isOnline
-                      ? const LinearGradient(
-                          colors: [Color(0xFF0EA5E9), Color(0xFF0284C7)],
-                          begin: Alignment.topLeft,
-                          end: Alignment.bottomRight,
-                        )
-                      : LinearGradient(
-                          colors: isDark
-                              ? [const Color(0xFF334155), const Color(0xFF1E293B)]
-                              : [const Color(0xFF64748B), const Color(0xFF475569)],
-                          begin: Alignment.topLeft,
-                          end: Alignment.bottomRight,
+          ListenableBuilder(
+            listenable: ChatNotificationService.instance,
+            builder: (context, _) {
+              final unread = ChatNotificationService.instance
+                  .getUnreadCountForDoctorName(dokter['nama'] as String? ?? '');
+
+              return Stack(
+                clipBehavior: Clip.none,
+                children: [
+                  Material(
+                    color: Colors.transparent,
+                    child: InkWell(
+                      borderRadius: BorderRadius.circular(12),
+                      onTap: onDirectChat,
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 10,
+                          vertical: 8,
                         ),
-                  borderRadius: BorderRadius.circular(12),
-                  boxShadow: [
-                    BoxShadow(
-                      color: (isOnline
-                              ? const Color(0xFF0284C7)
-                              : const Color(0xFF475569))
-                          .withValues(alpha: 0.3),
-                      blurRadius: 6,
-                      offset: const Offset(0, 2),
-                    ),
-                  ],
-                ),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(
-                      isOnline ? Icons.chat_bubble_rounded : Icons.mark_chat_unread_outlined,
-                      color: Colors.white,
-                      size: 16,
-                    ),
-                    const SizedBox(height: 2),
-                    Text(
-                      isOnline ? 'Chat' : 'Pesan',
-                      style: const TextStyle(
-                        fontSize: 10.5,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.white,
+                        decoration: BoxDecoration(
+                          gradient: isOnline
+                              ? const LinearGradient(
+                                  colors: [Color(0xFF0EA5E9), Color(0xFF0284C7)],
+                                  begin: Alignment.topLeft,
+                                  end: Alignment.bottomRight,
+                                )
+                              : LinearGradient(
+                                  colors: isDark
+                                      ? [const Color(0xFF334155), const Color(0xFF1E293B)]
+                                      : [const Color(0xFF64748B), const Color(0xFF475569)],
+                                  begin: Alignment.topLeft,
+                                  end: Alignment.bottomRight,
+                                ),
+                          borderRadius: BorderRadius.circular(12),
+                          boxShadow: [
+                            BoxShadow(
+                              color: (isOnline
+                                      ? const Color(0xFF0284C7)
+                                      : const Color(0xFF475569))
+                                  .withValues(alpha: 0.3),
+                              blurRadius: 6,
+                              offset: const Offset(0, 2),
+                            ),
+                          ],
+                        ),
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(
+                              isOnline ? Icons.chat_bubble_rounded : Icons.mark_chat_unread_outlined,
+                              color: Colors.white,
+                              size: 16,
+                            ),
+                            const SizedBox(height: 2),
+                            Text(
+                              isOnline ? tr('Chat', 'Chat') : tr('Pesan', 'Message'),
+                              style: const TextStyle(
+                                fontSize: 10.5,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.white,
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
                     ),
-                  ],
-                ),
-              ),
-            ),
+                  ),
+                  if (unread > 0)
+                    Positioned(
+                      top: -6,
+                      right: -6,
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 2),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFEF4444),
+                          borderRadius: BorderRadius.circular(10),
+                          border: Border.all(
+                            color: isDark ? const Color(0xFF1E293B) : Colors.white,
+                            width: 1.5,
+                          ),
+                          boxShadow: [
+                            BoxShadow(
+                              color: const Color(0xFFEF4444).withValues(alpha: 0.4),
+                              blurRadius: 4,
+                              offset: const Offset(0, 2),
+                            ),
+                          ],
+                        ),
+                        child: Text(
+                          unread > 9 ? '9+' : '$unread',
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 10,
+                            fontWeight: FontWeight.bold,
+                            height: 1,
+                          ),
+                        ),
+                      ),
+                    ),
+                ],
+              );
+            },
           ),
         ],
       ),
@@ -1038,7 +1214,7 @@ class _PilihDokterPageState extends State<PilihDokterPage> {
           ),
           const SizedBox(height: 14),
           Text(
-            'Dokter tidak ditemukan',
+            tr('Dokter tidak ditemukan', 'No doctors found'),
             style: TextStyle(
               fontSize: 16,
               fontWeight: FontWeight.bold,
@@ -1047,7 +1223,7 @@ class _PilihDokterPageState extends State<PilihDokterPage> {
           ),
           const SizedBox(height: 5),
           Text(
-            'Tidak ada dokter terdaftar yang cocok dengan pencarian.',
+            tr('Tidak ada dokter terdaftar yang cocok dengan pencarian.', 'No registered doctors match your search.'),
             style: TextStyle(
               fontSize: 12.5,
               color: isDark

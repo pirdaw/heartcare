@@ -3,6 +3,7 @@ import 'Skrining/medical_clipboard_illustration.dart';
 import 'Skrining/custom_bottom_nav_bar.dart';
 import 'Skrining/screening_input_page.dart';
 import '../services/theme_service.dart';
+import '../services/language_service.dart';
 
 /// Halaman Pertama: Pengantar Skrining Risiko Penyakit Jantung
 class ScreeningIntroPage extends StatelessWidget {
@@ -12,157 +13,165 @@ class ScreeningIntroPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ValueListenableBuilder<ThemeMode>(
-      valueListenable: ThemeService.themeModeNotifier,
-      builder: (context, themeMode, _) {
-        final isDark = themeMode == ThemeMode.dark;
+    return ValueListenableBuilder<String>(
+      valueListenable: LanguageService.languageNotifier,
+      builder: (context, _, _) {
+        return ValueListenableBuilder<ThemeMode>(
+          valueListenable: ThemeService.themeModeNotifier,
+          builder: (context, themeMode, _) {
+            final isDark = themeMode == ThemeMode.dark;
 
-        return Scaffold(
-          backgroundColor:
-              isDark ? const Color(0xFF0F172A) : const Color(0xFFF8FAFC),
-          body: Container(
-            decoration: BoxDecoration(
-              color: isDark ? const Color(0xFF0F172A) : const Color(0xFFF8FAFC),
-              gradient: LinearGradient(
-                begin: Alignment.topCenter,
-                end: Alignment.bottomCenter,
-                stops: const [0.0, 0.22, 0.6],
-                colors: isDark
-                    ? const [
-                        Color(0xFF1E293B),
-                        Color(0xFF131D2E),
-                        Color(0xFF0F172A),
-                      ]
-                    : const [
-                        Color(0xFFE8F6FA),
-                        Color(0xFFF4FAFC),
-                        Color(0xFFF8FAFC),
-                      ],
-              ),
-            ),
-            child: SafeArea(
-              child: Column(
-                children: [
-                  // Top Bar dengan Tombol Back Melingkar
-                  Padding(
-                    padding: const EdgeInsets.only(left: 16, right: 16, top: 12),
-                    child: Align(
-                      alignment: Alignment.centerLeft,
-                      child: Container(
-                        width: 42,
-                        height: 42,
-                        decoration: BoxDecoration(
-                          color: isDark
-                              ? const Color(0xFF1E293B)
-                              : Colors.white,
-                          shape: BoxShape.circle,
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.black.withValues(alpha: isDark ? 0.2 : 0.05),
-                              blurRadius: 6,
-                              offset: const Offset(0, 2),
-                            ),
+            return Scaffold(
+              backgroundColor:
+                  isDark ? const Color(0xFF0F172A) : const Color(0xFFF8FAFC),
+              body: Container(
+                decoration: BoxDecoration(
+                  color: isDark ? const Color(0xFF0F172A) : const Color(0xFFF8FAFC),
+                  gradient: LinearGradient(
+                    begin: Alignment.topCenter,
+                    end: Alignment.bottomCenter,
+                    stops: const [0.0, 0.22, 0.6],
+                    colors: isDark
+                        ? const [
+                            Color(0xFF1E293B),
+                            Color(0xFF131D2E),
+                            Color(0xFF0F172A),
+                          ]
+                        : const [
+                            Color(0xFFE8F6FA),
+                            Color(0xFFF4FAFC),
+                            Color(0xFFF8FAFC),
                           ],
-                        ),
-                        child: IconButton(
-                          icon: Icon(
-                            Icons.chevron_left,
-                            color: isDark ? Colors.white : const Color(0xFF1E293B),
-                            size: 26,
-                          ),
-                          onPressed: () => Navigator.pop(context),
-                        ),
-                      ),
-                    ),
                   ),
-
-                  const SizedBox(height: 16),
-
-                  // Judul Halaman: Skrining Risiko Penyakit Jantung
-                  Text(
-                    'Skrining Risiko\nPenyakit Jantung',
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      fontSize: 22,
-                      fontWeight: FontWeight.bold,
-                      color: isDark ? Colors.white : const Color(0xFF111827),
-                      height: 1.25,
-                      letterSpacing: -0.3,
-                    ),
-                  ),
-
-                  const SizedBox(height: 14),
-
-                  // Deskripsi Penjelasan
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 24),
-                    child: Text(
-                      'Sistem menganalisis data kesehatan Anda\nuntuk menilai risiko penyakit jantung.',
-                      textAlign: TextAlign.center,
-                      style: TextStyle(
-                        fontSize: 13.5,
-                        fontWeight: FontWeight.w400,
-                        color: isDark
-                            ? const Color(0xFF94A3B8)
-                            : const Color(0xFF4B5563),
-                        height: 1.45,
-                      ),
-                    ),
-                  ),
-
-                  const Spacer(flex: 2),
-
-                  // Ilustrasi Clipboard Medis dengan Jantung EKG
-                  const Center(
-                    child: MedicalClipboardIllustration(
-                      width: 220,
-                      height: 275,
-                    ),
-                  ),
-
-                  const Spacer(flex: 3),
-
-                  // Tombol "Mulai Skrining"
-                  Padding(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-                    child: SizedBox(
-                      width: double.infinity,
-                      height: 48,
-                      child: ElevatedButton(
-                        onPressed: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => const ScreeningInputPage(),
+                ),
+                child: SafeArea(
+                  child: Column(
+                    children: [
+                      // Top Bar dengan Tombol Back Melingkar
+                      Padding(
+                        padding: const EdgeInsets.only(left: 16, right: 16, top: 12),
+                        child: Align(
+                          alignment: Alignment.centerLeft,
+                          child: Container(
+                            width: 42,
+                            height: 42,
+                            decoration: BoxDecoration(
+                              color: isDark
+                                  ? const Color(0xFF1E293B)
+                                  : Colors.white,
+                              shape: BoxShape.circle,
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.black.withValues(alpha: isDark ? 0.2 : 0.05),
+                                  blurRadius: 6,
+                                  offset: const Offset(0, 2),
+                                ),
+                              ],
                             ),
-                          );
-                        },
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: primaryBlue,
-                          foregroundColor: Colors.white,
-                          elevation: 0,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                        ),
-                        child: const Text(
-                          'Mulai Skrining',
-                          style: TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.bold,
+                            child: IconButton(
+                              icon: Icon(
+                                Icons.chevron_left,
+                                color: isDark ? Colors.white : const Color(0xFF1E293B),
+                                size: 26,
+                              ),
+                              onPressed: () => Navigator.pop(context),
+                            ),
                           ),
                         ),
                       ),
-                    ),
-                  ),
 
-                  // Bottom Navigation Bar (Tab "Skrining" aktif)
-                  const HeartCareBottomNavBar(currentIndex: 1),
-                ],
+                      const SizedBox(height: 16),
+
+                      // Judul Halaman: Skrining Risiko Penyakit Jantung
+                      Text(
+                        tr('Skrining Risiko\nPenyakit Jantung', 'Heart Disease\nRisk Screening'),
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                          fontSize: 22,
+                          fontWeight: FontWeight.bold,
+                          color: isDark ? Colors.white : const Color(0xFF111827),
+                          height: 1.25,
+                          letterSpacing: -0.3,
+                        ),
+                      ),
+
+                      const SizedBox(height: 14),
+
+                      // Deskripsi Penjelasan
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 24),
+                        child: Text(
+                          tr(
+                            'Sistem menganalisis data kesehatan Anda\nuntuk menilai risiko penyakit jantung.',
+                            'The system analyzes your health data\nto assess heart disease risk.',
+                          ),
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                            fontSize: 13.5,
+                            fontWeight: FontWeight.w400,
+                            color: isDark
+                                ? const Color(0xFF94A3B8)
+                                : const Color(0xFF4B5563),
+                            height: 1.45,
+                          ),
+                        ),
+                      ),
+
+                      const Spacer(flex: 2),
+
+                      // Ilustrasi Clipboard Medis dengan Jantung EKG
+                      const Center(
+                        child: MedicalClipboardIllustration(
+                          width: 220,
+                          height: 275,
+                        ),
+                      ),
+
+                      const Spacer(flex: 3),
+
+                      // Tombol "Mulai Skrining"
+                      Padding(
+                        padding:
+                            const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                        child: SizedBox(
+                          width: double.infinity,
+                          height: 48,
+                          child: ElevatedButton(
+                            onPressed: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) => const ScreeningInputPage(),
+                                ),
+                              );
+                            },
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: primaryBlue,
+                              foregroundColor: Colors.white,
+                              elevation: 0,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                            ),
+                            child: Text(
+                              tr('Mulai Skrining', 'Start Screening'),
+                              style: const TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+
+                      // Bottom Navigation Bar (Tab "Skrining" aktif)
+                      const HeartCareBottomNavBar(currentIndex: 1),
+                    ],
+                  ),
+                ),
               ),
-            ),
-          ),
+            );
+          },
         );
       },
     );

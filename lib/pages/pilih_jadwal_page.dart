@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:heartcare/services/theme_service.dart';
+import 'package:heartcare/services/language_service.dart';
 import 'home_page.dart';
 import 'konfirmasi_jadwal_page.dart';
 import 'profil_page.dart';
@@ -62,57 +63,60 @@ class _PilihJadwalPageState extends State<PilihJadwalPage> {
 
   @override
   Widget build(BuildContext context) {
-    return ValueListenableBuilder<ThemeMode>(
-      valueListenable: ThemeService.themeModeNotifier,
-      builder: (context, themeMode, _) {
-        final isDark = themeMode == ThemeMode.dark;
+    return ValueListenableBuilder<String>(
+      valueListenable: LanguageService.languageNotifier,
+      builder: (context, _, _) {
+        return ValueListenableBuilder<ThemeMode>(
+          valueListenable: ThemeService.themeModeNotifier,
+          builder: (context, themeMode, _) {
+            final isDark = themeMode == ThemeMode.dark;
 
-        return Scaffold(
-          backgroundColor: isDark ? const Color(0xFF0F172A) : Colors.white,
-          body: SafeArea(
-            child: Column(
-              children: [
-                // ==================================================
-                // HEADER
-                // ==================================================
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(20, 16, 20, 12),
-                  child: Row(
-                    children: [
-                      // TOMBOL KEMBALI BUNDAR
-                      Container(
-                        width: 40,
-                        height: 40,
-                        decoration: BoxDecoration(
-                          color: isDark ? const Color(0xFF1E293B) : const Color(0xFFF1F3F6),
-                          shape: BoxShape.circle,
-                        ),
-                        child: IconButton(
-                          padding: EdgeInsets.zero,
-                          icon: Icon(
-                            Icons.chevron_left,
-                            size: 28,
-                            color: isDark ? Colors.white : const Color(0xFF1E293B),
-                          ),
-                          onPressed: () {
-                            Navigator.pop(context);
-                          },
-                        ),
-                      ),
-
-                      // JUDUL
-                      Expanded(
-                        child: Center(
-                          child: Text(
-                            "Pilih Jadwal",
-                            style: TextStyle(
-                              fontSize: 21,
-                              fontWeight: FontWeight.bold,
-                              color: isDark ? Colors.white : const Color(0xFF0F172A),
+            return Scaffold(
+              backgroundColor: isDark ? const Color(0xFF0F172A) : Colors.white,
+              body: SafeArea(
+                child: Column(
+                  children: [
+                    // ==================================================
+                    // HEADER
+                    // ==================================================
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(20, 16, 20, 12),
+                      child: Row(
+                        children: [
+                          // TOMBOL KEMBALI BUNDAR
+                          Container(
+                            width: 40,
+                            height: 40,
+                            decoration: BoxDecoration(
+                              color: isDark ? const Color(0xFF1E293B) : const Color(0xFFF1F3F6),
+                              shape: BoxShape.circle,
+                            ),
+                            child: IconButton(
+                              padding: EdgeInsets.zero,
+                              icon: Icon(
+                                Icons.chevron_left,
+                                size: 28,
+                                color: isDark ? Colors.white : const Color(0xFF1E293B),
+                              ),
+                              onPressed: () {
+                                Navigator.pop(context);
+                              },
                             ),
                           ),
-                        ),
-                      ),
+
+                          // JUDUL
+                          Expanded(
+                            child: Center(
+                              child: Text(
+                                tr("Pilih Jadwal", "Select Schedule"),
+                                style: TextStyle(
+                                  fontSize: 21,
+                                  fontWeight: FontWeight.bold,
+                                  color: isDark ? Colors.white : const Color(0xFF0F172A),
+                                ),
+                              ),
+                            ),
+                          ),
 
                       // PENYEIMBANG KANAN
                       const SizedBox(width: 40),
@@ -338,7 +342,7 @@ class _PilihJadwalPageState extends State<PilihJadwalPage> {
                   _bottomNavItem(
                     isDark: isDark,
                     icon: Icons.home_outlined,
-                    label: "Home",
+                    label: tr("Beranda", "Home"),
                     active: false,
                     onTap: () {
                       Navigator.pushAndRemoveUntil(
@@ -351,7 +355,7 @@ class _PilihJadwalPageState extends State<PilihJadwalPage> {
                   _bottomNavItem(
                     isDark: isDark,
                     icon: Icons.favorite_border,
-                    label: "Skrining",
+                    label: tr("Skrining", "Screening"),
                     active: false,
                     onTap: () {
                       Navigator.pop(context);
@@ -360,7 +364,7 @@ class _PilihJadwalPageState extends State<PilihJadwalPage> {
                   _bottomNavItem(
                     isDark: isDark,
                     icon: Icons.medical_services_outlined,
-                    label: "Dokter",
+                    label: tr("Dokter", "Doctors"),
                     active: true,
                     onTap: () {
                       Navigator.pop(context);
@@ -369,13 +373,13 @@ class _PilihJadwalPageState extends State<PilihJadwalPage> {
                   _bottomNavItem(
                     isDark: isDark,
                     icon: Icons.description_outlined,
-                    label: "Riwayat",
+                    label: tr("Riwayat", "History"),
                     active: false,
                   ),
                   _bottomNavItem(
                     isDark: isDark,
                     icon: Icons.person_outline,
-                    label: "Profil",
+                    label: tr("Profil", "Profile"),
                     active: false,
                     onTap: () {
                       Navigator.push(
@@ -391,6 +395,8 @@ class _PilihJadwalPageState extends State<PilihJadwalPage> {
             ),
           ),
         );
+      },
+    );
       },
     );
   }

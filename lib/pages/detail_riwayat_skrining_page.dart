@@ -241,7 +241,10 @@ class DetailRiwayatSkriningPage extends StatelessWidget {
                                     context,
                                     MaterialPageRoute(
                                       builder: (context) =>
-                                          const PilihDokterPage(),
+                                          PilihDokterPage(
+                                        initialScreeningData: item.screeningData,
+                                        initialRiskResult: item.riskResult,
+                                      ),
                                     ),
                                   );
                                 },

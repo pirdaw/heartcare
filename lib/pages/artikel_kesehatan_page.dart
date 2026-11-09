@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../services/theme_service.dart';
+import '../services/language_service.dart';
 import 'article_detail_page.dart';
 
 class ArtikelKesehatanPage extends StatefulWidget {
@@ -18,16 +19,15 @@ class _ArtikelKesehatanPageState extends State<ArtikelKesehatanPage> {
 
   final List<Map<String, dynamic>> _articles = [
     {
-      'image':
-          'https://images.unsplash.com/photo-1530026405186-ed1f139313f8?w=800',
+      'image': 'assets/images/jantung_koroner_edukasi.jpg',
       'category': 'Penyakit Jantung',
-      'title': 'Mengenal Penyakit Jantung Koroner',
+      'title': 'Mengenal Penyakit Jantung Koroner: Gejala & Pencegahan Dini',
       'description':
-          'Penyakit jantung koroner merupakan salah satu penyakit yang perlu diwaspadai karena dapat memengaruhi fungsi jantung dalam memompa darah ke seluruh tubuh.',
-      'date': '08 September 2026',
-      'duration': '5 menit baca',
+          'Kajian komprehensif mengenai mekanisme aterosklerosis, gejala klinis angina pectoris, faktor risiko utama, dan protokol pencegahan dini berdasarkan bukti ilmiah.',
+      'date': '22 September 2026',
+      'duration': '6 menit baca',
       'content':
-          'Penyakit jantung koroner adalah kondisi ketika pembuluh darah yang berfungsi mengalirkan darah dan oksigen ke otot jantung mengalami penyempitan atau penyumbatan. Kondisi ini dapat menyebabkan aliran darah menuju jantung menjadi berkurang.\n\nPenyempitan pembuluh darah umumnya terjadi akibat penumpukan lemak atau plak pada dinding pembuluh darah.\n\nBeberapa faktor dapat meningkatkan risiko penyakit jantung, antara lain tekanan darah tinggi, kolesterol tinggi, kurang aktivitas fisik, dan pola makan kurang sehat.',
+          'Penyakit jantung koroner (PJK) adalah kondisi ketika pembuluh darah arteri koroner yang menyuplai darah dan oksigen ke otot jantung mengalami penyempitan atau penyumbatan akibat aterosklerosis.\n\nKondisi ini membatasi aliran darah ke miokardium dan berisiko memicu serangan jantung mendadak. Memahami gejala awal seperti angina pectoris serta melakukan pencegahan dini adalah langkah krusial menurunkan risiko.',
     },
     {
       'image':
@@ -79,12 +79,15 @@ class _ArtikelKesehatanPageState extends State<ArtikelKesehatanPage> {
   Widget build(BuildContext context) {
     final filtered = _filteredArticles;
 
-    return ValueListenableBuilder<ThemeMode>(
-      valueListenable: ThemeService.themeModeNotifier,
-      builder: (context, themeMode, _) {
-        final isDark = themeMode == ThemeMode.dark;
+    return ValueListenableBuilder<String>(
+      valueListenable: LanguageService.languageNotifier,
+      builder: (context, _, _) {
+        return ValueListenableBuilder<ThemeMode>(
+          valueListenable: ThemeService.themeModeNotifier,
+          builder: (context, themeMode, _) {
+            final isDark = themeMode == ThemeMode.dark;
 
-        return Scaffold(
+            return Scaffold(
           backgroundColor:
               isDark ? const Color(0xFF0F172A) : const Color(0xFFF8FAFC),
           body: Stack(
@@ -198,7 +201,7 @@ class _ArtikelKesehatanPageState extends State<ArtikelKesehatanPage> {
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 Text(
-                                  'Artikel Kesehatan',
+                                  tr('Artikel Kesehatan', 'Health Articles'),
                                   style: TextStyle(
                                     fontSize: 19.5,
                                     fontWeight: FontWeight.bold,
@@ -210,7 +213,7 @@ class _ArtikelKesehatanPageState extends State<ArtikelKesehatanPage> {
                                 ),
                                 const SizedBox(height: 2),
                                 Text(
-                                  'Kumpulan artikel & tips seputar kesehatan jantung',
+                                  tr('Kumpulan artikel & tips seputar kesehatan jantung', 'Collection of articles & tips on heart health'),
                                   style: TextStyle(
                                     fontSize: 12.5,
                                     color: isDark
@@ -271,7 +274,7 @@ class _ArtikelKesehatanPageState extends State<ArtikelKesehatanPage> {
                                       : const Color(0xFF0F172A),
                                 ),
                                 decoration: InputDecoration(
-                                  hintText: 'Cari artikel kesehatan...',
+                                  hintText: tr('Cari artikel kesehatan...', 'Search health articles...'),
                                   hintStyle: TextStyle(
                                     color: isDark
                                         ? const Color(0xFF64748B)
@@ -359,7 +362,7 @@ class _ArtikelKesehatanPageState extends State<ArtikelKesehatanPage> {
                                     ),
                                   ),
                                   child: Text(
-                                    '${filtered.length} Artikel',
+                                    tr('${filtered.length} Artikel', '${filtered.length} Articles'),
                                     style: TextStyle(
                                       fontSize: 11.5,
                                       fontWeight: FontWeight.bold,
@@ -404,6 +407,8 @@ class _ArtikelKesehatanPageState extends State<ArtikelKesehatanPage> {
         );
       },
     );
+  },
+);
   }
 
   // WIDGET CHIP FILTER KATEGORI (GAYA DOKTER PAGE)
@@ -583,23 +588,41 @@ class _ArtikelKesehatanPageState extends State<ArtikelKesehatanPage> {
                   ),
                   child: ClipRRect(
                     borderRadius: BorderRadius.circular(12.5),
-                    child: Image.network(
-                      item['image'],
-                      width: 90,
-                      height: 90,
-                      fit: BoxFit.cover,
-                      errorBuilder: (context, error, stackTrace) {
-                        return Center(
-                          child: Icon(
-                            Icons.article_outlined,
-                            size: 36,
-                            color: isDark
-                                ? const Color(0xFF38BDF8)
-                                : brandPrimary,
+                    child: (item['image'] as String).startsWith('http')
+                        ? Image.network(
+                            item['image'],
+                            width: 90,
+                            height: 90,
+                            fit: BoxFit.cover,
+                            errorBuilder: (context, error, stackTrace) {
+                              return Center(
+                                child: Icon(
+                                  Icons.article_outlined,
+                                  size: 36,
+                                  color: isDark
+                                      ? const Color(0xFF38BDF8)
+                                      : brandPrimary,
+                                ),
+                              );
+                            },
+                          )
+                        : Image.asset(
+                            item['image'],
+                            width: 90,
+                            height: 90,
+                            fit: BoxFit.cover,
+                            errorBuilder: (context, error, stackTrace) {
+                              return Center(
+                                child: Icon(
+                                  Icons.article_outlined,
+                                  size: 36,
+                                  color: isDark
+                                      ? const Color(0xFF38BDF8)
+                                      : brandPrimary,
+                                ),
+                              );
+                            },
                           ),
-                        );
-                      },
-                    ),
                   ),
                 ),
 
@@ -719,7 +742,7 @@ class _ArtikelKesehatanPageState extends State<ArtikelKesehatanPage> {
             ),
             const SizedBox(height: 12),
             Text(
-              'Artikel tidak ditemukan',
+              tr('Artikel tidak ditemukan', 'No articles found'),
               style: TextStyle(
                 fontSize: 15.5,
                 fontWeight: FontWeight.bold,
@@ -728,7 +751,7 @@ class _ArtikelKesehatanPageState extends State<ArtikelKesehatanPage> {
             ),
             const SizedBox(height: 4),
             Text(
-              'Coba gunakan kata kunci pencarian yang lain.',
+              tr('Coba gunakan kata kunci pencarian yang lain.', 'Try searching with different keywords.'),
               style: TextStyle(
                 fontSize: 12.5,
                 color:

@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:heartcare/services/theme_service.dart';
+import 'package:heartcare/services/language_service.dart';
 import '../services/alarm_service.dart';
 
 // MODEL DATA OBAT & PENGINGAT
@@ -412,12 +413,15 @@ class _PengingatKesehatanPageState extends State<PengingatKesehatanPage> {
 
   @override
   Widget build(BuildContext context) {
-    return ValueListenableBuilder<ThemeMode>(
-      valueListenable: ThemeService.themeModeNotifier,
-      builder: (context, themeMode, _) {
-        final isDark = themeMode == ThemeMode.dark;
+    return ValueListenableBuilder<String>(
+      valueListenable: LanguageService.languageNotifier,
+      builder: (context, _, _) {
+        return ValueListenableBuilder<ThemeMode>(
+          valueListenable: ThemeService.themeModeNotifier,
+          builder: (context, themeMode, _) {
+            final isDark = themeMode == ThemeMode.dark;
 
-        return Scaffold(
+            return Scaffold(
           backgroundColor: isDark ? const Color(0xFF0F172A) : const Color(0xFFF8FAFC),
           body: Container(
             decoration: BoxDecoration(
@@ -506,7 +510,7 @@ class _PengingatKesehatanPageState extends State<PengingatKesehatanPage> {
                               Row(
                                 children: [
                                   Text(
-                                    'Pilih Menu Pengingat',
+                                    tr('Pilih Menu Pengingat', 'Select Reminder Menu'),
                                     style: TextStyle(
                                       fontSize: 16,
                                       fontWeight: FontWeight.w700,
@@ -573,6 +577,8 @@ class _PengingatKesehatanPageState extends State<PengingatKesehatanPage> {
         );
       },
     );
+  },
+);
   }
 
   // Header Bar Atas
@@ -588,7 +594,7 @@ class _PengingatKesehatanPageState extends State<PengingatKesehatanPage> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Pengingat Obat',
+                  tr('Pengingat Obat', 'Medication Reminder'),
                   style: TextStyle(
                     fontSize: 18.5,
                     fontWeight: FontWeight.w700,
@@ -598,7 +604,7 @@ class _PengingatKesehatanPageState extends State<PengingatKesehatanPage> {
                 ),
                 const SizedBox(height: 2),
                 Text(
-                  'Atur alarm & jadwal minum obat harianmu',
+                  tr('Atur alarm & jadwal minum obat harianmu', 'Set alarms & your daily medication schedule'),
                   style: TextStyle(
                     fontSize: 11,
                     color: isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B),
@@ -1379,7 +1385,7 @@ class _PengingatKesehatanPageState extends State<PengingatKesehatanPage> {
                   ),
                   const SizedBox(height: 8),
                   Text(
-                    'Jadwal Alarm Obat',
+                    tr('Jadwal Alarm Obat', 'Medicine Alarm Schedule'),
                     style: TextStyle(
                       fontSize: 17,
                       fontWeight: FontWeight.w800,
@@ -1389,7 +1395,7 @@ class _PengingatKesehatanPageState extends State<PengingatKesehatanPage> {
                   ),
                   const SizedBox(height: 3),
                   Text(
-                    'Atur alarm dering & sinkron jam HP',
+                    tr('Atur alarm dering & sinkron jam HP', 'Set ring alarm & sync with phone clock'),
                     style: TextStyle(
                       fontSize: 11.5,
                       color: isDark
@@ -3595,32 +3601,37 @@ class HeartCareBottomNavBarWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ValueListenableBuilder<ThemeMode>(
-      valueListenable: ThemeService.themeModeNotifier,
-      builder: (context, themeMode, _) {
-        final isDark = themeMode == ThemeMode.dark;
+    return ValueListenableBuilder<String>(
+      valueListenable: LanguageService.languageNotifier,
+      builder: (context, _, _) {
+        return ValueListenableBuilder<ThemeMode>(
+          valueListenable: ThemeService.themeModeNotifier,
+          builder: (context, themeMode, _) {
+            final isDark = themeMode == ThemeMode.dark;
 
-        return Container(
-          decoration: BoxDecoration(
-            color: isDark ? const Color(0xFF0F172A) : Colors.white,
-            border: Border(
-              top: BorderSide(
-                color: isDark ? const Color(0xFF1E293B) : const Color(0xFFE2E8F0),
-                width: 1,
+            return Container(
+              decoration: BoxDecoration(
+                color: isDark ? const Color(0xFF0F172A) : Colors.white,
+                border: Border(
+                  top: BorderSide(
+                    color: isDark ? const Color(0xFF1E293B) : const Color(0xFFE2E8F0),
+                    width: 1,
+                  ),
+                ),
               ),
-            ),
-          ),
-          padding: const EdgeInsets.symmetric(vertical: 8),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceAround,
-            children: [
-              _navItem(Icons.home_outlined, 'Home', 0, isDark),
-              _navItem(Icons.favorite_border_rounded, 'Skrining', 1, isDark),
-              _navItem(Icons.medical_services_outlined, 'Dokter', 2, isDark),
-              _navItem(Icons.description_outlined, 'Riwayat', 3, isDark),
-              _navItem(Icons.person_outline_rounded, 'Profil', 4, isDark),
-            ],
-          ),
+              padding: const EdgeInsets.symmetric(vertical: 8),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceAround,
+                children: [
+                  _navItem(Icons.home_outlined, tr('Home', 'Home'), 0, isDark),
+                  _navItem(Icons.favorite_border_rounded, tr('Skrining', 'Screening'), 1, isDark),
+                  _navItem(Icons.medical_services_outlined, tr('Dokter', 'Doctors'), 2, isDark),
+                  _navItem(Icons.description_outlined, tr('Riwayat', 'History'), 3, isDark),
+                  _navItem(Icons.person_outline_rounded, tr('Profil', 'Profile'), 4, isDark),
+                ],
+              ),
+            );
+          },
         );
       },
     );

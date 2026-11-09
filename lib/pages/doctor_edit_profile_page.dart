@@ -31,6 +31,7 @@ class _DoctorEditProfilePageState extends State<DoctorEditProfilePage> {
   late TextEditingController _tentangCtrl;
 
   String? _currentPhoto;
+  String _selectedJenisKelamin = 'Laki-laki';
   bool _photoChanged = false;
   bool _isOnline = true;
   bool _isSaving = false;
@@ -39,6 +40,14 @@ class _DoctorEditProfilePageState extends State<DoctorEditProfilePage> {
   void initState() {
     super.initState();
     final profile = widget.doctorProfile;
+
+    _selectedJenisKelamin = (profile?['jenisKelamin'] ??
+            profile?['gender'] ??
+            'Laki-laki')
+        .toString();
+    if (_selectedJenisKelamin != 'Perempuan') {
+      _selectedJenisKelamin = 'Laki-laki';
+    }
 
     _namaCtrl = TextEditingController(
       text: profile?['nama'] ?? 'dr. Dokter HeartCare',
@@ -327,6 +336,7 @@ class _DoctorEditProfilePageState extends State<DoctorEditProfilePage> {
         telepon: _teleponCtrl.text.trim(),
         tentang: _tentangCtrl.text.trim(),
         foto: _photoChanged ? _currentPhoto : null,
+        jenisKelamin: _selectedJenisKelamin,
       );
 
       // Perbarui foto secara eksplisit bila ada perubahan
@@ -473,6 +483,8 @@ class _DoctorEditProfilePageState extends State<DoctorEditProfilePage> {
                         icon: Icons.person_outline_rounded,
                         isDark: isDark,
                       ),
+                      const SizedBox(height: 14),
+                      _buildGenderSelector(isDark),
                       const SizedBox(height: 14),
                       _buildTextField(
                         label: "Nomor SIP yang Berlaku",
@@ -916,6 +928,118 @@ class _DoctorEditProfilePageState extends State<DoctorEditProfilePage> {
             },
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildGenderSelector(bool isDark) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            Icon(
+              Icons.wc_rounded,
+              size: 15,
+              color: isDark ? const Color(0xFF38BDF8) : const Color(0xFF0284C7),
+            ),
+            const SizedBox(width: 6),
+            Text(
+              "Jenis Kelamin",
+              style: TextStyle(
+                fontSize: 12.5,
+                fontWeight: FontWeight.w600,
+                color: isDark ? const Color(0xFFE2E8F0) : const Color(0xFF334155),
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 6),
+        Row(
+          children: [
+            Expanded(
+              child: _buildGenderOption(
+                label: 'Laki-laki',
+                icon: Icons.male_rounded,
+                selected: _selectedJenisKelamin == 'Laki-laki',
+                isDark: isDark,
+                onTap: () {
+                  setState(() {
+                    _selectedJenisKelamin = 'Laki-laki';
+                  });
+                },
+              ),
+            ),
+            const SizedBox(width: 10),
+            Expanded(
+              child: _buildGenderOption(
+                label: 'Perempuan',
+                icon: Icons.female_rounded,
+                selected: _selectedJenisKelamin == 'Perempuan',
+                isDark: isDark,
+                onTap: () {
+                  setState(() {
+                    _selectedJenisKelamin = 'Perempuan';
+                  });
+                },
+              ),
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+
+  Widget _buildGenderOption({
+    required String label,
+    required IconData icon,
+    required bool selected,
+    required bool isDark,
+    required VoidCallback onTap,
+  }) {
+    final activeBg = isDark
+        ? const Color(0xFF0284C7).withValues(alpha: 0.25)
+        : const Color(0xFFE0F2FE);
+    final activeBorder = const Color(0xFF0284C7);
+    final inactiveBg = isDark ? const Color(0xFF0F172A) : const Color(0xFFF8FAFC);
+    final inactiveBorder = isDark ? const Color(0xFF334155) : const Color(0xFFCBD5E1);
+
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(12),
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 11, horizontal: 12),
+        decoration: BoxDecoration(
+          color: selected ? activeBg : inactiveBg,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(
+            color: selected ? activeBorder : inactiveBorder,
+            width: selected ? 1.5 : 1,
+          ),
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              icon,
+              size: 18,
+              color: selected
+                  ? const Color(0xFF0284C7)
+                  : (isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B)),
+            ),
+            const SizedBox(width: 6),
+            Text(
+              label,
+              style: TextStyle(
+                fontSize: 13,
+                fontWeight: selected ? FontWeight.bold : FontWeight.w500,
+                color: selected
+                    ? const Color(0xFF0284C7)
+                    : (isDark ? Colors.white : const Color(0xFF0F172A)),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

@@ -24,7 +24,7 @@ class WelcomePage extends StatelessWidget {
                   padding: const EdgeInsets.symmetric(horizontal: 26, vertical: 16),
                   child: Column(
                     children: [
-                      const SizedBox(height: 12),
+                      const SizedBox(height: 8),
 
                       // ==========================================
                       // 1. TOP BRANDING PILL
@@ -34,10 +34,12 @@ class WelcomePage extends StatelessWidget {
                         decoration: BoxDecoration(
                           color: isDark
                               ? const Color(0xFF1E293B).withValues(alpha: 0.8)
-                              : Colors.white.withValues(alpha: 0.9),
+                              : Colors.white.withValues(alpha: 0.95),
                           borderRadius: BorderRadius.circular(30),
                           border: Border.all(
-                            color: const Color(0xFF0284C7).withValues(alpha: 0.3),
+                            color: isDark
+                                ? const Color(0xFF1E3A5F)
+                                : const Color(0xFFBAE6FD),
                             width: 1.2,
                           ),
                           boxShadow: [
@@ -56,10 +58,10 @@ class WelcomePage extends StatelessWidget {
                               height: 8,
                               decoration: const BoxDecoration(
                                 shape: BoxShape.circle,
-                                color: Color(0xFFE11D48),
+                                color: Color(0xFF0284C7),
                                 boxShadow: [
                                   BoxShadow(
-                                    color: Color(0xFFE11D48),
+                                    color: Color(0xFF38BDF8),
                                     blurRadius: 6,
                                     spreadRadius: 1,
                                   ),
@@ -82,7 +84,7 @@ class WelcomePage extends StatelessWidget {
                         ),
                       ),
 
-                      const Spacer(),
+                      const Spacer(flex: 1),
 
                       // ==========================================
                       // 2. HERO LOGO CARD WITH GLOW & HEARTBEAT
@@ -98,8 +100,8 @@ class WelcomePage extends StatelessWidget {
                               shape: BoxShape.circle,
                               gradient: RadialGradient(
                                 colors: [
-                                  const Color(0xFF0284C7).withValues(alpha: isDark ? 0.25 : 0.20),
-                                  const Color(0xFFE11D48).withValues(alpha: isDark ? 0.12 : 0.08),
+                                  const Color(0xFF0284C7).withValues(alpha: isDark ? 0.25 : 0.18),
+                                  const Color(0xFF38BDF8).withValues(alpha: isDark ? 0.12 : 0.08),
                                   Colors.transparent,
                                 ],
                                 stops: const [0.3, 0.7, 1.0],
@@ -118,18 +120,20 @@ class WelcomePage extends StatelessWidget {
                                   ? const Color(0xFF131D36)
                                   : Colors.white,
                               border: Border.all(
-                                color: const Color(0xFF0284C7).withValues(alpha: 0.25),
+                                color: isDark
+                                    ? const Color(0xFF1E3A5F)
+                                    : const Color(0xFFBAE6FD),
                                 width: 2,
                               ),
                               boxShadow: [
                                 BoxShadow(
-                                  color: const Color(0xFF0284C7).withValues(alpha: 0.18),
+                                  color: const Color(0xFF0284C7).withValues(alpha: 0.16),
                                   blurRadius: 24,
                                   spreadRadius: 2,
                                   offset: const Offset(0, 8),
                                 ),
                                 BoxShadow(
-                                  color: const Color(0xFFE11D48).withValues(alpha: 0.12),
+                                  color: const Color(0xFF38BDF8).withValues(alpha: 0.12),
                                   blurRadius: 16,
                                   offset: const Offset(0, 4),
                                 ),
@@ -151,16 +155,16 @@ class WelcomePage extends StatelessWidget {
                             child: const HeartPulseBadge(
                               size: 38,
                               icon: Icons.monitor_heart_rounded,
-                              glowColor: Color(0xFFE11D48),
+                              glowColor: Color(0xFF0284C7),
                             ),
                           ),
                         ],
                       ),
 
-                      const SizedBox(height: 28),
+                      const SizedBox(height: 22),
 
                       // ==========================================
-                      // 3. MAIN TITLE & SUBTITLE
+                      // 3. MAIN TITLE
                       // ==========================================
                       Text(
                         'Jaga Detak Sehat\nJantung Anda',
@@ -174,33 +178,16 @@ class WelcomePage extends StatelessWidget {
                         ),
                       ),
 
-                      const SizedBox(height: 12),
-
-                      Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 10),
-                        child: Text(
-                          'Skrining risiko penyakit jantung, konsultasi kardiolog tepercaya, dan pantau ritme kardiovaskular harian Anda secara mudah.',
-                          textAlign: TextAlign.center,
-                          style: TextStyle(
-                            fontSize: 13.5,
-                            height: 1.5,
-                            color: isDark ? const Color(0xFF94A3B8) : const Color(0xFF475569),
-                          ),
-                        ),
-                      ),
-
-                      const SizedBox(height: 24),
+                      const SizedBox(height: 20),
 
                       // ==========================================
-                      // 4. VALUE PROPOSITION FEATURE CARDS (NOT EMPTY!)
+                      // 4. VALUE PROPOSITION FEATURE CARDS (HOME PALETTE)
                       // ==========================================
                       Row(
                         children: [
                           _buildFeaturePill(
                             isDark: isDark,
                             icon: Icons.health_and_safety_rounded,
-                            iconColor: const Color(0xFF0284C7),
-                            bgColor: const Color(0xFFE0F2FE),
                             title: 'Skrining Dini',
                             subtitle: 'Analisis Cerdas',
                           ),
@@ -208,8 +195,6 @@ class WelcomePage extends StatelessWidget {
                           _buildFeaturePill(
                             isDark: isDark,
                             icon: Icons.medical_services_rounded,
-                            iconColor: const Color(0xFFE11D48),
-                            bgColor: const Color(0xFFFFE4E6),
                             title: 'Kardiolog',
                             subtitle: 'Dokter Siaga',
                           ),
@@ -217,19 +202,16 @@ class WelcomePage extends StatelessWidget {
                           _buildFeaturePill(
                             isDark: isDark,
                             icon: Icons.alarm_rounded,
-                            iconColor: const Color(0xFF0D9488),
-                            bgColor: const Color(0xFFCCFBF1),
                             title: 'Pengingat',
                             subtitle: 'Jadwal Obat',
                           ),
                         ],
                       ),
 
-                      const Spacer(),
-                      const SizedBox(height: 24),
+                      const SizedBox(height: 26),
 
                       // ==========================================
-                      // 5. ACTION BUTTONS
+                      // 5. ACTION BUTTONS (Shifted upwards to fill space)
                       // ==========================================
                       HeartCareGradientButton(
                         onPressed: () {
@@ -242,9 +224,13 @@ class WelcomePage extends StatelessWidget {
                         },
                         text: 'Mulai Sekarang',
                         icon: Icons.arrow_forward_rounded,
+                        gradientColors: const [
+                          Color(0xFF0EA5E9),
+                          Color(0xFF0284C7),
+                        ],
                       ),
 
-                      const SizedBox(height: 14),
+                      const SizedBox(height: 12),
 
                       // Shortcut Daftar Akun Baru Langsung
                       OutlinedButton(
@@ -263,13 +249,14 @@ class WelcomePage extends StatelessWidget {
                           ),
                           side: BorderSide(
                             color: isDark
-                                ? const Color(0xFF334155)
-                                : const Color(0xFFCBD5E1),
-                            width: 1.2,
+                                ? const Color(0xFF1E3A5F)
+                                : const Color(0xFFBAE6FD),
+                            width: 1.4,
                           ),
                           backgroundColor: isDark
                               ? const Color(0xFF1E293B).withValues(alpha: 0.5)
-                              : Colors.white.withValues(alpha: 0.7),
+                              : Colors.white.withValues(alpha: 0.85),
+                          elevation: 0,
                         ),
                         child: Text(
                           'Daftar Akun Baru',
@@ -281,16 +268,9 @@ class WelcomePage extends StatelessWidget {
                         ),
                       ),
 
-                      const SizedBox(height: 18),
-
-                      // ==========================================
-                      // 6. MEDICAL PRIVACY BADGE
-                      // ==========================================
-                      const HeartCareTrustBadge(
-                        text: 'Platform Pendamping Kesehatan Jantung Terpercaya',
-                      ),
-
-                      const SizedBox(height: 10),
+                      // Balanced spacer below buttons
+                      const Spacer(flex: 1),
+                      const SizedBox(height: 20),
                     ],
                   ),
                 ),
@@ -305,30 +285,43 @@ class WelcomePage extends StatelessWidget {
   Widget _buildFeaturePill({
     required bool isDark,
     required IconData icon,
-    required Color iconColor,
-    required Color bgColor,
     required String title,
     required String subtitle,
   }) {
+    final borderColor = isDark ? const Color(0xFF1E3A5F) : const Color(0xFFBAE6FD);
+    final cardGradient = isDark
+        ? const LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [
+              Color(0xFF1E293B),
+              Color(0xFF0E2536),
+            ],
+          )
+        : const LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [
+              Color(0xFFEBF6FE),
+              Color(0xFFD4ECFC),
+            ],
+          );
+
     return Expanded(
       child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
+        padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 8),
         decoration: BoxDecoration(
-          color: isDark
-              ? const Color(0xFF131D36).withValues(alpha: 0.8)
-              : Colors.white.withValues(alpha: 0.9),
-          borderRadius: BorderRadius.circular(14),
+          gradient: cardGradient,
+          borderRadius: BorderRadius.circular(16),
           border: Border.all(
-            color: isDark
-                ? const Color(0xFF1E293B)
-                : const Color(0xFFE2E8F0),
+            color: borderColor,
             width: 1.2,
           ),
           boxShadow: [
             BoxShadow(
-              color: (isDark ? Colors.black : const Color(0xFF0284C7))
-                  .withValues(alpha: isDark ? 0.2 : 0.04),
-              blurRadius: 8,
+              color: (isDark ? const Color(0xFF38BDF8) : const Color(0xFF0284C7))
+                  .withValues(alpha: 0.08),
+              blurRadius: 10,
               offset: const Offset(0, 3),
             ),
           ],
@@ -336,24 +329,31 @@ class WelcomePage extends StatelessWidget {
         child: Column(
           children: [
             Container(
-              width: 34,
-              height: 34,
+              width: 38,
+              height: 38,
               decoration: BoxDecoration(
-                color: isDark ? iconColor.withValues(alpha: 0.18) : bgColor,
+                color: isDark ? const Color(0xFF0F172A) : Colors.white,
                 shape: BoxShape.circle,
+                boxShadow: [
+                  BoxShadow(
+                    color: const Color(0xFF0284C7).withValues(alpha: 0.12),
+                    blurRadius: 6,
+                    offset: const Offset(0, 2),
+                  ),
+                ],
               ),
               child: Icon(
                 icon,
-                size: 18,
-                color: iconColor,
+                size: 20,
+                color: isDark ? const Color(0xFF38BDF8) : const Color(0xFF0284C7),
               ),
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: 9),
             Text(
               title,
               textAlign: TextAlign.center,
               style: TextStyle(
-                fontSize: 12,
+                fontSize: 12.5,
                 fontWeight: FontWeight.bold,
                 color: isDark ? Colors.white : const Color(0xFF0F172A),
               ),
@@ -363,7 +363,8 @@ class WelcomePage extends StatelessWidget {
               subtitle,
               textAlign: TextAlign.center,
               style: TextStyle(
-                fontSize: 10,
+                fontSize: 10.5,
+                fontWeight: FontWeight.w500,
                 color: isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B),
               ),
             ),

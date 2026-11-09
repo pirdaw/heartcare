@@ -25,6 +25,14 @@ service cloud.firestore {
       allow read: if true;
       // Hanya pemilik akun yang bisa menulis profil sendiri
       allow write: if isOwner(userId);
+
+      // Rekam skrining kesehatan jantung pasien
+      match /screenings/{screeningId} {
+        // Pasien dan dokter yang login bisa baca rekam skrining
+        allow read: if isAuthenticated();
+        // Pemilik akun bisa menulis skrining sendiri
+        allow write: if isOwner(userId);
+      }
     }
     
     // =============================================

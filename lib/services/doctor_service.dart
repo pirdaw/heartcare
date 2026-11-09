@@ -42,10 +42,11 @@ class DoctorService {
     return false;
   }
 
-  /// Cek apakah akun dokter adalah akun asli (BUKAN dummy yang di-generate tanpa akun)
-  static bool isRealDoctorAccount(Map<String, dynamic> data, String id) {
+  /// Cek apakah suatu dokumen adalah akun dokter aktif yang dipertahankan
+  /// Sesuai permintaan: saat ini hanya akun dokter utama paling bawah
+  /// (yaitu dr.Kavalera Valent, S.T.,...) yang aktif dipakai di sistem.
+  static bool isTargetActiveDoctor(Map<String, dynamic> data, String id) {
     final cleanId = id.trim().toLowerCase();
-    // Filter akun dummy yang di-generate sebelumnya
     if (cleanId.startsWith('dr_valent_') ||
         cleanId.startsWith('dummy_') ||
         cleanId.contains('dummy')) {
@@ -57,22 +58,65 @@ class DoctorService {
       return false;
     }
 
-    return isDoctorDocument(data);
+    final rawName =
+        (data['nama'] as String? ?? data['name'] as String? ?? '').trim();
+    final nama = rawName.toLowerCase();
+
+    // 1. Abaikan akun placeholder / default HeartCare
+    if (nama.contains('heartcare') || nama == 'dr. dokter heartcare') {
+      return false;
+    }
+
+    // 2. Akun dokter aktif yang dipertahankan:
+    // Jika dokter lama Valent / Kavalera, wajib memiliki gelar S.T.
+    final bool hasValentOrKavalera =
+        nama.contains('valent') || nama.contains('kavalera');
+    final bool hasDegreeST =
+        nama.contains('s.t') || nama.contains('s.t.') || nama.contains(', st');
+
+    if (hasValentOrKavalera) {
+      return hasDegreeST;
+    }
+
+    // Akun dokter yang mendaftar resmi dengan SIP dan role doctor
+    final sip = (data['sip'] as String? ?? '').trim();
+    final role = (data['role'] as String? ?? '').trim().toLowerCase();
+    if ((role == 'doctor' || role == 'dokter') && sip.isNotEmpty) {
+      return true;
+    }
+
+    return false;
   }
 
-  /// Bersihkan data dokter dummy dari Cache Lokal dan Firestore
+  /// Cek apakah akun dokter adalah akun asli dan aktif untuk ditampilkan ke pasien
+  static bool isRealDoctorAccount(Map<String, dynamic> data, String id) {
+    if (!isDoctorDocument(data)) return false;
+    return isTargetActiveDoctor(data, id);
+  }
+
+  /// Bersihkan data dokter dummy dan akun dokter lama dari Cache Lokal dan Firestore,
+  /// hanya menyisakan akun dokter utama aktif (dr.Kavalera Valent, S.T.,...).
   Future<void> cleanupDummyDoctors() async {
     try {
       final prefs = await SharedPreferences.getInstance();
       final List<String> list = prefs.getStringList(_prefKeyDoctors) ?? [];
       final List<Map<String, dynamic>> cleanList = [];
+      final Set<String> seenKeys = {};
 
       for (final item in list) {
         try {
           final decoded = jsonDecode(item) as Map<String, dynamic>;
           final id = (decoded['id'] ?? decoded['uid'] ?? '').toString();
           if (isRealDoctorAccount(decoded, id)) {
-            cleanList.add(decoded);
+            final key = (decoded['id'] ??
+                    decoded['uid'] ??
+                    decoded['email'] ??
+                    decoded['nama'])
+                .toString();
+            if (!seenKeys.contains(key)) {
+              seenKeys.add(key);
+              cleanList.add(decoded);
+            }
           }
         } catch (_) {}
       }
@@ -80,22 +124,47 @@ class DoctorService {
       final encoded = cleanList.map((e) => jsonEncode(e)).toList();
       await prefs.setStringList(_prefKeyDoctors, encoded);
 
-      // Bersihkan juga dari Firestore jika ada dokumen dummy dr_valent_*
+      // Bersihkan dari Firestore (koleksi users dan doctors)
       try {
-        final dummyUsers = await _firestore.collection('users').get();
-        for (final doc in dummyUsers.docs) {
-          if (doc.id.startsWith('dr_valent_') || doc.id.startsWith('dummy_')) {
-            await doc.reference.delete();
-          }
-        }
-        final dummyDoctors = await _firestore.collection('doctors').get();
-        for (final doc in dummyDoctors.docs) {
-          if (doc.id.startsWith('dr_valent_') || doc.id.startsWith('dummy_')) {
-            await doc.reference.delete();
+        final usersSnap = await _firestore.collection('users').get();
+        for (final doc in usersSnap.docs) {
+          final data = doc.data();
+          if (isDoctorDocument(data) ||
+              doc.id.startsWith('dr_valent_') ||
+              doc.id.startsWith('dummy_')) {
+            if (!isTargetActiveDoctor(data, doc.id)) {
+              try {
+                await doc.reference.delete();
+                debugPrint(
+                    '[DoctorService] Berhasil menghapus user dokter lama: ${doc.id} (${data['nama']})');
+              } catch (e) {
+                debugPrint(
+                    '[DoctorService] Info delete user doc ${doc.id}: $e');
+              }
+            }
           }
         }
       } catch (e) {
-        debugPrint('[DoctorService] Info cleanup Firestore: $e');
+        debugPrint('[DoctorService] Info cleanup users Firestore: $e');
+      }
+
+      try {
+        final doctorsSnap = await _firestore.collection('doctors').get();
+        for (final doc in doctorsSnap.docs) {
+          final data = doc.data();
+          if (!isTargetActiveDoctor(data, doc.id)) {
+            try {
+              await doc.reference.delete();
+              debugPrint(
+                  '[DoctorService] Berhasil menghapus doctor doc lama: ${doc.id} (${data['nama']})');
+            } catch (e) {
+              debugPrint(
+                  '[DoctorService] Info delete doctor doc ${doc.id}: $e');
+            }
+          }
+        }
+      } catch (e) {
+        debugPrint('[DoctorService] Info cleanup doctors Firestore: $e');
       }
     } catch (e) {
       debugPrint('[DoctorService] Gagal membersihkan dummy doctors: $e');
@@ -109,7 +178,7 @@ class DoctorService {
   }) {
     String nama = (data['nama'] as String? ?? '').trim();
     if (nama.isEmpty) {
-      nama = (data['name'] as String? ?? 'dr. Dokter HeartCare').trim();
+      nama = (data['name'] as String? ?? 'dr. Dokter').trim();
     }
     if (!nama.toLowerCase().startsWith('dr.') && !nama.toLowerCase().startsWith('dr ')) {
       nama = 'dr. $nama';
@@ -121,8 +190,9 @@ class DoctorService {
     }
 
     String foto = (data['foto'] as String? ?? '').trim();
-    if (foto.isEmpty) {
-      foto = 'assets/images/dokter_nurlitta.jpg';
+    // Tidak ada foto profil bawaan (default foto nurlitta dihilangkan)
+    if (foto.contains('dokter_nurlitta')) {
+      foto = '';
     }
 
     String pengalaman = (data['pengalaman'] as String? ?? '').trim();
@@ -139,6 +209,8 @@ class DoctorService {
     if (lokasi.isEmpty) {
       lokasi = 'Klinik Jantung HeartCare';
     }
+
+    String jenisKelamin = (data['jenisKelamin'] as String? ?? '').trim();
 
     String tentang = (data['tentang'] as String? ?? '').trim();
     if (tentang.isEmpty) {
@@ -165,6 +237,7 @@ class DoctorService {
       'pengalaman': pengalaman,
       'sip': sip,
       'lokasi': lokasi,
+      'jenisKelamin': jenisKelamin,
       'tentang': tentang,
       'isOnline': isOnline,
       'email': email,
@@ -266,6 +339,7 @@ class DoctorService {
         'sip': normalized['sip'],
         'lokasi': normalized['lokasi'],
         'pengalaman': normalized['pengalaman'],
+        'jenisKelamin': normalized['jenisKelamin'],
         'tentang': normalized['tentang'],
         'foto': normalized['foto'],
         'isOnline': normalized['isOnline'],
@@ -290,7 +364,7 @@ class DoctorService {
     }
   }
 
-  /// Perbarui profil dokter (Nama, SIP, Spesialisasi, Lokasi, Bio, Telepon)
+  /// Perbarui profil dokter (Nama, SIP, Spesialisasi, Lokasi, Bio, Telepon, Jenis Kelamin)
   Future<bool> updateDoctorProfile({
     required String uid,
     required String nama,
@@ -300,6 +374,7 @@ class DoctorService {
     required String pengalaman,
     required String telepon,
     required String tentang,
+    String? jenisKelamin,
     String? foto,
   }) async {
     try {
@@ -322,6 +397,10 @@ class DoctorService {
         'role': 'doctor',
         'updatedAt': FieldValue.serverTimestamp(),
       };
+
+      if (jenisKelamin != null && jenisKelamin.trim().isNotEmpty) {
+        payload['jenisKelamin'] = jenisKelamin.trim();
+      }
 
       if (foto != null && foto.isNotEmpty) {
         payload['foto'] = foto;
@@ -497,12 +576,25 @@ class DoctorService {
     BoxFit fit = BoxFit.cover,
     bool isDark = false,
   }) {
-    if (photo == null || photo.trim().isEmpty) {
-      return Icon(
-        Icons.person_rounded,
-        size: width != null ? width * 0.6 : 36,
-        color: isDark ? const Color(0xFF38BDF8) : const Color(0xFF0284C7),
+    Widget buildPlaceholder() {
+      return Container(
+        width: width,
+        height: height,
+        color: isDark ? const Color(0xFF1E293B) : const Color(0xFFE0F2FE),
+        child: Center(
+          child: Icon(
+            Icons.person_rounded,
+            size: width != null ? width * 0.58 : 34,
+            color: isDark ? const Color(0xFF38BDF8) : const Color(0xFF0284C7),
+          ),
+        ),
       );
+    }
+
+    if (photo == null ||
+        photo.trim().isEmpty ||
+        photo.contains('dokter_nurlitta')) {
+      return buildPlaceholder();
     }
 
     final trimmed = photo.trim();
@@ -514,11 +606,7 @@ class DoctorService {
         width: width,
         height: height,
         fit: fit,
-        errorBuilder: (context, error, stackTrace) => Icon(
-          Icons.person_rounded,
-          size: width != null ? width * 0.6 : 36,
-          color: isDark ? const Color(0xFF38BDF8) : const Color(0xFF0284C7),
-        ),
+        errorBuilder: (context, error, stackTrace) => buildPlaceholder(),
       );
     }
 
@@ -535,27 +623,19 @@ class DoctorService {
           width: width,
           height: height,
           fit: fit,
-          errorBuilder: (context, error, stackTrace) => Icon(
-            Icons.person_rounded,
-            size: width != null ? width * 0.6 : 36,
-            color: isDark ? const Color(0xFF38BDF8) : const Color(0xFF0284C7),
-          ),
+          errorBuilder: (context, error, stackTrace) => buildPlaceholder(),
         );
       } catch (_) {}
     }
 
-    // 3. Asset Image
-    if (trimmed.startsWith('assets/')) {
+    // 3. Asset Image (bukan foto bawaan)
+    if (trimmed.startsWith('assets/') && !trimmed.contains('dokter_nurlitta')) {
       return Image.asset(
         trimmed,
         width: width,
         height: height,
         fit: fit,
-        errorBuilder: (context, error, stackTrace) => Icon(
-          Icons.person_rounded,
-          size: width != null ? width * 0.6 : 36,
-          color: isDark ? const Color(0xFF38BDF8) : const Color(0xFF0284C7),
-        ),
+        errorBuilder: (context, error, stackTrace) => buildPlaceholder(),
       );
     }
 
@@ -569,21 +649,12 @@ class DoctorService {
             width: width,
             height: height,
             fit: fit,
-            errorBuilder: (context, error, stackTrace) => Icon(
-              Icons.person_rounded,
-              size: width != null ? width * 0.6 : 36,
-              color: isDark ? const Color(0xFF38BDF8) : const Color(0xFF0284C7),
-            ),
+            errorBuilder: (context, error, stackTrace) => buildPlaceholder(),
           );
         }
       } catch (_) {}
     }
 
-    // Default icon
-    return Icon(
-      Icons.person_rounded,
-      size: width != null ? width * 0.6 : 36,
-      color: isDark ? const Color(0xFF38BDF8) : const Color(0xFF0284C7),
-    );
+    return buildPlaceholder();
   }
 }

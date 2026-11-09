@@ -5,6 +5,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'doctor_service.dart';
+import 'chat_notification_service.dart';
 
 class ChatMessage {
   final String id;
@@ -266,6 +267,17 @@ class ChatService {
     return input.replaceAll(RegExp(r'[^a-zA-Z0-9]'), '_').toLowerCase();
   }
 
+  static String cleanDoctorName(String raw) {
+    return raw
+        .toLowerCase()
+        .replaceAll(
+            RegExp(r'(dr\.|dr\b|sp\.jp|spjp|s\.t\.|s\.t|\bst\b|spesialis|jantung)',
+                caseSensitive: false),
+            '')
+        .replaceAll(RegExp(r'[^a-z0-9]'), ' ')
+        .trim();
+  }
+
   /// Mendapatkan atau membuat ruang chat antara pasien dan dokter secara deterministik di Firestore & Cache
   Future<String> getOrCreateChatRoom({
     required String doctorName,
@@ -289,15 +301,18 @@ class ChatService {
     // Jika doctorId tidak dioper atau berupa nama, coba cari UID dokter asli di Firestore
     if (doctorId == null || doctorId.isEmpty || doctorId == doctorName) {
       try {
-        final cleanTarget = _cleanId(doctorName);
-        final usersSnap = await _firestore.collection('users').get();
-        for (final doc in usersSnap.docs) {
-          final data = doc.data();
-          if (DoctorService.isDoctorDocument(data)) {
-            final dName = (data['nama'] as String? ?? data['name'] as String? ?? '');
-            if (_cleanId(dName).contains(cleanTarget) || cleanTarget.contains(_cleanId(dName))) {
-              resolvedDoctorId = doc.id;
-              break;
+        final targetDocName = cleanDoctorName(doctorName);
+        if (targetDocName.isNotEmpty) {
+          final usersSnap = await _firestore.collection('users').get();
+          for (final doc in usersSnap.docs) {
+            final data = doc.data();
+            if (DoctorService.isDoctorDocument(data)) {
+              final dName = (data['nama'] as String? ?? data['name'] as String? ?? '');
+              final cleanDName = cleanDoctorName(dName);
+              if (cleanDName.contains(targetDocName) || targetDocName.contains(cleanDName)) {
+                resolvedDoctorId = doc.id;
+                break;
+              }
             }
           }
         }
@@ -500,8 +515,10 @@ class ChatService {
     // 2. Perbarui ringkasan room lokal
     final snippet = message.isNotEmpty
         ? message
-        : (attachmentType == 'image'
-            ? '📷 Mengirim foto keluhan'
+        : (imagePath != null && imagePath.isNotEmpty
+            ? (attachmentType != null && attachmentType.isNotEmpty
+                ? '📷 $attachmentType'
+                : '📷 Mengirim foto medis')
             : (attachmentType == 'screening'
                 ? '📊 Mengirim hasil skrining jantung'
                 : '📄 Mengirim lampiran'));
@@ -531,6 +548,31 @@ class ChatService {
       _localRooms[chatId] = updatedRoom;
       _saveRoomToLocal(updatedRoom);
     }
+
+    // Trigger notifikasi real-time & simpan riwayat notifikasi lokal
+    final docName = doctorName ?? existingRoom?.doctorName ?? 'dr. Nurlitta Dwi';
+    final docPhoto = existingRoom?.doctorPhoto ?? 'assets/images/dokter_nurlitta.jpg';
+    final docSpec = existingRoom?.doctorSpecialty ?? 'Spesialis Jantung';
+    final pName = patientName ?? existingRoom?.patientName ?? 'Pasien HeartCare';
+
+    ChatNotificationService.instance.notifyIncomingMessage(
+      conversationDoctorName: docName,
+      doctorPhoto: docPhoto,
+      doctorSpecialty: docSpec,
+      patientName: pName,
+      senderRole: senderRole == 'doctor'
+          ? ChatSenderRole.doctor
+          : ChatSenderRole.patient,
+      senderName: senderName,
+      message: message.isNotEmpty
+          ? message
+          : (attachmentType == 'image'
+              ? '📷 Mengirim foto keluhan'
+              : (attachmentType == 'screening'
+                  ? '📊 Mengirim hasil skrining jantung'
+                  : '📄 Mengirim lampiran')),
+      time: timeStr,
+    );
 
     // 3. Simpan ke Firestore secara background
     bool isCloudSuccess = false;
@@ -669,72 +711,119 @@ class ChatService {
     }
   }
 
-  List<ChatRoom> _filterDoctorRooms(
+  static List<ChatRoom> filterDoctorRooms(
     List<ChatRoom> allRooms,
     String doctorName, {
     String? doctorId,
   }) {
-    final targetName = doctorName
-        .replaceAll(RegExp(r'(dr\.|dr|sp\.jp|spjp)', caseSensitive: false), '')
-        .trim()
-        .toLowerCase();
-    final targetId = (doctorId ?? '').trim().toLowerCase();
+    final cleanTargetId = (doctorId ?? '').trim().toLowerCase();
+    final cleanTargetName = cleanDoctorName(doctorName);
+
+    // Identifikasi dokter target secara spesifik (2 dokter aktif utama HeartCare)
+    final isTargetAsya = cleanTargetName.contains('asya') ||
+        cleanTargetName.contains('catherine') ||
+        cleanTargetId.contains('asya');
+    final isTargetValent = cleanTargetName.contains('valent') ||
+        cleanTargetName.contains('kavalera') ||
+        cleanTargetId.contains('valent') ||
+        cleanTargetId.contains('kavalera');
 
     final filtered = allRooms.where((room) {
-      // 1. Cek kecocokan ID dokter atau room ID
-      if (targetId.isNotEmpty) {
-        final rDoctorId = room.doctorId.toLowerCase();
-        final rRoomId = room.id.toLowerCase();
-        if (rDoctorId == targetId ||
-            rDoctorId.contains(targetId) ||
-            targetId.contains(rDoctorId) ||
-            rRoomId.contains(targetId)) {
+      final rDoctorId = room.doctorId.trim().toLowerCase();
+      final rRoomId = room.id.trim().toLowerCase();
+      final rDoctorName = cleanDoctorName(room.doctorName);
+
+      final isRoomAsya = rDoctorName.contains('asya') ||
+          rDoctorName.contains('catherine') ||
+          rDoctorId.contains('asya') ||
+          rRoomId.contains('asya');
+
+      final isRoomValent = rDoctorName.contains('valent') ||
+          rDoctorName.contains('kavalera') ||
+          rDoctorId.contains('valent') ||
+          rDoctorId.contains('kavalera') ||
+          rRoomId.contains('valent') ||
+          rRoomId.contains('kavalera');
+
+      // 1. Jika dokter saat ini adalah dr. Asya:
+      if (isTargetAsya) {
+        // Jangan pernah tampilkan percakapan pasien untuk dr. Valent
+        if (isRoomValent && !isRoomAsya) {
+          return false;
+        }
+        // Tampilkan jika room memang untuk dr. Asya
+        if (isRoomAsya) return true;
+        // Atau jika ID dokter pada room cocok dengan ID dr. Asya
+        if (cleanTargetId.isNotEmpty &&
+            (rDoctorId == cleanTargetId ||
+                rDoctorId.contains(cleanTargetId) ||
+                cleanTargetId.contains(rDoctorId) ||
+                rRoomId.contains(cleanTargetId))) {
+          return true;
+        }
+        return false;
+      }
+
+      // 2. Jika dokter saat ini adalah dr. Valent:
+      if (isTargetValent) {
+        // Jangan pernah tampilkan percakapan pasien untuk dr. Asya
+        if (isRoomAsya && !isRoomValent) {
+          return false;
+        }
+        // Tampilkan jika room memang untuk dr. Valent
+        if (isRoomValent) return true;
+        // Atau jika ID dokter pada room cocok dengan ID dr. Valent
+        if (cleanTargetId.isNotEmpty &&
+            (rDoctorId == cleanTargetId ||
+                rDoctorId.contains(cleanTargetId) ||
+                cleanTargetId.contains(rDoctorId) ||
+                rRoomId.contains(cleanTargetId))) {
+          return true;
+        }
+        return false;
+      }
+
+      // 3. Untuk dokter lainnya secara umum (pencocokan ketat ID atau nama lengkap):
+      if (cleanTargetId.isNotEmpty && rDoctorId.isNotEmpty) {
+        if (rDoctorId == cleanTargetId ||
+            rDoctorId.contains(cleanTargetId) ||
+            cleanTargetId.contains(rDoctorId) ||
+            rRoomId.contains(cleanTargetId)) {
           return true;
         }
       }
 
-      // 2. Cek kecocokan Nama Dokter
-      final rName = room.doctorName
-          .replaceAll(RegExp(r'(dr\.|dr|sp\.jp|spjp)', caseSensitive: false), '')
-          .trim()
-          .toLowerCase();
-      if (targetName.isNotEmpty && rName.isNotEmpty) {
-        if (rName.contains(targetName) || targetName.contains(rName)) {
+      if (cleanTargetName.isNotEmpty && rDoctorName.isNotEmpty) {
+        if (rDoctorName == cleanTargetName ||
+            rDoctorName.contains(cleanTargetName) ||
+            cleanTargetName.contains(rDoctorName)) {
           return true;
         }
-      }
-
-      // 3. Fallback akun dokter default / pengetesan
-      if (targetName.isEmpty ||
-          targetName.contains('heartcare') ||
-          targetName.contains('dokter') ||
-          rName.contains('heartcare') ||
-          rName.contains('valent') ||
-          rName.contains('dokter') ||
-          targetId.isEmpty) {
-        return true;
       }
 
       return false;
     }).toList();
 
-    // Jika filter spesifik kosong tetapi ada konsultasi pasien aktif di sistem,
-    // tampilkan semua konsultasi agar dokter tidak pernah melewatkan pesan pasien!
-    if (filtered.isEmpty && allRooms.isNotEmpty) {
-      final fallback = allRooms.toList();
-      fallback.sort((a, b) => b.lastMessageTime.compareTo(a.lastMessageTime));
-      return fallback;
-    }
-
     filtered.sort((a, b) => b.lastMessageTime.compareTo(a.lastMessageTime));
     return filtered;
   }
 
+  // Alias private untuk kompatibilitas internal
+  List<ChatRoom> _filterDoctorRooms(
+    List<ChatRoom> allRooms,
+    String doctorName, {
+    String? doctorId,
+  }) => filterDoctorRooms(allRooms, doctorName, doctorId: doctorId);
+
   /// Real-time stream daftar chat untuk dokter tertentu (instan tanpa jeda loading)
   Stream<List<ChatRoom>> getDoctorChatsStream(String doctorName,
       {String? doctorId}) async* {
+    final effectiveId = (doctorId != null && doctorId.isNotEmpty)
+        ? doctorId
+        : FirebaseAuth.instance.currentUser?.uid;
+
     // 1. Emit data lokal seketika pada milidetik ke-0 agar dokter dashboard tidak loading
-    yield _filterDoctorRooms(_localRooms.values.toList(), doctorName, doctorId: doctorId);
+    yield _filterDoctorRooms(_localRooms.values.toList(), doctorName, doctorId: effectiveId);
 
     // 2. Stream real-time Firestore secara langsung dari koleksi 'chats'
     try {
@@ -757,12 +846,12 @@ class ChatService {
           }
         }
 
-        final filtered = _filterDoctorRooms(map.values.toList(), doctorName, doctorId: doctorId);
+        final filtered = _filterDoctorRooms(map.values.toList(), doctorName, doctorId: effectiveId);
         yield filtered;
       }
     } catch (e) {
       debugPrint('[ChatService] getDoctorChatsStream error: $e');
-      yield _filterDoctorRooms(_localRooms.values.toList(), doctorName, doctorId: doctorId);
+      yield _filterDoctorRooms(_localRooms.values.toList(), doctorName, doctorId: effectiveId);
     }
   }
 
@@ -823,6 +912,14 @@ class ChatService {
         );
         _localRooms[chatId] = updated;
         _saveRoomToLocal(updated);
+
+        // Sinkronkan ke ChatNotificationService
+        ChatNotificationService.instance.markAsRead(
+          room.doctorName,
+          viewerRole: currentRole == 'doctor'
+              ? ChatSenderRole.doctor
+              : ChatSenderRole.patient,
+        );
       }
 
       final roomRef = _firestore.collection('chats').doc(chatId);
