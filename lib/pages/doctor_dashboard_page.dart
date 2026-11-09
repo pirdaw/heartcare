@@ -6,11 +6,12 @@ import '../services/auth_service.dart';
 import '../services/chat_service.dart';
 import '../services/theme_service.dart';
 import '../services/doctor_service.dart';
-import 'home_page.dart';
 import 'konsultasi_dokter_page.dart';
 import 'welcome_page.dart';
+import 'home_page.dart';
 import '../services/chat_notification_service.dart';
 import '../widgets/chat_notification_sheet.dart';
+import 'doctor_edit_profile_page.dart';
 
 class DoctorDashboardPage extends StatefulWidget {
   const DoctorDashboardPage({super.key});
@@ -304,509 +305,24 @@ class _DoctorDashboardPageState extends State<DoctorDashboardPage> {
     }
   }
 
-  /// Sheet Modal Lengkap untuk Edit Profil Dokter (Nama, Jenis Kelamin, SIP, Spesialis, Lokasi, Telepon, Bio)
-  void _showEditDoctorProfileSheet() {
-    final isDark = ThemeService.isDarkMode;
-
-    final namaCtrl = TextEditingController(
-      text: _doctorProfile?['nama'] ?? 'dr. Dokter HeartCare',
-    );
-    String selectedJenisKelamin =
-        (_doctorProfile?['jenisKelamin'] ?? _doctorProfile?['gender'] ?? 'Laki-laki')
-            .toString();
-    if (selectedJenisKelamin != 'Perempuan') {
-      selectedJenisKelamin = 'Laki-laki';
-    }
-
-    final sipCtrl = TextEditingController(
-      text: _doctorProfile?['sip'] ?? 'SIP-2026/01/9921',
-    );
-    final spesialisCtrl = TextEditingController(
-      text: _doctorProfile?['spesialis'] ?? 'Spesialis Jantung & Pembuluh Darah',
-    );
-    final lokasiCtrl = TextEditingController(
-      text: _doctorProfile?['lokasi'] ?? 'Klinik Jantung HeartCare',
-    );
-    final pengalamanCtrl = TextEditingController(
-      text: _doctorProfile?['pengalaman'] ?? '10 tahun',
-    );
-    final teleponCtrl = TextEditingController(
-      text: (_doctorProfile?['telepon'] ??
-              _doctorProfile?['noWa'] ??
-              _doctorProfile?['whatsapp'] ??
-              '')
-          .toString()
-          .trim(),
-    );
-    final tentangCtrl = TextEditingController(
-      text: _doctorProfile?['tentang'] ??
-          'Dokter spesialis jantung dan kardiovaskular bersertifikasi yang berdedikasi melayani konsultasi kesehatan jantung pasien secara komprehensif.',
-    );
-
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (context) {
-        return StatefulBuilder(
-          builder: (context, setSheetState) {
-            return Container(
-              padding: EdgeInsets.only(
-                left: 20,
-                right: 20,
-                top: 16,
-                bottom: MediaQuery.of(context).viewInsets.bottom + 22,
-              ),
-              decoration: BoxDecoration(
-                color: isDark ? const Color(0xFF1E293B) : Colors.white,
-                borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
-              ),
-              child: SingleChildScrollView(
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Center(
-                      child: Container(
-                        width: 42,
-                        height: 4,
-                        decoration: BoxDecoration(
-                          color: isDark
-                              ? const Color(0xFF475569)
-                              : const Color(0xFFCBD5E1),
-                          borderRadius: BorderRadius.circular(4),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 16),
-                    Row(
-                      children: [
-                        Container(
-                          width: 40,
-                          height: 40,
-                          decoration: BoxDecoration(
-                            gradient: const LinearGradient(
-                              colors: [Color(0xFF0EA5E9), Color(0xFF0284C7)],
-                            ),
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          child: const Icon(
-                            Icons.medical_information_rounded,
-                            color: Colors.white,
-                            size: 22,
-                          ),
-                        ),
-                        const SizedBox(width: 12),
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              "Edit Profil & SIP Dokter",
-                              style: TextStyle(
-                                fontSize: 16,
-                                fontWeight: FontWeight.bold,
-                                color: isDark ? Colors.white : const Color(0xFF0F172A),
-                              ),
-                            ),
-                            const SizedBox(height: 2),
-                            Text(
-                              "Perbarui nama, jenis kelamin, nomor SIP, dan data praktik",
-                              style: TextStyle(
-                                fontSize: 11.5,
-                                color: isDark
-                                    ? const Color(0xFF94A3B8)
-                                    : const Color(0xFF64748B),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 18),
-
-                    _inputField(
-                      "Nama Lengkap Dokter",
-                      namaCtrl,
-                      hint: "Contoh: dr. Valent Pratama, Sp.JP",
-                      helper: "Gelar dr. akan otomatis disesuaikan",
-                      isDark: isDark,
-                    ),
-
-                    // PILIHAN JENIS KELAMIN
-                    Padding(
-                      padding: const EdgeInsets.only(bottom: 12),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            "Jenis Kelamin",
-                            style: TextStyle(
-                              fontSize: 12,
-                              fontWeight: FontWeight.w600,
-                              color: isDark
-                                  ? const Color(0xFFCBD5E1)
-                                  : const Color(0xFF334155),
-                            ),
-                          ),
-                          const SizedBox(height: 6),
-                          Row(
-                            children: [
-                              Expanded(
-                                child: InkWell(
-                                  onTap: () {
-                                    setSheetState(() {
-                                      selectedJenisKelamin = 'Laki-laki';
-                                    });
-                                  },
-                                  borderRadius: BorderRadius.circular(12),
-                                  child: Container(
-                                    padding: const EdgeInsets.symmetric(vertical: 10),
-                                    decoration: BoxDecoration(
-                                      color: selectedJenisKelamin == 'Laki-laki'
-                                          ? const Color(0xFF0284C7)
-                                              .withValues(alpha: 0.12)
-                                          : (isDark
-                                              ? const Color(0xFF0F172A)
-                                              : const Color(0xFFF8FAFC)),
-                                      borderRadius: BorderRadius.circular(12),
-                                      border: Border.all(
-                                        color: selectedJenisKelamin == 'Laki-laki'
-                                            ? const Color(0xFF0284C7)
-                                            : (isDark
-                                                ? const Color(0xFF334155)
-                                                : const Color(0xFFCBD5E1)),
-                                        width: selectedJenisKelamin == 'Laki-laki'
-                                            ? 1.8
-                                            : 1,
-                                      ),
-                                    ),
-                                    child: Row(
-                                      mainAxisAlignment: MainAxisAlignment.center,
-                                      children: [
-                                        Icon(
-                                          Icons.male_rounded,
-                                          size: 18,
-                                          color: selectedJenisKelamin == 'Laki-laki'
-                                              ? const Color(0xFF0284C7)
-                                              : (isDark
-                                                  ? const Color(0xFF94A3B8)
-                                                  : const Color(0xFF64748B)),
-                                        ),
-                                        const SizedBox(width: 6),
-                                        Text(
-                                          'Laki-laki',
-                                          style: TextStyle(
-                                            fontSize: 12.5,
-                                            fontWeight:
-                                                selectedJenisKelamin == 'Laki-laki'
-                                                    ? FontWeight.bold
-                                                    : FontWeight.w500,
-                                            color: selectedJenisKelamin == 'Laki-laki'
-                                                ? const Color(0xFF0284C7)
-                                                : (isDark
-                                                    ? Colors.white
-                                                    : const Color(0xFF0F172A)),
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                ),
-                              ),
-                              const SizedBox(width: 10),
-                              Expanded(
-                                child: InkWell(
-                                  onTap: () {
-                                    setSheetState(() {
-                                      selectedJenisKelamin = 'Perempuan';
-                                    });
-                                  },
-                                  borderRadius: BorderRadius.circular(12),
-                                  child: Container(
-                                    padding: const EdgeInsets.symmetric(vertical: 10),
-                                    decoration: BoxDecoration(
-                                      color: selectedJenisKelamin == 'Perempuan'
-                                          ? const Color(0xFFEC4899)
-                                              .withValues(alpha: 0.12)
-                                          : (isDark
-                                              ? const Color(0xFF0F172A)
-                                              : const Color(0xFFF8FAFC)),
-                                      borderRadius: BorderRadius.circular(12),
-                                      border: Border.all(
-                                        color: selectedJenisKelamin == 'Perempuan'
-                                            ? const Color(0xFFEC4899)
-                                            : (isDark
-                                                ? const Color(0xFF334155)
-                                                : const Color(0xFFCBD5E1)),
-                                        width: selectedJenisKelamin == 'Perempuan'
-                                            ? 1.8
-                                            : 1,
-                                      ),
-                                    ),
-                                    child: Row(
-                                      mainAxisAlignment: MainAxisAlignment.center,
-                                      children: [
-                                        Icon(
-                                          Icons.female_rounded,
-                                          size: 18,
-                                          color: selectedJenisKelamin == 'Perempuan'
-                                              ? const Color(0xFFEC4899)
-                                              : (isDark
-                                                  ? const Color(0xFF94A3B8)
-                                                  : const Color(0xFF64748B)),
-                                        ),
-                                        const SizedBox(width: 6),
-                                        Text(
-                                          'Perempuan',
-                                          style: TextStyle(
-                                            fontSize: 12.5,
-                                            fontWeight:
-                                                selectedJenisKelamin == 'Perempuan'
-                                                    ? FontWeight.bold
-                                                    : FontWeight.w500,
-                                            color: selectedJenisKelamin == 'Perempuan'
-                                                ? const Color(0xFFEC4899)
-                                                : (isDark
-                                                    ? Colors.white
-                                                    : const Color(0xFF0F172A)),
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ],
-                      ),
-                    ),
-
-                    _inputField(
-                      "Nomor SIP yang Berlaku",
-                      sipCtrl,
-                      hint: "Contoh: SIP-9921/2026 atau 1823/SIP/2021",
-                      helper: "Pastikan nomor SIP resmi dan masih aktif",
-                      isDark: isDark,
-                    ),
-                    _inputField(
-                      "Spesialisasi",
-                      spesialisCtrl,
-                      hint: "Contoh: Spesialis Jantung & Pembuluh Darah",
-                      isDark: isDark,
-                    ),
-                    _inputField(
-                      "Lokasi / Rumah Sakit Praktik",
-                      lokasiCtrl,
-                      hint: "Contoh: Klinik Jantung HeartCare / RS Jantung",
-                      isDark: isDark,
-                    ),
-                    _inputField(
-                      "Pengalaman Kerja",
-                      pengalamanCtrl,
-                      hint: "Contoh: 10 tahun",
-                      isDark: isDark,
-                    ),
-                    _inputField(
-                      "No. Telepon / WhatsApp",
-                      teleponCtrl,
-                      hint: "Contoh: +62 812-3456-7890",
-                      keyboardType: TextInputType.phone,
-                      isDark: isDark,
-                    ),
-                    _inputField(
-                      "Tentang Dokter (Bio & Deskripsi)",
-                      tentangCtrl,
-                      hint: "Deskripsi singkat profil dan keahlian Anda...",
-                      maxLines: 3,
-                      isDark: isDark,
-                    ),
-
-                    const SizedBox(height: 16),
-
-                    // TOMBOL SIMPAN
-                    Container(
-                      width: double.infinity,
-                      height: 48,
-                      decoration: BoxDecoration(
-                        gradient: const LinearGradient(
-                          begin: Alignment.topLeft,
-                          end: Alignment.bottomRight,
-                          colors: [Color(0xFF0EA5E9), Color(0xFF0284C7)],
-                        ),
-                        borderRadius: BorderRadius.circular(14),
-                        boxShadow: [
-                          BoxShadow(
-                            color: const Color(0xFF0284C7).withValues(alpha: 0.35),
-                            blurRadius: 8,
-                            offset: const Offset(0, 3),
-                          ),
-                        ],
-                      ),
-                      child: ElevatedButton(
-                        onPressed: () async {
-                          final uid = _doctorProfile?['uid'] ??
-                              FirebaseAuth.instance.currentUser?.uid;
-                          if (uid == null || uid.isEmpty) {
-                            Navigator.pop(context);
-                            return;
-                          }
-
-                          final messenger = ScaffoldMessenger.of(context);
-                          final nav = Navigator.of(context);
-
-                          final success =
-                              await DoctorService.instance.updateDoctorProfile(
-                            uid: uid,
-                            nama: namaCtrl.text,
-                            sip: sipCtrl.text,
-                            spesialis: spesialisCtrl.text,
-                            lokasi: lokasiCtrl.text,
-                            pengalaman: pengalamanCtrl.text,
-                            telepon: teleponCtrl.text,
-                            tentang: tentangCtrl.text,
-                            jenisKelamin: selectedJenisKelamin,
-                          );
-
-                          nav.pop();
-                          if (mounted) {
-                            if (success) {
-                              setState(() {
-                                if (_doctorProfile != null) {
-                                  _doctorProfile!['nama'] = namaCtrl.text.trim();
-                                  _doctorProfile!['sip'] = sipCtrl.text.trim();
-                                  _doctorProfile!['spesialis'] =
-                                      spesialisCtrl.text.trim();
-                                  _doctorProfile!['lokasi'] =
-                                      lokasiCtrl.text.trim();
-                                  _doctorProfile!['pengalaman'] =
-                                      pengalamanCtrl.text.trim();
-                                  _doctorProfile!['telepon'] =
-                                      teleponCtrl.text.trim();
-                                  _doctorProfile!['noWa'] =
-                                      teleponCtrl.text.trim();
-                                  _doctorProfile!['whatsapp'] =
-                                      teleponCtrl.text.trim();
-                                  _doctorProfile!['tentang'] =
-                                      tentangCtrl.text.trim();
-                                  _doctorProfile!['jenisKelamin'] =
-                                      selectedJenisKelamin;
-                                }
-                              });
-                              await _loadDoctorProfile();
-                              messenger.showSnackBar(
-                                const SnackBar(
-                                  content: Text(
-                                    "Profil dokter berhasil diperbarui!",
-                                  ),
-                                  backgroundColor: Color(0xFF10B981),
-                                  behavior: SnackBarBehavior.floating,
-                                ),
-                              );
-                            } else {
-                              messenger.showSnackBar(
-                                const SnackBar(
-                                  content: Text("Gagal memperbarui profil dokter."),
-                                  backgroundColor: Color(0xFFEF4444),
-                                  behavior: SnackBarBehavior.floating,
-                                ),
-                              );
-                            }
-                          }
-                        },
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.transparent,
-                          foregroundColor: Colors.white,
-                          shadowColor: Colors.transparent,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(14),
-                          ),
-                        ),
-                        child: const Text(
-                          "Simpan Perubahan Profil",
-                          style: TextStyle(
-                            fontSize: 14.5,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            );
-          },
-        );
-      },
-    );
-  }
-
-  Widget _inputField(
-    String label,
-    TextEditingController controller, {
-    String? hint,
-    String? helper,
-    int maxLines = 1,
-    TextInputType keyboardType = TextInputType.text,
-    bool isDark = false,
-  }) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 12),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            label,
-            style: TextStyle(
-              fontSize: 12,
-              fontWeight: FontWeight.w600,
-              color: isDark ? const Color(0xFFCBD5E1) : const Color(0xFF334155),
-            ),
-          ),
-          const SizedBox(height: 5),
-          Container(
-            decoration: BoxDecoration(
-              color: isDark ? const Color(0xFF0F172A) : const Color(0xFFF8FAFC),
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(
-                color: isDark ? const Color(0xFF334155) : const Color(0xFFCBD5E1),
-              ),
-            ),
-            child: TextField(
-              controller: controller,
-              maxLines: maxLines,
-              keyboardType: keyboardType,
-              style: TextStyle(
-                fontSize: 13,
-                color: isDark ? Colors.white : const Color(0xFF0F172A),
-              ),
-              decoration: InputDecoration(
-                hintText: hint,
-                hintStyle: TextStyle(
-                  fontSize: 12.5,
-                  color: isDark ? const Color(0xFF64748B) : const Color(0xFF94A3B8),
-                ),
-                contentPadding: const EdgeInsets.symmetric(
-                  horizontal: 14,
-                  vertical: 10,
-                ),
-                border: InputBorder.none,
-              ),
-            ),
-          ),
-          if (helper != null) ...[
-            const SizedBox(height: 3),
-            Text(
-              helper,
-              style: TextStyle(
-                fontSize: 10.5,
-                color: isDark ? const Color(0xFF64748B) : const Color(0xFF94A3B8),
-              ),
-            ),
-          ],
-        ],
+  /// Navigasi ke Halaman / Menu Khusus Edit Profil Dokter
+  Future<void> _openEditProfilePage() async {
+    final updated = await Navigator.push<bool>(
+      context,
+      MaterialPageRoute(
+        builder: (context) => DoctorEditProfilePage(
+          doctorProfile: _doctorProfile,
+        ),
       ),
     );
+    if (updated == true || mounted) {
+      await _loadDoctorProfile();
+    }
+  }
+
+  /// Sheet Modal Lengkap untuk Edit Profil Dokter (Nama, Jenis Kelamin, SIP, Spesialis, Lokasi, Telepon, Bio)
+  void _showEditDoctorProfileSheet() {
+    _openEditProfilePage();
   }
 
   @override
@@ -844,7 +360,17 @@ class _DoctorDashboardPageState extends State<DoctorDashboardPage> {
         backgroundColor: Colors.transparent,
         elevation: 0,
         scrolledUnderElevation: 0,
-        titleSpacing: 16,
+        titleSpacing: Navigator.canPop(context) ? 0 : 16,
+        leading: Navigator.canPop(context)
+            ? IconButton(
+                icon: Icon(
+                  Icons.arrow_back_rounded,
+                  color: isDark ? Colors.white : const Color(0xFF0F172A),
+                ),
+                tooltip: 'Kembali',
+                onPressed: () => Navigator.pop(context),
+              )
+            : null,
         title: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -1542,7 +1068,7 @@ class _DoctorDashboardPageState extends State<DoctorDashboardPage> {
                                         ],
                                       ),
                                       GestureDetector(
-                                        onTap: _showEditDoctorProfileSheet,
+                                        onTap: _openEditProfilePage,
                                         child: Text(
                                           'Perbarui',
                                           style: TextStyle(
