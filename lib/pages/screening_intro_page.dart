@@ -26,26 +26,75 @@ class ScreeningIntroPage extends StatelessWidget {
                   isDark ? const Color(0xFF0F172A) : const Color(0xFFF8FAFC),
               body: Container(
                 decoration: BoxDecoration(
-                  color: isDark ? const Color(0xFF0F172A) : const Color(0xFFF8FAFC),
                   gradient: LinearGradient(
                     begin: Alignment.topCenter,
                     end: Alignment.bottomCenter,
-                    stops: const [0.0, 0.22, 0.6],
+                    stops: const [0.0, 0.28, 0.65, 1.0],
                     colors: isDark
                         ? const [
                             Color(0xFF1E293B),
-                            Color(0xFF131D2E),
+                            Color(0xFF162032),
+                            Color(0xFF111927),
                             Color(0xFF0F172A),
                           ]
                         : const [
-                            Color(0xFFE8F6FA),
-                            Color(0xFFF4FAFC),
+                            Color(0xFFE0F2FE),
+                            Color(0xFFEDF6FD),
+                            Color(0xFFF3F8FD),
                             Color(0xFFF8FAFC),
                           ],
                   ),
                 ),
                 child: SafeArea(
-                  child: Column(
+                  child: Stack(
+                    children: [
+                      // Ornamen ambient glow lembut agar layar selaras dengan menu Home
+                      Positioned(
+                        top: -40,
+                        right: -30,
+                        child: IgnorePointer(
+                          child: Container(
+                            width: 220,
+                            height: 220,
+                            decoration: BoxDecoration(
+                              shape: BoxShape.circle,
+                              color: const Color(0xFF38BDF8)
+                                  .withValues(alpha: isDark ? 0.04 : 0.16),
+                            ),
+                          ),
+                        ),
+                      ),
+                      Positioned(
+                        top: 280,
+                        left: -60,
+                        child: IgnorePointer(
+                          child: Container(
+                            width: 200,
+                            height: 200,
+                            decoration: BoxDecoration(
+                              shape: BoxShape.circle,
+                              color: const Color(0xFF0EA5E9)
+                                  .withValues(alpha: isDark ? 0.03 : 0.08),
+                            ),
+                          ),
+                        ),
+                      ),
+                      Positioned(
+                        bottom: 140,
+                        right: -50,
+                        child: IgnorePointer(
+                          child: Container(
+                            width: 200,
+                            height: 200,
+                            decoration: BoxDecoration(
+                              shape: BoxShape.circle,
+                              color: const Color(0xFF0284C7)
+                                  .withValues(alpha: isDark ? 0.03 : 0.06),
+                            ),
+                          ),
+                        ),
+                      ),
+                      Column(
                     children: [
                       // Top Bar dengan Tombol Back Melingkar
                       Padding(
@@ -166,6 +215,8 @@ class ScreeningIntroPage extends StatelessWidget {
 
                       // Bottom Navigation Bar (Tab "Skrining" aktif)
                       const HeartCareBottomNavBar(currentIndex: 1),
+                    ],
+                  ),
                     ],
                   ),
                 ),
