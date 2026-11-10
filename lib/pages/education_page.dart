@@ -176,7 +176,7 @@ class _EducationPageState extends State<EducationPage> {
   ];
 
   final List<String> _dailyTips = const [
-    'Beri jeda minimal 2-3 jam antara makan malam dan waktu tidur agar lambung tidak tertekan dan kerja jantung tetap stabil.',
+    'Berikan jeda sekitar 2–3 jam antara makan malam dan waktu tidur untuk membantu mengurangi risiko refluks asam lambung dan meningkatkan kenyamanan saat beristirahat.',
     'Jalan santai 15-30 menit per hari secara rutin dapat melancarkan aliran darah dan menjaga elastisitas pembuluh darah.',
     'Batasi natrium/garam maksimal 1 sendok teh (2.000 mg) per hari demi menjaga kestabilan tekanan darah arteri Anda.',
     'Latihan pernapasan dalam (tarik 4 detik, hembus 6 detik) terbukti membantu meredakan ketegangan dan menstabilkan irama jantung.',
