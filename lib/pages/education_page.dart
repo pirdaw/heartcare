@@ -193,9 +193,9 @@ class _EducationPageState extends State<EducationPage> {
       bgColor: Color(0xFFFFE4E6),
     ),
     _StatFact(
-      value: '< 2.000 mg',
-      label: 'Batas Garam',
-      subtitle: 'Maks. 1 sdt natrium harian',
+      value: '< 2.000 mg/hari',
+      label: 'Batas Natrium',
+      subtitle: 'Setara dengan < 5 gram garam/hari.',
       icon: Icons.tune_rounded,
       color: Color(0xFFD97706),
       bgColor: Color(0xFFFEF3C7),
