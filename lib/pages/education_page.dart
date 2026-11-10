@@ -76,6 +76,51 @@ class EducationPage extends StatefulWidget {
     );
   }
 
+  /// Ornamen ambient glow lembut persis seperti Home Page
+  static List<Widget> buildAmbientGlow({required bool isDark}) {
+    return [
+      Positioned(
+        top: -40,
+        right: -30,
+        child: Container(
+          width: 220,
+          height: 220,
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            color: const Color(0xFF38BDF8)
+                .withValues(alpha: isDark ? 0.04 : 0.16),
+          ),
+        ),
+      ),
+      Positioned(
+        top: 280,
+        left: -60,
+        child: Container(
+          width: 200,
+          height: 200,
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            color: const Color(0xFF0EA5E9)
+                .withValues(alpha: isDark ? 0.03 : 0.08),
+          ),
+        ),
+      ),
+      Positioned(
+        bottom: 140,
+        right: -50,
+        child: Container(
+          width: 200,
+          height: 200,
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            color: const Color(0xFF0284C7)
+                .withValues(alpha: isDark ? 0.03 : 0.06),
+          ),
+        ),
+      ),
+    ];
+  }
+
   // Notifier bersama untuk melacak topik yang sudah dipelajari
   static final ValueNotifier<Set<String>> completedTopicsNotifier =
       ValueNotifier<Set<String>>({});
@@ -242,9 +287,12 @@ class _EducationPageState extends State<EducationPage> {
                   gradient: EducationPage.pageGradient(isDark),
                 ),
                 child: SafeArea(
-                  child: Column(
+                  child: Stack(
                     children: [
-                      // 1. TOP BAR DENGAN BADGE KLINIS & INFO
+                      ...EducationPage.buildAmbientGlow(isDark: isDark),
+                      Column(
+                        children: [
+                          // 1. TOP BAR DENGAN BADGE KLINIS & INFO
                       _buildTopBar(context, isDark: isDark),
 
                       // 2. SEARCH BAR MODERN
@@ -300,9 +348,11 @@ class _EducationPageState extends State<EducationPage> {
                       ),
                     ],
                   ),
-                ),
+                ],
               ),
-            );
+            ),
+          ),
+        );
           },
         );
       },
@@ -2597,9 +2647,12 @@ class PolaMakanSehatPage extends StatelessWidget {
               gradient: EducationPage.pageGradient(isDark),
             ),
             child: SafeArea(
-              child: Column(
+              child: Stack(
                 children: [
-                  // HEADER BAR
+                  ...EducationPage.buildAmbientGlow(isDark: isDark),
+                  Column(
+                    children: [
+                      // HEADER BAR
                   Padding(
                     padding:
                         const EdgeInsets.only(left: 16, right: 16, top: 12),
@@ -2804,12 +2857,14 @@ class PolaMakanSehatPage extends StatelessWidget {
                 ),
               ],
             ),
-          ),
+          ],
         ),
-      );
-      },
-    );
-  }
+      ),
+    ),
+  );
+  },
+);
+}
 }
 
 // ============================================================================
@@ -2835,9 +2890,12 @@ class AktivitasFisikPage extends StatelessWidget {
               gradient: EducationPage.pageGradient(isDark),
             ),
             child: SafeArea(
-              child: Column(
+              child: Stack(
                 children: [
-                  // HEADER BAR
+                  ...EducationPage.buildAmbientGlow(isDark: isDark),
+                  Column(
+                    children: [
+                      // HEADER BAR
                   Padding(
                     padding:
                         const EdgeInsets.only(left: 16, right: 16, top: 12),
@@ -3103,12 +3161,14 @@ class AktivitasFisikPage extends StatelessWidget {
                 ),
               ],
             ),
-          ),
+          ],
         ),
-      );
-      },
-    );
-  }
+      ),
+    ),
+  );
+  },
+);
+}
 }
 
 // ============================================================================
@@ -3134,9 +3194,12 @@ class KebiasaanSehatPage extends StatelessWidget {
               gradient: EducationPage.pageGradient(isDark),
             ),
             child: SafeArea(
-              child: Column(
+              child: Stack(
                 children: [
-                  // HEADER BAR
+                  ...EducationPage.buildAmbientGlow(isDark: isDark),
+                  Column(
+                    children: [
+                      // HEADER BAR
                   Padding(
                     padding:
                         const EdgeInsets.only(left: 16, right: 16, top: 12),
@@ -3341,12 +3404,14 @@ class KebiasaanSehatPage extends StatelessWidget {
                 ),
               ],
             ),
-          ),
+          ],
         ),
-      );
-      },
-    );
-  }
+      ),
+    ),
+  );
+  },
+);
+}
 }
 
 // ============================================================================
