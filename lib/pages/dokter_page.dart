@@ -11,6 +11,7 @@ import 'signup_page.dart';
 import 'Skrining/screening_model.dart';
 import '../services/theme_service.dart';
 import '../services/doctor_service.dart';
+import '../services/user_profile_service.dart';
 
 import '../services/language_service.dart';
 
@@ -123,7 +124,17 @@ class _PilihDokterPageState extends State<PilihDokterPage> {
               ListenableBuilder(
                 listenable: ChatNotificationService.instance,
                 builder: (context, _) {
-                  final unread = ChatNotificationService.instance.totalUnreadNotificationCount;
+                  final authUser = FirebaseAuth.instance.currentUser;
+                  final profile = UserProfileService.instance.currentProfile;
+                  final patientId = authUser?.uid ?? authUser?.email ?? profile.nama;
+                  final patientName = profile.nama.isNotEmpty
+                      ? profile.nama
+                      : (authUser?.displayName ?? 'Pasien');
+                  final unread = ChatNotificationService.instance
+                      .getUnreadCountForPatientAccount(
+                    patientId: patientId,
+                    patientName: patientName,
+                  );
                   return Padding(
                     padding: const EdgeInsets.only(right: 8),
                     child: Material(
@@ -131,7 +142,12 @@ class _PilihDokterPageState extends State<PilihDokterPage> {
                       borderRadius: BorderRadius.circular(12),
                       child: InkWell(
                         borderRadius: BorderRadius.circular(12),
-                        onTap: () => ChatNotificationSheet.show(context),
+                        onTap: () => ChatNotificationSheet.show(
+                          context,
+                          viewerRole: ChatSenderRole.patient,
+                          patientId: patientId,
+                          patientName: patientName,
+                        ),
                         child: Container(
                           width: 38,
                           height: 38,

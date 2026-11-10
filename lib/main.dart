@@ -55,6 +55,9 @@ class _HeartCareAppState extends State<HeartCareApp> {
     // Dengarkan event notifikasi chat baru secara global untuk menampilkan banner in-app
     _notifSub = ChatNotificationService.instance.onNewNotification.listen((notif) {
       if (!mounted) return;
+      if (!ChatNotificationService.instance.isNotificationForCurrentAccount(notif)) {
+        return;
+      }
       ChatNotificationBannerManager.showWithNavigatorKey(
         navigatorKey: rootNavigatorKey,
         notification: notif,

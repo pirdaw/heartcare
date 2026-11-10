@@ -240,8 +240,8 @@ class ChatService {
   }
   static final ChatService instance = ChatService._();
 
-  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
-  final FirebaseAuth _auth = FirebaseAuth.instance;
+  FirebaseFirestore get _firestore => FirebaseFirestore.instance;
+  FirebaseAuth get _auth => FirebaseAuth.instance;
 
   // In-memory instant message cache
   final Map<String, List<ChatMessage>> _localMessages = {};
@@ -421,6 +421,78 @@ class ChatService {
     return chatId;
   }
 
+  /// Memeriksa apakah pesan bot awal sudah pernah dikirim untuk kombinasi pasien & dokter ini.
+  Future<bool> hasInitialBotReplied({
+    required String chatId,
+    String? patientId,
+    String? doctorId,
+    String? doctorName,
+  }) async {
+    final cleanDoc = cleanDoctorName(doctorName ?? '');
+    final cleanPat = (patientId ?? '').trim().toLowerCase();
+
+    // 1. Cek dari SharedPreferences (instan dan persisten lokal)
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      if (prefs.getBool('bot_replied_$chatId') == true) {
+        return true;
+      }
+      if (cleanDoc.isNotEmpty && cleanPat.isNotEmpty) {
+        if (prefs.getBool('bot_replied_${cleanPat}_$cleanDoc') == true) {
+          return true;
+        }
+      }
+    } catch (_) {}
+
+    // 2. Cek Firestore pada dokumen chat
+    try {
+      final doc = await _firestore.collection('chats').doc(chatId).get();
+      if (doc.exists) {
+        final data = doc.data();
+        if (data != null && data['hasInitialBotReplied'] == true) {
+          return true;
+        }
+      }
+    } catch (_) {}
+
+    // 3. Periksa riwayat pesan: jika pasien sudah pernah mengirim pesan sebelumnya,
+    // maka ini BUKAN chat pertama kali.
+    final localMsgs = await _loadLocalMessages(chatId);
+    final patientMsgs =
+        localMsgs.where((m) => m.senderRole == 'patient').toList();
+    if (patientMsgs.isNotEmpty) {
+      return true;
+    }
+
+    return false;
+  }
+
+  /// Menandai bahwa bot awal sudah membalas, sehingga pesan balasan berikutnya dari pasien
+  /// tidak akan memicu pesan bot otomatis lagi.
+  Future<void> markInitialBotReplied({
+    required String chatId,
+    String? patientId,
+    String? doctorId,
+    String? doctorName,
+  }) async {
+    final cleanDoc = cleanDoctorName(doctorName ?? '');
+    final cleanPat = (patientId ?? '').trim().toLowerCase();
+
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setBool('bot_replied_$chatId', true);
+      if (cleanDoc.isNotEmpty && cleanPat.isNotEmpty) {
+        await prefs.setBool('bot_replied_${cleanPat}_$cleanDoc', true);
+      }
+    } catch (_) {}
+
+    try {
+      await _firestore.collection('chats').doc(chatId).set({
+        'hasInitialBotReplied': true,
+      }, SetOptions(merge: true));
+    } catch (_) {}
+  }
+
   void _addLocalMessage(String chatId, ChatMessage msg) {
     final list = _localMessages[chatId] ?? [];
     list.removeWhere((m) => m.id == msg.id);
@@ -556,6 +628,9 @@ class ChatService {
     final pName = patientName ?? existingRoom?.patientName ?? 'Pasien HeartCare';
 
     ChatNotificationService.instance.notifyIncomingMessage(
+      chatId: chatId,
+      patientId: patientId ?? existingRoom?.patientId,
+      doctorId: doctorId ?? existingRoom?.doctorId,
       conversationDoctorName: docName,
       doctorPhoto: docPhoto,
       doctorSpecialty: docSpec,
@@ -919,6 +994,8 @@ class ChatService {
           viewerRole: currentRole == 'doctor'
               ? ChatSenderRole.doctor
               : ChatSenderRole.patient,
+          patientId: room.patientId,
+          doctorId: room.doctorId,
         );
       }
 

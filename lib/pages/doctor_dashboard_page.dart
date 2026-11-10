@@ -8,7 +8,6 @@ import '../services/theme_service.dart';
 import '../services/doctor_service.dart';
 import 'konsultasi_dokter_page.dart';
 import 'welcome_page.dart';
-import 'home_page.dart';
 import '../services/chat_notification_service.dart';
 import '../widgets/chat_notification_sheet.dart';
 import 'doctor_edit_profile_page.dart';
@@ -398,73 +397,124 @@ class _DoctorDashboardPageState extends State<DoctorDashboardPage> {
               ),
             ),
             const SizedBox(width: 10),
-            Text(
-              'Portal Dokter',
-              style: TextStyle(
-                color: isDark ? Colors.white : const Color(0xFF0F172A),
-                fontWeight: FontWeight.w800,
-                fontSize: 18,
-                letterSpacing: -0.3,
+            Flexible(
+              child: Text(
+                'Portal Dokter',
+                style: TextStyle(
+                  color: isDark ? Colors.white : const Color(0xFF0F172A),
+                  fontWeight: FontWeight.w800,
+                  fontSize: 18,
+                  letterSpacing: -0.3,
+                ),
+                overflow: TextOverflow.ellipsis,
               ),
             ),
           ],
         ),
         actions: [
-          // NOTIFIKASI CHAT DOKTER
-          ListenableBuilder(
-            listenable: ChatNotificationService.instance,
+          // TOMBOL PUSAT NOTIFIKASI CHAT DOKTER (Desain persis seperti milik Pasien di Home)
+          AnimatedBuilder(
+            animation: ChatNotificationService.instance,
             builder: (context, _) {
               final unread = ChatNotificationService.instance
-                  .totalUnreadNotificationCount;
-              return Center(
-                child: Padding(
-                  padding: const EdgeInsets.only(right: 4),
+                  .getUnreadCountForDoctorAccount(
+                doctorId: doctorUid,
+                doctorName: doctorName,
+              );
+              return Padding(
+                padding: const EdgeInsets.only(right: 8),
+                child: Center(
                   child: Material(
-                    color: Colors.white.withValues(alpha: 0.15),
-                    borderRadius: BorderRadius.circular(10),
+                    color: Colors.transparent,
                     child: InkWell(
-                      borderRadius: BorderRadius.circular(10),
-                      onTap: () => ChatNotificationSheet.show(context),
-                      child: Container(
-                        width: 36,
-                        height: 36,
-                        alignment: Alignment.center,
-                        child: Stack(
-                          clipBehavior: Clip.none,
-                          children: [
-                            const Icon(
-                              Icons.notifications_outlined,
-                              size: 20,
-                              color: Colors.white,
+                      borderRadius: BorderRadius.circular(14),
+                      onTap: () {
+                        ChatNotificationSheet.show(
+                          context,
+                          viewerRole: ChatSenderRole.doctor,
+                          doctorId: doctorUid,
+                          doctorName: doctorName,
+                        );
+                      },
+                      child: Stack(
+                        clipBehavior: Clip.none,
+                        children: [
+                          Container(
+                            width: 40,
+                            height: 40,
+                            decoration: BoxDecoration(
+                              color: isDark
+                                  ? const Color(0xFF1E293B)
+                                  : Colors.white,
+                              borderRadius: BorderRadius.circular(14),
+                              border: Border.all(
+                                color: isDark
+                                    ? const Color(0xFF334155)
+                                    : const Color(0xFFE2E8F0),
+                                width: 1.2,
+                              ),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.black.withValues(
+                                    alpha: isDark ? 0.2 : 0.04,
+                                  ),
+                                  blurRadius: 6,
+                                  offset: const Offset(0, 2),
+                                ),
+                              ],
                             ),
-                            if (unread > 0)
-                              Positioned(
-                                top: -4,
-                                right: -4,
-                                child: Container(
-                                  padding: const EdgeInsets.all(3),
-                                  constraints: const BoxConstraints(
-                                    minWidth: 16,
-                                    minHeight: 16,
+                            child: Icon(
+                              Icons.notifications_active_outlined,
+                              size: 20,
+                              color: isDark
+                                  ? const Color(0xFF38BDF8)
+                                  : const Color(0xFF0284C7),
+                            ),
+                          ),
+                          if (unread > 0)
+                            Positioned(
+                              top: -3,
+                              right: -3,
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 5,
+                                  vertical: 1.5,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: const Color(0xFFEF4444),
+                                  borderRadius: BorderRadius.circular(10),
+                                  border: Border.all(
+                                    color: isDark
+                                        ? const Color(0xFF0F172A)
+                                        : Colors.white,
+                                    width: 1.5,
                                   ),
-                                  decoration: const BoxDecoration(
-                                    color: Color(0xFFEF4444),
-                                    shape: BoxShape.circle,
-                                  ),
-                                  alignment: Alignment.center,
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: const Color(0xFFEF4444)
+                                          .withValues(alpha: 0.4),
+                                      blurRadius: 4,
+                                    ),
+                                  ],
+                                ),
+                                constraints: const BoxConstraints(
+                                  minWidth: 18,
+                                  minHeight: 18,
+                                ),
+                                child: Center(
                                   child: Text(
-                                    unread > 9 ? '9+' : '$unread',
+                                    unread > 99 ? '99+' : '$unread',
                                     style: const TextStyle(
                                       color: Colors.white,
-                                      fontSize: 9,
+                                      fontSize: 9.5,
                                       fontWeight: FontWeight.bold,
                                       height: 1,
                                     ),
                                   ),
                                 ),
                               ),
-                          ],
-                        ),
+                            ),
+                        ],
                       ),
                     ),
                   ),
@@ -472,72 +522,6 @@ class _DoctorDashboardPageState extends State<DoctorDashboardPage> {
               );
             },
           ),
-
-          // TOMBOL MODE PASIEN
-          Container(
-            margin: const EdgeInsets.symmetric(vertical: 8),
-            decoration: BoxDecoration(
-              color: isDark
-                  ? const Color(0xFF1E293B).withValues(alpha: 0.8)
-                  : Colors.white.withValues(alpha: 0.95),
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(
-                color: isDark
-                    ? const Color(0xFF334155)
-                    : const Color(0xFFBAE6FD),
-                width: 1.2,
-              ),
-              boxShadow: [
-                BoxShadow(
-                  color: const Color(0xFF0284C7).withValues(alpha: 0.06),
-                  blurRadius: 6,
-                  offset: const Offset(0, 2),
-                ),
-              ],
-            ),
-            child: Material(
-              color: Colors.transparent,
-              child: InkWell(
-                borderRadius: BorderRadius.circular(12),
-                onTap: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (context) => const HomePage()),
-                  );
-                },
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 10,
-                    vertical: 6,
-                  ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Icon(
-                        Icons.swap_horiz_rounded,
-                        color: isDark
-                            ? const Color(0xFF38BDF8)
-                            : const Color(0xFF0284C7),
-                        size: 18,
-                      ),
-                      const SizedBox(width: 4),
-                      Text(
-                        'Mode Pasien',
-                        style: TextStyle(
-                          fontSize: 12,
-                          fontWeight: FontWeight.w700,
-                          color: isDark
-                              ? const Color(0xFF38BDF8)
-                              : const Color(0xFF0284C7),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ),
-          ),
-          const SizedBox(width: 8),
           // TOMBOL KELUAR
           Container(
             margin: const EdgeInsets.only(top: 8, bottom: 8, right: 16),

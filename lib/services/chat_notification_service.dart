@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'user_profile_service.dart';
 
 /// Peran pengirim pesan dalam konsultasi chat
@@ -84,9 +85,12 @@ class ChatMessageItem {
   }
 }
 
-/// Model untuk notifikasi pesan masuk chat
+/// Model untuk notifikasi pesan masuk chat dengan metadata role dan hak akses akun
 class ChatNotificationItem {
   final String id;
+  final String? chatId;
+  final String? patientId;
+  final String? doctorId;
   final String conversationDoctorName;
   final String doctorPhoto;
   final String doctorSpecialty;
@@ -101,6 +105,9 @@ class ChatNotificationItem {
 
   ChatNotificationItem({
     required this.id,
+    this.chatId,
+    this.patientId,
+    this.doctorId,
     required this.conversationDoctorName,
     required this.doctorPhoto,
     required this.doctorSpecialty,
@@ -115,12 +122,14 @@ class ChatNotificationItem {
   });
 
   /// Format teks notifikasi sesuai permintaan user
-  /// Contoh: "dr. Nurlitta Dwi mengirim pesan baru: Bagaimana kondisi Anda hari ini?"
   String get notificationTitle => '$senderName mengirim pesan baru';
   String get formattedNotificationText => '$notificationTitle: $messageSnippet';
 
   Map<String, dynamic> toJson() => {
         'id': id,
+        'chatId': chatId,
+        'patientId': patientId,
+        'doctorId': doctorId,
         'conversationDoctorName': conversationDoctorName,
         'doctorPhoto': doctorPhoto,
         'doctorSpecialty': doctorSpecialty,
@@ -137,7 +146,11 @@ class ChatNotificationItem {
   factory ChatNotificationItem.fromJson(Map<String, dynamic> json) {
     return ChatNotificationItem(
       id: json['id'] ?? DateTime.now().millisecondsSinceEpoch.toString(),
-      conversationDoctorName: json['conversationDoctorName'] ?? 'dr. Nurlitta Dwi',
+      chatId: json['chatId'],
+      patientId: json['patientId'],
+      doctorId: json['doctorId'],
+      conversationDoctorName:
+          json['conversationDoctorName'] ?? 'dr. Nurlitta Dwi',
       doctorPhoto: json['doctorPhoto'] ?? 'assets/images/dokter_nurlitta.jpg',
       doctorSpecialty: json['doctorSpecialty'] ?? 'Spesialis Jantung',
       patientName: json['patientName'] ?? 'Pasien',
@@ -159,7 +172,7 @@ class ChatNotificationItem {
 }
 
 /// Layanan terpusat untuk konsultasi chat, penyimpanan percakapan,
-/// dan sistem notifikasi pesan masuk antara dokter dan pasien.
+/// dan sistem notifikasi pesan masuk antara dokter dan pasien dengan hak akses akun.
 class ChatNotificationService extends ChangeNotifier {
   ChatNotificationService._internal();
   static final ChatNotificationService instance =
@@ -173,7 +186,6 @@ class ChatNotificationService extends ChangeNotifier {
   final List<ChatNotificationItem> _notifications = [];
 
   /// Stream controller untuk memancarkan event notifikasi baru secara real-time
-  /// agar banner in-app dapat langsung ditampilkan di layar mana pun.
   final StreamController<ChatNotificationItem> _notificationStreamController =
       StreamController<ChatNotificationItem>.broadcast();
 
@@ -181,10 +193,9 @@ class ChatNotificationService extends ChangeNotifier {
       _notificationStreamController.stream;
 
   /// Ruang chat yang sedang aktif dilihat oleh user saat ini
-  /// (jika user sedang berada di ruang chat dokter X, pesan dari dokter X
-  /// tidak akan memunculkan banner notifikasi yang mengganggu).
   String? currentActiveDoctorRoom;
 
+  static int _notifSeq = 0;
   bool _initialized = false;
 
   /// Inisialisasi service dan muat data dari SharedPreferences
@@ -216,20 +227,33 @@ class ChatNotificationService extends ChangeNotifier {
         final List<dynamic> decodedList = jsonDecode(notifJson);
         _notifications.clear();
         for (var item in decodedList) {
-          _notifications.add(ChatNotificationItem.fromJson(
-              Map<String, dynamic>.from(item)));
+          final notif = ChatNotificationItem.fromJson(
+              Map<String, dynamic>.from(item));
+          if (notif.id != 'demo_notif_1') {
+            _notifications.add(notif);
+          }
         }
       }
+      _cleanMockDemoNotifications();
     } catch (e) {
       debugPrint('[ChatNotificationService] Error initializing: $e');
     }
 
-    // Jika percakapan masih kosong, inisialisasi default
+    // Jika percakapan masih kosong, inisialisasi default struktur percakapan
     if (_conversations.isEmpty) {
       _seedDefaultConversations();
     }
 
     notifyListeners();
+  }
+
+  void _cleanMockDemoNotifications() {
+    _notifications.removeWhere((n) =>
+        n.id == 'demo_notif_1' ||
+        n.id == 'demo_unread_nurlitta' ||
+        (n.messageSnippet.contains('Jangan lupa catat tensi dan hindari begadang') &&
+            n.conversationDoctorName == 'dr. Nurlitta Dwi' &&
+            n.patientName == 'Pasien HeartCare'));
   }
 
   /// Dapatkan daftar pesan untuk dokter tertentu
@@ -250,38 +274,206 @@ class ChatNotificationService extends ChangeNotifier {
     return list;
   }
 
-  /// Jumlah pesan belum dibaca yang ditujukan untuk Pasien (dari seluruh dokter)
-  int get unreadCountForPatient {
-    int count = 0;
-    for (var list in _conversations.values) {
-      for (var msg in list) {
-        if (msg.senderRole == ChatSenderRole.doctor && !msg.isRead) {
-          count++;
+  /// Helper untuk mencocokkan notifikasi dengan akun pasien
+  bool _matchesPatient(ChatNotificationItem notif,
+      {String? patientId, String? patientName}) {
+    final cleanPId = (patientId ?? '').trim().toLowerCase();
+    final cleanPName = (patientName ?? '').trim().toLowerCase();
+
+    // 1. Cocokkan berdasarkan patientId jika ada
+    if (notif.patientId != null && notif.patientId!.isNotEmpty) {
+      final notifPid = notif.patientId!.trim().toLowerCase();
+      if (cleanPId.isNotEmpty) {
+        if (notifPid == cleanPId ||
+            notifPid.contains(cleanPId) ||
+            cleanPId.contains(notifPid)) {
+          return true;
         }
       }
     }
-    return count;
+
+    // 2. Cocokkan berdasarkan nama pasien
+    if (cleanPName.isNotEmpty && notif.patientName.isNotEmpty) {
+      final notifPName = notif.patientName.trim().toLowerCase();
+      if (notifPName == cleanPName ||
+          notifPName.contains(cleanPName) ||
+          cleanPName.contains(notifPName)) {
+        return true;
+      }
+    }
+
+    // 3. Fallback jika patientId & patientName kosong
+    if (cleanPId.isEmpty && cleanPName.isEmpty) {
+      return true;
+    }
+
+    return false;
   }
 
-  /// Jumlah pesan belum dibaca yang ditujukan untuk Dokter
-  int get unreadCountForDoctorOverall {
-    int count = 0;
-    for (var list in _conversations.values) {
-      for (var msg in list) {
-        if (msg.senderRole == ChatSenderRole.patient && !msg.isRead) {
-          count++;
-        }
+  /// Helper untuk mencocokkan notifikasi dengan akun dokter
+  bool _matchesDoctor(ChatNotificationItem notif,
+      {String? doctorId, String? doctorName}) {
+    final cleanDId = (doctorId ?? '').trim().toLowerCase();
+    final cleanDName = (doctorName ?? '').trim().toLowerCase();
+
+    final notifDocName = notif.conversationDoctorName.trim().toLowerCase();
+    final notifDocId = (notif.doctorId ?? '').trim().toLowerCase();
+
+    // Isolasi ketat untuk dua dokter utama (dr. Asya dan dr. Valent)
+    final isTargetAsya = cleanDName.contains('asya') ||
+        cleanDName.contains('catherine') ||
+        cleanDId.contains('asya');
+    final isTargetValent = cleanDName.contains('valent') ||
+        cleanDName.contains('kavalera') ||
+        cleanDId.contains('valent') ||
+        cleanDId.contains('kavalera');
+
+    final isNotifAsya = notifDocName.contains('asya') ||
+        notifDocName.contains('catherine') ||
+        notifDocId.contains('asya');
+    final isNotifValent = notifDocName.contains('valent') ||
+        notifDocName.contains('kavalera') ||
+        notifDocId.contains('valent') ||
+        notifDocId.contains('kavalera');
+
+    if (isTargetAsya) {
+      if (isNotifValent && !isNotifAsya) return false;
+      return isNotifAsya ||
+          (cleanDId.isNotEmpty && notifDocId.isNotEmpty && notifDocId == cleanDId);
+    }
+
+    if (isTargetValent) {
+      if (isNotifAsya && !isNotifValent) return false;
+      return isNotifValent ||
+          (cleanDId.isNotEmpty && notifDocId.isNotEmpty && notifDocId == cleanDId);
+    }
+
+    if (cleanDId.isNotEmpty && notifDocId.isNotEmpty) {
+      if (notifDocId == cleanDId ||
+          notifDocId.contains(cleanDId) ||
+          cleanDId.contains(notifDocId)) {
+        return true;
       }
     }
-    return count;
+
+    if (cleanDName.isNotEmpty && notifDocName.isNotEmpty) {
+      if (notifDocName == cleanDName ||
+          notifDocName.contains(cleanDName) ||
+          cleanDName.contains(notifDocName)) {
+        return true;
+      }
+    }
+
+    if (cleanDId.isEmpty && cleanDName.isEmpty) {
+      return true;
+    }
+
+    return false;
+  }
+
+  /// Dapatkan seluruh notifikasi yang disesuaikan dengan hak akses peran (Pasien atau Dokter)
+  /// dan akun pengguna yang sedang login saat ini.
+  List<ChatNotificationItem> getNotificationsForUser({
+    required ChatSenderRole viewerRole,
+    String? patientId,
+    String? patientName,
+    String? doctorId,
+    String? doctorName,
+    bool? unreadOnly,
+  }) {
+    final all = getNotifications(filterRecipientRole: viewerRole);
+
+    return all.where((n) {
+      if (unreadOnly == true && n.isRead) return false;
+
+      if (viewerRole == ChatSenderRole.patient) {
+        return _matchesPatient(n,
+            patientId: patientId, patientName: patientName);
+      } else {
+        return _matchesDoctor(n,
+            doctorId: doctorId, doctorName: doctorName);
+      }
+    }).toList();
+  }
+
+  /// Memeriksa apakah notifikasi masuk ditujukan untuk akun yang sedang login saat ini
+  bool isNotificationForCurrentAccount(ChatNotificationItem notif) {
+    try {
+      final user = FirebaseAuth.instance.currentUser;
+      final profile = UserProfileService.instance.currentProfile;
+
+      final isDoctor = (user?.email?.toLowerCase().contains('dokter') ?? false) ||
+          (user?.displayName?.toLowerCase().startsWith('dr.') ?? false) ||
+          (profile.nama.toLowerCase().startsWith('dr.'));
+
+      if (isDoctor) {
+        if (notif.recipientRole != ChatSenderRole.doctor) return false;
+        return _matchesDoctor(
+          notif,
+          doctorId: user?.uid,
+          doctorName: user?.displayName ?? profile.nama,
+        );
+      } else {
+        if (notif.recipientRole != ChatSenderRole.patient) return false;
+        return _matchesPatient(
+          notif,
+          patientId: user?.uid ?? user?.email ?? profile.nama,
+          patientName:
+              profile.nama.isNotEmpty ? profile.nama : user?.displayName,
+        );
+      }
+    } catch (_) {
+      return true;
+    }
+  }
+
+  /// Jumlah pesan belum dibaca khusus akun Pasien tertentu
+  int getUnreadCountForPatientAccount({
+    String? patientId,
+    String? patientName,
+  }) {
+    return getNotificationsForUser(
+      viewerRole: ChatSenderRole.patient,
+      patientId: patientId,
+      patientName: patientName,
+      unreadOnly: true,
+    ).length;
+  }
+
+  /// Jumlah pesan belum dibaca khusus akun Dokter tertentu
+  int getUnreadCountForDoctorAccount({
+    String? doctorId,
+    String? doctorName,
+  }) {
+    return getNotificationsForUser(
+      viewerRole: ChatSenderRole.doctor,
+      doctorId: doctorId,
+      doctorName: doctorName,
+      unreadOnly: true,
+    ).length;
+  }
+
+  /// Jumlah pesan belum dibaca yang ditujukan untuk Pasien (global/fallback)
+  int get unreadCountForPatient {
+    return _notifications
+        .where((n) => n.recipientRole == ChatSenderRole.patient && !n.isRead)
+        .length;
+  }
+
+  /// Jumlah pesan belum dibaca yang ditujukan untuk Dokter (global/fallback)
+  int get unreadCountForDoctorOverall {
+    return _notifications
+        .where((n) => n.recipientRole == ChatSenderRole.doctor && !n.isRead)
+        .length;
   }
 
   /// Jumlah pesan belum dibaca dari dokter tertentu untuk pasien
   int getUnreadCountForDoctorName(String doctorName) {
-    final list = _conversations[doctorName];
-    if (list == null) return 0;
-    return list
-        .where((msg) => msg.senderRole == ChatSenderRole.doctor && !msg.isRead)
+    return _notifications
+        .where((n) =>
+            n.conversationDoctorName == doctorName &&
+            n.recipientRole == ChatSenderRole.patient &&
+            !n.isRead)
         .length;
   }
 
@@ -306,6 +498,9 @@ class ChatNotificationService extends ChangeNotifier {
     required String doctorName,
     required String message,
     required ChatSenderRole senderRole,
+    String? chatId,
+    String? patientId,
+    String? doctorId,
     String? senderNameOverride,
     String? doctorPhoto,
     String? doctorSpecialty,
@@ -326,7 +521,6 @@ class ChatNotificationService extends ChangeNotifier {
 
     final msgId = 'msg_${now.millisecondsSinceEpoch}_${_conversations.length}';
 
-    // Jika ruang chat dokter sedang aktif dibuka di layar, langsung anggap terbaca
     final bool isRecipientViewingChat = (currentActiveDoctorRoom == doctorName);
 
     final newMsg = ChatMessageItem(
@@ -350,18 +544,20 @@ class ChatNotificationService extends ChangeNotifier {
     }
     _conversations[doctorName]!.add(newMsg);
 
-    // Buat objek notifikasi untuk penerima
     final ChatSenderRole recipientRole = (senderRole == ChatSenderRole.doctor)
         ? ChatSenderRole.patient
         : ChatSenderRole.doctor;
 
-    final notifId = 'notif_${now.millisecondsSinceEpoch}';
+    final notifId = 'notif_${now.millisecondsSinceEpoch}_${++_notifSeq}';
     final snippet = message.length > 60
         ? '${message.substring(0, 57)}...'
         : message;
 
     final notif = ChatNotificationItem(
       id: notifId,
+      chatId: chatId,
+      patientId: patientId,
+      doctorId: doctorId,
       conversationDoctorName: doctorName,
       doctorPhoto: photo,
       doctorSpecialty: specialty,
@@ -377,7 +573,6 @@ class ChatNotificationService extends ChangeNotifier {
 
     _notifications.insert(0, notif);
 
-    // Batasi riwayat notifikasi maksimal 50 agar hemat memori
     if (_notifications.length > 50) {
       _notifications.removeRange(50, _notifications.length);
     }
@@ -385,7 +580,6 @@ class ChatNotificationService extends ChangeNotifier {
     await _saveToPrefs();
     notifyListeners();
 
-    // Pancarkan event notifikasi real-time jika penerima tidak sedang di ruang chat
     if (emitNotification && !isRecipientViewingChat) {
       _notificationStreamController.add(notif);
     }
@@ -394,11 +588,14 @@ class ChatNotificationService extends ChangeNotifier {
   }
 
   /// Tandai seluruh pesan dalam percakapan dokter tertentu sebagai sudah dibaca
-  Future<void> markAsRead(String doctorName, {ChatSenderRole? viewerRole}) async {
+  Future<void> markAsRead(
+    String doctorName, {
+    ChatSenderRole? viewerRole,
+    String? patientId,
+    String? doctorId,
+  }) async {
     bool changed = false;
 
-    // Default: jika viewerRole tidak dispesifikasikan, tandai pesan yang dikirim oleh
-    // pihak lawan sebagai sudah dibaca
     final list = _conversations[doctorName];
     if (list != null) {
       for (var msg in list) {
@@ -411,10 +608,23 @@ class ChatNotificationService extends ChangeNotifier {
       }
     }
 
-    // Tandai juga notifikasi terkait dokter ini sebagai sudah dibaca
     for (var notif in _notifications) {
       if (notif.conversationDoctorName == doctorName && !notif.isRead) {
         if (viewerRole == null || notif.recipientRole == viewerRole) {
+          if (viewerRole == ChatSenderRole.patient &&
+              patientId != null &&
+              patientId.isNotEmpty) {
+            if (!_matchesPatient(notif, patientId: patientId)) {
+              continue;
+            }
+          } else if (viewerRole == ChatSenderRole.doctor &&
+              doctorId != null &&
+              doctorId.isNotEmpty) {
+            if (!_matchesDoctor(notif,
+                doctorId: doctorId, doctorName: doctorName)) {
+              continue;
+            }
+          }
           notif.isRead = true;
           changed = true;
         }
@@ -427,12 +637,33 @@ class ChatNotificationService extends ChangeNotifier {
     }
   }
 
-  /// Tandai semua notifikasi sebagai sudah dibaca
+  /// Tandai semua notifikasi untuk akun user tertentu sebagai sudah dibaca
+  Future<void> markAllNotificationsAsReadForUser({
+    required ChatSenderRole viewerRole,
+    String? patientId,
+    String? patientName,
+    String? doctorId,
+    String? doctorName,
+  }) async {
+    final userNotifs = getNotificationsForUser(
+      viewerRole: viewerRole,
+      patientId: patientId,
+      patientName: patientName,
+      doctorId: doctorId,
+      doctorName: doctorName,
+    );
+    for (var notif in userNotifs) {
+      notif.isRead = true;
+    }
+    await _saveToPrefs();
+    notifyListeners();
+  }
+
+  /// Tandai semua notifikasi sebagai sudah dibaca (global)
   Future<void> markAllNotificationsAsRead() async {
     for (var notif in _notifications) {
       notif.isRead = true;
     }
-    // Tandai semua pesan masuk juga sebagai terbaca
     for (var list in _conversations.values) {
       for (var msg in list) {
         msg.isRead = true;
@@ -452,6 +683,27 @@ class ChatNotificationService extends ChangeNotifier {
   /// Hapus semua notifikasi dari daftar
   Future<void> clearAllNotifications() async {
     _notifications.clear();
+    await _saveToPrefs();
+    notifyListeners();
+  }
+
+  /// Hapus semua notifikasi milik akun user tertentu
+  Future<void> clearAllNotificationsForUser({
+    required ChatSenderRole viewerRole,
+    String? patientId,
+    String? patientName,
+    String? doctorId,
+    String? doctorName,
+  }) async {
+    final userNotifs = getNotificationsForUser(
+      viewerRole: viewerRole,
+      patientId: patientId,
+      patientName: patientName,
+      doctorId: doctorId,
+      doctorName: doctorName,
+    );
+    final userNotifIds = userNotifs.map((n) => n.id).toSet();
+    _notifications.removeWhere((n) => userNotifIds.contains(n.id));
     await _saveToPrefs();
     notifyListeners();
   }
@@ -499,13 +751,17 @@ class ChatNotificationService extends ChangeNotifier {
     required ChatSenderRole senderRole,
     required String senderName,
     required String message,
+    String? chatId,
+    String? patientId,
+    String? doctorId,
     String? time,
     bool isRead = false,
   }) {
     final now = DateTime.now();
     final timeStr = time ??
         '${now.hour.toString().padLeft(2, '0')}.${now.minute.toString().padLeft(2, '0')}';
-    final notifId = 'notif_${now.millisecondsSinceEpoch}_${now.microsecond % 1000}';
+    final notifId =
+        'notif_${now.millisecondsSinceEpoch}_${++_notifSeq}';
     final recipientRole = (senderRole == ChatSenderRole.doctor)
         ? ChatSenderRole.patient
         : ChatSenderRole.doctor;
@@ -519,6 +775,9 @@ class ChatNotificationService extends ChangeNotifier {
 
     final notif = ChatNotificationItem(
       id: notifId,
+      chatId: chatId,
+      patientId: patientId,
+      doctorId: doctorId,
       conversationDoctorName: conversationDoctorName,
       doctorPhoto: doctorPhoto,
       doctorSpecialty: doctorSpecialty,
@@ -551,6 +810,8 @@ class ChatNotificationService extends ChangeNotifier {
     String? customMessage,
     String? doctorPhoto,
     String? doctorSpecialty,
+    String? patientId,
+    String? doctorId,
   }) async {
     final String msg = customMessage ??
         "Halo, bagaimana perkembangan keluhan nyeri dada dan ritme detak jantung Anda hari ini? Mohon infokan jika ada keluhan baru.";
@@ -561,6 +822,8 @@ class ChatNotificationService extends ChangeNotifier {
       senderRole: ChatSenderRole.doctor,
       doctorPhoto: doctorPhoto,
       doctorSpecialty: doctorSpecialty,
+      patientId: patientId,
+      doctorId: doctorId,
       emitNotification: true,
     );
   }
@@ -569,6 +832,8 @@ class ChatNotificationService extends ChangeNotifier {
   Future<void> simulatePatientMessage({
     required String doctorName,
     String? customMessage,
+    String? patientId,
+    String? doctorId,
   }) async {
     final patientName = getPatientName();
     final String msg = customMessage ??
@@ -579,6 +844,8 @@ class ChatNotificationService extends ChangeNotifier {
       message: msg,
       senderRole: ChatSenderRole.patient,
       senderNameOverride: patientName,
+      patientId: patientId,
+      doctorId: doctorId,
       emitNotification: true,
     );
   }
@@ -653,7 +920,8 @@ class ChatNotificationService extends ChangeNotifier {
         patientName: patientName,
         senderRole: ChatSenderRole.doctor,
         senderName: doctorName,
-        message: "Halo $patientName, Selamat datang di layanan konsultasi online HeartCare. Ada yang bisa saya bantu terkait kesehatan jantung Anda?",
+        message:
+            "Halo $patientName, Selamat datang di layanan konsultasi online HeartCare. Ada yang bisa saya bantu terkait kesehatan jantung Anda?",
         time: "14.00",
         timestamp: DateTime.now().subtract(const Duration(minutes: 30)),
         isRead: true,
@@ -666,7 +934,8 @@ class ChatNotificationService extends ChangeNotifier {
         patientName: patientName,
         senderRole: ChatSenderRole.patient,
         senderName: patientName,
-        message: "Dok, saya tadi melakukan skrining mandiri di aplikasi, hasilnya terindikasi risiko tinggi. Apa langkah awal yang harus saya lakukan?",
+        message:
+            "Dok, saya tadi melakukan skrining mandiri di aplikasi, hasilnya terindikasi risiko tinggi. Apa langkah awal yang harus saya lakukan?",
         time: "14.02",
         timestamp: DateTime.now().subtract(const Duration(minutes: 28)),
         isRead: true,
@@ -679,7 +948,8 @@ class ChatNotificationService extends ChangeNotifier {
         patientName: patientName,
         senderRole: ChatSenderRole.doctor,
         senderName: doctorName,
-        message: "Baik, jangan panik ya. Saya siap membantu evaluasi klinis. Apakah Anda merasakan keluhan fisik seperti nyeri dada menjalar, jantung berdebar, atau sesak nafas saat beraktivitas?",
+        message:
+            "Baik, jangan panik ya. Saya siap membantu evaluasi klinis. Apakah Anda merasakan keluhan fisik seperti nyeri dada menjalar, jantung berdebar, atau sesak nafas saat beraktivitas?",
         time: "14.03",
         timestamp: DateTime.now().subtract(const Duration(minutes: 27)),
         isRead: true,
@@ -692,44 +962,6 @@ class ChatNotificationService extends ChangeNotifier {
     _initConversationForDoctor('dr. Andi Pratama');
     _initConversationForDoctor('dr. Sinta Maharani');
     _initConversationForDoctor('dr. Rina Amelia');
-
-    // Tambahkan 1 pesan belum dibaca dari dr. Nurlitta Dwi agar ada demo realistis
-    final now = DateTime.now();
-    final timeStr =
-        '${now.hour.toString().padLeft(2, '0')}.${now.minute.toString().padLeft(2, '0')}';
-
-    final demoMsg = ChatMessageItem(
-      id: 'demo_unread_nurlitta',
-      doctorName: 'dr. Nurlitta Dwi',
-      doctorPhoto: 'assets/images/dokter_nurlitta.jpg',
-      doctorSpecialty: 'Spesialis Jantung & Konsultan Aritmia',
-      patientName: getPatientName(),
-      senderRole: ChatSenderRole.doctor,
-      senderName: 'dr. Nurlitta Dwi',
-      message: 'Bagaimana kondisi Anda hari ini? Jangan lupa catat tensi dan hindari begadang ya.',
-      time: timeStr,
-      timestamp: now.subtract(const Duration(minutes: 5)),
-      isRead: false,
-    );
-    _conversations['dr. Nurlitta Dwi']!.add(demoMsg);
-
-    _notifications.add(
-      ChatNotificationItem(
-        id: 'demo_notif_1',
-        conversationDoctorName: 'dr. Nurlitta Dwi',
-        doctorPhoto: 'assets/images/dokter_nurlitta.jpg',
-        doctorSpecialty: 'Spesialis Jantung & Konsultan Aritmia',
-        patientName: getPatientName(),
-        senderRole: ChatSenderRole.doctor,
-        senderName: 'dr. Nurlitta Dwi',
-        recipientRole: ChatSenderRole.patient,
-        messageSnippet:
-            'Bagaimana kondisi Anda hari ini? Jangan lupa catat tensi dan hindari begadang ya.',
-        time: timeStr,
-        timestamp: now.subtract(const Duration(minutes: 5)),
-        isRead: false,
-      ),
-    );
   }
 
   Future<void> _saveToPrefs() async {
@@ -748,11 +980,5 @@ class ChatNotificationService extends ChangeNotifier {
     } catch (e) {
       debugPrint('[ChatNotificationService] Error saving to prefs: $e');
     }
-  }
-
-  @override
-  void dispose() {
-    _notificationStreamController.close();
-    super.dispose();
   }
 }

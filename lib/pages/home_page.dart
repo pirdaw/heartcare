@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'screening_intro_page.dart';
 import 'dokter_page.dart';
 import 'emergency_page.dart';
@@ -355,12 +356,26 @@ class _HomePageState extends State<HomePage> {
                                 ),
                               ),
                             ),
-                            // TOMBOL PUSAT NOTIFIKASI CHAT DOKTER
+                            // TOMBOL PUSAT NOTIFIKASI CHAT
                             AnimatedBuilder(
                               animation: ChatNotificationService.instance,
                               builder: (context, _) {
+                                final authUser =
+                                    FirebaseAuth.instance.currentUser;
+                                final profile =
+                                    UserProfileService.instance.currentProfile;
+                                final patientId = authUser?.uid ??
+                                    authUser?.email ??
+                                    profile.nama;
+                                final patientName = profile.nama.isNotEmpty
+                                    ? profile.nama
+                                    : (authUser?.displayName ?? 'Pasien');
                                 final unreadCount = ChatNotificationService
-                                    .instance.totalUnreadNotificationCount;
+                                    .instance
+                                    .getUnreadCountForPatientAccount(
+                                  patientId: patientId,
+                                  patientName: patientName,
+                                );
 
                                 return Padding(
                                   padding: const EdgeInsets.only(right: 8),
@@ -368,7 +383,12 @@ class _HomePageState extends State<HomePage> {
                                     color: Colors.transparent,
                                     child: InkWell(
                                       onTap: () {
-                                        ChatNotificationSheet.show(context);
+                                        ChatNotificationSheet.show(
+                                          context,
+                                          viewerRole: ChatSenderRole.patient,
+                                          patientId: patientId,
+                                          patientName: patientName,
+                                        );
                                       },
                                       borderRadius: BorderRadius.circular(14),
                                       child: Stack(

@@ -82,12 +82,10 @@ class _KonsultasiDokterPageState
   StreamSubscription? _doctorStatusSub;
   bool _isDoctorOnline = true;
   final ImagePicker _picker = ImagePicker();
-  late bool _sendingAsDoctor;
 
   @override
   void initState() {
     super.initState();
-    _sendingAsDoctor = widget.isDoctorView;
     ChatNotificationService.instance.currentActiveDoctorRoom = widget.doctorName;
     ChatNotificationService.instance.markAsRead(widget.doctorName);
     _listenDoctorOnlineStatus();
@@ -246,9 +244,30 @@ class _KonsultasiDokterPageState
         resolvedPatientName = profile.nama;
       }
     } catch (_) {}
-    final isSendingDoctor = _sendingAsDoctor;
+    final isSendingDoctor = widget.isDoctorView;
     final senderRole = isSendingDoctor ? 'doctor' : 'patient';
     final senderName = isSendingDoctor ? widget.doctorName : resolvedPatientName;
+
+    // Periksa apakah ini adalah pesan pertama pasien kepada dokter tersebut
+    bool isFirstChatWithDoctor = false;
+    if (!isSendingDoctor) {
+      final alreadyReplied = await ChatService.instance.hasInitialBotReplied(
+        chatId: _activeChatId!,
+        patientId: widget.patientId,
+        doctorId: widget.doctorId,
+        doctorName: widget.doctorName,
+      );
+      if (!alreadyReplied) {
+        isFirstChatWithDoctor = true;
+        // Tandai langsung agar pesan balasan berikutnya tidak memicu balasan bot lagi
+        await ChatService.instance.markInitialBotReplied(
+          chatId: _activeChatId!,
+          patientId: widget.patientId,
+          doctorId: widget.doctorId,
+          doctorName: widget.doctorName,
+        );
+      }
+    }
 
     final now = DateTime.now();
     final timeStr =
@@ -281,9 +300,9 @@ class _KonsultasiDokterPageState
       doctorName: widget.doctorName,
     );
 
-    // Jika dikirim oleh pasien, jadwalkan balasan dokter setelah 2.5 detik
-    // (Bila pasien keluar ruangan, notifikasi floating in-app banner otomatis muncul)
-    if (!isSendingDoctor) {
+    // Pesan bot sambutan otomatis HANYA terkirim jika pasien pertama kali chat dokter tersebut.
+    // Balasan beruntun berikutnya tidak akan memicu pesan bot berulang.
+    if (!isSendingDoctor && isFirstChatWithDoctor) {
       Future.delayed(const Duration(milliseconds: 2500), () async {
         if (_activeChatId == null) return;
         final replyText = ChatNotificationService.instance.getClinicalReply(text);
@@ -1658,62 +1677,6 @@ class _KonsultasiDokterPageState
     _scrollToBottom();
   }
 
-  Future<void> _sendAttachment(String title, {String? imagePath}) async {
-    if (_activeChatId == null) {
-      await _initChat();
-    }
-    if (_activeChatId == null) return;
-
-    final profile = UserProfileService.instance.currentProfile;
-    final senderRole = widget.isDoctorView ? 'doctor' : 'patient';
-    final senderName = widget.isDoctorView
-        ? widget.doctorName
-        : (widget.patientName ??
-            (profile.nama.isNotEmpty ? profile.nama : 'Pasien'));
-
-    final path = imagePath ??
-        (title.contains("Skrining") || title.contains("EKG")
-            ? "assets/images/screening_jantung.png"
-            : null);
-
-    final now = DateTime.now();
-    final timeStr =
-        "${now.hour.toString().padLeft(2, '0')}.${now.minute.toString().padLeft(2, '0')}";
-
-    final optMsg = ChatMessage(
-      id: 'opt_att_${now.millisecondsSinceEpoch}',
-      senderId: widget.isDoctorView ? 'doctor' : 'patient',
-      senderRole: senderRole,
-      senderName: senderName,
-      message: "📎 Lampiran: $title",
-      attachmentType: title,
-      imagePath: path,
-      timestamp: now,
-      timeFormatted: timeStr,
-      isRead: false,
-    );
-
-    setState(() {
-      _optimisticMessages.add(optMsg);
-    });
-    _scrollToBottom();
-
-    await ChatService.instance.sendMessage(
-      chatId: _activeChatId!,
-      message: "📎 Lampiran: $title",
-      senderRole: senderRole,
-      senderName: senderName,
-      attachmentType: title,
-      imagePath: path,
-      patientId: widget.patientId,
-      patientName: widget.patientName ?? profile.nama,
-      doctorId: widget.doctorId,
-      doctorName: widget.doctorName,
-    );
-
-    _scrollToBottom();
-  }
-
   // ==========================================================
   // HALAMAN UTAMA
   // ==========================================================
@@ -1887,14 +1850,40 @@ class _KonsultasiDokterPageState
                         AnimatedBuilder(
                           animation: ChatNotificationService.instance,
                           builder: (context, _) {
-                            final unread = ChatNotificationService
-                                .instance.totalUnreadNotificationCount;
+                            final authUser = FirebaseAuth.instance.currentUser;
+                            final isDoctor = widget.isDoctorView;
+                            final String? docId = widget.doctorId ?? (isDoctor ? authUser?.uid : null);
+                            final String docName = widget.doctorName;
+
+                            final profile = UserProfileService.instance.currentProfile;
+                            final String? patId = widget.patientId ?? (isDoctor ? null : (authUser?.uid ?? authUser?.email ?? profile.nama));
+                            final String patName = widget.patientName ?? (profile.nama.isNotEmpty ? profile.nama : (authUser?.displayName ?? 'Pasien'));
+
+                            final unread = isDoctor
+                                ? ChatNotificationService.instance.getUnreadCountForDoctorAccount(
+                                    doctorId: docId,
+                                    doctorName: docName,
+                                  )
+                                : ChatNotificationService.instance.getUnreadCountForPatientAccount(
+                                    patientId: patId,
+                                    patientName: patName,
+                                  );
+
                             return Stack(
                               alignment: Alignment.center,
                               children: [
                                 IconButton(
                                   onPressed: () =>
-                                      ChatNotificationSheet.show(context),
+                                      ChatNotificationSheet.show(
+                                    context,
+                                    viewerRole: isDoctor
+                                        ? ChatSenderRole.doctor
+                                        : ChatSenderRole.patient,
+                                    doctorId: isDoctor ? docId : null,
+                                    doctorName: isDoctor ? docName : null,
+                                    patientId: isDoctor ? null : patId,
+                                    patientName: isDoctor ? null : patName,
+                                  ),
                                   tooltip: "Pusat Notifikasi Chat",
                                   icon: Icon(
                                     Icons.notifications_active_outlined,
@@ -2187,118 +2176,6 @@ class _KonsultasiDokterPageState
                         ),
 
                         // ==================================================
-                        // PILIHAN PENGIRIM: PASIEN / DOKTER (UNTUK PENGUJIAN & SIMULASI)
-                        // ==================================================
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 14,
-                            vertical: 7,
-                          ),
-                          decoration: BoxDecoration(
-                            color: isDark
-                                ? const Color(0xFF162032)
-                                : const Color(0xFFF1F5F9),
-                            border: Border(
-                              top: BorderSide(
-                                color: isDark
-                                    ? const Color(0xFF334155)
-                                    : const Color(0xFFE2E8F0),
-                                width: 0.8,
-                              ),
-                            ),
-                          ),
-                          child: Row(
-                            children: [
-                              Text(
-                                'Kirim sebagai:',
-                                style: TextStyle(
-                                  fontSize: 11,
-                                  fontWeight: FontWeight.w600,
-                                  color: isDark
-                                      ? const Color(0xFF94A3B8)
-                                      : const Color(0xFF64748B),
-                                ),
-                              ),
-                              const SizedBox(width: 8),
-                              _senderRoleChoice(
-                                label: 'Pasien',
-                                icon: Icons.person_rounded,
-                                isSelected: !_sendingAsDoctor,
-                                isDark: isDark,
-                                onTap: () {
-                                  setState(() {
-                                    _sendingAsDoctor = false;
-                                  });
-                                },
-                              ),
-                              const SizedBox(width: 6),
-                              _senderRoleChoice(
-                                label: 'Dokter',
-                                icon: Icons.medical_services_rounded,
-                                isSelected: _sendingAsDoctor,
-                                isDark: isDark,
-                                onTap: () {
-                                  setState(() {
-                                    _sendingAsDoctor = true;
-                                  });
-                                },
-                              ),
-                              const Spacer(),
-                              GestureDetector(
-                                onTap: () {
-                                  ChatNotificationService.instance
-                                      .simulateDoctorInitiatedMessage(
-                                    doctorName: widget.doctorName,
-                                    doctorPhoto: widget.doctorPhoto,
-                                    doctorSpecialty: widget.doctorSpecialty,
-                                  );
-                                },
-                                child: Container(
-                                  padding: const EdgeInsets.symmetric(
-                                    horizontal: 8,
-                                    vertical: 4,
-                                  ),
-                                  decoration: BoxDecoration(
-                                    color: isDark
-                                        ? const Color(0xFF0F2B3E)
-                                        : const Color(0xFFE0F2FE),
-                                    borderRadius: BorderRadius.circular(8),
-                                    border: Border.all(
-                                      color: isDark
-                                          ? const Color(0xFF1E3A5F)
-                                          : const Color(0xFFBAE6FD),
-                                    ),
-                                  ),
-                                  child: Row(
-                                    mainAxisSize: MainAxisSize.min,
-                                    children: [
-                                      Icon(
-                                        Icons.bolt_rounded,
-                                        size: 13,
-                                        color: isDark
-                                            ? const Color(0xFF38BDF8)
-                                            : const Color(0xFF0284C7),
-                                      ),
-                                      const SizedBox(width: 3),
-                                      Text(
-                                        'Simulasi Dokter',
-                                        style: TextStyle(
-                                          fontSize: 10,
-                                          fontWeight: FontWeight.bold,
-                                          color: isDark
-                                              ? const Color(0xFF38BDF8)
-                                              : const Color(0xFF0284C7),
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-
-                        // ==================================================
                         // INPUT PESAN
                         // ==================================================
 
@@ -2345,7 +2222,7 @@ class _KonsultasiDokterPageState
                                       color: isDark ? Colors.white : const Color(0xFF0F172A),
                                     ),
                                     decoration: InputDecoration(
-                                      hintText: _sendingAsDoctor
+                                      hintText: widget.isDoctorView
                                           ? "Ketik balasan sebagai dokter..."
                                           : ((!widget.isDoctorView && !_isDoctorOnline)
                                               ? "Tinggalkan pesan untuk dokter..."
@@ -2456,61 +2333,6 @@ class _KonsultasiDokterPageState
           ),
         );
       },
-    );
-  }
-
-  Widget _senderRoleChoice({
-    required String label,
-    required IconData icon,
-    required bool isSelected,
-    required bool isDark,
-    required VoidCallback onTap,
-  }) {
-    final activeBg = label == 'Dokter'
-        ? const Color(0xFF0284C7)
-        : const Color(0xFF10B981);
-
-    return GestureDetector(
-      onTap: onTap,
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 180),
-        padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 4),
-        decoration: BoxDecoration(
-          color: isSelected
-              ? activeBg
-              : (isDark ? const Color(0xFF0F172A) : Colors.white),
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(
-            color: isSelected
-                ? Colors.transparent
-                : (isDark ? const Color(0xFF334155) : const Color(0xFFCBD5E1)),
-            width: 1,
-          ),
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(
-              icon,
-              size: 13,
-              color: isSelected
-                  ? Colors.white
-                  : (isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B)),
-            ),
-            const SizedBox(width: 4),
-            Text(
-              label,
-              style: TextStyle(
-                fontSize: 11,
-                fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
-                color: isSelected
-                    ? Colors.white
-                    : (isDark ? const Color(0xFFCBD5E1) : const Color(0xFF475569)),
-              ),
-            ),
-          ],
-        ),
-      ),
     );
   }
 
