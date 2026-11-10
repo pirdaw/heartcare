@@ -1381,6 +1381,25 @@ imageUrl: 'assets/images/jantung_koroner_edukasi.jpg',
                           isDark: isDark,
                         ),
 
+                        const SizedBox(height: 10),
+
+                        _featuredArticleItem(
+                          context,
+                          imageUrl:
+                              'https://images.unsplash.com/photo-1552674605-db6ffd4facb5?w=800',
+                          category: tr('Pola Hidup', 'Lifestyle'),
+                          title: tr(
+                            'Olahraga yang Baik untuk Kesehatan Jantung',
+                            'Best Exercises for Heart Health',
+                          ),
+                          duration: tr('7 menit baca', '7 min read'),
+                          description:
+                              'Kajian ilmiah mengenai kapasitas kerja pompa jantung, takaran latihan terukur (zona denyut 70–85% DJM, durasi 20–45 menit, frekuensi 3–5 kali seminggu), uji jalan 5 menit, dan panduan latihan aerobik berbasis riset Dr. Eddy Purnomo.',
+                          content:
+                              'Latihan olahraga yang teratur, terarah, dan terprogram merupakan salah satu sarana utama dalam meningkatkan kebugaran jasmani serta menghindarkan diri dari penyakit degeneratif, khususnya penyakit jantung dan pembuluh darah.\n\nDi era modern saat ini, kemajuan teknologi yang serba otomatis kerap mengakibatkan manusia menjadi malas bergerak (gaya hidup sedentari). Menurut data survei kesehatan dan catatan rumah sakit, penyakit jantung menduduki urutan ketiga penyebab kematian di Indonesia dan peringkat pertama untuk usia di atas 45 tahun (Sahabuddin, 1992). Faktor risiko lain meliputi diabetes melitus, hipertensi, obesitas, merokok, stres, dan inaktivitas fisik.\n\nJantung bekerja sebagai pompa darah yang berukuran kira-kira sebesar kepalan tangan. Dalam satu kali pompaan, jantung mengalirkan 70–80 cc darah. Dalam satu menit pada orang dewasa normal, jantung memompa sekitar 5 liter darah, 300 liter per jam, hingga 7.200 liter darah setiap harinya (Puruhito, 1992). Otot jantung merupakan jenis otot polos involunter yang berkontraksi secara refleks tanpa diperintah otak sadar (Hay, 1987).\n\nLatihan olahraga yang teratur merangsang kerja jantung dan paru-paru sehingga meningkatkan volume sekuncup (Stroke Volume). Olahraga yang melibatkan otot-otot besar pada tungkai kaki—seperti jalan cepat, lari/joging, dan bersepeda—sangat dianjurkan karena memerlukan konsumsi oksigen tinggi dan memberikan stimulasi sirkulasi darah yang lebih optimal dibandingkan gerakan lengan.\n\nMenurut dr. Sadoso Sumosardjuno (1993), latihan aerobik berkesinambungan selama 20–30 menit membuat otot jantung lebih padat, kuat, dan efisien. Pada saat istirahat, denyut nadi individu yang terlatih berdetak lebih lambat namun memompakan darah jauh lebih bertenaga.\n\nLatihan olahraga yang benar wajib mematuhi takaran terukur:\n1. Intensitas Latihan: Diukur melalui denyut nadi maksimal (DJM = 220 - Umur). Zona sasaran efektif dan aman adalah 70% sampai 85% dari DJM (idealnya 72%–85%). Sebagai contoh, individu berusia 50 tahun (DJM = 170 bpm) harus berlatih pada zona denyut nadi 119 hingga 144,5 denyut per menit.\n2. Lama Latihan: Mempertahankan denyut di zona sasaran selama 20 hingga 45 menit per sesi.\n3. Frekuensi Latihan: Minimal 3 kali per minggu, optimal 4 hingga 5 kali per minggu karena kebugaran tubuh mulai menurun setelah 48 jam tanpa aktivitas.\n4. Urutan Sesi: Pemanasan (±10 menit), Latihan Inti (20–45 menit), dan Pendinginan (±5 menit).\n\nSebelum memulai program, lakukan uji mandiri jalan cepat 5 menit (dalam kondisi masih dapat berbicara), lalu istirahat 10 menit. Jika denyut nadi setelah 10 menit telah kembali di bawah 100 bpm dan bernapas lancar, kondisi jantung dinyatakan fit dan layak berlatih. Namun jika denyut masih di atas 100 bpm atau terasa sesak napas, periksakan diri ke dokter spesialis sebelum berlatih.\n\nBentuk latihan aerobik terbaik mencakup jalan kaki cepat, lari santai/joging, bersepeda statis, berenang, dan senam aerobik yang disesuaikan dengan kapasitas fisik masing-masing secara teratur dan berkesinambungan.',
+                          isDark: isDark,
+                        ),
+
                         const SizedBox(height: 18),
 
                         // 9. TIPS SEHAT HARIAN
