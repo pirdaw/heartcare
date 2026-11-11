@@ -6,11 +6,12 @@ import '../services/auth_service.dart';
 import '../services/chat_service.dart';
 import '../services/theme_service.dart';
 import '../services/doctor_service.dart';
+import 'home_page.dart';
 import 'konsultasi_dokter_page.dart';
 import 'welcome_page.dart';
+import 'doctor_edit_profile_page.dart';
 import '../services/chat_notification_service.dart';
 import '../widgets/chat_notification_sheet.dart';
-import 'doctor_edit_profile_page.dart';
 
 class DoctorDashboardPage extends StatefulWidget {
   const DoctorDashboardPage({super.key});
@@ -318,10 +319,9 @@ class _DoctorDashboardPageState extends State<DoctorDashboardPage> {
       await _loadDoctorProfile();
     }
   }
-
   /// Sheet Modal Lengkap untuk Edit Profil Dokter (Nama, Jenis Kelamin, SIP, Spesialis, Lokasi, Telepon, Bio)
   void _showEditDoctorProfileSheet() {
-    _openEditProfilePage();
+
   }
 
   @override
@@ -412,9 +412,11 @@ class _DoctorDashboardPageState extends State<DoctorDashboardPage> {
           ],
         ),
         actions: [
+
           // TOMBOL PUSAT NOTIFIKASI CHAT DOKTER (Desain persis seperti milik Pasien di Home)
           AnimatedBuilder(
             animation: ChatNotificationService.instance,
+
             builder: (context, _) {
               final unread = ChatNotificationService.instance
                   .getUnreadCountForDoctorAccount(
@@ -912,7 +914,7 @@ class _DoctorDashboardPageState extends State<DoctorDashboardPage> {
                                               children: [
                                                 // Tombol Edit Profil
                                                 InkWell(
-                                                  onTap: _showEditDoctorProfileSheet,
+                                                  onTap: _openEditProfilePage,
                                                   borderRadius: BorderRadius.circular(20),
                                                   child: Container(
                                                     padding: const EdgeInsets.symmetric(
