@@ -524,9 +524,11 @@ class DetailDokterPage extends StatelessWidget {
                                   context,
                                   MaterialPageRoute(
                                     builder: (context) => PilihJadwalPage(
+                                      doctorId: widget.doctorId,
                                       doctorName: nama,
                                       doctorSpecialty: spesialis,
                                       doctorPhoto: imagePath,
+                                      isOnline: widget.isOnline,
                                     ),
                                   ),
                                 );
