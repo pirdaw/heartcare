@@ -6,6 +6,7 @@ import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'doctor_service.dart';
 import 'notification_service.dart';
+import 'call_service.dart';
 
 class ChatMessage {
   final String id;
@@ -263,6 +264,7 @@ class ChatService {
     final clean = role.toLowerCase().trim();
     if (clean.isNotEmpty) {
       _activeRole = clean;
+      CallService.instance.setActiveRole(clean);
       debugPrint(
           '[ChatService] Active portal role disetel ke: $_activeRole (Session: $instanceSessionId)');
     }
@@ -321,6 +323,12 @@ class ChatService {
       final doc = change.doc;
       final data = doc.data() as Map<String, dynamic>?;
       if (data == null) continue;
+
+      // Pantau sinyal panggilan masuk ganda via chats
+      final callSession = data['callSession'] as Map<String, dynamic>?;
+      if (callSession != null) {
+        CallService.instance.handleIncomingCallFromChat(callSession, doc.id);
+      }
 
       final lastMessage = (data['lastMessage'] as String? ?? '').trim();
       if (lastMessage.isEmpty) continue;

@@ -1,13 +1,17 @@
 import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'Skrining/screening_model.dart';
 import 'package:heartcare/services/theme_service.dart';
 import 'package:heartcare/services/doctor_service.dart';
 import '../services/user_profile_service.dart';
 import '../services/profile_service.dart';
+import '../services/chat_service.dart';
 import 'home_page.dart';
 import 'konsultasi_dokter_page.dart';
 import 'pilih_jadwal_page.dart';
 import 'profil_page.dart';
+import 'video_call_page.dart';
+import '../services/call_service.dart';
 
 class DetailDokterPage extends StatelessWidget {
   final String? doctorId;
@@ -505,6 +509,111 @@ class DetailDokterPage extends StatelessWidget {
                         ),
 
                         const SizedBox(height: 12),
+
+                        // ==================================================
+                        // TOMBOL VIDEO CALL DOKTER LANGSUNG
+                        // ==================================================
+                        Container(
+                          width: double.infinity,
+                          height: 50,
+                          decoration: BoxDecoration(
+                            gradient: const LinearGradient(
+                              colors: [Color(0xFF10B981), Color(0xFF059669)],
+                              begin: Alignment.topLeft,
+                              end: Alignment.bottomRight,
+                            ),
+                            borderRadius: BorderRadius.circular(14),
+                            boxShadow: [
+                              BoxShadow(
+                                color: const Color(0xFF10B981).withValues(alpha: 0.35),
+                                blurRadius: 10,
+                                offset: const Offset(0, 4),
+                              ),
+                            ],
+                          ),
+                          child: Material(
+                            color: Colors.transparent,
+                            child: InkWell(
+                              borderRadius: BorderRadius.circular(14),
+                              onTap: () async {
+                                final userProfile =
+                                    UserProfileService.instance.currentProfile;
+                                final patientPhoto = userProfile.fotoProfil.isNotEmpty
+                                    ? userProfile.fotoProfil
+                                    : (ProfileService.instance.currentImagePath ?? '');
+                                final currentUid = FirebaseAuth.instance.currentUser?.uid ?? '';
+                                final patientId = currentUid.isNotEmpty
+                                    ? currentUid
+                                    : 'patient_${userProfile.nama.replaceAll(RegExp(r'[^a-zA-Z0-9]'), '_').toLowerCase()}';
+                                final resolvedDoctorId = (doctorId != null && doctorId!.isNotEmpty) ? doctorId! : nama;
+                                final chatId = ChatService.instance.computeChatId(
+                                  patientId: patientId,
+                                  doctorId: resolvedDoctorId,
+                                );
+
+                                final callId = await CallService.instance.createCallSession(
+                                  callerName: userProfile.nama.isNotEmpty
+                                      ? userProfile.nama
+                                      : "Pasien HeartCare",
+                                  callerPhoto: patientPhoto,
+                                  callerRole: 'patient',
+                                  receiverRole: 'doctor',
+                                  doctorId: resolvedDoctorId,
+                                  doctorName: nama,
+                                  doctorPhoto: imagePath,
+                                  doctorSpecialty: spesialis,
+                                  patientName: userProfile.nama.isNotEmpty
+                                      ? userProfile.nama
+                                      : "Pasien HeartCare",
+                                  patientPhoto: patientPhoto,
+                                  patientId: patientId,
+                                  chatId: chatId,
+                                );
+                                if (context.mounted) {
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (context) => VideoCallPage(
+                                        callId: callId,
+                                        isCaller: true,
+                                        isDoctorView: false,
+                                        doctorId: resolvedDoctorId,
+                                        doctorName: nama,
+                                        doctorPhoto: imagePath,
+                                        doctorSpecialty: spesialis,
+                                        patientName: userProfile.nama.isNotEmpty
+                                            ? userProfile.nama
+                                            : "Pasien HeartCare",
+                                        patientPhoto: patientPhoto,
+                                        patientId: patientId,
+                                        chatId: chatId,
+                                      ),
+                                    ),
+                                  );
+                                }
+                              },
+                              child: const Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Icon(
+                                    Icons.videocam_rounded,
+                                    color: Colors.white,
+                                    size: 21,
+                                  ),
+                                  SizedBox(width: 8),
+                                  Text(
+                                    'Mulai Video Call Langsung',
+                                    style: TextStyle(
+                                      fontSize: 15,
+                                      fontWeight: FontWeight.bold,
+                                      color: Colors.white,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ),
 
                         // ==================================================
                         // TOMBOL PILIH JADWAL

@@ -13,6 +13,9 @@ import '../services/theme_service.dart';
 import '../services/doctor_service.dart';
 import '../services/user_profile_service.dart';
 import '../services/profile_service.dart';
+import '../services/call_service.dart';
+import '../services/chat_service.dart';
+import 'video_call_page.dart';
 
 class PilihDokterPage extends StatefulWidget {
   final ScreeningData? initialScreeningData;
@@ -525,6 +528,63 @@ class _PilihDokterPageState extends State<PilihDokterPage> {
                                         child: _doctorCard(
                                           dokter: dokter,
                                           isDark: isDark,
+                                          onVideoCall: () async {
+                                            final userProfile =
+                                                UserProfileService.instance.currentProfile;
+                                            final patientPhoto = userProfile.fotoProfil.isNotEmpty
+                                                ? userProfile.fotoProfil
+                                                : (ProfileService.instance.currentImagePath ?? '');
+                                            final currentUid = FirebaseAuth.instance.currentUser?.uid ?? '';
+                                            final patientId = currentUid.isNotEmpty
+                                                ? currentUid
+                                                : 'patient_${userProfile.nama.replaceAll(RegExp(r'[^a-zA-Z0-9]'), '_').toLowerCase()}';
+                                            final doctorId = (dokter['id'] as String? ?? dokter['uid'] as String? ?? dokter['nama'] as String).trim();
+                                            final chatId = ChatService.instance.computeChatId(
+                                              patientId: patientId,
+                                              doctorId: doctorId,
+                                            );
+
+                                            final callId = await CallService.instance.createCallSession(
+                                              callerName: userProfile.nama.isNotEmpty
+                                                  ? userProfile.nama
+                                                  : "Pasien HeartCare",
+                                              callerPhoto: patientPhoto,
+                                              callerRole: 'patient',
+                                              receiverRole: 'doctor',
+                                              doctorId: doctorId,
+                                              doctorName: dokter['nama'] as String,
+                                              doctorPhoto: dokter['foto'] as String,
+                                              doctorSpecialty: dokter['spesialis'] as String,
+                                              patientName: userProfile.nama.isNotEmpty
+                                                  ? userProfile.nama
+                                                  : "Pasien HeartCare",
+                                              patientPhoto: patientPhoto,
+                                              patientId: patientId,
+                                              chatId: chatId,
+                                            );
+                                            if (context.mounted) {
+                                              Navigator.push(
+                                                context,
+                                                MaterialPageRoute(
+                                                  builder: (context) => VideoCallPage(
+                                                    callId: callId,
+                                                    isCaller: true,
+                                                    isDoctorView: false,
+                                                    doctorId: doctorId,
+                                                    doctorName: dokter['nama'] as String,
+                                                    doctorPhoto: dokter['foto'] as String,
+                                                    doctorSpecialty: dokter['spesialis'] as String,
+                                                    patientName: userProfile.nama.isNotEmpty
+                                                        ? userProfile.nama
+                                                        : "Pasien HeartCare",
+                                                    patientPhoto: patientPhoto,
+                                                    patientId: patientId,
+                                                    chatId: chatId,
+                                                  ),
+                                                ),
+                                              );
+                                            }
+                                          },
                                           onDirectChat: () {
                                             final userProfile =
                                                 UserProfileService.instance.currentProfile;
@@ -720,6 +780,7 @@ class _PilihDokterPageState extends State<PilihDokterPage> {
   Widget _doctorCard({
     required Map<String, dynamic> dokter,
     required bool isDark,
+    required VoidCallback onVideoCall,
     required VoidCallback onDirectChat,
   }) {
     final isOnline = dokter['isOnline'] == true;
@@ -885,64 +946,117 @@ class _PilihDokterPageState extends State<PilihDokterPage> {
 
           const SizedBox(width: 8),
 
-          // TOMBOL CHAT / PESAN
-          Material(
-            color: Colors.transparent,
-            child: InkWell(
-              borderRadius: BorderRadius.circular(12),
-              onTap: onDirectChat,
-              child: Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 10,
-                  vertical: 8,
-                ),
-                decoration: BoxDecoration(
-                  gradient: isOnline
-                      ? const LinearGradient(
-                          colors: [Color(0xFF0EA5E9), Color(0xFF0284C7)],
-                          begin: Alignment.topLeft,
-                          end: Alignment.bottomRight,
-                        )
-                      : LinearGradient(
-                          colors: isDark
-                              ? [const Color(0xFF334155), const Color(0xFF1E293B)]
-                              : [const Color(0xFF64748B), const Color(0xFF475569)],
-                          begin: Alignment.topLeft,
-                          end: Alignment.bottomRight,
-                        ),
-                  borderRadius: BorderRadius.circular(12),
-                  boxShadow: [
-                    BoxShadow(
-                      color: (isOnline
-                              ? const Color(0xFF0284C7)
-                              : const Color(0xFF475569))
-                          .withValues(alpha: 0.3),
-                      blurRadius: 6,
-                      offset: const Offset(0, 2),
-                    ),
-                  ],
-                ),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(
-                      isOnline ? Icons.chat_bubble_rounded : Icons.mark_chat_unread_outlined,
-                      color: Colors.white,
-                      size: 16,
-                    ),
-                    const SizedBox(height: 2),
-                    Text(
-                      isOnline ? 'Chat' : 'Pesan',
-                      style: const TextStyle(
-                        fontSize: 10.5,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.white,
+          // AKSI DOKTER: VIDEO CALL & CHAT
+          Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // TOMBOL VIDEO CALL LANGSUNG
+              Material(
+                color: Colors.transparent,
+                child: InkWell(
+                  borderRadius: BorderRadius.circular(10),
+                  onTap: onVideoCall,
+                  child: Container(
+                    width: 58,
+                    padding: const EdgeInsets.symmetric(vertical: 6),
+                    decoration: BoxDecoration(
+                      gradient: const LinearGradient(
+                        colors: [Color(0xFF10B981), Color(0xFF059669)],
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
                       ),
+                      borderRadius: BorderRadius.circular(10),
+                      boxShadow: [
+                        BoxShadow(
+                          color: const Color(0xFF10B981).withValues(alpha: 0.35),
+                          blurRadius: 6,
+                          offset: const Offset(0, 2),
+                        ),
+                      ],
                     ),
-                  ],
+                    child: const Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(
+                          Icons.videocam_rounded,
+                          color: Colors.white,
+                          size: 16,
+                        ),
+                        SizedBox(height: 2),
+                        Text(
+                          'Video',
+                          style: TextStyle(
+                            fontSize: 10,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
                 ),
               ),
-            ),
+
+              const SizedBox(height: 6),
+
+              // TOMBOL CHAT / PESAN
+              Material(
+                color: Colors.transparent,
+                child: InkWell(
+                  borderRadius: BorderRadius.circular(10),
+                  onTap: onDirectChat,
+                  child: Container(
+                    width: 58,
+                    padding: const EdgeInsets.symmetric(vertical: 6),
+                    decoration: BoxDecoration(
+                      gradient: isOnline
+                          ? const LinearGradient(
+                              colors: [Color(0xFF0EA5E9), Color(0xFF0284C7)],
+                              begin: Alignment.topLeft,
+                              end: Alignment.bottomRight,
+                            )
+                          : LinearGradient(
+                              colors: isDark
+                                  ? [const Color(0xFF334155), const Color(0xFF1E293B)]
+                                  : [const Color(0xFF64748B), const Color(0xFF475569)],
+                              begin: Alignment.topLeft,
+                              end: Alignment.bottomRight,
+                            ),
+                      borderRadius: BorderRadius.circular(10),
+                      boxShadow: [
+                        BoxShadow(
+                          color: (isOnline
+                                  ? const Color(0xFF0284C7)
+                                  : const Color(0xFF475569))
+                              .withValues(alpha: 0.3),
+                          blurRadius: 6,
+                          offset: const Offset(0, 2),
+                        ),
+                      ],
+                    ),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(
+                          isOnline ? Icons.chat_bubble_rounded : Icons.mark_chat_unread_outlined,
+                          color: Colors.white,
+                          size: 15,
+                        ),
+                        const SizedBox(height: 2),
+                        Text(
+                          isOnline ? 'Chat' : 'Pesan',
+                          style: const TextStyle(
+                            fontSize: 10,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            ],
           ),
         ],
       ),

@@ -9,8 +9,10 @@ import '../services/user_profile_service.dart';
 import '../services/theme_service.dart';
 import '../services/doctor_service.dart';
 import '../services/notification_service.dart';
+import '../services/call_service.dart';
 import 'home_page.dart';
 import 'konsultasi_dokter_page.dart';
+import 'video_call_page.dart';
 import 'welcome_page.dart';
 
 class DoctorDashboardPage extends StatefulWidget {
@@ -30,6 +32,9 @@ class _DoctorDashboardPageState extends State<DoctorDashboardPage> {
   void initState() {
     super.initState();
     ChatService.instance.setActiveRole('doctor');
+    CallService.instance.setActiveRole('doctor');
+    CallService.instance.initGlobalCallListener();
+    ChatService.instance.initGlobalChatNotificationListener();
     _doctorProfile = AuthService.instance.getFastDoctorProfile();
     _isOnline = _doctorProfile?['isOnline'] ?? true;
     _loadDoctorProfile();
@@ -1507,10 +1512,59 @@ class _DoctorDashboardPageState extends State<DoctorDashboardPage> {
                                     ],
                                   ),
                                 ),
-                                trailing: const Icon(
-                                  Icons.chevron_right_rounded,
-                                  color: Color(0xFF94A3B8),
-                                  size: 20,
+                                trailing: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    IconButton(
+                                      icon: const Icon(
+                                        Icons.videocam_rounded,
+                                        color: Color(0xFF0284C7),
+                                        size: 22,
+                                      ),
+                                      tooltip: "Mulai Video Call dengan Pasien",
+                                      onPressed: () async {
+                                        final callId = await CallService.instance.createCallSession(
+                                          callerName: room.doctorName,
+                                          callerPhoto: room.doctorPhoto,
+                                          callerRole: 'doctor',
+                                          receiverRole: 'patient',
+                                          doctorId: room.doctorId,
+                                          doctorName: room.doctorName,
+                                          doctorPhoto: room.doctorPhoto,
+                                          doctorSpecialty: room.doctorSpecialty,
+                                          patientId: room.patientId,
+                                          patientName: room.patientName,
+                                          patientPhoto: room.patientPhoto,
+                                          chatId: room.id,
+                                        );
+                                        if (context.mounted) {
+                                          Navigator.push(
+                                            context,
+                                            MaterialPageRoute(
+                                              builder: (context) => VideoCallPage(
+                                                callId: callId,
+                                                isCaller: true,
+                                                isDoctorView: true,
+                                                doctorId: room.doctorId,
+                                                doctorName: room.doctorName,
+                                                doctorPhoto: room.doctorPhoto,
+                                                doctorSpecialty: room.doctorSpecialty,
+                                                patientName: room.patientName,
+                                                patientPhoto: room.patientPhoto,
+                                                patientId: room.patientId,
+                                                chatId: room.id,
+                                              ),
+                                            ),
+                                          );
+                                        }
+                                      },
+                                    ),
+                                    const Icon(
+                                      Icons.chevron_right_rounded,
+                                      color: Color(0xFF94A3B8),
+                                      size: 20,
+                                    ),
+                                  ],
                                 ),
                                 onTap: () {
                                   Navigator.push(

@@ -15,6 +15,8 @@ import '../services/user_profile_service.dart';
 import '../services/chat_service.dart';
 import '../services/doctor_service.dart';
 import '../services/notification_service.dart';
+import '../services/call_service.dart';
+import 'video_call_page.dart';
 
 class ChatItem {
   final String message;
@@ -335,6 +337,59 @@ class _KonsultasiDokterPageState
     }
 
     _scrollToBottom();
+  }
+
+  Future<void> _openVideoCall() async {
+    UserProfileData? profile;
+    try {
+      profile = UserProfileService.instance.currentProfile;
+    } catch (_) {}
+
+    final resolvedPatientName = _patientName ??
+        widget.patientName ??
+        (profile != null && profile.nama.isNotEmpty ? profile.nama : "Pasien HeartCare");
+    final resolvedPatientPhoto = _patientPhoto ??
+        widget.patientPhoto ??
+        (profile != null && profile.fotoProfil.isNotEmpty
+            ? profile.fotoProfil
+            : ProfileService.instance.currentImagePath);
+
+    final isDoctor = widget.isDoctorView;
+    final callId = await CallService.instance.createCallSession(
+      callerName: isDoctor ? widget.doctorName : resolvedPatientName,
+      callerPhoto: isDoctor ? widget.doctorPhoto : resolvedPatientPhoto,
+      callerRole: isDoctor ? 'doctor' : 'patient',
+      receiverRole: isDoctor ? 'patient' : 'doctor',
+      doctorId: widget.doctorId,
+      doctorName: widget.doctorName,
+      doctorPhoto: widget.doctorPhoto,
+      doctorSpecialty: widget.doctorSpecialty,
+      patientId: widget.patientId,
+      patientName: resolvedPatientName,
+      patientPhoto: resolvedPatientPhoto,
+      chatId: _activeChatId,
+    );
+
+    if (!mounted) return;
+
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => VideoCallPage(
+          callId: callId,
+          isCaller: true,
+          isDoctorView: widget.isDoctorView,
+          doctorId: widget.doctorId,
+          doctorName: widget.doctorName,
+          doctorPhoto: widget.doctorPhoto,
+          doctorSpecialty: widget.doctorSpecialty,
+          patientName: resolvedPatientName,
+          patientPhoto: resolvedPatientPhoto,
+          patientId: widget.patientId,
+          chatId: _activeChatId,
+        ),
+      ),
+    );
   }
 
   void _showAttachmentOptions() {
@@ -1928,6 +1983,24 @@ class _KonsultasiDokterPageState
                           ),
                         ),
 
+                        // TOMBOL VIDEO CALL (HEADER)
+                        Container(
+                          margin: const EdgeInsets.only(right: 4),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFF0284C7).withValues(alpha: isDark ? 0.22 : 0.10),
+                            shape: BoxShape.circle,
+                          ),
+                          child: IconButton(
+                            onPressed: _openVideoCall,
+                            tooltip: "Mulai Video Call Langsung",
+                            icon: const Icon(
+                              Icons.videocam_rounded,
+                              size: 22,
+                              color: Color(0xFF0284C7),
+                            ),
+                          ),
+                        ),
+
                         // TOMBOL ATUR PENGINGAT (HEADER)
                         IconButton(
                           onPressed: showReminderSheet,
@@ -3361,6 +3434,43 @@ class _KonsultasiDokterPageState
                           ),
                           style: ElevatedButton.styleFrom(
                             backgroundColor: const Color(0xFF0D9488),
+                            elevation: 0,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+
+                    const SizedBox(height: 8),
+
+                    // TOMBOL MULAI VIDEO CALL LANGSUNG
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                      child: SizedBox(
+                        width: double.infinity,
+                        height: 38,
+                        child: ElevatedButton.icon(
+                          onPressed: () {
+                            Navigator.pop(context);
+                            _openVideoCall();
+                          },
+                          icon: const Icon(
+                            Icons.videocam_rounded,
+                            size: 18,
+                            color: Colors.white,
+                          ),
+                          label: const Text(
+                            "Mulai Video Call Dokter Sekarang",
+                            style: TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.white,
+                            ),
+                          ),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: const Color(0xFF0284C7),
                             elevation: 0,
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(10),

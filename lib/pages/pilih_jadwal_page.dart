@@ -1,5 +1,8 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:heartcare/services/theme_service.dart';
+import '../services/user_profile_service.dart';
+import '../services/profile_service.dart';
 import 'home_page.dart';
 import 'konfirmasi_jadwal_page.dart';
 import 'profil_page.dart';
@@ -26,6 +29,7 @@ class _PilihJadwalPageState extends State<PilihJadwalPage> {
   int selectedDay = 2;
   String selectedDayName = 'Sel';
   String? selectedTime = '09.00';
+  String selectedConsultationType = 'video'; // 'video' atau 'chat'
 
 
   final List<Map<String, String>> dates = [
@@ -227,7 +231,14 @@ class _PilihJadwalPageState extends State<PilihJadwalPage> {
                           }).toList(),
                         ),
 
-                        const SizedBox(height: 28),
+                        const SizedBox(height: 24),
+
+                        // ==========================================
+                        // METODE KONSULTASI: VIDEO CALL VS CHAT
+                        // ==========================================
+                        _buildConsultationTypeSelector(isDark),
+
+                        const SizedBox(height: 26),
 
                         // PAGI
                         _timeSection(
@@ -490,10 +501,191 @@ class _PilihJadwalPageState extends State<PilihJadwalPage> {
     );
   }
 
+  Widget _buildConsultationTypeSelector(bool isDark) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            Icon(
+              Icons.video_camera_front_rounded,
+              size: 18,
+              color: isDark ? const Color(0xFF38BDF8) : const Color(0xFF0284C7),
+            ),
+            const SizedBox(width: 8),
+            Text(
+              "Pilih Metode Konsultasi:",
+              style: TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.bold,
+                color: isDark ? Colors.white : const Color(0xFF0F172A),
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 10),
+        Row(
+          children: [
+            // Opsi 1: Video Call Langsung
+            Expanded(
+              child: _consultationTypeCard(
+                isDark: isDark,
+                type: 'video',
+                title: 'Video Call',
+                subtitle: 'Tatap muka & bicara langsung keluhan',
+                icon: Icons.videocam_rounded,
+                badge: 'Rekomendasi',
+                badgeColor: const Color(0xFF10B981),
+              ),
+            ),
+            const SizedBox(width: 10),
+            // Opsi 2: Chat Online
+            Expanded(
+              child: _consultationTypeCard(
+                isDark: isDark,
+                type: 'chat',
+                title: 'Chat Online',
+                subtitle: 'Konsultasi via chat teks & kirim foto',
+                icon: Icons.chat_bubble_rounded,
+              ),
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+
+  Widget _consultationTypeCard({
+    required bool isDark,
+    required String type,
+    required String title,
+    required String subtitle,
+    required IconData icon,
+    String? badge,
+    Color? badgeColor,
+  }) {
+    final bool isSelected = selectedConsultationType == type;
+
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: () {
+          setState(() {
+            selectedConsultationType = type;
+          });
+        },
+        borderRadius: BorderRadius.circular(14),
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+          decoration: BoxDecoration(
+            color: isSelected
+                ? (isDark
+                    ? const Color(0xFF0284C7).withValues(alpha: 0.18)
+                    : const Color(0xFFE0F2FE))
+                : (isDark ? const Color(0xFF1E293B) : Colors.white),
+            borderRadius: BorderRadius.circular(14),
+            border: Border.all(
+              color: isSelected
+                  ? const Color(0xFF0284C7)
+                  : (isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0)),
+              width: isSelected ? 2 : 1,
+            ),
+            boxShadow: isSelected
+                ? [
+                    BoxShadow(
+                      color: const Color(0xFF0284C7).withValues(alpha: 0.18),
+                      blurRadius: 8,
+                      offset: const Offset(0, 3),
+                    ),
+                  ]
+                : null,
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Container(
+                    width: 32,
+                    height: 32,
+                    decoration: BoxDecoration(
+                      color: isSelected
+                          ? const Color(0xFF0284C7)
+                          : (isDark ? const Color(0xFF334155) : const Color(0xFFF1F5F9)),
+                      shape: BoxShape.circle,
+                    ),
+                    child: Icon(
+                      icon,
+                      size: 17,
+                      color: isSelected
+                          ? Colors.white
+                          : (isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B)),
+                    ),
+                  ),
+                  const Spacer(),
+                  if (badge != null)
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                      decoration: BoxDecoration(
+                        color: (badgeColor ?? const Color(0xFF10B981)).withValues(alpha: 0.15),
+                        borderRadius: BorderRadius.circular(6),
+                      ),
+                      child: Text(
+                        badge,
+                        style: TextStyle(
+                          fontSize: 8.5,
+                          fontWeight: FontWeight.bold,
+                          color: badgeColor ?? const Color(0xFF10B981),
+                        ),
+                      ),
+                    ),
+                ],
+              ),
+              const SizedBox(height: 8),
+              Text(
+                title,
+                style: TextStyle(
+                  fontSize: 13,
+                  fontWeight: FontWeight.bold,
+                  color: isSelected
+                      ? const Color(0xFF0284C7)
+                      : (isDark ? Colors.white : const Color(0xFF0F172A)),
+                ),
+              ),
+              const SizedBox(height: 2),
+              Text(
+                subtitle,
+                style: TextStyle(
+                  fontSize: 10,
+                  height: 1.25,
+                  color: isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
   void _onConfirmSchedule() {
     if (selectedTime == null) return;
 
     final formattedDate = '$selectedDayName, $selectedDay September 2026';
+    UserProfileData? profile;
+    try {
+      profile = UserProfileService.instance.currentProfile;
+    } catch (_) {}
+    final resolvedPatientName = profile != null && profile.nama.isNotEmpty
+        ? profile.nama
+        : 'Pasien HeartCare';
+    final resolvedPatientPhoto = profile != null && profile.fotoProfil.isNotEmpty
+        ? profile.fotoProfil
+        : ProfileService.instance.currentImagePath;
+    String? currentUid;
+    try {
+      currentUid = FirebaseAuth.instance.currentUser?.uid;
+    } catch (_) {}
 
     Navigator.push(
       context,
@@ -505,6 +697,10 @@ class _PilihJadwalPageState extends State<PilihJadwalPage> {
           doctorPhoto: widget.doctorPhoto,
           selectedDate: formattedDate,
           selectedTime: selectedTime!,
+          consultationType: selectedConsultationType,
+          patientName: resolvedPatientName,
+          patientPhoto: resolvedPatientPhoto,
+          patientId: currentUid,
         ),
       ),
     );

@@ -5,6 +5,12 @@ allprojects {
     }
 }
 
+rootProject.extra.apply {
+    set("compileSdkVersion", 36)
+    set("minSdkVersion", 24)
+    set("targetSdkVersion", 35)
+}
+
 val newBuildDir: Directory =
     rootProject.layout.buildDirectory
         .dir("../../build")
@@ -17,6 +23,28 @@ subprojects {
 }
 subprojects {
     project.evaluationDependsOn(":app")
+}
+
+subprojects {
+    if (project.name != "app") {
+        val configureAction: Project.() -> Unit = {
+            plugins.withId("com.android.library") {
+                extensions.configure<com.android.build.gradle.LibraryExtension> {
+                    compileSdk = 36
+                    defaultConfig {
+                        minSdk = 24
+                    }
+                }
+            }
+        }
+        if (state.executed) {
+            configureAction()
+        } else {
+            afterEvaluate {
+                configureAction()
+            }
+        }
+    }
 }
 
 tasks.register<Delete>("clean") {

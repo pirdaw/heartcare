@@ -4,12 +4,18 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'firebase_options.dart';
 import 'pages/welcome_page.dart';
+import 'widgets/auth_gate.dart';
 import 'services/theme_service.dart';
 import 'services/notification_service.dart';
 import 'services/chat_service.dart';
+import 'services/call_service.dart';
+import 'services/webrtc_view_factory.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  // Daftarkan view factory kamera WebRTC (Web)
+  registerWebRtcViewFactories();
 
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
@@ -23,6 +29,9 @@ Future<void> main() async {
 
   // Aktifkan listener notifikasi chat real-time multi-port & multi-device
   ChatService.instance.initGlobalChatNotificationListener();
+
+  // Aktifkan listener panggilan video real-time masuk (WhatsApp Call)
+  CallService.instance.initGlobalCallListener();
 
   runApp(const HeartCareApp());
 }
@@ -62,7 +71,7 @@ class HeartCareApp extends StatelessWidget {
             ),
             useMaterial3: true,
           ),
-          home: const WelcomePage(),
+          home: const AuthGate(),
         );
       },
     );
