@@ -128,7 +128,19 @@ class ScreeningResultPage extends StatelessWidget {
                               color: isDark ? Colors.white : const Color(0xFF1E293B),
                               size: 26,
                             ),
-                            onPressed: () => Navigator.pop(context),
+                            onPressed: () {
+                              if (Navigator.canPop(context)) {
+                                Navigator.pop(context);
+                              } else {
+                                Navigator.pushAndRemoveUntil(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) => const HomePage(),
+                                  ),
+                                  (route) => false,
+                                );
+                              }
+                            },
                           ),
                         ),
                       ),
@@ -327,25 +339,8 @@ class ScreeningResultPage extends StatelessWidget {
                   ),
                 ),
 
-                // Bottom Navigation Bar (Tab Home aktif pada Figma layar 4)
-                HeartCareBottomNavBar(
-                  currentIndex: 0,
-                  onTap: (index) {
-                    if (index == 0) {
-                      Navigator.pushAndRemoveUntil(
-                        context,
-                        MaterialPageRoute(builder: (_) => const HomePage()),
-                        (route) => false,
-                      );
-                    } else if (index == 2) {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                            builder: (_) => const PilihDokterPage()),
-                      );
-                    }
-                  },
-                ),
+                // Bottom Navigation Bar
+                const HeartCareBottomNavBar(currentIndex: 1),
               ],
             ),
                 ],

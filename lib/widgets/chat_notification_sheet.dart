@@ -879,10 +879,16 @@ class _ChatNotificationSheetState extends State<ChatNotificationSheet> {
                                   );
                                 },
                               )
-                            : const Icon(
-                                Icons.person,
-                                color: Color(0xFF10B981),
-                                size: 28,
+                            : Image.asset(
+                                'assets/images/profile_woman.png',
+                                fit: BoxFit.cover,
+                                errorBuilder: (context, error, stackTrace) {
+                                  return const Icon(
+                                    Icons.person,
+                                    color: Color(0xFF10B981),
+                                    size: 28,
+                                  );
+                                },
                               ),
                       ),
                     ),

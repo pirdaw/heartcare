@@ -68,7 +68,13 @@ class _HomePageState extends State<HomePage> {
         MaterialPageRoute(
           builder: (context) => const ScreeningIntroPage(),
         ),
-      );
+      ).then((_) {
+        if (mounted) {
+          setState(() {
+            _selectedIndex = 0;
+          });
+        }
+      });
       return;
     }
 
@@ -81,7 +87,13 @@ class _HomePageState extends State<HomePage> {
         MaterialPageRoute(
           builder: (context) => const PilihDokterPage(),
         ),
-      );
+      ).then((_) {
+        if (mounted) {
+          setState(() {
+            _selectedIndex = 0;
+          });
+        }
+      });
       return;
     }
 
@@ -94,7 +106,13 @@ class _HomePageState extends State<HomePage> {
         MaterialPageRoute(
           builder: (context) => const RiwayatPage(),
         ),
-      );
+      ).then((_) {
+        if (mounted) {
+          setState(() {
+            _selectedIndex = 0;
+          });
+        }
+      });
       return;
     }
 
@@ -107,7 +125,13 @@ class _HomePageState extends State<HomePage> {
         MaterialPageRoute(
           builder: (context) => const ProfilPage(),
         ),
-      );
+      ).then((_) {
+        if (mounted) {
+          setState(() {
+            _selectedIndex = 0;
+          });
+        }
+      });
       return;
     }
   }
@@ -2053,32 +2077,34 @@ final Color borderColor = isDark ? const Color(0xFF1E3A5F) : const Color(0xFFBAE
     final Color activeColor = isDark ? const Color(0xFF38BDF8) : const Color(0xFF1479F5);
     final Color inactiveColor = isDark ? const Color(0xFF94A3B8) : Colors.black87;
 
-    return GestureDetector(
-      onTap: () => _onItemTapped(index),
-      behavior: HitTestBehavior.opaque,
-      child: SizedBox(
-        width: 55,
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(
-              icon,
-              size: 23,
-              color: active ? activeColor : inactiveColor,
-            ),
-            const SizedBox(height: 2),
-            Text(
-              label,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: TextStyle(
-                fontSize: 11,
-                fontWeight: active ? FontWeight.bold : FontWeight.normal,
+    return Expanded(
+      child: GestureDetector(
+        onTap: () => _onItemTapped(index),
+        behavior: HitTestBehavior.opaque,
+        child: Container(
+          padding: const EdgeInsets.symmetric(vertical: 4),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(
+                icon,
+                size: 23,
                 color: active ? activeColor : inactiveColor,
               ),
-            ),
-          ],
+              const SizedBox(height: 2),
+              Text(
+                label,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(
+                  fontSize: 11,
+                  fontWeight: active ? FontWeight.bold : FontWeight.normal,
+                  color: active ? activeColor : inactiveColor,
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );

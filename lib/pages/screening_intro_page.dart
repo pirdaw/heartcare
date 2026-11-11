@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'home_page.dart';
 import 'Skrining/medical_clipboard_illustration.dart';
 import 'Skrining/custom_bottom_nav_bar.dart';
 import 'Skrining/screening_input_page.dart';
@@ -123,7 +124,19 @@ class ScreeningIntroPage extends StatelessWidget {
                                 color: isDark ? Colors.white : const Color(0xFF1E293B),
                                 size: 26,
                               ),
-                              onPressed: () => Navigator.pop(context),
+                              onPressed: () {
+                                if (Navigator.canPop(context)) {
+                                  Navigator.pop(context);
+                                } else {
+                                  Navigator.pushAndRemoveUntil(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (context) => const HomePage(),
+                                    ),
+                                    (route) => false,
+                                  );
+                                }
+                              },
                             ),
                           ),
                         ),

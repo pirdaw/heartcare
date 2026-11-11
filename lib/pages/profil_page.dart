@@ -7,7 +7,7 @@ import 'package:heartcare/pages/home_page.dart';
 import 'package:heartcare/pages/dokter_page.dart';
 import 'package:heartcare/pages/riwayat_page.dart';
 import 'package:heartcare/pages/login_page.dart';
-import 'package:heartcare/pages/Skrining/screening_input_page.dart';
+import 'package:heartcare/pages/screening_intro_page.dart';
 import '../services/profile_service.dart';
 import '../services/theme_service.dart';
 import '../services/auth_service.dart';
@@ -910,51 +910,53 @@ class _ProfilPageState extends State<ProfilPage> {
         isDark ? const Color(0xFF38BDF8) : const Color(0xFF1479F5);
     final inactiveColor = isDark ? const Color(0xFF94A3B8) : Colors.black87;
 
-    return GestureDetector(
-      behavior: HitTestBehavior.opaque,
-      onTap: () {
-        if (active) return;
-        if (index == 0) {
-          Navigator.pushAndRemoveUntil(
-            context,
-            MaterialPageRoute(builder: (context) => const HomePage()),
-            (route) => false,
-          );
-        } else if (index == 1) {
-          Navigator.push(
+    return Expanded(
+      child: GestureDetector(
+        behavior: HitTestBehavior.opaque,
+        onTap: () {
+          if (active) return;
+          if (index == 0) {
+            Navigator.pushAndRemoveUntil(
               context,
-              MaterialPageRoute(
-                  builder: (context) => const ScreeningInputPage()));
-        } else if (index == 2) {
-          Navigator.push(
-              context,
-              MaterialPageRoute(
-                  builder: (context) => const PilihDokterPage()));
-        } else if (index == 3) {
-          Navigator.push(context,
-              MaterialPageRoute(builder: (context) => const RiwayatPage()));
-        }
-      },
-      child: SizedBox(
-        width: 55,
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(
-              icon,
-              size: 24,
-              color: active ? activeColor : inactiveColor,
-            ),
-            const SizedBox(height: 2),
-            Text(
-              label,
-              style: TextStyle(
-                fontSize: 10.5,
-                fontWeight: active ? FontWeight.bold : FontWeight.normal,
+              MaterialPageRoute(builder: (context) => const HomePage()),
+              (route) => false,
+            );
+          } else if (index == 1) {
+            Navigator.push(
+                context,
+                MaterialPageRoute(
+                    builder: (context) => const ScreeningIntroPage()));
+          } else if (index == 2) {
+            Navigator.push(
+                context,
+                MaterialPageRoute(
+                    builder: (context) => const PilihDokterPage()));
+          } else if (index == 3) {
+            Navigator.push(context,
+                MaterialPageRoute(builder: (context) => const RiwayatPage()));
+          }
+        },
+        child: Container(
+          padding: const EdgeInsets.symmetric(vertical: 4),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(
+                icon,
+                size: 24,
                 color: active ? activeColor : inactiveColor,
               ),
-            ),
-          ],
+              const SizedBox(height: 2),
+              Text(
+                label,
+                style: TextStyle(
+                  fontSize: 10.5,
+                  fontWeight: active ? FontWeight.bold : FontWeight.normal,
+                  color: active ? activeColor : inactiveColor,
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );

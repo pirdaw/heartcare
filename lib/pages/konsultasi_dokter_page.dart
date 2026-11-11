@@ -12,6 +12,7 @@ import 'package:heartcare/pages/profil_page.dart';
 import 'package:heartcare/services/theme_service.dart';
 import 'package:heartcare/services/language_service.dart';
 import '../services/user_profile_service.dart';
+import '../services/profile_service.dart';
 import '../services/chat_service.dart';
 import '../services/doctor_service.dart';
 import '../services/chat_notification_service.dart';
@@ -82,10 +83,15 @@ class _KonsultasiDokterPageState
   StreamSubscription? _doctorStatusSub;
   bool _isDoctorOnline = true;
   final ImagePicker _picker = ImagePicker();
+  String? _resolvedPatientPhoto;
 
   @override
   void initState() {
     super.initState();
+    _resolvedPatientPhoto = widget.patientPhoto;
+    if (widget.isDoctorView && (_resolvedPatientPhoto == null || _resolvedPatientPhoto!.isEmpty)) {
+      _loadPatientPhotoIfAvailable();
+    }
     ChatNotificationService.instance.currentActiveDoctorRoom = widget.doctorName;
     ChatNotificationService.instance.markAsRead(widget.doctorName);
     _listenDoctorOnlineStatus();
@@ -117,6 +123,35 @@ class _KonsultasiDokterPageState
     }
     _isLoadingChat = false;
     _initChat();
+  }
+
+  Future<void> _loadPatientPhotoIfAvailable() async {
+    final room = ChatService.instance.getRoomById(widget.chatId);
+    if (room != null && room.patientPhoto.isNotEmpty) {
+      if (mounted) {
+        setState(() {
+          _resolvedPatientPhoto = room.patientPhoto;
+        });
+      }
+      return;
+    }
+
+    if (widget.patientId != null && widget.patientId!.isNotEmpty) {
+      try {
+        final doc = await FirebaseFirestore.instance
+            .collection('users')
+            .doc(widget.patientId)
+            .get();
+        if (doc.exists && mounted) {
+          final photo = doc.data()?['fotoProfil'] as String?;
+          if (photo != null && photo.isNotEmpty) {
+            setState(() {
+              _resolvedPatientPhoto = photo;
+            });
+          }
+        }
+      } catch (_) {}
+    }
   }
 
   Future<void> _initChat() async {
@@ -1748,18 +1783,11 @@ class _KonsultasiDokterPageState
                         // FOTO DOKTER
                         // FOTO / AVATAR HEADER
                         widget.isDoctorView
-                            ? Container(
+                            ? ProfileService.buildPatientAvatar(
+                                photo: _resolvedPatientPhoto ?? widget.patientPhoto,
                                 width: 44,
                                 height: 44,
-                                decoration: const BoxDecoration(
-                                  color: Color(0xFFE0F2FE),
-                                  shape: BoxShape.circle,
-                                ),
-                                child: const Icon(
-                                  Icons.person_rounded,
-                                  color: Color(0xFF0284C7),
-                                  size: 26,
-                                ),
+                                isDark: isDark,
                               )
                             : _doctorImage(
                                 width: 44,
@@ -2350,18 +2378,11 @@ class _KonsultasiDokterPageState
       crossAxisAlignment: CrossAxisAlignment.end,
       children: [
         widget.isDoctorView
-            ? Container(
+            ? ProfileService.buildPatientAvatar(
+                photo: _resolvedPatientPhoto ?? widget.patientPhoto,
                 width: 32,
                 height: 32,
-                decoration: const BoxDecoration(
-                  color: Color(0xFFE0F2FE),
-                  shape: BoxShape.circle,
-                ),
-                child: const Icon(
-                  Icons.person_rounded,
-                  color: Color(0xFF0284C7),
-                  size: 20,
-                ),
+                isDark: isDark,
               )
             : _doctorImage(
                 width: 32,

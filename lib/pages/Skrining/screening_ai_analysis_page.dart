@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../home_page.dart';
 import 'package:heartcare/pages/Skrining/screening_model.dart';
 import 'screening_result_page.dart';
 import 'custom_bottom_nav_bar.dart';
@@ -197,7 +198,19 @@ class _ScreeningAiAnalysisPageState extends State<ScreeningAiAnalysisPage>
                               color: isDark ? Colors.white : const Color(0xFF1E293B),
                               size: 26,
                             ),
-                            onPressed: () => Navigator.pop(context),
+                            onPressed: () {
+                              if (Navigator.canPop(context)) {
+                                Navigator.pop(context);
+                              } else {
+                                Navigator.pushAndRemoveUntil(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) => const HomePage(),
+                                  ),
+                                  (route) => false,
+                                );
+                              }
+                            },
                           ),
                         ),
                       ),

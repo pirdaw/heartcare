@@ -1209,29 +1209,31 @@ class _RiwayatPageState extends State<RiwayatPage> {
     final inactiveColor =
         isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B);
 
-    return GestureDetector(
-      behavior: HitTestBehavior.opaque,
-      onTap: onTap,
-      child: SizedBox(
-        width: 58,
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(
-              icon,
-              size: 23,
-              color: active ? activeColor : inactiveColor,
-            ),
-            const SizedBox(height: 2),
-            Text(
-              title,
-              style: TextStyle(
-                fontSize: 10.5,
+    return Expanded(
+      child: GestureDetector(
+        behavior: HitTestBehavior.opaque,
+        onTap: onTap,
+        child: Container(
+          padding: const EdgeInsets.symmetric(vertical: 4),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(
+                icon,
+                size: 23,
                 color: active ? activeColor : inactiveColor,
-                fontWeight: active ? FontWeight.bold : FontWeight.w500,
               ),
-            ),
-          ],
+              const SizedBox(height: 2),
+              Text(
+                title,
+                style: TextStyle(
+                  fontSize: 10.5,
+                  color: active ? activeColor : inactiveColor,
+                  fontWeight: active ? FontWeight.bold : FontWeight.w500,
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );

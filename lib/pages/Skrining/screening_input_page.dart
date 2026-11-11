@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../home_page.dart';
 import 'custom_bottom_nav_bar.dart';
 import 'screening_model.dart';
 import 'screening_review_page.dart';
@@ -244,7 +245,15 @@ class _ScreeningInputPageState extends State<ScreeningInputPage> {
         _currentStep--;
       });
     } else {
-      Navigator.pop(context);
+      if (Navigator.canPop(context)) {
+        Navigator.pop(context);
+      } else {
+        Navigator.pushAndRemoveUntil(
+          context,
+          MaterialPageRoute(builder: (_) => const HomePage()),
+          (route) => false,
+        );
+      }
     }
   }
 
