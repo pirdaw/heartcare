@@ -359,17 +359,8 @@ class _DoctorDashboardPageState extends State<DoctorDashboardPage> {
         backgroundColor: Colors.transparent,
         elevation: 0,
         scrolledUnderElevation: 0,
-        titleSpacing: Navigator.canPop(context) ? 0 : 16,
-        leading: Navigator.canPop(context)
-            ? IconButton(
-                icon: Icon(
-                  Icons.arrow_back_rounded,
-                  color: isDark ? Colors.white : const Color(0xFF0F172A),
-                ),
-                tooltip: 'Kembali',
-                onPressed: () => Navigator.pop(context),
-              )
-            : null,
+        automaticallyImplyLeading: false,
+        titleSpacing: 16,
         title: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -1113,29 +1104,13 @@ class _DoctorDashboardPageState extends State<DoctorDashboardPage> {
                             const SizedBox(height: 14),
 
                             // STATISTIK KILAT
-                            Row(
-                              children: [
-                        Expanded(
-                          child: _statCard(
-                            isDark: isDark,
-                            icon: Icons.forum_rounded,
-                            color: const Color(0xFF0284C7),
-                            label: 'Pesan Masuk',
-                            value: 'Real-Time',
-                          ),
-                        ),
-                        const SizedBox(width: 10),
-                        Expanded(
-                          child: _statCard(
-                            isDark: isDark,
-                            icon: Icons.verified_user_rounded,
-                            color: const Color(0xFF10B981),
-                            label: 'Keamanan',
-                            value: 'Firebase Auth',
-                          ),
-                        ),
-                      ],
-                    ),
+                            _statCard(
+                              isDark: isDark,
+                              icon: Icons.forum_rounded,
+                              color: const Color(0xFF0284C7),
+                              label: 'Pesan Masuk',
+                              value: 'Real-Time',
+                            ),
 
                     const SizedBox(height: 20),
 
