@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
+import 'package:permission_handler/permission_handler.dart';
 import 'firebase_options.dart';
 import 'pages/welcome_page.dart';
 import 'widgets/auth_gate.dart';
@@ -32,6 +33,13 @@ Future<void> main() async {
 
   // Aktifkan listener panggilan video real-time masuk (WhatsApp Call)
   CallService.instance.initGlobalCallListener();
+
+  // Minta izin notifikasi sistem pada Android (Android 13/14+)
+  if (!kIsWeb) {
+    try {
+      await Permission.notification.request();
+    } catch (_) {}
+  }
 
   runApp(const HeartCareApp());
 }

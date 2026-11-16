@@ -121,9 +121,21 @@ class CallService extends ChangeNotifier {
   }
 
   void _showIncomingCallUi(String callId, Map<String, dynamic> data) {
+    final callerName = data['callerName'] as String? ?? 'Panggilan Masuk';
+    final callerPhoto = data['callerPhoto'] as String?;
+    final callerRole = data['callerRole'] as String? ?? 'patient';
+    final isCallerDoctor = callerRole == 'doctor';
+
+    // Picu notifikasi sistem Android pop-up / heads-up agar bergetar & muncul di HP meskipun aplikasi di-background
+    NotificationService.triggerSystemNotification(
+      title: isCallerDoctor ? '📞 Panggilan Video dari Dokter' : '📞 Panggilan Video Masuk Pasien',
+      message: '$callerName memanggil Anda untuk telekonsultasi jantung...',
+      isCall: true,
+    );
+
     final context = _getValidContext();
     if (context == null) {
-      debugPrint('[CallService] Context navigator belum siap untuk menampilkan incoming call.');
+      debugPrint('[CallService] Context navigator belum siap untuk menampilkan incoming call sheet, notifikasi sistem telah ditembakkan.');
       return;
     }
 
@@ -132,11 +144,6 @@ class CallService extends ChangeNotifier {
 
     // 1. Mainkan nada dering masuk WhatsApp
     VideoCallAudioService.instance.playWhatsAppIncomingRingtone();
-
-    final callerName = data['callerName'] as String? ?? 'Panggilan Masuk';
-    final callerPhoto = data['callerPhoto'] as String?;
-    final callerRole = data['callerRole'] as String? ?? 'patient';
-    final isCallerDoctor = callerRole == 'doctor';
 
     showGeneralDialog(
       context: context,

@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:heartcare/pages/home_page.dart';
 import 'package:heartcare/pages/dokter_page.dart';
@@ -202,6 +203,36 @@ class _PengaturanPageState extends State<PengaturanPage> {
                     message:
                         "Batasi asupan garam < 5g (1 sdt) per hari untuk menjaga tekanan darah dan elastisitas arteri jantung.",
                   );
+                },
+                isDark: isDark,
+              ),
+              // 6. Uji Coba Saat Aplikasi Diminimalkan / Ditutup (Jeda 5 Detik)
+              _buildTestNotifTile(
+                icon: Icons.timer_outlined,
+                iconColor: const Color(0xFF10B981),
+                bgColor: const Color(0xFFD1FAE5),
+                title: "6. Tes Notifikasi Sistem (Jeda 5 Detik)",
+                subtitle: "Ketuk lalu segera minimize/tutup app untuk melihat pop-up di layar HP",
+                onTap: () {
+                  Navigator.pop(context);
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text(
+                        "⏱️ Timer 5 detik aktif! Silakan tekan tombol Home / minimize aplikasi sekarang.",
+                      ),
+                      duration: Duration(seconds: 4),
+                      behavior: SnackBarBehavior.floating,
+                      backgroundColor: Color(0xFF0284C7),
+                    ),
+                  );
+                  Timer(const Duration(seconds: 5), () {
+                    NotificationService.triggerSystemNotification(
+                      title: "dr. Nurlitta Dwi, Sp.JP",
+                      message:
+                          "Halo, ini notifikasi chat dokter yang berhasil muncul di HP saat aplikasi diminimalkan/layar kunci!",
+                      isCall: false,
+                    );
+                  });
                 },
                 isDark: isDark,
               ),

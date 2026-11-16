@@ -56,6 +56,29 @@ class NotificationService extends ChangeNotifier {
 
   static final NotificationService instance = NotificationService._();
 
+  static const MethodChannel _systemNotifChannel =
+      MethodChannel('com.example.heartcare/notifications');
+
+  /// Memicu Notifikasi Status Bar & Heads-Up Banner native di OS Android/HP
+  /// agar tetap muncul saat aplikasi di-background atau ditutup
+  static Future<void> triggerSystemNotification({
+    required String title,
+    required String message,
+    bool isCall = false,
+  }) async {
+    try {
+      await _systemNotifChannel.invokeMethod('showSystemNotification', {
+        'id': DateTime.now().millisecondsSinceEpoch % 100000,
+        'title': title,
+        'message': message,
+        'isCall': isCall,
+      });
+      debugPrint('📲 [NotificationService] Native System Notification triggered: $title');
+    } catch (e) {
+      debugPrint('[NotificationService] Gagal memicu notifikasi sistem: $e');
+    }
+  }
+
   /// Global NavigatorKey untuk menampilkan pop-up di atas screen mana saja tanpa context caller
   static final GlobalKey<NavigatorState> navigatorKey =
       GlobalKey<NavigatorState>();
@@ -262,6 +285,15 @@ class NotificationService extends ChangeNotifier {
     try {
       HapticFeedback.mediumImpact().catchError((_) {});
     } catch (_) {}
+
+    // Pemicu Notifikasi Status Bar & Heads-up Pop-up Sistem HP (Android)
+    // agar notifikasi tetap keluar saat aplikasi diminimalkan / layar kunci / di-background
+    triggerSystemNotification(
+      title: title,
+      message: message,
+      isCall: type == HeartCareNotificationType.chatDoctor ||
+          type == HeartCareNotificationType.chatPatient,
+    );
 
     // JIKA OVERLAY TERSEDIA: TAMPILKAN HEADS-UP POP-UP BANNER DI ATAS LAYAR
     if (overlayState != null) {

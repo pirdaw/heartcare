@@ -69,6 +69,7 @@ class _VideoCallPageState extends State<VideoCallPage>
   bool _isMuted = false;
   bool _isCameraOff = false;
   bool _isFrontCamera = true;
+  bool _isSpeakerOn = true;
   bool _isConnected = false;
   bool _isRejected = false;
 
@@ -199,10 +200,21 @@ class _VideoCallPageState extends State<VideoCallPage>
   /// Inisialisasi Agora RTC Engine untuk Audio & Video real-time
   Future<void> _initAgora() async {
     try {
-      // 1. Meminta izin kamera & mikrofon pada Android / iOS
+      // 1. Meminta izin kamera, mikrofon, dan notifikasi secara berurutan pada Android / iOS
       if (!kIsWeb) {
         try {
-          await [Permission.microphone, Permission.camera].request();
+          final micStatus = await Permission.microphone.status;
+          if (!micStatus.isGranted) {
+            await Permission.microphone.request();
+          }
+          final camStatus = await Permission.camera.status;
+          if (!camStatus.isGranted) {
+            await Permission.camera.request();
+          }
+          final notifStatus = await Permission.notification.status;
+          if (!notifStatus.isGranted) {
+            await Permission.notification.request();
+          }
         } catch (e) {
           debugPrint('[Agora] Izin sistem notice: $e');
         }
@@ -222,6 +234,12 @@ class _VideoCallPageState extends State<VideoCallPage>
         RtcEngineEventHandler(
           onJoinChannelSuccess: (RtcConnection connection, int elapsed) {
             debugPrint('[Agora] Berhasil masuk channel: ${connection.channelId}');
+            if (!kIsWeb) {
+              try {
+                _engine?.setDefaultAudioRouteToSpeakerphone(true);
+                _engine?.setEnableSpeakerphone(true);
+              } catch (_) {}
+            }
             if (mounted) {
               setState(() {
                 _localUserJoined = true;
@@ -235,6 +253,18 @@ class _VideoCallPageState extends State<VideoCallPage>
                 _remoteUid = remoteUid;
                 _remoteCameraOff = false;
               });
+              // Pastikan suara lawan bicara aktif & loudspeaker menyala maksimal
+              try {
+                _engine?.muteRemoteAudioStream(uid: remoteUid, mute: false);
+                _engine?.adjustPlaybackSignalVolume(200);
+                _engine?.adjustUserPlaybackSignalVolume(uid: remoteUid, volume: 200);
+                if (!kIsWeb) {
+                  _engine?.setDefaultAudioRouteToSpeakerphone(true);
+                  _engine?.setEnableSpeakerphone(true);
+                }
+              } catch (e) {
+                debugPrint('[Agora] Remote audio adjust error: $e');
+              }
               // Tulis status 'connected' ke Firestore agar kedua pihak tersinkron
               _markCallConnected();
               _onCallConnected();
@@ -257,17 +287,37 @@ class _VideoCallPageState extends State<VideoCallPage>
               });
             }
           },
+          onUserMuteAudio: (RtcConnection connection, int remoteUid, bool muted) {
+            debugPrint('[Agora] Lawan bicara mengubah status mic: muted=$muted');
+          },
           onError: (ErrorCodeType err, String msg) {
             debugPrint('[Agora] Error $err: $msg');
           },
         ),
       );
 
-      // 4. Aktifkan video dan mulai preview lokal
+      // 4. Aktifkan Audio & Video HD secara penuh
+      await _engine!.enableAudio();
       await _engine!.enableVideo();
+      await _engine!.enableLocalAudio(true);
+      await _engine!.muteLocalAudioStream(false);
+      await _engine!.muteAllRemoteAudioStreams(false);
+      await _engine!.adjustRecordingSignalVolume(200);
+      await _engine!.adjustPlaybackSignalVolume(200);
+
+      // Pada HP Android: Arahkan output suara ke Speakerphone (Loudspeaker) agar terdengar jelas
+      if (!kIsWeb) {
+        try {
+          await _engine!.setDefaultAudioRouteToSpeakerphone(true);
+          await _engine!.setEnableSpeakerphone(true);
+        } catch (e) {
+          debugPrint('[Agora] Speakerphone setup notice: $e');
+        }
+      }
+
       await _engine!.startPreview();
 
-      // 5. Masuk ke Channel Agora
+      // 5. Masuk ke Channel Agora dengan audio & video track aktif
       await _engine!.joinChannel(
         token: AgoraConfig.token,
         channelId: _channelName,
@@ -275,6 +325,10 @@ class _VideoCallPageState extends State<VideoCallPage>
         options: const ChannelMediaOptions(
           clientRoleType: ClientRoleType.clientRoleBroadcaster,
           channelProfile: ChannelProfileType.channelProfileCommunication,
+          publishCameraTrack: true,
+          publishMicrophoneTrack: true,
+          autoSubscribeAudio: true,
+          autoSubscribeVideo: true,
         ),
       );
 
@@ -498,6 +552,58 @@ class _VideoCallPageState extends State<VideoCallPage>
           duration: const Duration(milliseconds: 1200),
           behavior: SnackBarBehavior.floating,
           backgroundColor: _isMuted ? const Color(0xFFEF4444) : const Color(0xFF10B981),
+        ),
+      );
+    }
+  }
+
+  void _toggleSpeaker() async {
+    if (kIsWeb) {
+      try {
+        await _engine?.muteAllRemoteAudioStreams(false);
+        await _engine?.adjustPlaybackSignalVolume(200);
+        if (_remoteUid != null) {
+          await _engine?.adjustUserPlaybackSignalVolume(uid: _remoteUid!, volume: 200);
+        }
+      } catch (_) {}
+      if (mounted) {
+        ScaffoldMessenger.of(context).hideCurrentSnackBar();
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('🔊 Audio Browser Diaktifkan & Dimaksimalkan (200%)'),
+            duration: Duration(milliseconds: 1500),
+            behavior: SnackBarBehavior.floating,
+            backgroundColor: Color(0xFF0284C7),
+          ),
+        );
+      }
+      return;
+    }
+
+    final newState = !_isSpeakerOn;
+    setState(() {
+      _isSpeakerOn = newState;
+    });
+
+    try {
+      await _engine?.setEnableSpeakerphone(newState);
+      await _engine?.setDefaultAudioRouteToSpeakerphone(newState);
+      await _engine?.adjustPlaybackSignalVolume(newState ? 200 : 100);
+      if (_remoteUid != null) {
+        await _engine?.adjustUserPlaybackSignalVolume(uid: _remoteUid!, volume: newState ? 200 : 100);
+      }
+    } catch (_) {}
+
+    if (mounted) {
+      ScaffoldMessenger.of(context).hideCurrentSnackBar();
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(newState
+              ? '🔊 Loudspeaker Aktif (Suara Keras & Jelas)'
+              : '👂 Earpiece Aktif (Suara Telepon Telinga)'),
+          duration: const Duration(milliseconds: 1200),
+          behavior: SnackBarBehavior.floating,
+          backgroundColor: newState ? const Color(0xFF10B981) : const Color(0xFF64748B),
         ),
       );
     }
@@ -901,6 +1007,39 @@ class _VideoCallPageState extends State<VideoCallPage>
             right: 0,
             child: _buildCallHeader(),
           ),
+
+          // Banner Audio Web jika diuji melalui Browser Chrome
+          if (kIsWeb)
+            Positioned(
+              top: 76,
+              left: 16,
+              right: 16,
+              child: Center(
+                child: InkWell(
+                  onTap: _toggleSpeaker,
+                  borderRadius: BorderRadius.circular(20),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF0F172A).withValues(alpha: 0.85),
+                      borderRadius: BorderRadius.circular(20),
+                      border: Border.all(color: const Color(0xFF0284C7).withValues(alpha: 0.5)),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: const [
+                        Icon(Icons.volume_up_rounded, color: Color(0xFF38BDF8), size: 16),
+                        SizedBox(width: 8),
+                        Text(
+                          "Audio Browser: Klik untuk un-mute / maksimalkan suara",
+                          style: TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.w600),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            ),
 
           // 3. FLOATING PICTURE-IN-PICTURE (KAMERA DIRI SENDIRI)
           Positioned(
@@ -1308,7 +1447,18 @@ class _VideoCallPageState extends State<VideoCallPage>
             onTap: _toggleMute,
           ),
 
-          // 2. Toggle Kamera
+          // 2. Speaker / Loudspeaker (HP) & Booster Audio Browser (Web)
+          _controlButton(
+            icon: _isSpeakerOn ? Icons.volume_up_rounded : Icons.phone_in_talk_rounded,
+            label: kIsWeb ? "Audio" : (_isSpeakerOn ? "Speaker" : "Ear"),
+            isActive: _isSpeakerOn,
+            activeColor: const Color(0xFF10B981),
+            inactiveColor: Colors.white.withValues(alpha: 0.15),
+            iconColor: Colors.white,
+            onTap: _toggleSpeaker,
+          ),
+
+          // 3. Toggle Kamera
           _controlButton(
             icon: _isCameraOff ? Icons.videocam_off_rounded : Icons.videocam_rounded,
             label: _isCameraOff ? "Kamera On" : "Kamera",
@@ -1319,7 +1469,7 @@ class _VideoCallPageState extends State<VideoCallPage>
             onTap: _toggleCamera,
           ),
 
-          // 3. Balik Kamera Depan / Belakang
+          // 4. Balik Kamera Depan / Belakang
           _controlButton(
             icon: Icons.flip_camera_ios_rounded,
             label: "Putar",
@@ -1330,7 +1480,7 @@ class _VideoCallPageState extends State<VideoCallPage>
             onTap: _switchCamera,
           ),
 
-          // 4. Catat Keluhan Pasien Langsung
+          // 5. Catat Keluhan Pasien Langsung
           _controlButton(
             icon: Icons.note_alt_rounded,
             label: "Keluhan",
