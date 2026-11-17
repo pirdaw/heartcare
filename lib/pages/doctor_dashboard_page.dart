@@ -6,6 +6,7 @@ import '../services/auth_service.dart';
 import '../services/chat_service.dart';
 import '../services/theme_service.dart';
 import '../services/doctor_service.dart';
+import '../services/profile_service.dart';
 import 'konsultasi_dokter_page.dart';
 import 'welcome_page.dart';
 import 'doctor_edit_profile_page.dart';
@@ -1289,20 +1290,11 @@ class _DoctorDashboardPageState extends State<DoctorDashboardPage> {
                                 ),
                                 leading: Stack(
                                   children: [
-                                    Container(
+                                    ProfileService.buildPatientAvatar(
+                                      photo: room.patientPhoto,
                                       width: 44,
                                       height: 44,
-                                      decoration: BoxDecoration(
-                                        color: isDark
-                                            ? const Color(0xFF0F2B3E)
-                                            : const Color(0xFFE0F2FE),
-                                        shape: BoxShape.circle,
-                                      ),
-                                      child: const Icon(
-                                        Icons.person_rounded,
-                                        color: Color(0xFF0284C7),
-                                        size: 26,
-                                      ),
+                                      isDark: isDark,
                                     ),
                                     if (hasUnread)
                                       Positioned(
@@ -1432,6 +1424,7 @@ class _DoctorDashboardPageState extends State<DoctorDashboardPage> {
                                         doctorSpecialty: room.doctorSpecialty,
                                         patientName: room.patientName,
                                         patientId: room.patientId,
+                                        patientPhoto: room.patientPhoto,
                                         doctorId: room.doctorId.isNotEmpty
                                             ? room.doctorId
                                             : doctorUid,
