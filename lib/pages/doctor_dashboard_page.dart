@@ -6,7 +6,6 @@ import '../services/auth_service.dart';
 import '../services/chat_service.dart';
 import '../services/theme_service.dart';
 import '../services/doctor_service.dart';
-import '../services/profile_service.dart';
 import 'konsultasi_dokter_page.dart';
 import 'welcome_page.dart';
 import 'doctor_edit_profile_page.dart';
@@ -29,9 +28,19 @@ class _DoctorDashboardPageState extends State<DoctorDashboardPage> {
   @override
   void initState() {
     super.initState();
+    ChatNotificationService.instance.currentAppRole = ChatSenderRole.doctor;
     _doctorProfile = AuthService.instance.getFastDoctorProfile();
     _isOnline = _doctorProfile?['isOnline'] ?? true;
     _loadDoctorProfile();
+  }
+
+  @override
+  void dispose() {
+    if (ChatNotificationService.instance.currentAppRole ==
+        ChatSenderRole.doctor) {
+      ChatNotificationService.instance.currentAppRole = null;
+    }
+    super.dispose();
   }
 
   Future<void> _loadDoctorProfile() async {
@@ -319,6 +328,7 @@ class _DoctorDashboardPageState extends State<DoctorDashboardPage> {
       await _loadDoctorProfile();
     }
   }
+
   @override
   Widget build(BuildContext context) {
     final isDark = ThemeService.isDarkMode;
@@ -1136,66 +1146,24 @@ class _DoctorDashboardPageState extends State<DoctorDashboardPage> {
 
                     // JUDUL DAFTAR CHAT PASIEN
                     Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        Expanded(
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Container(
-                                width: 4,
-                                height: 16,
-                                decoration: BoxDecoration(
-                                  color: const Color(0xFF0284C7),
-                                  borderRadius: BorderRadius.circular(2),
-                                ),
-                              ),
-                              const SizedBox(width: 8),
-                              Flexible(
-                                child: Text(
-                                  "Konsultasi Pasien",
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
-                                  style: TextStyle(
-                                    fontSize: 15,
-                                    fontWeight: FontWeight.bold,
-                                    color: isDark
-                                        ? Colors.white
-                                        : const Color(0xFF0F172A),
-                                  ),
-                                ),
-                              ),
-                            ],
+                        Container(
+                          width: 4,
+                          height: 16,
+                          decoration: BoxDecoration(
+                            color: const Color(0xFF0284C7),
+                            borderRadius: BorderRadius.circular(2),
                           ),
                         ),
                         const SizedBox(width: 8),
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 8,
-                            vertical: 3,
-                          ),
-                          decoration: BoxDecoration(
-                            color: const Color(0xFF10B981).withValues(alpha: 0.12),
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          child: const Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Icon(
-                                Icons.circle,
-                                size: 7,
-                                color: Color(0xFF10B981),
-                              ),
-                              SizedBox(width: 4),
-                              Text(
-                                "Live",
-                                style: TextStyle(
-                                  fontSize: 10.5,
-                                  fontWeight: FontWeight.bold,
-                                  color: Color(0xFF10B981),
-                                ),
-                              ),
-                            ],
+                        Text(
+                          "Konsultasi Pasien",
+                          style: TextStyle(
+                            fontSize: 15,
+                            fontWeight: FontWeight.bold,
+                            color: isDark
+                                ? Colors.white
+                                : const Color(0xFF0F172A),
                           ),
                         ),
                       ],
@@ -1321,11 +1289,20 @@ class _DoctorDashboardPageState extends State<DoctorDashboardPage> {
                                 ),
                                 leading: Stack(
                                   children: [
-                                    ProfileService.buildPatientAvatar(
-                                      photo: room.patientPhoto,
+                                    Container(
                                       width: 44,
                                       height: 44,
-                                      isDark: isDark,
+                                      decoration: BoxDecoration(
+                                        color: isDark
+                                            ? const Color(0xFF0F2B3E)
+                                            : const Color(0xFFE0F2FE),
+                                        shape: BoxShape.circle,
+                                      ),
+                                      child: const Icon(
+                                        Icons.person_rounded,
+                                        color: Color(0xFF0284C7),
+                                        size: 26,
+                                      ),
                                     ),
                                     if (hasUnread)
                                       Positioned(
@@ -1455,7 +1432,9 @@ class _DoctorDashboardPageState extends State<DoctorDashboardPage> {
                                         doctorSpecialty: room.doctorSpecialty,
                                         patientName: room.patientName,
                                         patientId: room.patientId,
-                                        patientPhoto: room.patientPhoto,
+                                        doctorId: room.doctorId.isNotEmpty
+                                            ? room.doctorId
+                                            : doctorUid,
                                       ),
                                     ),
                                   );

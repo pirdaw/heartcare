@@ -32,12 +32,17 @@ class _HomePageState extends State<HomePage> {
   @override
   void initState() {
     super.initState();
+    ChatNotificationService.instance.currentAppRole = ChatSenderRole.patient;
     UserProfileService.instance.addListener(_onProfileChanged);
     _reminderController.addListener(_onReminderChanged);
   }
 
   @override
   void dispose() {
+    if (ChatNotificationService.instance.currentAppRole ==
+        ChatSenderRole.patient) {
+      ChatNotificationService.instance.currentAppRole = null;
+    }
     UserProfileService.instance.removeListener(_onProfileChanged);
     _reminderController.removeListener(_onReminderChanged);
     super.dispose();

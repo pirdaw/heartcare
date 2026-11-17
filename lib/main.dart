@@ -9,6 +9,7 @@ import 'services/theme_service.dart';
 import 'services/language_service.dart';
 import 'services/doctor_service.dart';
 import 'services/chat_notification_service.dart';
+import 'services/system_notification_service.dart';
 import 'widgets/chat_notification_banner.dart';
 
 final GlobalKey<NavigatorState> rootNavigatorKey = GlobalKey<NavigatorState>();
@@ -35,6 +36,9 @@ Future<void> main() async {
 
   // Inisialisasi service percakapan dan notifikasi chat
   await ChatNotificationService.instance.init();
+
+  // Inisialisasi notifikasi sistem telepon native (status bar / heads-up OS notification)
+  await SystemNotificationService.instance.init();
 
   runApp(const HeartCareApp());
 }
