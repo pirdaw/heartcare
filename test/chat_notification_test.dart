@@ -428,5 +428,147 @@ void main() {
       );
       expect(budiNotifs.length, 1);
     });
+
+    test('Doctor sending message while doctor is in chat view does NOT suppress notification for patient and triggers stream event', () async {
+      // Simulate doctor opening the consultation page
+      ChatNotificationService.instance.setActiveChatRoom(
+        doctorName: 'dr. Asya Catherine',
+        isDoctorView: true,
+        patientId: 'patient_firdaa0444',
+      );
+
+      ChatNotificationItem? receivedNotif;
+      final sub = ChatNotificationService.instance.onNewNotification.listen((notif) {
+        receivedNotif = notif;
+      });
+
+      // Doctor sends a reply to patient Firdaa0444
+      await ChatNotificationService.instance.sendMessage(
+        doctorName: 'dr. Asya Catherine',
+        message: 'Halo Mbak Firda, tensi Anda perlu diperhatikan dan kurangi begadang ya.',
+        senderRole: ChatSenderRole.doctor,
+        senderNameOverride: 'dr. Asya Catherine',
+        patientId: 'patient_firdaa0444',
+        chatId: 'chat_firdaa_asya',
+      );
+
+      await Future.delayed(const Duration(milliseconds: 50));
+
+      // 1. Stream MUST have emitted the notification for patient
+      expect(receivedNotif, isNotNull);
+      expect(receivedNotif!.senderRole, ChatSenderRole.doctor);
+      expect(receivedNotif!.recipientRole, ChatSenderRole.patient);
+      expect(receivedNotif!.conversationDoctorName, 'dr. Asya Catherine');
+      expect(receivedNotif!.isRead, isFalse);
+
+      // 2. Patient Firdaa0444 MUST see this notification in their notification menu
+      final firdaaNotifs = ChatNotificationService.instance.getNotificationsForUser(
+        viewerRole: ChatSenderRole.patient,
+        patientId: 'patient_firdaa0444',
+        patientName: 'Firdaa0444',
+      );
+      expect(firdaaNotifs.length, 1);
+      expect(firdaaNotifs.first.isRead, isFalse);
+      expect(firdaaNotifs.first.messageSnippet, contains('tensi Anda perlu diperhatikan'));
+
+      // 3. Unread count for patient Firdaa0444 must be 1
+      final unreadCount = ChatNotificationService.instance.getUnreadCountForPatientAccount(
+        patientId: 'patient_firdaa0444',
+        patientName: 'Firdaa0444',
+      );
+      expect(unreadCount, 1);
+
+      await sub.cancel();
+    });
+
+    test('Doctor chat message with generic patient name still matches patient when viewing as patient', () async {
+      ChatNotificationService.instance.clearActiveChatRoom();
+
+      // Doctor sends message where patientName is 'Pasien HeartCare'
+      ChatNotificationService.instance.notifyIncomingMessage(
+        conversationDoctorName: 'dr. Asya Catherine',
+        doctorPhoto: 'assets/images/dokter_asya.jpg',
+        doctorSpecialty: 'Spesialis Jantung',
+        patientName: 'Pasien HeartCare',
+        senderRole: ChatSenderRole.doctor,
+        senderName: 'dr. Asya Catherine',
+        message: 'Hasil EKG Anda normal, silakan lanjutkan obat rutin.',
+        chatId: 'chat_general_asya',
+      );
+
+      final patientNotifs = ChatNotificationService.instance.getNotificationsForUser(
+        viewerRole: ChatSenderRole.patient,
+        patientId: 'user_firdaa_uid',
+        patientName: 'Firdaa0444',
+      );
+
+      expect(patientNotifs.isNotEmpty, isTrue);
+      expect(patientNotifs.first.conversationDoctorName, 'dr. Asya Catherine');
+      expect(patientNotifs.first.messageSnippet, contains('Hasil EKG'));
+      expect(patientNotifs.first.isRead, isFalse);
+    });
+
+    test('Doctor viewing patient A does NOT suppress notification from patient B', () async {
+      // Doctor is actively looking at Siska's chat room
+      ChatNotificationService.instance.setActiveChatRoom(
+        doctorName: 'dr. Asya Catherine',
+        isDoctorView: true,
+        patientName: 'Siska',
+        patientId: 'patient_siska_uid',
+        chatId: 'chat_dr_asya_siska',
+      );
+
+      // Verify that Siska is recognized as viewing
+      expect(
+        ChatNotificationService.instance.isRecipientViewing(
+          recipientRole: ChatSenderRole.doctor,
+          doctorName: 'dr. Asya Catherine',
+          patientName: 'Siska',
+          patientId: 'patient_siska_uid',
+          chatId: 'chat_dr_asya_siska',
+        ),
+        isTrue,
+      );
+
+      // Verify that another patient (Firdaa0444) is NOT suppressed!
+      expect(
+        ChatNotificationService.instance.isRecipientViewing(
+          recipientRole: ChatSenderRole.doctor,
+          doctorName: 'dr. Asya Catherine',
+          patientName: 'Firdaa0444',
+          patientId: 'patient_firdaa_uid',
+          chatId: 'chat_dr_asya_firdaa',
+        ),
+        isFalse,
+      );
+
+      // When Firdaa sends a message, doctor still gets notification!
+      ChatNotificationItem? receivedNotif;
+      final sub = ChatNotificationService.instance.onNewNotification.listen((n) {
+        receivedNotif = n;
+      });
+
+      ChatNotificationService.instance.notifyIncomingMessage(
+        conversationDoctorName: 'dr. Asya Catherine',
+        doctorPhoto: 'assets/images/dokter_asya.jpg',
+        doctorSpecialty: 'Spesialis Jantung',
+        patientName: 'Firdaa0444',
+        patientId: 'patient_firdaa_uid',
+        doctorId: 'doctor_asya_uid',
+        senderRole: ChatSenderRole.patient,
+        senderName: 'Firdaa0444',
+        message: 'Halo dok, ini Firda mau tanya.',
+        chatId: 'chat_dr_asya_firdaa',
+      );
+
+      await Future.delayed(const Duration(milliseconds: 50));
+
+      expect(receivedNotif, isNotNull);
+      expect(receivedNotif!.patientName, 'Firdaa0444');
+      expect(receivedNotif!.isRead, isFalse);
+
+      await sub.cancel();
+      ChatNotificationService.instance.clearActiveChatRoom();
+    });
   });
 }

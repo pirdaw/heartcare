@@ -630,7 +630,9 @@ class _ChatNotificationSheetState extends State<ChatNotificationSheet> {
                                   notif.conversationDoctorName,
                                   viewerRole: effectiveRole,
                                   patientId: notif.patientId ?? effectivePatientId,
+                                  patientName: notif.patientName,
                                   doctorId: notif.doctorId ?? effectiveDoctorId,
+                                  chatId: notif.chatId,
                                 );
                                 if (!context.mounted) return;
                                 Navigator.pop(context);
