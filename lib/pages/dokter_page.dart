@@ -11,12 +11,9 @@ import 'signup_page.dart';
 import 'Skrining/screening_model.dart';
 import '../services/theme_service.dart';
 import '../services/doctor_service.dart';
-import '../services/user_profile_service.dart';
-
 import '../services/language_service.dart';
 
 import '../services/chat_notification_service.dart';
-import '../widgets/chat_notification_sheet.dart';
 
 
 class PilihDokterPage extends StatefulWidget {
@@ -119,134 +116,6 @@ class _PilihDokterPageState extends State<PilihDokterPage> {
                 fontWeight: FontWeight.bold,
               ),
             ),
-            actions: [
-              // Tombol Chat Notifications
-              ListenableBuilder(
-                listenable: ChatNotificationService.instance,
-                builder: (context, _) {
-                  final authUser = FirebaseAuth.instance.currentUser;
-                  final profile = UserProfileService.instance.currentProfile;
-                  final patientId = authUser?.uid ?? authUser?.email ?? profile.nama;
-                  final patientName = profile.nama.isNotEmpty
-                      ? profile.nama
-                      : (authUser?.displayName ?? 'Pasien');
-                  final unread = ChatNotificationService.instance
-                      .getUnreadCountForPatientAccount(
-                    patientId: patientId,
-                    patientName: patientName,
-                  );
-                  return Padding(
-                    padding: const EdgeInsets.only(right: 8),
-                    child: Material(
-                      color: isDark ? const Color(0xFF1E293B) : const Color(0xFFF1F5F9),
-                      borderRadius: BorderRadius.circular(12),
-                      child: InkWell(
-                        borderRadius: BorderRadius.circular(12),
-                        onTap: () => ChatNotificationSheet.show(
-                          context,
-                          viewerRole: ChatSenderRole.patient,
-                          patientId: patientId,
-                          patientName: patientName,
-                        ),
-                        child: Container(
-                          width: 38,
-                          height: 38,
-                          alignment: Alignment.center,
-                          child: Stack(
-                            clipBehavior: Clip.none,
-                            children: [
-                              Icon(
-                                Icons.notifications_outlined,
-                                size: 20,
-                                color: isDark ? Colors.white : const Color(0xFF0F172A),
-                              ),
-                              if (unread > 0)
-                                Positioned(
-                                  top: -4,
-                                  right: -4,
-                                  child: Container(
-                                    padding: const EdgeInsets.all(3),
-                                    constraints: const BoxConstraints(
-                                      minWidth: 16,
-                                      minHeight: 16,
-                                    ),
-                                    decoration: const BoxDecoration(
-                                      color: Color(0xFFEF4444),
-                                      shape: BoxShape.circle,
-                                    ),
-                                    alignment: Alignment.center,
-                                    child: Text(
-                                      unread > 9 ? '9+' : '$unread',
-                                      style: const TextStyle(
-                                        color: Colors.white,
-                                        fontSize: 9,
-                                        fontWeight: FontWeight.bold,
-                                        height: 1,
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                            ],
-                          ),
-                        ),
-                      ),
-                    ),
-                  );
-                },
-              ),
-              // Tombol tambah / daftar dokter baru
-              Padding(
-                padding: const EdgeInsets.only(right: 12),
-                child: Material(
-                  color: isDark
-                      ? const Color(0xFF1E293B)
-                      : const Color(0xFFF1F5F9),
-                  borderRadius: BorderRadius.circular(12),
-                  child: InkWell(
-                    borderRadius: BorderRadius.circular(12),
-                    onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => const SignupPage(
-                            initialRole: 'doctor',
-                          ),
-                        ),
-                      );
-                    },
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 10,
-                        vertical: 6,
-                      ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Icon(
-                            Icons.person_add_alt_1_rounded,
-                            size: 17,
-                            color: isDark
-                                ? const Color(0xFF38BDF8)
-                                : brandPrimary,
-                          ),
-                          const SizedBox(width: 4),
-                          Text(
-                            '+ Dokter',
-                            style: TextStyle(
-                              fontSize: 12,
-                              fontWeight: FontWeight.bold,
-                              color: isDark
-                                  ? const Color(0xFF38BDF8)
-                                  : brandPrimary,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-            ],
           ),
           body: StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
             stream:
