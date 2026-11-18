@@ -212,4 +212,56 @@ class ProfileService {
 
     return null;
   }
+
+  /// Widget avatar pasien dengan fallback ke foto profil bawaan ('assets/images/profile_woman.png')
+  static Widget buildPatientAvatar({
+    String? photo,
+    double width = 44,
+    double height = 44,
+    bool isDark = false,
+  }) {
+    final provider = getImageProvider(photo);
+    return Container(
+      width: width,
+      height: height,
+      decoration: BoxDecoration(
+        color: isDark ? const Color(0xFF0F2B3E) : const Color(0xFFE0F2FE),
+        shape: BoxShape.circle,
+      ),
+      clipBehavior: Clip.antiAlias,
+      child: provider != null
+          ? Image(
+              image: provider,
+              width: width,
+              height: height,
+              fit: BoxFit.cover,
+              errorBuilder: (context, error, stackTrace) => Image.asset(
+                'assets/images/profile_woman.png',
+                width: width,
+                height: height,
+                fit: BoxFit.cover,
+                errorBuilder: (context, error, stackTrace) => Icon(
+                  Icons.person_rounded,
+                  color: isDark
+                      ? const Color(0xFF38BDF8)
+                      : const Color(0xFF0284C7),
+                  size: width * 0.58,
+                ),
+              ),
+            )
+          : Image.asset(
+              'assets/images/profile_woman.png',
+              width: width,
+              height: height,
+              fit: BoxFit.cover,
+              errorBuilder: (context, error, stackTrace) => Icon(
+                Icons.person_rounded,
+                color: isDark
+                    ? const Color(0xFF38BDF8)
+                    : const Color(0xFF0284C7),
+                size: width * 0.58,
+              ),
+            ),
+    );
+  }
 }

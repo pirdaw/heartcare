@@ -75,7 +75,19 @@ class ScreeningResultPage extends StatelessWidget {
                                 : const Color(0xFF1E293B),
                             size: 26,
                           ),
-                          onPressed: () => Navigator.pop(context),
+                          onPressed: () {
+                            if (Navigator.canPop(context)) {
+                              Navigator.pop(context);
+                            } else {
+                              Navigator.pushAndRemoveUntil(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) => const HomePage(),
+                                ),
+                                (route) => false,
+                              );
+                            }
+                          },
                         ),
                       ),
                     ),
