@@ -1,8 +1,8 @@
-import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:heartcare/services/theme_service.dart';
 import 'package:heartcare/services/language_service.dart';
 import 'package:heartcare/services/booking_service.dart';
+import 'package:heartcare/services/doctor_service.dart';
 import 'home_page.dart';
 import 'konfirmasi_jadwal_page.dart';
 import 'profil_page.dart';
@@ -57,9 +57,20 @@ class _PilihJadwalPageState extends State<PilihJadwalPage> {
   @override
   void initState() {
     super.initState();
+    BookingService.instance.addListener(_onBookingServiceChanged);
     BookingService.instance.init().then((_) {
       if (mounted) setState(() {});
     });
+  }
+
+  @override
+  void dispose() {
+    BookingService.instance.removeListener(_onBookingServiceChanged);
+    super.dispose();
+  }
+
+  void _onBookingServiceChanged() {
+    if (mounted) setState(() {});
   }
 
   void _onDurationChanged(int duration) {
@@ -307,33 +318,86 @@ class _PilihJadwalPageState extends State<PilihJadwalPage> {
 
                             const SizedBox(height: 18),
 
-                            // 5. JADWAL TERSEDIA: PAGI
-                            _buildTimeSection(
-                              isDark: isDark,
-                              title: "Pagi",
-                              icon: Icons.wb_sunny_outlined,
-                              slots: morningSlots,
-                            ),
+                            // 5. DAFTAR JADWAL ATAU STATUS TUTUP
+                            if (allSlots.isEmpty) ...[
+                              Container(
+                                width: double.infinity,
+                                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 32),
+                                margin: const EdgeInsets.only(top: 8, bottom: 20),
+                                decoration: BoxDecoration(
+                                  color: isDark ? const Color(0xFF1E293B) : Colors.white,
+                                  borderRadius: BorderRadius.circular(16),
+                                  border: Border.all(
+                                    color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0),
+                                  ),
+                                ),
+                                child: Column(
+                                  children: [
+                                    Container(
+                                      padding: const EdgeInsets.all(12),
+                                      decoration: BoxDecoration(
+                                        color: isDark ? const Color(0xFF334155) : const Color(0xFFF1F5F9),
+                                        shape: BoxShape.circle,
+                                      ),
+                                      child: Icon(
+                                        Icons.event_busy_rounded,
+                                        size: 36,
+                                        color: isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B),
+                                      ),
+                                    ),
+                                    const SizedBox(height: 12),
+                                    Text(
+                                      tr("Jadwal Tidak Tersedia", "Schedule Unavailable"),
+                                      style: TextStyle(
+                                        fontSize: 15,
+                                        fontWeight: FontWeight.bold,
+                                        color: isDark ? Colors.white : const Color(0xFF0F172A),
+                                      ),
+                                    ),
+                                    const SizedBox(height: 4),
+                                    Text(
+                                      tr(
+                                        "Dokter tidak membuka sesi konsultasi pada tanggal ini. Silakan pilih tanggal lain yang tersedia.",
+                                        "The doctor is not available on this date. Please select another available date.",
+                                      ),
+                                      textAlign: TextAlign.center,
+                                      style: TextStyle(
+                                        fontSize: 12.5,
+                                        color: isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ] else ...[
+                              // 5. JADWAL TERSEDIA: PAGI
+                              _buildTimeSection(
+                                isDark: isDark,
+                                title: "Pagi",
+                                icon: Icons.wb_sunny_outlined,
+                                slots: morningSlots,
+                              ),
 
-                            const SizedBox(height: 22),
+                              const SizedBox(height: 22),
 
-                            // 6. JADWAL TERSEDIA: SIANG
-                            _buildTimeSection(
-                              isDark: isDark,
-                              title: "Siang",
-                              icon: Icons.light_mode_outlined,
-                              slots: afternoonSlots,
-                            ),
+                              // 6. JADWAL TERSEDIA: SIANG
+                              _buildTimeSection(
+                                isDark: isDark,
+                                title: "Siang",
+                                icon: Icons.light_mode_outlined,
+                                slots: afternoonSlots,
+                              ),
 
-                            const SizedBox(height: 22),
+                              const SizedBox(height: 22),
 
-                            // 7. JADWAL TERSEDIA: SORE
-                            _buildTimeSection(
-                              isDark: isDark,
-                              title: "Sore",
-                              icon: Icons.nights_stay_outlined,
-                              slots: eveningSlots,
-                            ),
+                              // 7. JADWAL TERSEDIA: SORE
+                              _buildTimeSection(
+                                isDark: isDark,
+                                title: "Sore",
+                                icon: Icons.nights_stay_outlined,
+                                slots: eveningSlots,
+                              ),
+                            ],
 
                             const SizedBox(height: 32),
 
@@ -544,27 +608,10 @@ class _PilihJadwalPageState extends State<PilihJadwalPage> {
   }
 
   Widget _buildDoctorAvatarImage(String photo) {
-    if (photo.startsWith('http://') || photo.startsWith('https://')) {
-      return Image.network(
-        photo,
-        fit: BoxFit.cover,
-        errorBuilder: (_, __, ___) => const Icon(Icons.person, color: Color(0xFF0284C7), size: 30),
-      );
-    }
-    if (photo.startsWith('/') || photo.contains(':\\') || photo.contains(':/')) {
-      final file = File(photo);
-      if (file.existsSync()) {
-        return Image.file(
-          file,
-          fit: BoxFit.cover,
-          errorBuilder: (_, __, ___) => const Icon(Icons.person, color: Color(0xFF0284C7), size: 30),
-        );
-      }
-    }
-    return Image.asset(
+    return DoctorService.buildDoctorImage(
       photo,
-      fit: BoxFit.cover,
-      errorBuilder: (_, __, ___) => const Icon(Icons.person, color: Color(0xFF0284C7), size: 30),
+      width: 60,
+      height: 60,
     );
   }
 

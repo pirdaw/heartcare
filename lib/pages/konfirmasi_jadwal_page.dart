@@ -1,7 +1,9 @@
-import 'dart:io';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:heartcare/services/theme_service.dart';
 import 'package:heartcare/services/booking_service.dart';
+import 'package:heartcare/services/doctor_service.dart';
+import 'package:heartcare/services/user_profile_service.dart';
 import 'home_page.dart';
 import 'konsultasi_dokter_page.dart';
 
@@ -71,6 +73,18 @@ class _KonfirmasiJadwalPageState extends State<KonfirmasiJadwalPage> {
 
     final dKey = widget.dateKey ?? widget.selectedDate;
 
+    final currentUser = FirebaseAuth.instance.currentUser;
+    final userProfile = UserProfileService.instance.currentProfile;
+    final patientName = userProfile.nama.trim().isNotEmpty
+        ? userProfile.nama.trim()
+        : (currentUser?.displayName?.trim().isNotEmpty == true
+            ? currentUser!.displayName!.trim()
+            : 'Pasien HeartCare');
+    final patientPhoto = userProfile.fotoProfil.trim().isNotEmpty
+        ? userProfile.fotoProfil.trim()
+        : (currentUser?.photoURL ?? '');
+    final patientPhone = userProfile.telepon.trim();
+
     BookingService.instance.bookSlot(
       doctorId: widget.doctorId ?? '',
       doctorName: widget.doctorName,
@@ -82,33 +96,21 @@ class _KonfirmasiJadwalPageState extends State<KonfirmasiJadwalPage> {
       endMinutes: sEnd,
       durationMinutes: widget.durationMinutes,
       timeSlot: widget.selectedTime,
+      patientId: currentUser?.uid,
+      patientName: patientName,
+      patientPhoto: patientPhoto,
+      patientPhone: patientPhone,
+      status: 'Menunggu Konfirmasi',
     );
 
     _isBookingRecorded = true;
   }
 
   Widget _buildDoctorAvatarImage(String photo) {
-    if (photo.startsWith('http://') || photo.startsWith('https://')) {
-      return Image.network(
-        photo,
-        fit: BoxFit.cover,
-        errorBuilder: (_, __, ___) => const Icon(Icons.person, color: KonfirmasiJadwalPage.brandPrimary, size: 30),
-      );
-    }
-    if (photo.startsWith('/') || photo.contains(':\\') || photo.contains(':/')) {
-      final file = File(photo);
-      if (file.existsSync()) {
-        return Image.file(
-          file,
-          fit: BoxFit.cover,
-          errorBuilder: (_, __, ___) => const Icon(Icons.person, color: KonfirmasiJadwalPage.brandPrimary, size: 30),
-        );
-      }
-    }
-    return Image.asset(
+    return DoctorService.buildDoctorImage(
       photo,
-      fit: BoxFit.cover,
-      errorBuilder: (_, __, ___) => const Icon(Icons.person, color: KonfirmasiJadwalPage.brandPrimary, size: 30),
+      width: 60,
+      height: 60,
     );
   }
 

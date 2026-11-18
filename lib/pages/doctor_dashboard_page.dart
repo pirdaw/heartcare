@@ -10,6 +10,8 @@ import '../services/profile_service.dart';
 import 'konsultasi_dokter_page.dart';
 import 'welcome_page.dart';
 import 'doctor_edit_profile_page.dart';
+import 'doctor_schedule_booking_page.dart';
+import '../services/booking_service.dart';
 import '../services/chat_notification_service.dart';
 import '../widgets/chat_notification_sheet.dart';
 
@@ -33,6 +35,7 @@ class _DoctorDashboardPageState extends State<DoctorDashboardPage> {
     _doctorProfile = AuthService.instance.getFastDoctorProfile();
     _isOnline = _doctorProfile?['isOnline'] ?? true;
     _loadDoctorProfile();
+    BookingService.instance.init();
   }
 
   @override
@@ -409,6 +412,102 @@ class _DoctorDashboardPageState extends State<DoctorDashboardPage> {
           ],
         ),
         actions: [
+          // TOMBOL MENU JADWAL & BOOKING DOKTER
+          AnimatedBuilder(
+            animation: BookingService.instance,
+            builder: (context, _) {
+              final pending = BookingService.instance.getPendingBookingsCount(
+                doctorUid ?? '',
+                doctorName: doctorName,
+              );
+              return Padding(
+                padding: const EdgeInsets.only(right: 8),
+                child: Center(
+                  child: Material(
+                    color: Colors.transparent,
+                    child: InkWell(
+                      borderRadius: BorderRadius.circular(14),
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => DoctorScheduleBookingPage(
+                              doctorId: doctorUid ?? '',
+                              doctorName: doctorName,
+                              doctorSpecialty: doctorSpecialty,
+                              doctorPhoto: doctorPhoto,
+                            ),
+                          ),
+                        );
+                      },
+                      child: Stack(
+                        clipBehavior: Clip.none,
+                        children: [
+                          Container(
+                            width: 40,
+                            height: 40,
+                            decoration: BoxDecoration(
+                              color: isDark
+                                  ? const Color(0xFF1E293B)
+                                  : Colors.white,
+                              borderRadius: BorderRadius.circular(14),
+                              border: Border.all(
+                                color: isDark
+                                    ? const Color(0xFF334155)
+                                    : const Color(0xFFE2E8F0),
+                                width: 1.2,
+                              ),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.black.withValues(
+                                    alpha: isDark ? 0.2 : 0.04,
+                                  ),
+                                  blurRadius: 6,
+                                  offset: const Offset(0, 2),
+                                ),
+                              ],
+                            ),
+                            child: Icon(
+                              Icons.calendar_month_rounded,
+                              size: 20,
+                              color: isDark
+                                  ? const Color(0xFF38BDF8)
+                                  : const Color(0xFF0284C7),
+                            ),
+                          ),
+                          if (pending > 0)
+                            Positioned(
+                              top: -3,
+                              right: -3,
+                              child: Container(
+                                padding: const EdgeInsets.all(4),
+                                decoration: const BoxDecoration(
+                                  color: Color(0xFFF59E0B),
+                                  shape: BoxShape.circle,
+                                ),
+                                constraints: const BoxConstraints(
+                                  minWidth: 16,
+                                  minHeight: 16,
+                                ),
+                                child: Text(
+                                  '$pending',
+                                  textAlign: TextAlign.center,
+                                  style: const TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 9.5,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                              ),
+                            ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              );
+            },
+          ),
 
           // TOMBOL PUSAT NOTIFIKASI CHAT DOKTER (Desain persis seperti milik Pasien di Home)
           AnimatedBuilder(
@@ -1109,13 +1208,261 @@ class _DoctorDashboardPageState extends State<DoctorDashboardPage> {
 
                             const SizedBox(height: 14),
 
-                            // STATISTIK KILAT
-                            _statCard(
-                              isDark: isDark,
-                              icon: Icons.forum_rounded,
-                              color: const Color(0xFF0284C7),
-                              label: 'Pesan Masuk',
-                              value: 'Real-Time',
+                            // STATISTIK KILAT: PESAN MASUK & JADWAL BOOKING
+                            AnimatedBuilder(
+                              animation: BookingService.instance,
+                              builder: (context, _) {
+                                final pendingBookings = BookingService.instance
+                                    .getPendingBookingsCount(
+                                  doctorUid ?? '',
+                                  doctorName: doctorName,
+                                );
+
+                                return Row(
+                                  children: [
+                                    Expanded(
+                                      child: _statCard(
+                                        isDark: isDark,
+                                        icon: Icons.forum_rounded,
+                                        color: const Color(0xFF0284C7),
+                                        label: 'Pesan Masuk',
+                                        value: 'Real-Time',
+                                      ),
+                                    ),
+                                    const SizedBox(width: 10),
+                                    Expanded(
+                                      child: InkWell(
+                                        borderRadius: BorderRadius.circular(16),
+                                        onTap: () {
+                                          Navigator.push(
+                                            context,
+                                            MaterialPageRoute(
+                                              builder: (context) =>
+                                                  DoctorScheduleBookingPage(
+                                                doctorId: doctorUid ?? '',
+                                                doctorName: doctorName,
+                                                doctorSpecialty: doctorSpecialty,
+                                                doctorPhoto: doctorPhoto,
+                                              ),
+                                            ),
+                                          );
+                                        },
+                                        child: _statCard(
+                                          isDark: isDark,
+                                          icon: Icons.calendar_month_rounded,
+                                          color: pendingBookings > 0
+                                              ? const Color(0xFFF59E0B)
+                                              : const Color(0xFF10B981),
+                                          label: 'Jadwal & Booking',
+                                          value: pendingBookings > 0
+                                              ? '$pendingBookings Permintaan'
+                                              : 'Terkelola',
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                );
+                              },
+                            ),
+
+                            const SizedBox(height: 12),
+
+                            // KARTU UTAMA MENU JADWAL & BOOKING DOKTER
+                            AnimatedBuilder(
+                              animation: BookingService.instance,
+                              builder: (context, _) {
+                                final pendingBookings = BookingService.instance
+                                    .getPendingBookingsCount(
+                                  doctorUid ?? '',
+                                  doctorName: doctorName,
+                                );
+
+                                return Container(
+                                  decoration: BoxDecoration(
+                                    gradient: LinearGradient(
+                                      colors: isDark
+                                          ? const [
+                                              Color(0xFF1E293B),
+                                              Color(0xFF0F2B3E),
+                                            ]
+                                          : const [
+                                              Color(0xFFE0F2FE),
+                                              Color(0xFFF0F9FF),
+                                            ],
+                                      begin: Alignment.topLeft,
+                                      end: Alignment.bottomRight,
+                                    ),
+                                    borderRadius: BorderRadius.circular(18),
+                                    border: Border.all(
+                                      color: isDark
+                                          ? const Color(0xFF334155)
+                                          : const Color(0xFFBAE6FD),
+                                      width: 1.2,
+                                    ),
+                                    boxShadow: [
+                                      BoxShadow(
+                                        color: const Color(0xFF0284C7)
+                                            .withValues(alpha: isDark ? 0.2 : 0.08),
+                                        blurRadius: 10,
+                                        offset: const Offset(0, 3),
+                                      ),
+                                    ],
+                                  ),
+                                  child: Material(
+                                    color: Colors.transparent,
+                                    child: InkWell(
+                                      borderRadius: BorderRadius.circular(18),
+                                      onTap: () {
+                                        Navigator.push(
+                                          context,
+                                          MaterialPageRoute(
+                                            builder: (context) =>
+                                                DoctorScheduleBookingPage(
+                                              doctorId: doctorUid ?? '',
+                                              doctorName: doctorName,
+                                              doctorSpecialty: doctorSpecialty,
+                                              doctorPhoto: doctorPhoto,
+                                            ),
+                                          ),
+                                        );
+                                      },
+                                      child: Padding(
+                                        padding: const EdgeInsets.all(14),
+                                        child: Row(
+                                          children: [
+                                            Container(
+                                              width: 46,
+                                              height: 46,
+                                              decoration: BoxDecoration(
+                                                gradient: const LinearGradient(
+                                                  colors: [
+                                                    Color(0xFF38BDF8),
+                                                    Color(0xFF0284C7),
+                                                  ],
+                                                  begin: Alignment.topLeft,
+                                                  end: Alignment.bottomRight,
+                                                ),
+                                                borderRadius:
+                                                    BorderRadius.circular(14),
+                                                boxShadow: [
+                                                  BoxShadow(
+                                                    color:
+                                                        const Color(0xFF0284C7)
+                                                            .withValues(
+                                                      alpha: 0.25,
+                                                    ),
+                                                    blurRadius: 6,
+                                                    offset: const Offset(0, 2),
+                                                  ),
+                                                ],
+                                              ),
+                                              child: const Icon(
+                                                Icons.event_available_rounded,
+                                                color: Colors.white,
+                                                size: 24,
+                                              ),
+                                            ),
+                                            const SizedBox(width: 14),
+                                            Expanded(
+                                              child: Column(
+                                                crossAxisAlignment:
+                                                    CrossAxisAlignment.start,
+                                                children: [
+                                                  Row(
+                                                    children: [
+                                                      Text(
+                                                        'Jadwal & Booking',
+                                                        style: TextStyle(
+                                                          fontSize: 15,
+                                                          fontWeight:
+                                                              FontWeight.bold,
+                                                          color: isDark
+                                                              ? Colors.white
+                                                              : const Color(
+                                                                  0xFF0F172A),
+                                                        ),
+                                                      ),
+                                                      if (pendingBookings > 0) ...[
+                                                        const SizedBox(
+                                                            width: 8),
+                                                        Container(
+                                                          padding:
+                                                              const EdgeInsets
+                                                                  .symmetric(
+                                                            horizontal: 7,
+                                                            vertical: 2,
+                                                          ),
+                                                          decoration:
+                                                              BoxDecoration(
+                                                            color: const Color(
+                                                                0xFFF59E0B),
+                                                            borderRadius:
+                                                                BorderRadius
+                                                                    .circular(
+                                                                        10),
+                                                          ),
+                                                          child: Text(
+                                                            '$pendingBookings Permintaan Baru',
+                                                            style:
+                                                                const TextStyle(
+                                                              fontSize: 10,
+                                                              fontWeight:
+                                                                  FontWeight
+                                                                      .bold,
+                                                              color:
+                                                                  Colors.white,
+                                                            ),
+                                                          ),
+                                                        ),
+                                                      ],
+                                                    ],
+                                                  ),
+                                                  const SizedBox(height: 3),
+                                                  Text(
+                                                    'Atur jadwal praktik & konfirmasi booking konsultasi pasien',
+                                                    style: TextStyle(
+                                                      fontSize: 11.5,
+                                                      color: isDark
+                                                          ? const Color(
+                                                              0xFF94A3B8)
+                                                          : const Color(
+                                                              0xFF64748B),
+                                                      height: 1.3,
+                                                    ),
+                                                  ),
+                                                ],
+                                              ),
+                                            ),
+                                            const SizedBox(width: 8),
+                                            Container(
+                                              width: 32,
+                                              height: 32,
+                                              decoration: BoxDecoration(
+                                                color: isDark
+                                                    ? const Color(0xFF334155)
+                                                    : Colors.white,
+                                                borderRadius:
+                                                    BorderRadius.circular(10),
+                                                border: Border.all(
+                                                  color: isDark
+                                                      ? const Color(0xFF475569)
+                                                      : const Color(0xFFBAE6FD),
+                                                  width: 1,
+                                                ),
+                                              ),
+                                              child: const Icon(
+                                                Icons.arrow_forward_ios_rounded,
+                                                size: 14,
+                                                color: Color(0xFF0284C7),
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                );
+                              },
                             ),
 
                     const SizedBox(height: 20),
