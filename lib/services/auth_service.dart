@@ -136,7 +136,7 @@ class AuthService {
       name = prefix.isNotEmpty ? '${prefix[0].toUpperCase()}${prefix.substring(1)}' : 'Dokter';
     }
     if (name.isEmpty) {
-      name = 'Dokter HeartCare';
+      name = 'Dokter';
     }
     if (!name.toLowerCase().startsWith('dr.') && !name.toLowerCase().startsWith('dr ')) {
       name = 'dr. $name';
@@ -147,7 +147,8 @@ class AuthService {
       'nama': name,
       'email': user?.email ?? '',
       'spesialis': 'Spesialis Jantung & Pembuluh Darah',
-      'foto': 'assets/images/dokter_nurlitta.jpg',
+      'foto': '',
+      'jenisKelamin': 'Perempuan',
       'sip': 'SIP/2026',
       'lokasi': 'Klinik Jantung HeartCare',
       'telepon': '',
@@ -210,6 +211,9 @@ class AuthService {
         .toString()
         .trim();
     final pengalaman = (data['pengalaman'] ?? '10 tahun').toString().trim();
+    final jenisKelamin = (data['jenisKelamin'] ?? '').toString().trim();
+    final rawFoto = (data['foto'] ?? '').toString().trim();
+    final foto = rawFoto.contains('dokter_nurlitta') ? '' : rawFoto;
     final tentang = (data['tentang'] ??
             'Dokter spesialis jantung dan kardiovaskular bersertifikasi yang berdedikasi melayani konsultasi kesehatan jantung pasien secara komprehensif.')
         .toString()
@@ -217,10 +221,11 @@ class AuthService {
 
     return {
       'uid': user.uid,
-      'nama': data['nama'] ?? user.displayName ?? 'dr. Dokter HeartCare',
+      'nama': data['nama'] ?? user.displayName ?? 'dr. Dokter',
       'spesialis':
           data['spesialis'] ?? 'Spesialis Jantung & Pembuluh Darah',
-      'foto': data['foto'] ?? 'assets/images/dokter_nurlitta.jpg',
+      'foto': foto,
+      'jenisKelamin': jenisKelamin,
       'sip': data['sip'] ?? 'SIP/2026',
       'lokasi': data['lokasi'] ?? 'Klinik Jantung HeartCare',
       'telepon': telepon,
@@ -250,12 +255,14 @@ class AuthService {
     required String name,
     required String email,
     required String password,
+    required String foto,
+    required String jenisKelamin,
     String telepon = '',
     String spesialis = 'Spesialis Jantung & Pembuluh Darah',
     String sip = '',
     String lokasi = '',
+    String pengalaman = '10 tahun',
     String tentang = '',
-    String foto = 'assets/images/dokter_nurlitta.jpg',
   }) async {
     final trimmedName = name.trim();
     final trimmedEmail = email.trim();
@@ -266,9 +273,20 @@ class AuthService {
     final trimmedSip = sip.trim();
     final trimmedLokasi =
         lokasi.trim().isEmpty ? 'Klinik Jantung HeartCare' : lokasi.trim();
+    final trimmedPengalaman =
+        pengalaman.trim().isEmpty ? '10 tahun' : pengalaman.trim();
+    final trimmedJenisKelamin = jenisKelamin.trim();
 
     if (trimmedName.isEmpty || trimmedEmail.isEmpty || password.isEmpty) {
       return 'Mohon lengkapi Nama Dokter, Email, dan Kata Sandi.';
+    }
+
+    if (foto.trim().isEmpty) {
+      return 'Foto profil dokter wajib diunggah.';
+    }
+
+    if (trimmedJenisKelamin.isEmpty) {
+      return 'Mohon pilih jenis kelamin dokter.';
     }
 
     String formattedName = trimmedName;
@@ -297,11 +315,12 @@ class AuthService {
               ? trimmedSip
               : 'SIP-${DateTime.now().millisecondsSinceEpoch % 10000}/2026',
           'lokasi': trimmedLokasi,
-          'pengalaman': '10 tahun',
+          'pengalaman': trimmedPengalaman,
+          'jenisKelamin': trimmedJenisKelamin,
           'tentang': tentang.trim().isNotEmpty
               ? tentang.trim()
               : 'Berpengalaman dalam penanganan masalah jantung dan kardiovaskular secara profesional dan komprehensif.',
-          'foto': foto,
+          'foto': foto.trim(),
           'isOnline': true,
         };
 

@@ -7,6 +7,7 @@ import 'package:heartcare/pages/riwayat_model.dart';
 import 'package:heartcare/pages/detail_riwayat_skrining_page.dart';
 import 'package:heartcare/pages/detail_riwayat_konsultasi_page.dart';
 import 'package:heartcare/services/theme_service.dart';
+import 'package:heartcare/services/language_service.dart';
 
 class RiwayatPage extends StatefulWidget {
   const RiwayatPage({super.key});
@@ -21,11 +22,14 @@ class _RiwayatPageState extends State<RiwayatPage> {
 
   @override
   Widget build(BuildContext context) {
-    return ValueListenableBuilder<ThemeMode>(
-      valueListenable: ThemeService.themeModeNotifier,
-      builder: (context, themeMode, child) {
-        final isDark = themeMode == ThemeMode.dark;
-        final allItems = RiwayatService().items;
+    return ValueListenableBuilder<String>(
+      valueListenable: LanguageService.languageNotifier,
+      builder: (context, _, _) {
+        return ValueListenableBuilder<ThemeMode>(
+          valueListenable: ThemeService.themeModeNotifier,
+          builder: (context, themeMode, child) {
+            final isDark = themeMode == ThemeMode.dark;
+            final allItems = RiwayatService().items;
 
         final items = _selectedFilterIndex == 1
             ? allItems.where((e) => e.type == RiwayatType.skrining).toList()
@@ -125,7 +129,7 @@ class _RiwayatPageState extends State<RiwayatPage> {
                           mainAxisSize: MainAxisSize.min,
                           children: [
                             Text(
-                              'Riwayat',
+                              tr('Riwayat', 'History'),
                               style: TextStyle(
                                 fontSize: 18,
                                 fontWeight: FontWeight.bold,
@@ -137,7 +141,7 @@ class _RiwayatPageState extends State<RiwayatPage> {
                             ),
                             const SizedBox(height: 2),
                             Text(
-                              'Catatan Skrining & Konsultasi',
+                              tr('Catatan Skrining & Konsultasi', 'Screening & Consultation Records'),
                               style: TextStyle(
                                 fontSize: 11.5,
                                 color: isDark
@@ -161,14 +165,14 @@ class _RiwayatPageState extends State<RiwayatPage> {
                     child: Row(
                       children: [
                         _filterChip(
-                          label: 'Semua',
+                          label: tr('Semua', 'All'),
                           count: allItems.length,
                           index: 0,
                           isDark: isDark,
                         ),
                         const SizedBox(width: 8),
                         _filterChip(
-                          label: 'Skrining',
+                          label: tr('Skrining', 'Screening'),
                           count: skriningCount,
                           index: 1,
                           isDark: isDark,
@@ -176,7 +180,7 @@ class _RiwayatPageState extends State<RiwayatPage> {
                         ),
                         const SizedBox(width: 8),
                         _filterChip(
-                          label: 'Konsultasi',
+                          label: tr('Konsultasi', 'Consultation'),
                           count: konsultasiCount,
                           index: 2,
                           isDark: isDark,
@@ -216,6 +220,8 @@ class _RiwayatPageState extends State<RiwayatPage> {
         );
       },
     );
+  },
+);
   }
 
   // WIDGET HELPER: FILTER CHIP
@@ -1011,7 +1017,7 @@ class _RiwayatPageState extends State<RiwayatPage> {
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
                           Text(
-                            'Lihat Detail',
+                            tr('Lihat Detail', 'View Details'),
                             style: TextStyle(
                               fontSize: 13,
                               fontWeight: FontWeight.bold,
@@ -1066,7 +1072,7 @@ class _RiwayatPageState extends State<RiwayatPage> {
             ),
             const SizedBox(height: 16),
             Text(
-              'Belum Ada Riwayat',
+              tr('Belum Ada Riwayat', 'No History Yet'),
               style: TextStyle(
                 fontSize: 16,
                 fontWeight: FontWeight.bold,
@@ -1075,7 +1081,7 @@ class _RiwayatPageState extends State<RiwayatPage> {
             ),
             const SizedBox(height: 6),
             Text(
-              'Tidak ada catatan riwayat untuk kategori yang dipilih.',
+              tr('Tidak ada catatan riwayat untuk kategori yang dipilih.', 'No history records found for the selected category.'),
               textAlign: TextAlign.center,
               style: TextStyle(
                 fontSize: 12.5,
@@ -1091,9 +1097,9 @@ class _RiwayatPageState extends State<RiwayatPage> {
                   _selectedFilterIndex = 0;
                 });
               },
-              child: const Text(
-                'Tampilkan Semua',
-                style: TextStyle(
+              child: Text(
+                tr('Tampilkan Semua', 'Show All'),
+                style: const TextStyle(
                   fontWeight: FontWeight.bold,
                   color: primaryTeal,
                 ),
@@ -1126,7 +1132,7 @@ class _RiwayatPageState extends State<RiwayatPage> {
           _navItem(
             context,
             Icons.home_outlined,
-            'Home',
+            tr('Home', 'Home'),
             false,
             isDark: isDark,
             onTap: () {
@@ -1140,7 +1146,7 @@ class _RiwayatPageState extends State<RiwayatPage> {
           _navItem(
             context,
             Icons.favorite_border,
-            'Skrining',
+            tr('Skrining', 'Screening'),
             false,
             isDark: isDark,
             onTap: () {
@@ -1154,7 +1160,7 @@ class _RiwayatPageState extends State<RiwayatPage> {
           _navItem(
             context,
             Icons.medical_services_outlined,
-            'Dokter',
+            tr('Dokter', 'Doctors'),
             false,
             isDark: isDark,
             onTap: () {
@@ -1168,14 +1174,14 @@ class _RiwayatPageState extends State<RiwayatPage> {
           _navItem(
             context,
             Icons.description_rounded,
-            'Riwayat',
+            tr('Riwayat', 'History'),
             true,
             isDark: isDark,
           ),
           _navItem(
             context,
             Icons.person_outline,
-            'Profil',
+            tr('Profil', 'Profile'),
             false,
             isDark: isDark,
             onTap: () {

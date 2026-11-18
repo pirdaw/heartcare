@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:heartcare/services/theme_service.dart';
+import 'package:heartcare/services/language_service.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 class EmergencyPage extends StatelessWidget {
@@ -54,12 +55,15 @@ class EmergencyPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ValueListenableBuilder<ThemeMode>(
-      valueListenable: ThemeService.themeModeNotifier,
-      builder: (context, themeMode, _) {
-        final isDark = themeMode == ThemeMode.dark;
+    return ValueListenableBuilder<String>(
+      valueListenable: LanguageService.languageNotifier,
+      builder: (context, _, _) {
+        return ValueListenableBuilder<ThemeMode>(
+          valueListenable: ThemeService.themeModeNotifier,
+          builder: (context, themeMode, _) {
+            final isDark = themeMode == ThemeMode.dark;
 
-        return Scaffold(
+            return Scaffold(
           backgroundColor: isDark ? const Color(0xFF0F172A) : const Color(0xFFF8FAFC),
           appBar: AppBar(
             backgroundColor: isDark ? const Color(0xFF1E293B) : Colors.white,
@@ -83,7 +87,7 @@ class EmergencyPage extends StatelessWidget {
               ),
             ),
             title: Text(
-              'Panggilan Darurat Medis',
+              tr('Panggilan Darurat Medis', 'Medical Emergency Call'),
               style: TextStyle(
                 color: isDark ? Colors.white : const Color(0xFF0F172A),
                 fontSize: 17,
@@ -109,7 +113,7 @@ class EmergencyPage extends StatelessWidget {
                     ),
                     const SizedBox(width: 5),
                     Text(
-                      'Siaga 24 Jam',
+                      tr('Siaga 24 Jam', '24-Hour Standby'),
                       style: TextStyle(
                         color: isDark ? const Color(0xFFF87171) : const Color(0xFFDC2626),
                         fontSize: 11.5,
@@ -134,7 +138,7 @@ class EmergencyPage extends StatelessWidget {
 
                   // 2. NOMOR PANGGILAN CEPAT LAINNYA
                   Text(
-                    'Layanan Darurat Cepat',
+                    tr('Layanan Darurat Cepat', 'Quick Emergency Services'),
                     style: TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.bold,
@@ -194,6 +198,8 @@ class EmergencyPage extends StatelessWidget {
         );
       },
     );
+  },
+);
   }
 
   /// Banner Hotline Utama 119

@@ -1,12 +1,15 @@
 import 'dart:async';
 import 'dart:convert';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+
 import 'doctor_service.dart';
 import 'notification_service.dart';
 import 'call_service.dart';
+import 'chat_notification_service.dart';
 
 class ChatMessage {
   final String id;
@@ -73,12 +76,15 @@ class ChatMessage {
   }
 
   factory ChatMessage.fromJson(Map<String, dynamic> json) {
-    final tsMillis = json['localTimestamp'] as num? ??
+    final tsMillis =
+        json['localTimestamp'] as num? ??
         (json['timestampMillis'] as num?) ??
         DateTime.now().millisecondsSinceEpoch;
 
     return ChatMessage(
-      id: json['id'] as String? ?? 'msg_${DateTime.now().millisecondsSinceEpoch}',
+      id:
+          json['id'] as String? ??
+          'msg_${DateTime.now().millisecondsSinceEpoch}',
       senderId: json['senderId'] as String? ?? '',
       senderRole: json['senderRole'] as String? ?? 'patient',
       senderName: json['senderName'] as String? ?? '',
@@ -86,7 +92,8 @@ class ChatMessage {
       attachmentType: json['attachmentType'] as String?,
       imagePath: json['imagePath'] as String?,
       timestamp: DateTime.fromMillisecondsSinceEpoch(tsMillis.toInt()),
-      timeFormatted: json['timeFormatted'] as String? ??
+      timeFormatted:
+          json['timeFormatted'] as String? ??
           json['clientTime'] as String? ??
           '${DateTime.now().hour.toString().padLeft(2, '0')}.${DateTime.now().minute.toString().padLeft(2, '0')}',
       isRead: json['isRead'] as bool? ?? false,
@@ -156,7 +163,8 @@ class ChatRoom {
       lastTime = (data['lastMessageTime'] as Timestamp).toDate();
     } else if (data['lastMessageLocalTime'] is num) {
       lastTime = DateTime.fromMillisecondsSinceEpoch(
-          (data['lastMessageLocalTime'] as num).toInt());
+        (data['lastMessageLocalTime'] as num).toInt(),
+      );
     }
 
     DateTime updated = DateTime.now();
@@ -189,7 +197,8 @@ class ChatRoom {
   }
 
   factory ChatRoom.fromJson(Map<String, dynamic> json) {
-    final lastTimeMillis = json['lastMessageLocalTime'] as num? ??
+    final lastTimeMillis =
+        json['lastMessageLocalTime'] as num? ??
         DateTime.now().millisecondsSinceEpoch;
     int unreadDoctor = (json['unreadCountDoctor'] as num?)?.toInt() ?? 0;
     final lastSender = (json['lastSenderRole'] as String? ?? '').toLowerCase();
@@ -204,10 +213,14 @@ class ChatRoom {
       patientPhoto: json['patientPhoto'] as String? ?? '',
       doctorId: json['doctorId'] as String? ?? '',
       doctorName: json['doctorName'] as String? ?? 'dr. Spesialis Jantung',
-      doctorPhoto: json['doctorPhoto'] as String? ?? 'assets/images/dokter_nurlitta.jpg',
-      doctorSpecialty: json['doctorSpecialty'] as String? ?? 'Spesialis Jantung',
+      doctorPhoto:
+          json['doctorPhoto'] as String? ?? 'assets/images/dokter_nurlitta.jpg',
+      doctorSpecialty:
+          json['doctorSpecialty'] as String? ?? 'Spesialis Jantung',
       lastMessage: json['lastMessage'] as String? ?? '',
-      lastMessageTime: DateTime.fromMillisecondsSinceEpoch(lastTimeMillis.toInt()),
+      lastMessageTime: DateTime.fromMillisecondsSinceEpoch(
+        lastTimeMillis.toInt(),
+      ),
       lastSenderRole: json['lastSenderRole'] as String? ?? '',
       unreadCountDoctor: unreadDoctor,
       unreadCountPatient: (json['unreadCountPatient'] as num?)?.toInt() ?? 0,
@@ -266,7 +279,8 @@ class ChatService {
       _activeRole = clean;
       CallService.instance.setActiveRole(clean);
       debugPrint(
-          '[ChatService] Active portal role disetel ke: $_activeRole (Session: $instanceSessionId)');
+        '[ChatService] Active portal role disetel ke: $_activeRole (Session: $instanceSessionId)',
+      );
     }
   }
 
@@ -299,15 +313,19 @@ class ChatService {
 
     try {
       debugPrint(
-          '[ChatService] Memulai listener chat real-time (Session: $instanceSessionId, Role: $_activeRole)...');
-      _incomingChatSub = _firestore.collection('chats').snapshots().listen(
-        (snapshot) {
-          _handleIncomingChatsSnapshot(snapshot);
-        },
-        onError: (err) {
-          debugPrint('[ChatService] Info listener chat: $err');
-        },
+        '[ChatService] Memulai listener chat real-time (Session: $instanceSessionId, Role: $_activeRole)...',
       );
+      _incomingChatSub = _firestore
+          .collection('chats')
+          .snapshots()
+          .listen(
+            (snapshot) {
+              _handleIncomingChatsSnapshot(snapshot);
+            },
+            onError: (err) {
+              debugPrint('[ChatService] Info listener chat: $err');
+            },
+          );
     } catch (e) {
       debugPrint('[ChatService] Exception starting chat listener: $e');
     }
@@ -333,8 +351,9 @@ class ChatService {
       final lastMessage = (data['lastMessage'] as String? ?? '').trim();
       if (lastMessage.isEmpty) continue;
 
-      final lastSenderRole =
-          (data['lastSenderRole'] as String? ?? '').trim().toLowerCase();
+      final lastSenderRole = (data['lastSenderRole'] as String? ?? '')
+          .trim()
+          .toLowerCase();
       // Abaikan status baca pesan
       if (lastSenderRole.contains('read') || lastSenderRole.isEmpty) {
         continue;
@@ -396,7 +415,8 @@ class ChatService {
 
       // 5. MUNCULKAN NOTIFIKASI POP-UP DI ATAS HP SESUAI TUJUAN PENERIMA!
       debugPrint(
-          '[ChatService] Menampilkan notifikasi chat masuk untuk portal: $_activeRole dari pengirim: $lastSenderRole');
+        '[ChatService] Menampilkan notifikasi chat masuk untuk portal: $_activeRole dari pengirim: $lastSenderRole',
+      );
 
       if (_activeRole == 'doctor' && lastSenderRole == 'patient') {
         // Pasien kirim ke dokter -> POP-UP DI PORTAL DOKTER
@@ -404,8 +424,8 @@ class ChatService {
           patientName: (data['patientName'] as String?)?.isNotEmpty == true
               ? data['patientName']
               : ((data['lastSenderName'] as String?)?.isNotEmpty == true
-                  ? data['lastSenderName']
-                  : 'Pasien HeartCare'),
+                    ? data['lastSenderName']
+                    : 'Pasien HeartCare'),
           message: lastMessage,
           patientPhoto: data['patientPhoto'] as String?,
           patientId: data['patientId'] as String?,
@@ -420,8 +440,8 @@ class ChatService {
           doctorName: (data['doctorName'] as String?)?.isNotEmpty == true
               ? data['doctorName']
               : ((data['lastSenderName'] as String?)?.isNotEmpty == true
-                  ? data['lastSenderName']
-                  : 'Dokter HeartCare'),
+                    ? data['lastSenderName']
+                    : 'Dokter HeartCare'),
           message: lastMessage,
           doctorPhoto: data['doctorPhoto'] as String?,
           doctorSpecialty: data['doctorSpecialty'] as String?,
@@ -438,7 +458,9 @@ class ChatService {
       final roomsList = prefs.getStringList(_prefKeyRooms) ?? [];
       for (final item in roomsList) {
         try {
-          final room = ChatRoom.fromJson(jsonDecode(item) as Map<String, dynamic>);
+          final room = ChatRoom.fromJson(
+            jsonDecode(item) as Map<String, dynamic>,
+          );
           _localRooms[room.id] = room;
         } catch (_) {}
       }
@@ -447,6 +469,20 @@ class ChatService {
 
   String _cleanId(String input) {
     return input.replaceAll(RegExp(r'[^a-zA-Z0-9]'), '_').toLowerCase();
+  }
+
+  static String cleanDoctorName(String raw) {
+    return raw
+        .toLowerCase()
+        .replaceAll(
+          RegExp(
+            r'(dr\.|dr\b|sp\.jp|spjp|s\.t\.|s\.t|\bst\b|spesialis|jantung)',
+            caseSensitive: false,
+          ),
+          '',
+        )
+        .replaceAll(RegExp(r'[^a-z0-9]'), ' ')
+        .trim();
   }
 
   /// Mendapatkan atau membuat ruang chat antara pasien dan dokter secara deterministik di Firestore & Cache
@@ -463,7 +499,8 @@ class ChatService {
     try {
       currentUser = _auth.currentUser;
     } catch (_) {}
-    final resolvedPatientId = patientId ??
+    final resolvedPatientId =
+        patientId ??
         currentUser?.uid ??
         currentUser?.email?.replaceAll(RegExp(r'[^a-zA-Z0-9]'), '_') ??
         'patient_user';
@@ -475,23 +512,30 @@ class ChatService {
     // Jika doctorId tidak dioper atau berupa nama, coba cari UID dokter asli di Firestore
     if (doctorId == null || doctorId.isEmpty || doctorId == doctorName) {
       try {
-        final cleanTarget = _cleanId(doctorName);
-        final usersSnap = await _firestore.collection('users').get();
-        for (final doc in usersSnap.docs) {
-          final data = doc.data();
-          if (DoctorService.isDoctorDocument(data)) {
-            final dName = (data['nama'] as String? ?? data['name'] as String? ?? '');
-            if (_cleanId(dName).contains(cleanTarget) || cleanTarget.contains(_cleanId(dName))) {
-              resolvedDoctorId = doc.id;
-              break;
+        final targetDocName = cleanDoctorName(doctorName);
+        if (targetDocName.isNotEmpty) {
+          final usersSnap = await _firestore.collection('users').get();
+          for (final doc in usersSnap.docs) {
+            final data = doc.data();
+            if (DoctorService.isDoctorDocument(data)) {
+              final dName =
+                  (data['nama'] as String? ?? data['name'] as String? ?? '');
+              final cleanDName = cleanDoctorName(dName);
+              if (cleanDName.contains(targetDocName) ||
+                  targetDocName.contains(cleanDName)) {
+                resolvedDoctorId = doc.id;
+                break;
+              }
             }
           }
         }
       } catch (_) {}
     }
 
-    final chatId = 'chat_${_cleanId(resolvedPatientId)}_${_cleanId(resolvedDoctorId)}';
-    final resolvedPatientName = patientName ??
+    final chatId =
+        'chat_${_cleanId(resolvedPatientId)}_${_cleanId(resolvedDoctorId)}';
+    final resolvedPatientName =
+        patientName ??
         (currentUser?.displayName?.isNotEmpty == true
             ? currentUser!.displayName!
             : 'Pasien HeartCare');
@@ -552,7 +596,9 @@ class ChatService {
         }, SetOptions(merge: true));
 
         // Buat pesan sambutan awal otomatis dari dokter
-        final initialMsgRef = chatDocRef.collection('messages').doc('welcome_msg');
+        final initialMsgRef = chatDocRef
+            .collection('messages')
+            .doc('welcome_msg');
         final welcomeMsg = {
           'id': 'welcome_msg',
           'senderId': resolvedDoctorId,
@@ -644,6 +690,79 @@ class ChatService {
     return chatId;
   }
 
+  /// Memeriksa apakah pesan bot awal sudah pernah dikirim untuk kombinasi pasien & dokter ini.
+  Future<bool> hasInitialBotReplied({
+    required String chatId,
+    String? patientId,
+    String? doctorId,
+    String? doctorName,
+  }) async {
+    final cleanDoc = cleanDoctorName(doctorName ?? '');
+    final cleanPat = (patientId ?? '').trim().toLowerCase();
+
+    // 1. Cek dari SharedPreferences (instan dan persisten lokal)
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      if (prefs.getBool('bot_replied_$chatId') == true) {
+        return true;
+      }
+      if (cleanDoc.isNotEmpty && cleanPat.isNotEmpty) {
+        if (prefs.getBool('bot_replied_${cleanPat}_$cleanDoc') == true) {
+          return true;
+        }
+      }
+    } catch (_) {}
+
+    // 2. Cek Firestore pada dokumen chat
+    try {
+      final doc = await _firestore.collection('chats').doc(chatId).get();
+      if (doc.exists) {
+        final data = doc.data();
+        if (data != null && data['hasInitialBotReplied'] == true) {
+          return true;
+        }
+      }
+    } catch (_) {}
+
+    // 3. Periksa riwayat pesan: jika pasien sudah pernah mengirim pesan sebelumnya,
+    // maka ini BUKAN chat pertama kali.
+    final localMsgs = await _loadLocalMessages(chatId);
+    final patientMsgs = localMsgs
+        .where((m) => m.senderRole == 'patient')
+        .toList();
+    if (patientMsgs.isNotEmpty) {
+      return true;
+    }
+
+    return false;
+  }
+
+  /// Menandai bahwa bot awal sudah membalas, sehingga pesan balasan berikutnya dari pasien
+  /// tidak akan memicu pesan bot otomatis lagi.
+  Future<void> markInitialBotReplied({
+    required String chatId,
+    String? patientId,
+    String? doctorId,
+    String? doctorName,
+  }) async {
+    final cleanDoc = cleanDoctorName(doctorName ?? '');
+    final cleanPat = (patientId ?? '').trim().toLowerCase();
+
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setBool('bot_replied_$chatId', true);
+      if (cleanDoc.isNotEmpty && cleanPat.isNotEmpty) {
+        await prefs.setBool('bot_replied_${cleanPat}_$cleanDoc', true);
+      }
+    } catch (_) {}
+
+    try {
+      await _firestore.collection('chats').doc(chatId).set({
+        'hasInitialBotReplied': true,
+      }, SetOptions(merge: true));
+    } catch (_) {}
+  }
+
   void _addLocalMessage(String chatId, ChatMessage msg) {
     final list = _localMessages[chatId] ?? [];
     list.removeWhere((m) => m.id == msg.id);
@@ -652,7 +771,10 @@ class ChatService {
     _saveMessagesToLocal(chatId, list);
   }
 
-  Future<void> _saveMessagesToLocal(String chatId, List<ChatMessage> list) async {
+  Future<void> _saveMessagesToLocal(
+    String chatId,
+    List<ChatMessage> list,
+  ) async {
     try {
       final prefs = await SharedPreferences.getInstance();
       final encoded = list.map((m) => jsonEncode(m.toJson())).toList();
@@ -661,7 +783,8 @@ class ChatService {
   }
 
   Future<List<ChatMessage>> _loadLocalMessages(String chatId) async {
-    if (_localMessages.containsKey(chatId) && _localMessages[chatId]!.isNotEmpty) {
+    if (_localMessages.containsKey(chatId) &&
+        _localMessages[chatId]!.isNotEmpty) {
       return _localMessages[chatId]!;
     }
     try {
@@ -670,7 +793,9 @@ class ChatService {
       final result = <ChatMessage>[];
       for (final item in list) {
         try {
-          result.add(ChatMessage.fromJson(jsonDecode(item) as Map<String, dynamic>));
+          result.add(
+            ChatMessage.fromJson(jsonDecode(item) as Map<String, dynamic>),
+          );
         } catch (_) {}
       }
       _localMessages[chatId] = result;
@@ -693,7 +818,9 @@ class ChatService {
       decoded.removeWhere((r) => r['id'] == room.id || r['chatId'] == room.id);
       decoded.add(room.toJson());
       await prefs.setStringList(
-          _prefKeyRooms, decoded.map((e) => jsonEncode(e)).toList());
+        _prefKeyRooms,
+        decoded.map((e) => jsonEncode(e)).toList(),
+      );
     } catch (_) {}
   }
 
@@ -715,7 +842,8 @@ class ChatService {
     try {
       currentUser = _auth.currentUser;
     } catch (_) {}
-    final senderId = currentUser?.uid ??
+    final senderId =
+        currentUser?.uid ??
         (senderRole == 'doctor' ? 'doctor_user' : 'patient_user');
 
     final now = DateTime.now();
@@ -743,12 +871,12 @@ class ChatService {
     final snippet = message.isNotEmpty
         ? message
         : (imagePath != null && imagePath.isNotEmpty
-            ? (attachmentType != null && attachmentType.isNotEmpty
-                ? '📷 $attachmentType'
-                : '📷 Mengirim foto medis')
-            : (attachmentType == 'screening'
-                ? '📊 Mengirim hasil skrining jantung'
-                : '📄 Mengirim lampiran'));
+              ? (attachmentType != null && attachmentType.isNotEmpty
+                    ? '📷 $attachmentType'
+                    : '📷 Mengirim foto medis')
+              : (attachmentType == 'screening'
+                    ? '📊 Mengirim hasil skrining jantung'
+                    : '📄 Mengirim lampiran'));
 
     final existingRoom = _localRooms[chatId];
     final resolvedPhoto = (patientPhoto != null && patientPhoto.isNotEmpty)
@@ -779,6 +907,37 @@ class ChatService {
       _localRooms[chatId] = updatedRoom;
       _saveRoomToLocal(updatedRoom);
     }
+
+    // Trigger notifikasi real-time & simpan riwayat notifikasi lokal
+    final docName =
+        doctorName ?? existingRoom?.doctorName ?? 'dr. Nurlitta Dwi';
+    final docPhoto =
+        existingRoom?.doctorPhoto ?? 'assets/images/dokter_nurlitta.jpg';
+    final docSpec = existingRoom?.doctorSpecialty ?? 'Spesialis Jantung';
+    final pName =
+        patientName ?? existingRoom?.patientName ?? 'Pasien HeartCare';
+
+    ChatNotificationService.instance.notifyIncomingMessage(
+      chatId: chatId,
+      patientId: patientId ?? existingRoom?.patientId,
+      doctorId: doctorId ?? existingRoom?.doctorId,
+      conversationDoctorName: docName,
+      doctorPhoto: docPhoto,
+      doctorSpecialty: docSpec,
+      patientName: pName,
+      senderRole: senderRole == 'doctor'
+          ? ChatSenderRole.doctor
+          : ChatSenderRole.patient,
+      senderName: senderName,
+      message: message.isNotEmpty
+          ? message
+          : (attachmentType == 'image'
+                ? '📷 Mengirim foto keluhan'
+                : (attachmentType == 'screening'
+                      ? '📊 Mengirim hasil skrining jantung'
+                      : '📄 Mengirim lampiran')),
+      time: timeStr,
+    );
 
     // 3. Simpan ke Firestore secara background
     bool isCloudSuccess = false;
@@ -830,11 +989,16 @@ class ChatService {
         roomPayload['doctorPhoto'] = existingRoom.doctorPhoto;
         roomPayload['doctorSpecialty'] = existingRoom.doctorSpecialty;
       } else {
-        if (patientId != null && patientId.isNotEmpty) roomPayload['patientId'] = patientId;
-        if (patientName != null && patientName.isNotEmpty) roomPayload['patientName'] = patientName;
-        if (resolvedPhoto.isNotEmpty) roomPayload['patientPhoto'] = resolvedPhoto;
-        if (doctorId != null && doctorId.isNotEmpty) roomPayload['doctorId'] = doctorId;
-        if (doctorName != null && doctorName.isNotEmpty) roomPayload['doctorName'] = doctorName;
+        if (patientId != null && patientId.isNotEmpty)
+          roomPayload['patientId'] = patientId;
+        if (patientName != null && patientName.isNotEmpty)
+          roomPayload['patientName'] = patientName;
+        if (resolvedPhoto.isNotEmpty)
+          roomPayload['patientPhoto'] = resolvedPhoto;
+        if (doctorId != null && doctorId.isNotEmpty)
+          roomPayload['doctorId'] = doctorId;
+        if (doctorName != null && doctorName.isNotEmpty)
+          roomPayload['doctorName'] = doctorName;
       }
 
       await _firestore
@@ -845,7 +1009,9 @@ class ChatService {
       isCloudSuccess = true;
       debugPrint('[ChatService] Sukses kirim pesan ke Firestore: $chatId');
     } catch (e) {
-      debugPrint('[ChatService] sendMessage Firestore warning (tersimpan di lokal): $e');
+      debugPrint(
+        '[ChatService] sendMessage Firestore warning (tersimpan di lokal): $e',
+      );
     }
 
     return isCloudSuccess;
@@ -853,7 +1019,9 @@ class ChatService {
 
   /// Memperbarui foto profil pasien di seluruh ruang chat lokal dan Firestore
   Future<void> updatePatientPhotoInAllChats(
-      String patientId, String newPhoto) async {
+    String patientId,
+    String newPhoto,
+  ) async {
     if (patientId.isEmpty) return;
 
     final cleanPId = _cleanId(patientId);
@@ -937,8 +1105,8 @@ class ChatService {
           .collection('messages')
           .snapshots()
           .handleError((err) {
-        debugPrint('[ChatService] getMessagesStream Firestore error: $err');
-      });
+            debugPrint('[ChatService] getMessagesStream Firestore error: $err');
+          });
 
       await for (final snapshot in firestoreStream) {
         final Map<String, ChatMessage> map = {};
@@ -973,72 +1141,129 @@ class ChatService {
     }
   }
 
-  List<ChatRoom> _filterDoctorRooms(
+  static List<ChatRoom> filterDoctorRooms(
     List<ChatRoom> allRooms,
     String doctorName, {
     String? doctorId,
   }) {
-    final targetName = doctorName
-        .replaceAll(RegExp(r'(dr\.|dr|sp\.jp|spjp)', caseSensitive: false), '')
-        .trim()
-        .toLowerCase();
-    final targetId = (doctorId ?? '').trim().toLowerCase();
+    final cleanTargetId = (doctorId ?? '').trim().toLowerCase();
+    final cleanTargetName = cleanDoctorName(doctorName);
+
+    // Identifikasi dokter target secara spesifik (2 dokter aktif utama HeartCare)
+    final isTargetAsya =
+        cleanTargetName.contains('asya') ||
+        cleanTargetName.contains('catherine') ||
+        cleanTargetId.contains('asya');
+    final isTargetValent =
+        cleanTargetName.contains('valent') ||
+        cleanTargetName.contains('kavalera') ||
+        cleanTargetId.contains('valent') ||
+        cleanTargetId.contains('kavalera');
 
     final filtered = allRooms.where((room) {
-      // 1. Cek kecocokan ID dokter atau room ID
-      if (targetId.isNotEmpty) {
-        final rDoctorId = room.doctorId.toLowerCase();
-        final rRoomId = room.id.toLowerCase();
-        if (rDoctorId == targetId ||
-            rDoctorId.contains(targetId) ||
-            targetId.contains(rDoctorId) ||
-            rRoomId.contains(targetId)) {
+      final rDoctorId = room.doctorId.trim().toLowerCase();
+      final rRoomId = room.id.trim().toLowerCase();
+      final rDoctorName = cleanDoctorName(room.doctorName);
+
+      final isRoomAsya =
+          rDoctorName.contains('asya') ||
+          rDoctorName.contains('catherine') ||
+          rDoctorId.contains('asya') ||
+          rRoomId.contains('asya');
+
+      final isRoomValent =
+          rDoctorName.contains('valent') ||
+          rDoctorName.contains('kavalera') ||
+          rDoctorId.contains('valent') ||
+          rDoctorId.contains('kavalera') ||
+          rRoomId.contains('valent') ||
+          rRoomId.contains('kavalera');
+
+      // 1. Jika dokter saat ini adalah dr. Asya:
+      if (isTargetAsya) {
+        // Jangan pernah tampilkan percakapan pasien untuk dr. Valent
+        if (isRoomValent && !isRoomAsya) {
+          return false;
+        }
+        // Tampilkan jika room memang untuk dr. Asya
+        if (isRoomAsya) return true;
+        // Atau jika ID dokter pada room cocok dengan ID dr. Asya
+        if (cleanTargetId.isNotEmpty &&
+            (rDoctorId == cleanTargetId ||
+                rDoctorId.contains(cleanTargetId) ||
+                cleanTargetId.contains(rDoctorId) ||
+                rRoomId.contains(cleanTargetId))) {
+          return true;
+        }
+        return false;
+      }
+
+      // 2. Jika dokter saat ini adalah dr. Valent:
+      if (isTargetValent) {
+        // Jangan pernah tampilkan percakapan pasien untuk dr. Asya
+        if (isRoomAsya && !isRoomValent) {
+          return false;
+        }
+        // Tampilkan jika room memang untuk dr. Valent
+        if (isRoomValent) return true;
+        // Atau jika ID dokter pada room cocok dengan ID dr. Valent
+        if (cleanTargetId.isNotEmpty &&
+            (rDoctorId == cleanTargetId ||
+                rDoctorId.contains(cleanTargetId) ||
+                cleanTargetId.contains(rDoctorId) ||
+                rRoomId.contains(cleanTargetId))) {
+          return true;
+        }
+        return false;
+      }
+
+      // 3. Untuk dokter lainnya secara umum (pencocokan ketat ID atau nama lengkap):
+      if (cleanTargetId.isNotEmpty && rDoctorId.isNotEmpty) {
+        if (rDoctorId == cleanTargetId ||
+            rDoctorId.contains(cleanTargetId) ||
+            cleanTargetId.contains(rDoctorId) ||
+            rRoomId.contains(cleanTargetId)) {
           return true;
         }
       }
 
-      // 2. Cek kecocokan Nama Dokter
-      final rName = room.doctorName
-          .replaceAll(RegExp(r'(dr\.|dr|sp\.jp|spjp)', caseSensitive: false), '')
-          .trim()
-          .toLowerCase();
-      if (targetName.isNotEmpty && rName.isNotEmpty) {
-        if (rName.contains(targetName) || targetName.contains(rName)) {
+      if (cleanTargetName.isNotEmpty && rDoctorName.isNotEmpty) {
+        if (rDoctorName == cleanTargetName ||
+            rDoctorName.contains(cleanTargetName) ||
+            cleanTargetName.contains(rDoctorName)) {
           return true;
         }
-      }
-
-      // 3. Fallback akun dokter default / pengetesan
-      if (targetName.isEmpty ||
-          targetName.contains('heartcare') ||
-          targetName.contains('dokter') ||
-          rName.contains('heartcare') ||
-          rName.contains('valent') ||
-          rName.contains('dokter') ||
-          targetId.isEmpty) {
-        return true;
       }
 
       return false;
     }).toList();
 
-    // Jika filter spesifik kosong tetapi ada konsultasi pasien aktif di sistem,
-    // tampilkan semua konsultasi agar dokter tidak pernah melewatkan pesan pasien!
-    if (filtered.isEmpty && allRooms.isNotEmpty) {
-      final fallback = allRooms.toList();
-      fallback.sort((a, b) => b.lastMessageTime.compareTo(a.lastMessageTime));
-      return fallback;
-    }
-
     filtered.sort((a, b) => b.lastMessageTime.compareTo(a.lastMessageTime));
     return filtered;
   }
 
+  // Alias private untuk kompatibilitas internal
+  List<ChatRoom> _filterDoctorRooms(
+    List<ChatRoom> allRooms,
+    String doctorName, {
+    String? doctorId,
+  }) => filterDoctorRooms(allRooms, doctorName, doctorId: doctorId);
+
   /// Real-time stream daftar chat untuk dokter tertentu (instan tanpa jeda loading)
-  Stream<List<ChatRoom>> getDoctorChatsStream(String doctorName,
-      {String? doctorId}) async* {
+  Stream<List<ChatRoom>> getDoctorChatsStream(
+    String doctorName, {
+    String? doctorId,
+  }) async* {
+    final effectiveId = (doctorId != null && doctorId.isNotEmpty)
+        ? doctorId
+        : FirebaseAuth.instance.currentUser?.uid;
+
     // 1. Emit data lokal seketika pada milidetik ke-0 agar dokter dashboard tidak loading
-    yield _filterDoctorRooms(_localRooms.values.toList(), doctorName, doctorId: doctorId);
+    yield _filterDoctorRooms(
+      _localRooms.values.toList(),
+      doctorName,
+      doctorId: effectiveId,
+    );
 
     // 2. Stream real-time Firestore secara langsung dari koleksi 'chats'
     try {
@@ -1061,15 +1286,22 @@ class ChatService {
           }
         }
 
-        final filtered = _filterDoctorRooms(map.values.toList(), doctorName, doctorId: doctorId);
+        final filtered = _filterDoctorRooms(
+          map.values.toList(),
+          doctorName,
+          doctorId: effectiveId,
+        );
         yield filtered;
       }
     } catch (e) {
       debugPrint('[ChatService] getDoctorChatsStream error: $e');
-      yield _filterDoctorRooms(_localRooms.values.toList(), doctorName, doctorId: doctorId);
+      yield _filterDoctorRooms(
+        _localRooms.values.toList(),
+        doctorName,
+        doctorId: effectiveId,
+      );
     }
   }
-
 
   /// Real-time stream daftar chat untuk pasien tertentu
   Stream<List<ChatRoom>> getPatientChatsStream(String patientId) {
@@ -1079,29 +1311,30 @@ class ChatService {
         .where('patientId', isEqualTo: patientId)
         .snapshots()
         .map((snapshot) {
-      final Map<String, ChatRoom> map = {};
+          final Map<String, ChatRoom> map = {};
 
-      // Tambah data lokal dulu
-      final cleanPId = _cleanId(patientId);
-      for (final r in _localRooms.values) {
-        if (_cleanId(r.patientId).contains(cleanPId) || cleanPId.contains(_cleanId(r.patientId))) {
-          map[r.id] = r;
-        }
-      }
+          // Tambah data lokal dulu
+          final cleanPId = _cleanId(patientId);
+          for (final r in _localRooms.values) {
+            if (_cleanId(r.patientId).contains(cleanPId) ||
+                cleanPId.contains(_cleanId(r.patientId))) {
+              map[r.id] = r;
+            }
+          }
 
-      // Timpa dengan data Firestore
-      for (final doc in snapshot.docs) {
-        try {
-          final r = ChatRoom.fromFirestore(doc);
-          map[r.id] = r;
-          _localRooms[r.id] = r;
-        } catch (_) {}
-      }
+          // Timpa dengan data Firestore
+          for (final doc in snapshot.docs) {
+            try {
+              final r = ChatRoom.fromFirestore(doc);
+              map[r.id] = r;
+              _localRooms[r.id] = r;
+            } catch (_) {}
+          }
 
-      final list = map.values.toList();
-      list.sort((a, b) => b.lastMessageTime.compareTo(a.lastMessageTime));
-      return list;
-    });
+          final list = map.values.toList();
+          list.sort((a, b) => b.lastMessageTime.compareTo(a.lastMessageTime));
+          return list;
+        });
   }
 
   /// Menandai pesan telah dibaca (mereset unread counter)
@@ -1120,13 +1353,29 @@ class ChatService {
           doctorSpecialty: room.doctorSpecialty,
           lastMessage: room.lastMessage,
           lastMessageTime: room.lastMessageTime,
-          lastSenderRole: currentRole == 'doctor' ? 'doctor_read' : 'patient_read',
-          unreadCountDoctor: currentRole == 'doctor' ? 0 : room.unreadCountDoctor,
-          unreadCountPatient: currentRole == 'patient' ? 0 : room.unreadCountPatient,
+          lastSenderRole: currentRole == 'doctor'
+              ? 'doctor_read'
+              : 'patient_read',
+          unreadCountDoctor: currentRole == 'doctor'
+              ? 0
+              : room.unreadCountDoctor,
+          unreadCountPatient: currentRole == 'patient'
+              ? 0
+              : room.unreadCountPatient,
           updatedAt: DateTime.now(),
         );
         _localRooms[chatId] = updated;
         _saveRoomToLocal(updated);
+
+        // Sinkronkan ke ChatNotificationService
+        ChatNotificationService.instance.markAsRead(
+          room.doctorName,
+          viewerRole: currentRole == 'doctor'
+              ? ChatSenderRole.doctor
+              : ChatSenderRole.patient,
+          patientId: room.patientId,
+          doctorId: room.doctorId,
+        );
       }
 
       final roomRef = _firestore.collection('chats').doc(chatId);

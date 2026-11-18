@@ -1,11 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+
 import 'Skrining/screening_model.dart';
+
 import 'package:heartcare/services/theme_service.dart';
 import 'package:heartcare/services/doctor_service.dart';
+
 import '../services/user_profile_service.dart';
 import '../services/profile_service.dart';
 import '../services/chat_service.dart';
+
+import 'package:heartcare/services/language_service.dart';
+
 import 'home_page.dart';
 import 'konsultasi_dokter_page.dart';
 import 'pilih_jadwal_page.dart';
@@ -36,8 +42,7 @@ class DetailDokterPage extends StatelessWidget {
     this.pengalaman = '12 tahun',
     this.sip = '2406/SIP/2023',
     this.lokasi = 'RS Mitra Sehat, Jember',
-    this.tentang =
-        'Berpengalaman dalam memberikan pemeriksaan dan penanganan komprehensif terhadap berbagai kondisi jantung dan kardiovaskular.',
+    this.tentang = 'Berpengalaman dalam memberikan pemeriksaan dan penanganan komprehensif terhadap berbagai kondisi jantung dan kardiovaskular.',
     this.isOnline = true,
     this.telepon = '',
     this.screeningData,
@@ -49,706 +54,831 @@ class DetailDokterPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ValueListenableBuilder<ThemeMode>(
-      valueListenable: ThemeService.themeModeNotifier,
-      builder: (context, themeMode, _) {
-        final isDark = themeMode == ThemeMode.dark;
+    return ValueListenableBuilder<String>(
+      valueListenable: LanguageService.languageNotifier,
+      builder: (context, _, _) {
+        return ValueListenableBuilder<ThemeMode>(
+          valueListenable: ThemeService.themeModeNotifier,
+          builder: (context, themeMode, _) {
+            final isDark = themeMode == ThemeMode.dark;
 
-        return Scaffold(
-          backgroundColor: isDark ? const Color(0xFF0F172A) : const Color(0xFFF8FAFC),
-          appBar: AppBar(
-            backgroundColor: isDark ? const Color(0xFF1E293B) : Colors.white,
-            elevation: 0,
-            scrolledUnderElevation: 1,
-            shadowColor: Colors.black12,
-            leading: Padding(
-              padding: const EdgeInsets.all(8.0),
-              child: Material(
-                color: isDark ? const Color(0xFF0F172A) : const Color(0xFFF1F5F9),
-                borderRadius: BorderRadius.circular(12),
-                child: InkWell(
-                  borderRadius: BorderRadius.circular(12),
-                  onTap: () => Navigator.pop(context),
-                  child: Icon(
-                    Icons.arrow_back_ios_new_rounded,
+            return Scaffold(
+              backgroundColor: isDark
+                  ? const Color(0xFF0F172A)
+                  : const Color(0xFFF8FAFC),
+              appBar: AppBar(
+                backgroundColor: isDark
+                    ? const Color(0xFF1E293B)
+                    : Colors.white,
+                elevation: 0,
+                scrolledUnderElevation: 1,
+                shadowColor: Colors.black12,
+                leading: Padding(
+                  padding: const EdgeInsets.all(8.0),
+                  child: Material(
+                    color: isDark
+                        ? const Color(0xFF0F172A)
+                        : const Color(0xFFF1F5F9),
+                    borderRadius: BorderRadius.circular(12),
+                    child: InkWell(
+                      borderRadius: BorderRadius.circular(12),
+                      onTap: () => Navigator.pop(context),
+                      child: Icon(
+                        Icons.arrow_back_ios_new_rounded,
+                        color: isDark ? Colors.white : const Color(0xFF0F172A),
+                        size: 18,
+                      ),
+                    ),
+                  ),
+                ),
+                centerTitle: true,
+                title: Text(
+                  tr('Detail Dokter', 'Doctor Details'),
+                  style: TextStyle(
                     color: isDark ? Colors.white : const Color(0xFF0F172A),
-                    size: 18,
+                    fontSize: 17,
+                    fontWeight: FontWeight.bold,
                   ),
                 ),
-              ),
-            ),
-            centerTitle: true,
-            title: Text(
-              'Detail Dokter',
-              style: TextStyle(
-                color: isDark ? Colors.white : const Color(0xFF0F172A),
-                fontSize: 17,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            actions: [
-              IconButton(
-                onPressed: () {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text('Dokter disimpan ke favorit'),
-                      duration: Duration(seconds: 2),
-                      behavior: SnackBarBehavior.floating,
-                    ),
-                  );
-                },
-                icon: Icon(
-                  Icons.bookmark_border_rounded,
-                  color: isDark ? const Color(0xFF94A3B8) : const Color(0xFF475569),
-                  size: 24,
-                ),
-              ),
-              const SizedBox(width: 4),
-            ],
-          ),
-          body: SafeArea(
-            child: Column(
-              children: [
-                Expanded(
-                  child: SingleChildScrollView(
-                    padding: const EdgeInsets.fromLTRB(20, 16, 20, 24),
-                    child: Column(
-                      children: [
-                        // ==================================================
-                        // KARTU PROFIL UTAMA
-                        // ==================================================
-                        Container(
-                          width: double.infinity,
-                          padding: const EdgeInsets.all(20),
-                          decoration: BoxDecoration(
-                            color: isDark ? const Color(0xFF1E293B) : Colors.white,
-                            borderRadius: BorderRadius.circular(20),
-                            border: Border.all(color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0)),
-                            boxShadow: [
-                              BoxShadow(
-                                color: Colors.black.withValues(alpha: isDark ? 0.2 : 0.03),
-                                blurRadius: 10,
-                                offset: const Offset(0, 3),
-                              ),
-                            ],
-                          ),
-                          child: Column(
-                            children: [
-                              // FOTO DOKTER BESAR DENGAN BORDER
-                              Stack(
-                                children: [
-                                  Container(
-                                    width: 120,
-                                    height: 120,
-                                    decoration: BoxDecoration(
-                                      shape: BoxShape.circle,
-                                      border: Border.all(
-                                        color: brandPrimary.withValues(alpha: 0.25),
-                                        width: 3.5,
-                                      ),
-                                      boxShadow: [
-                                        BoxShadow(
-                                          color: brandPrimary.withValues(alpha: 0.15),
-                                          blurRadius: 14,
-                                          offset: const Offset(0, 4),
-                                        ),
-                                      ],
-                                    ),
-                                    child: ClipOval(
-                                      child: DoctorService.buildDoctorImage(
-                                        imagePath,
-                                        width: 120,
-                                        height: 120,
-                                        isDark: isDark,
-                                      ),
-                                    ),
-                                  ),
-                                  // STATUS ONLINE / OFFLINE DOT
-                                  Positioned(
-                                    right: 6,
-                                    bottom: 4,
-                                    child: Container(
-                                      width: 20,
-                                      height: 20,
-                                      decoration: BoxDecoration(
-                                        color: isOnline
-                                            ? onlineGreen
-                                            : const Color(0xFFF59E0B),
-                                        shape: BoxShape.circle,
-                                        border: Border.all(
-                                          color: isDark ? const Color(0xFF1E293B) : Colors.white,
-                                          width: 3,
-                                        ),
-                                      ),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                              const SizedBox(height: 14),
-
-                              // NAMA DOKTER
-                              Text(
-                                nama,
-                                textAlign: TextAlign.center,
-                                style: TextStyle(
-                                  fontSize: 18,
-                                  fontWeight: FontWeight.bold,
-                                  color: isDark ? Colors.white : const Color(0xFF0F172A),
-                                ),
-                              ),
-                              const SizedBox(height: 4),
-
-                              // SPESIALIS
-                              Container(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 12,
-                                  vertical: 4,
-                                ),
-                                decoration: BoxDecoration(
-                                  color: isDark
-                                      ? const Color(0xFF0284C7).withValues(alpha: 0.25)
-                                      : const Color(0xFFE0F2FE),
-                                  borderRadius: BorderRadius.circular(20),
-                                ),
-                                child: Text(
-                                  spesialis,
-                                  style: TextStyle(
-                                    fontSize: 12,
-                                    fontWeight: FontWeight.w600,
-                                    color: isDark ? const Color(0xFF38BDF8) : brandPrimary,
-                                  ),
-                                ),
-                              ),
-                              const SizedBox(height: 10),
-
-                              // STATUS LABEL
-                              Row(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
-                                  Icon(
-                                    Icons.circle,
-                                    size: 8,
-                                    color: isOnline
-                                        ? onlineGreen
-                                        : const Color(0xFF94A3B8),
-                                  ),
-                                  const SizedBox(width: 6),
-                                  Text(
-                                    isOnline
-                                        ? 'Tersedia untuk Konsultasi'
-                                        : 'Sedang Tidak Praktik',
-                                    style: TextStyle(
-                                      fontSize: 12,
-                                      fontWeight: FontWeight.w500,
-                                      color: isOnline
-                                          ? onlineGreen
-                                          : (isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B)),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ],
-                          ),
-                        ),
-
-                        const SizedBox(height: 18),
-
-                        // ==================================================
-                        // KARTU INFORMASI DOKTER
-                        // ==================================================
-                        Container(
-                          width: double.infinity,
-                          padding: const EdgeInsets.all(18),
-                          decoration: BoxDecoration(
-                            color: isDark ? const Color(0xFF1E293B) : Colors.white,
-                            borderRadius: BorderRadius.circular(18),
-                            border: Border.all(color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0)),
-                            boxShadow: [
-                              BoxShadow(
-                                color: Colors.black.withValues(alpha: isDark ? 0.2 : 0.02),
-                                blurRadius: 8,
-                                offset: const Offset(0, 2),
-                              ),
-                            ],
-                          ),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Row(
-                                children: [
-                                  const Icon(
-                                    Icons.badge_outlined,
-                                    color: brandPrimary,
-                                    size: 20,
-                                  ),
-                                  const SizedBox(width: 8),
-                                  Text(
-                                    'Informasi Dokter',
-                                    style: TextStyle(
-                                      fontSize: 15,
-                                      fontWeight: FontWeight.bold,
-                                      color: isDark ? Colors.white : const Color(0xFF0F172A),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                              const SizedBox(height: 14),
-                              _infoTile(
-                                isDark: isDark,
-                                icon: Icons.work_outline_rounded,
-                                title: 'Pengalaman Praktik',
-                                value: pengalaman,
-                              ),
-                              Divider(height: 20, color: isDark ? const Color(0xFF334155) : const Color(0xFFF1F5F9)),
-                              _infoTile(
-                                isDark: isDark,
-                                icon: Icons.verified_user_outlined,
-                                title: 'Nomor SIP',
-                                value: sip,
-                              ),
-                              Divider(height: 20, color: isDark ? const Color(0xFF334155) : const Color(0xFFF1F5F9)),
-                              _infoTile(
-                                isDark: isDark,
-                                icon: Icons.location_on_outlined,
-                                title: 'Lokasi Praktik',
-                                value: lokasi,
-                              ),
-                              if (telepon.isNotEmpty) ...[
-                                Divider(height: 20, color: isDark ? const Color(0xFF334155) : const Color(0xFFF1F5F9)),
-                                _infoTile(
-                                  isDark: isDark,
-                                  icon: Icons.phone_rounded,
-                                  title: 'No. Telepon / WhatsApp',
-                                  value: telepon,
-                                ),
-                              ],
-                            ],
-                          ),
-                        ),
-
-                        const SizedBox(height: 18),
-
-                        // ==================================================
-                        // TENTANG DOKTER
-                        // ==================================================
-                        Container(
-                          width: double.infinity,
-                          padding: const EdgeInsets.all(18),
-                          decoration: BoxDecoration(
-                            color: isDark ? const Color(0xFF1E293B) : Colors.white,
-                            borderRadius: BorderRadius.circular(18),
-                            border: Border.all(color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0)),
-                            boxShadow: [
-                              BoxShadow(
-                                color: Colors.black.withValues(alpha: isDark ? 0.2 : 0.02),
-                                blurRadius: 8,
-                                offset: const Offset(0, 2),
-                              ),
-                            ],
-                          ),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Row(
-                                children: [
-                                  const Icon(
-                                    Icons.info_outline_rounded,
-                                    color: brandPrimary,
-                                    size: 20,
-                                  ),
-                                  const SizedBox(width: 8),
-                                  Text(
-                                    'Tentang Dokter',
-                                    style: TextStyle(
-                                      fontSize: 15,
-                                      fontWeight: FontWeight.bold,
-                                      color: isDark ? Colors.white : const Color(0xFF0F172A),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                              const SizedBox(height: 10),
-                              Text(
-                                tentang,
-                                style: TextStyle(
-                                  fontSize: 13,
-                                  height: 1.55,
-                                  color: isDark ? const Color(0xFFCBD5E1) : const Color(0xFF475569),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-
-                        if (!isOnline) ...[
-                          const SizedBox(height: 18),
-                          Container(
-                            padding: const EdgeInsets.all(12),
-                            decoration: BoxDecoration(
-                              color: isDark
-                                  ? const Color(0xFF2A2415)
-                                  : const Color(0xFFFFFBEB),
-                              borderRadius: BorderRadius.circular(14),
-                              border: Border.all(
-                                color: isDark
-                                    ? const Color(0xFF78350F)
-                                    : const Color(0xFFFDE68A),
-                              ),
-                            ),
-                            child: Row(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                const Icon(
-                                  Icons.info_outline_rounded,
-                                  color: Color(0xFFD97706),
-                                  size: 20,
-                                ),
-                                const SizedBox(width: 10),
-                                Expanded(
-                                  child: Text(
-                                    'Dokter saat ini sedang offline dan tidak menerima konsultasi tatap muka langsung. Namun, Anda tetap dapat meninggalkan pesan chat, dan dokter akan merespons saat kembali online.',
-                                    style: TextStyle(
-                                      fontSize: 12,
-                                      height: 1.35,
-                                      color: isDark
-                                          ? const Color(0xFFFDE68A)
-                                          : const Color(0xFF92400E),
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ],
-
-                        const SizedBox(height: 20),
-
-                        // ==================================================
-                        // TOMBOL CHAT KONSULTASI SEKARANG (REAL-TIME)
-                        // ==================================================
-                        Container(
-                          width: double.infinity,
-                          height: 50,
-                          decoration: BoxDecoration(
-                            gradient: isOnline
-                                ? const LinearGradient(
-                                    colors: [Color(0xFF0EA5E9), Color(0xFF0284C7)],
-                                    begin: Alignment.topLeft,
-                                    end: Alignment.bottomRight,
-                                  )
-                                : LinearGradient(
-                                    colors: isDark
-                                        ? [const Color(0xFF334155), const Color(0xFF1E293B)]
-                                        : [const Color(0xFF64748B), const Color(0xFF475569)],
-                                    begin: Alignment.topLeft,
-                                    end: Alignment.bottomRight,
-                                  ),
-                            borderRadius: BorderRadius.circular(14),
-                            boxShadow: [
-                              BoxShadow(
-                                color: (isOnline
-                                        ? const Color(0xFF0284C7)
-                                        : const Color(0xFF475569))
-                                    .withValues(alpha: 0.35),
-                                blurRadius: 10,
-                                offset: const Offset(0, 4),
-                              ),
-                            ],
-                          ),
-                          child: Material(
-                            color: Colors.transparent,
-                            child: InkWell(
-                              borderRadius: BorderRadius.circular(14),
-                              onTap: () {
-                                final userProfile =
-                                    UserProfileService.instance.currentProfile;
-                                final patientPhoto = userProfile.fotoProfil.isNotEmpty
-                                    ? userProfile.fotoProfil
-                                    : (ProfileService.instance.currentImagePath ?? '');
-                                Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder: (context) => KonsultasiDokterPage(
-                                      doctorId: doctorId,
-                                      doctorName: nama,
-                                      doctorSpecialty: spesialis,
-                                      doctorPhoto: imagePath,
-                                      patientName: userProfile.nama,
-                                      patientPhoto: patientPhoto,
-                                      initialScreeningData: screeningData,
-                                      initialRiskResult: riskResult,
-                                    ),
-                                  ),
-                                );
-                              },
-                              child: Row(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
-                                  Icon(
-                                    isOnline
-                                        ? Icons.chat_bubble_rounded
-                                        : Icons.mark_chat_unread_outlined,
-                                    color: Colors.white,
-                                    size: 20,
-                                  ),
-                                  const SizedBox(width: 8),
-                                  Text(
-                                    isOnline
-                                        ? 'Chat Konsultasi Sekarang'
-                                        : 'Tinggalkan Pesan Chat',
-                                    style: const TextStyle(
-                                      fontSize: 15,
-                                      fontWeight: FontWeight.bold,
-                                      color: Colors.white,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ),
-                        ),
-
-                        const SizedBox(height: 12),
-
-                        // ==================================================
-                        // TOMBOL VIDEO CALL DOKTER LANGSUNG
-                        // ==================================================
-                        Container(
-                          width: double.infinity,
-                          height: 50,
-                          decoration: BoxDecoration(
-                            gradient: const LinearGradient(
-                              colors: [Color(0xFF10B981), Color(0xFF059669)],
-                              begin: Alignment.topLeft,
-                              end: Alignment.bottomRight,
-                            ),
-                            borderRadius: BorderRadius.circular(14),
-                            boxShadow: [
-                              BoxShadow(
-                                color: const Color(0xFF10B981).withValues(alpha: 0.35),
-                                blurRadius: 10,
-                                offset: const Offset(0, 4),
-                              ),
-                            ],
-                          ),
-                          child: Material(
-                            color: Colors.transparent,
-                            child: InkWell(
-                              borderRadius: BorderRadius.circular(14),
-                              onTap: () async {
-                                final userProfile =
-                                    UserProfileService.instance.currentProfile;
-                                final patientPhoto = userProfile.fotoProfil.isNotEmpty
-                                    ? userProfile.fotoProfil
-                                    : (ProfileService.instance.currentImagePath ?? '');
-                                final currentUid = FirebaseAuth.instance.currentUser?.uid ?? '';
-                                final patientId = currentUid.isNotEmpty
-                                    ? currentUid
-                                    : 'patient_${userProfile.nama.replaceAll(RegExp(r'[^a-zA-Z0-9]'), '_').toLowerCase()}';
-                                final resolvedDoctorId = (doctorId != null && doctorId!.isNotEmpty) ? doctorId! : nama;
-                                final chatId = ChatService.instance.computeChatId(
-                                  patientId: patientId,
-                                  doctorId: resolvedDoctorId,
-                                );
-
-                                final callId = await CallService.instance.createCallSession(
-                                  callerName: userProfile.nama.isNotEmpty
-                                      ? userProfile.nama
-                                      : "Pasien HeartCare",
-                                  callerPhoto: patientPhoto,
-                                  callerRole: 'patient',
-                                  receiverRole: 'doctor',
-                                  doctorId: resolvedDoctorId,
-                                  doctorName: nama,
-                                  doctorPhoto: imagePath,
-                                  doctorSpecialty: spesialis,
-                                  patientName: userProfile.nama.isNotEmpty
-                                      ? userProfile.nama
-                                      : "Pasien HeartCare",
-                                  patientPhoto: patientPhoto,
-                                  patientId: patientId,
-                                  chatId: chatId,
-                                );
-                                if (context.mounted) {
-                                  Navigator.push(
-                                    context,
-                                    MaterialPageRoute(
-                                      builder: (context) => VideoCallPage(
-                                        callId: callId,
-                                        isCaller: true,
-                                        isDoctorView: false,
-                                        doctorId: resolvedDoctorId,
-                                        doctorName: nama,
-                                        doctorPhoto: imagePath,
-                                        doctorSpecialty: spesialis,
-                                        patientName: userProfile.nama.isNotEmpty
-                                            ? userProfile.nama
-                                            : "Pasien HeartCare",
-                                        patientPhoto: patientPhoto,
-                                        patientId: patientId,
-                                        chatId: chatId,
-                                      ),
-                                    ),
-                                  );
-                                }
-                              },
-                              child: const Row(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
-                                  Icon(
-                                    Icons.videocam_rounded,
-                                    color: Colors.white,
-                                    size: 21,
-                                  ),
-                                  SizedBox(width: 8),
-                                  Text(
-                                    'Mulai Video Call Langsung',
-                                    style: TextStyle(
-                                      fontSize: 15,
-                                      fontWeight: FontWeight.bold,
-                                      color: Colors.white,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ),
-                        ),
-
-                        // ==================================================
-                        // TOMBOL PILIH JADWAL
-                        // ==================================================
-                        Container(
-                          width: double.infinity,
-                          height: 50,
-                          decoration: BoxDecoration(
-                            color: isDark ? const Color(0xFF1E293B) : const Color(0xFFF0F9FF),
-                            borderRadius: BorderRadius.circular(14),
-                            border: Border.all(
-                              color: isDark ? const Color(0xFF334155) : const Color(0xFFBAE6FD),
-                              width: 1.2,
-                            ),
-                          ),
-                          child: Material(
-                            color: Colors.transparent,
-                            child: InkWell(
-                              borderRadius: BorderRadius.circular(14),
-                              onTap: () {
-                                Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder: (context) => PilihJadwalPage(
-                                      doctorName: nama,
-                                      doctorSpecialty: spesialis,
-                                      doctorPhoto: imagePath,
-                                    ),
-                                  ),
-                                );
-                              },
-                              child: Row(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
-                                  Icon(
-                                    Icons.calendar_month_rounded,
-                                    color: isDark ? const Color(0xFF38BDF8) : const Color(0xFF0284C7),
-                                    size: 20,
-                                  ),
-                                  const SizedBox(width: 8),
-                                  Text(
-                                    'Pilih Jadwal Temu',
-                                    style: TextStyle(
-                                      fontSize: 15,
-                                      fontWeight: FontWeight.bold,
-                                      color: isDark ? Colors.white : const Color(0xFF0284C7),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-
-          // ==================================================
-          // BOTTOM NAVIGATION BAR
-          // ==================================================
-          bottomNavigationBar: SafeArea(
-            top: false,
-            child: Container(
-              height: 62,
-              decoration: BoxDecoration(
-                color: isDark ? const Color(0xFF0F172A) : Colors.white,
-                border: Border(
-                  top: BorderSide(
-                    color: isDark ? const Color(0xFF1E293B) : const Color(0xFFE2E8F0),
-                    width: 0.8,
-                  ),
-                ),
-              ),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceAround,
-                children: [
-                  _bottomNavItem(
-                    isDark: isDark,
-                    icon: Icons.home_outlined,
-                    label: 'Home',
-                    active: false,
-                    onTap: () {
-                      Navigator.pushAndRemoveUntil(
-                        context,
-                        MaterialPageRoute(builder: (context) => const HomePage()),
-                        (route) => false,
-                      );
-                    },
-                  ),
-                  _bottomNavItem(
-                    isDark: isDark,
-                    icon: Icons.favorite_border,
-                    label: 'Skrining',
-                    active: false,
-                    onTap: () {
-                      Navigator.pop(context);
-                    },
-                  ),
-                  _bottomNavItem(
-                    isDark: isDark,
-                    icon: Icons.medical_services,
-                    label: 'Dokter',
-                    active: true,
-                    onTap: () {
-                      Navigator.pop(context);
-                    },
-                  ),
-                  _bottomNavItem(
-                    isDark: isDark,
-                    icon: Icons.description_outlined,
-                    label: 'Riwayat',
-                    active: false,
-                  ),
-                  _bottomNavItem(
-                    isDark: isDark,
-                    icon: Icons.person_outline,
-                    label: 'Profil',
-                    active: false,
-                    onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => const ProfilPage(),
+                actions: [
+                  IconButton(
+                    onPressed: () {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text('Dokter disimpan ke favorit'),
+                          duration: Duration(seconds: 2),
+                          behavior: SnackBarBehavior.floating,
                         ),
                       );
                     },
+                    icon: Icon(
+                      Icons.bookmark_border_rounded,
+                      color: isDark
+                          ? const Color(0xFF94A3B8)
+                          : const Color(0xFF475569),
+                      size: 24,
+                    ),
                   ),
+                  const SizedBox(width: 4),
                 ],
               ),
-            ),
-          ),
+              body: SafeArea(
+                child: Column(
+                  children: [
+                    Expanded(
+                      child: SingleChildScrollView(
+                        padding: const EdgeInsets.fromLTRB(20, 16, 20, 24),
+                        child: Column(
+                          children: [
+                            // ==================================================
+                            // KARTU PROFIL UTAMA
+                            // ==================================================
+                            Container(
+                              width: double.infinity,
+                              padding: const EdgeInsets.all(20),
+                              decoration: BoxDecoration(
+                                color: isDark
+                                    ? const Color(0xFF1E293B)
+                                    : Colors.white,
+                                borderRadius: BorderRadius.circular(20),
+                                border: Border.all(
+                                  color: isDark
+                                      ? const Color(0xFF334155)
+                                      : const Color(0xFFE2E8F0),
+                                ),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: Colors.black.withValues(
+                                      alpha: isDark ? 0.2 : 0.03,
+                                    ),
+                                    blurRadius: 10,
+                                    offset: const Offset(0, 3),
+                                  ),
+                                ],
+                              ),
+                              child: Column(
+                                children: [
+                                  // FOTO DOKTER BESAR DENGAN BORDER
+                                  Stack(
+                                    children: [
+                                      Container(
+                                        width: 120,
+                                        height: 120,
+                                        decoration: BoxDecoration(
+                                          shape: BoxShape.circle,
+                                          border: Border.all(
+                                            color: brandPrimary.withValues(
+                                              alpha: 0.25,
+                                            ),
+                                            width: 3.5,
+                                          ),
+                                          boxShadow: [
+                                            BoxShadow(
+                                              color: brandPrimary.withValues(
+                                                alpha: 0.15,
+                                              ),
+                                              blurRadius: 14,
+                                              offset: const Offset(0, 4),
+                                            ),
+                                          ],
+                                        ),
+                                        child: ClipOval(
+                                          child: DoctorService.buildDoctorImage(
+                                            imagePath,
+                                            width: 120,
+                                            height: 120,
+                                            isDark: isDark,
+                                          ),
+                                        ),
+                                      ),
+                                      // STATUS ONLINE / OFFLINE DOT
+                                      Positioned(
+                                        right: 6,
+                                        bottom: 4,
+                                        child: Container(
+                                          width: 20,
+                                          height: 20,
+                                          decoration: BoxDecoration(
+                                            color: isOnline
+                                                ? onlineGreen
+                                                : const Color(0xFFF59E0B),
+                                            shape: BoxShape.circle,
+                                            border: Border.all(
+                                              color: isDark
+                                                  ? const Color(0xFF1E293B)
+                                                  : Colors.white,
+                                              width: 3,
+                                            ),
+                                          ),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                  const SizedBox(height: 14),
+
+                                  // NAMA DOKTER
+                                  Text(
+                                    nama,
+                                    textAlign: TextAlign.center,
+                                    style: TextStyle(
+                                      fontSize: 18,
+                                      fontWeight: FontWeight.bold,
+                                      color: isDark
+                                          ? Colors.white
+                                          : const Color(0xFF0F172A),
+                                    ),
+                                  ),
+                                  const SizedBox(height: 4),
+
+                                  // SPESIALIS
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 12,
+                                      vertical: 4,
+                                    ),
+                                    decoration: BoxDecoration(
+                                      color: isDark
+                                          ? const Color(0xFF0284C7)
+                                                .withValues(alpha: 0.25)
+                                          : const Color(0xFFE0F2FE),
+                                      borderRadius: BorderRadius.circular(20),
+                                    ),
+                                    child: Text(
+                                      spesialis,
+                                      style: TextStyle(
+                                        fontSize: 12,
+                                        fontWeight: FontWeight.w600,
+                                        color: isDark
+                                            ? const Color(0xFF38BDF8)
+                                            : brandPrimary,
+                                      ),
+                                    ),
+                                  ),
+                                  const SizedBox(height: 10),
+
+                                  // STATUS LABEL
+                                  Row(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      Icon(
+                                        Icons.circle,
+                                        size: 8,
+                                        color: isOnline
+                                            ? onlineGreen
+                                            : const Color(0xFF94A3B8),
+                                      ),
+                                      const SizedBox(width: 6),
+                                      Text(
+                                        isOnline
+                                            ? 'Tersedia untuk Konsultasi'
+                                            : 'Sedang Tidak Praktik',
+                                        style: TextStyle(
+                                          fontSize: 12,
+                                          fontWeight: FontWeight.w500,
+                                          color: isOnline
+                                              ? onlineGreen
+                                              : (isDark
+                                                    ? const Color(0xFF94A3B8)
+                                                    : const Color(0xFF64748B)),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ],
+                              ),
+                            ),
+
+                            const SizedBox(height: 18),
+
+                            // ==================================================
+                            // KARTU INFORMASI DOKTER
+                            // ==================================================
+                            Container(
+                              width: double.infinity,
+                              padding: const EdgeInsets.all(18),
+                              decoration: BoxDecoration(
+                                color: isDark
+                                    ? const Color(0xFF1E293B)
+                                    : Colors.white,
+                                borderRadius: BorderRadius.circular(18),
+                                border: Border.all(
+                                  color: isDark
+                                      ? const Color(0xFF334155)
+                                      : const Color(0xFFE2E8F0),
+                                ),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: Colors.black.withValues(
+                                      alpha: isDark ? 0.2 : 0.02,
+                                    ),
+                                    blurRadius: 8,
+                                    offset: const Offset(0, 2),
+                                  ),
+                                ],
+                              ),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Row(
+                                    children: [
+                                      const Icon(
+                                        Icons.badge_outlined,
+                                        color: brandPrimary,
+                                        size: 20,
+                                      ),
+                                      const SizedBox(width: 8),
+                                      Text(
+                                        'Informasi Dokter',
+                                        style: TextStyle(
+                                          fontSize: 15,
+                                          fontWeight: FontWeight.bold,
+                                          color: isDark
+                                              ? Colors.white
+                                              : const Color(0xFF0F172A),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                  const SizedBox(height: 14),
+                                  _infoTile(
+                                    isDark: isDark,
+                                    icon: Icons.work_outline_rounded,
+                                    title: 'Pengalaman Praktik',
+                                    value: pengalaman,
+                                  ),
+                                  Divider(
+                                    height: 20,
+                                    color: isDark
+                                        ? const Color(0xFF334155)
+                                        : const Color(0xFFF1F5F9),
+                                  ),
+                                  _infoTile(
+                                    isDark: isDark,
+                                    icon: Icons.verified_user_outlined,
+                                    title: 'Nomor SIP',
+                                    value: sip,
+                                  ),
+                                  Divider(
+                                    height: 20,
+                                    color: isDark
+                                        ? const Color(0xFF334155)
+                                        : const Color(0xFFF1F5F9),
+                                  ),
+                                  _infoTile(
+                                    isDark: isDark,
+                                    icon: Icons.location_on_outlined,
+                                    title: 'Lokasi Praktik',
+                                    value: lokasi,
+                                  ),
+                                  if (telepon.isNotEmpty) ...[
+                                    Divider(
+                                      height: 20,
+                                      color: isDark
+                                          ? const Color(0xFF334155)
+                                          : const Color(0xFFF1F5F9),
+                                    ),
+                                    _infoTile(
+                                      isDark: isDark,
+                                      icon: Icons.phone_rounded,
+                                      title: 'No. Telepon / WhatsApp',
+                                      value: telepon,
+                                    ),
+                                  ],
+                                ],
+                              ),
+                            ),
+
+                            const SizedBox(height: 18),
+
+                            // ==================================================
+                            // TENTANG DOKTER
+                            // ==================================================
+                            Container(
+                              width: double.infinity,
+                              padding: const EdgeInsets.all(18),
+                              decoration: BoxDecoration(
+                                color: isDark
+                                    ? const Color(0xFF1E293B)
+                                    : Colors.white,
+                                borderRadius: BorderRadius.circular(18),
+                                border: Border.all(
+                                  color: isDark
+                                      ? const Color(0xFF334155)
+                                      : const Color(0xFFE2E8F0),
+                                ),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: Colors.black.withValues(
+                                      alpha: isDark ? 0.2 : 0.02,
+                                    ),
+                                    blurRadius: 8,
+                                    offset: const Offset(0, 2),
+                                  ),
+                                ],
+                              ),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Row(
+                                    children: [
+                                      const Icon(
+                                        Icons.info_outline_rounded,
+                                        color: brandPrimary,
+                                        size: 20,
+                                      ),
+                                      const SizedBox(width: 8),
+                                      Text(
+                                        'Tentang Dokter',
+                                        style: TextStyle(
+                                          fontSize: 15,
+                                          fontWeight: FontWeight.bold,
+                                          color: isDark
+                                              ? Colors.white
+                                              : const Color(0xFF0F172A),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                  const SizedBox(height: 10),
+                                  Text(
+                                    tentang,
+                                    style: TextStyle(
+                                      fontSize: 13,
+                                      height: 1.55,
+                                      color: isDark
+                                          ? const Color(0xFFCBD5E1)
+                                          : const Color(0xFF475569),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+
+                            if (!isOnline) ...[
+                              const SizedBox(height: 18),
+                              Container(
+                                padding: const EdgeInsets.all(12),
+                                decoration: BoxDecoration(
+                                  color: isDark
+                                      ? const Color(0xFF2A2415)
+                                      : const Color(0xFFFFFBEB),
+                                  borderRadius: BorderRadius.circular(14),
+                                  border: Border.all(
+                                    color: isDark
+                                        ? const Color(0xFF78350F)
+                                        : const Color(0xFFFDE68A),
+                                  ),
+                                ),
+                                child: Row(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    const Icon(
+                                      Icons.info_outline_rounded,
+                                      color: Color(0xFFD97706),
+                                      size: 20,
+                                    ),
+                                    const SizedBox(width: 10),
+                                    Expanded(
+                                      child: Text(
+                                        'Dokter saat ini sedang offline dan tidak menerima konsultasi tatap muka langsung. Namun, Anda tetap dapat meninggalkan pesan chat, dan dokter akan merespons saat kembali online.',
+                                        style: TextStyle(
+                                          fontSize: 12,
+                                          height: 1.35,
+                                          color: isDark
+                                              ? const Color(0xFFFDE68A)
+                                              : const Color(0xFF92400E),
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ],
+
+                            const SizedBox(height: 20),
+
+                            // ==================================================
+                            // TOMBOL CHAT KONSULTASI SEKARANG (REAL-TIME)
+                            // ==================================================
+                            Container(
+                              width: double.infinity,
+                              height: 50,
+                              decoration: BoxDecoration(
+                                gradient: isOnline
+                                    ? const LinearGradient(
+                                        colors: [
+                                          Color(0xFF0EA5E9),
+                                          Color(0xFF0284C7),
+                                        ],
+                                        begin: Alignment.topLeft,
+                                        end: Alignment.bottomRight,
+                                      )
+                                    : LinearGradient(
+                                        colors: isDark
+                                            ? [
+                                                const Color(0xFF334155),
+                                                const Color(0xFF1E293B),
+                                              ]
+                                            : [
+                                                const Color(0xFF64748B),
+                                                const Color(0xFF475569),
+                                              ],
+                                        begin: Alignment.topLeft,
+                                        end: Alignment.bottomRight,
+                                      ),
+                                borderRadius: BorderRadius.circular(14),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color:
+                                        (isOnline
+                                                ? const Color(0xFF0284C7)
+                                                : const Color(0xFF475569))
+                                            .withValues(alpha: 0.35),
+                                    blurRadius: 10,
+                                    offset: const Offset(0, 4),
+                                  ),
+                                ],
+                              ),
+                              child: Material(
+                                color: Colors.transparent,
+                                child: InkWell(
+                                  borderRadius: BorderRadius.circular(14),
+                                  onTap: () {
+                                    final userProfile = UserProfileService
+                                        .instance
+                                        .currentProfile;
+                                    final patientPhoto =
+                                        userProfile.fotoProfil.isNotEmpty
+                                        ? userProfile.fotoProfil
+                                        : (ProfileService
+                                                  .instance
+                                                  .currentImagePath ??
+                                              '');
+                                    Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder: (context) =>
+                                            KonsultasiDokterPage(
+                                              doctorId: doctorId,
+                                              doctorName: nama,
+                                              doctorSpecialty: spesialis,
+                                              doctorPhoto: imagePath,
+                                              patientName: userProfile.nama,
+                                              patientPhoto: patientPhoto,
+                                              initialScreeningData:
+                                                  screeningData,
+                                              initialRiskResult: riskResult,
+                                            ),
+                                      ),
+                                    );
+                                  },
+                                  child: Row(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      Icon(
+                                        isOnline
+                                            ? Icons.chat_bubble_rounded
+                                            : Icons.mark_chat_unread_outlined,
+                                        color: Colors.white,
+                                        size: 20,
+                                      ),
+                                      const SizedBox(width: 8),
+                                      Text(
+                                        isOnline
+                                            ? 'Chat Konsultasi Sekarang'
+                                            : 'Tinggalkan Pesan Chat',
+                                        style: const TextStyle(
+                                          fontSize: 15,
+                                          fontWeight: FontWeight.bold,
+                                          color: Colors.white,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                            ),
+
+                            const SizedBox(height: 12),
+
+                            // ==================================================
+                            // TOMBOL VIDEO CALL DOKTER LANGSUNG
+                            // ==================================================
+                            Container(
+                              width: double.infinity,
+                              height: 50,
+                              decoration: BoxDecoration(
+                                gradient: const LinearGradient(
+                                  colors: [
+                                    Color(0xFF10B981),
+                                    Color(0xFF059669),
+                                  ],
+                                  begin: Alignment.topLeft,
+                                  end: Alignment.bottomRight,
+                                ),
+                                borderRadius: BorderRadius.circular(14),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: const Color(0xFF10B981)
+                                        .withValues(alpha: 0.35),
+                                    blurRadius: 10,
+                                    offset: const Offset(0, 4),
+                                  ),
+                                ],
+                              ),
+                              child: Material(
+                                color: Colors.transparent,
+                                child: InkWell(
+                                  borderRadius: BorderRadius.circular(14),
+                                  onTap: () async {
+                                    final userProfile = UserProfileService
+                                        .instance
+                                        .currentProfile;
+                                    final patientPhoto =
+                                        userProfile.fotoProfil.isNotEmpty
+                                        ? userProfile.fotoProfil
+                                        : (ProfileService
+                                                  .instance
+                                                  .currentImagePath ??
+                                              '');
+                                    final currentUid =
+                                        FirebaseAuth
+                                            .instance
+                                            .currentUser
+                                            ?.uid ??
+                                        '';
+                                    final patientId = currentUid.isNotEmpty
+                                        ? currentUid
+                                        : 'patient_${userProfile.nama.replaceAll(RegExp(r'[^a-zA-Z0-9]'), '_').toLowerCase()}';
+                                    final resolvedDoctorId =
+                                        (doctorId != null &&
+                                            doctorId!.isNotEmpty)
+                                        ? doctorId!
+                                        : nama;
+                                    final chatId = ChatService.instance
+                                        .computeChatId(
+                                          patientId: patientId,
+                                          doctorId: resolvedDoctorId,
+                                        );
+
+                                    final callId = await CallService.instance
+                                        .createCallSession(
+                                          callerName:
+                                              userProfile.nama.isNotEmpty
+                                              ? userProfile.nama
+                                              : "Pasien HeartCare",
+                                          callerPhoto: patientPhoto,
+                                          callerRole: 'patient',
+                                          receiverRole: 'doctor',
+                                          doctorId: resolvedDoctorId,
+                                          doctorName: nama,
+                                          doctorPhoto: imagePath,
+                                          doctorSpecialty: spesialis,
+                                          patientName:
+                                              userProfile.nama.isNotEmpty
+                                              ? userProfile.nama
+                                              : "Pasien HeartCare",
+                                          patientPhoto: patientPhoto,
+                                          patientId: patientId,
+                                          chatId: chatId,
+                                        );
+                                    if (context.mounted) {
+                                      Navigator.push(
+                                        context,
+                                        MaterialPageRoute(
+                                          builder: (context) => VideoCallPage(
+                                            callId: callId,
+                                            isCaller: true,
+                                            isDoctorView: false,
+                                            doctorId: resolvedDoctorId,
+                                            doctorName: nama,
+                                            doctorPhoto: imagePath,
+                                            doctorSpecialty: spesialis,
+                                            patientName:
+                                                userProfile.nama.isNotEmpty
+                                                ? userProfile.nama
+                                                : "Pasien HeartCare",
+                                            patientPhoto: patientPhoto,
+                                            patientId: patientId,
+                                            chatId: chatId,
+                                          ),
+                                        ),
+                                      );
+                                    }
+                                  },
+                                  child: const Row(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      Icon(
+                                        Icons.videocam_rounded,
+                                        color: Colors.white,
+                                        size: 21,
+                                      ),
+                                      SizedBox(width: 8),
+                                      Text(
+                                        'Mulai Video Call Langsung',
+                                        style: TextStyle(
+                                          fontSize: 15,
+                                          fontWeight: FontWeight.bold,
+                                          color: Colors.white,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                            ),
+
+                            // ==================================================
+                            // TOMBOL PILIH JADWAL
+                            // ==================================================
+                            Container(
+                              width: double.infinity,
+                              height: 50,
+                              decoration: BoxDecoration(
+                                color: isDark
+                                    ? const Color(0xFF1E293B)
+                                    : const Color(0xFFF0F9FF),
+                                borderRadius: BorderRadius.circular(14),
+                                border: Border.all(
+                                  color: isDark
+                                      ? const Color(0xFF334155)
+                                      : const Color(0xFFBAE6FD),
+                                  width: 1.2,
+                                ),
+                              ),
+                              child: Material(
+                                color: Colors.transparent,
+                                child: InkWell(
+                                  borderRadius: BorderRadius.circular(14),
+                                  onTap: () {
+                                    Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder: (context) => PilihJadwalPage(
+                                          doctorId: doctorId,
+                                          doctorName: nama,
+                                          doctorSpecialty: spesialis,
+                                          doctorPhoto: imagePath,
+                                          isOnline: isOnline,
+                                        ),
+                                      ),
+                                    );
+                                  },
+                                  child: Row(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      Icon(
+                                        Icons.calendar_month_rounded,
+                                        color: isDark
+                                            ? const Color(0xFF38BDF8)
+                                            : const Color(0xFF0284C7),
+                                        size: 20,
+                                      ),
+                                      const SizedBox(width: 8),
+                                      Text(
+                                        'Pilih Jadwal Temu',
+                                        style: TextStyle(
+                                          fontSize: 15,
+                                          fontWeight: FontWeight.bold,
+                                          color: isDark
+                                              ? Colors.white
+                                              : const Color(0xFF0284C7),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+
+              // ==================================================
+              // BOTTOM NAVIGATION BAR
+              // ==================================================
+              bottomNavigationBar: SafeArea(
+                top: false,
+                child: Container(
+                  height: 62,
+                  decoration: BoxDecoration(
+                    color: isDark ? const Color(0xFF0F172A) : Colors.white,
+                    border: Border(
+                      top: BorderSide(
+                        color: isDark
+                            ? const Color(0xFF1E293B)
+                            : const Color(0xFFE2E8F0),
+                        width: 0.8,
+                      ),
+                    ),
+                  ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceAround,
+                    children: [
+                      _bottomNavItem(
+                        isDark: isDark,
+                        icon: Icons.home_outlined,
+                        label: tr('Beranda', 'Home'),
+                        active: false,
+                        onTap: () {
+                          Navigator.pushAndRemoveUntil(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => const HomePage(),
+                            ),
+                            (route) => false,
+                          );
+                        },
+                      ),
+                      _bottomNavItem(
+                        isDark: isDark,
+                        icon: Icons.favorite_border,
+                        label: tr('Skrining', 'Screening'),
+                        active: false,
+                        onTap: () {
+                          Navigator.pop(context);
+                        },
+                      ),
+                      _bottomNavItem(
+                        isDark: isDark,
+                        icon: Icons.medical_services,
+                        label: tr('Dokter', 'Doctors'),
+                        active: true,
+                        onTap: () {
+                          Navigator.pop(context);
+                        },
+                      ),
+                      _bottomNavItem(
+                        isDark: isDark,
+                        icon: Icons.description_outlined,
+                        label: tr('Riwayat', 'History'),
+                        active: false,
+                      ),
+                      _bottomNavItem(
+                        isDark: isDark,
+                        icon: Icons.person_outline,
+                        label: tr('Profil', 'Profile'),
+                        active: false,
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => const ProfilPage(),
+                            ),
+                          );
+                        },
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            );
+          },
         );
       },
     );
@@ -768,7 +898,11 @@ class DetailDokterPage extends StatelessWidget {
             color: isDark ? const Color(0xFF0F172A) : const Color(0xFFF1F5F9),
             borderRadius: BorderRadius.circular(10),
           ),
-          child: Icon(icon, size: 18, color: isDark ? const Color(0xFF94A3B8) : const Color(0xFF475569)),
+          child: Icon(
+            icon,
+            size: 18,
+            color: isDark ? const Color(0xFF94A3B8) : const Color(0xFF475569),
+          ),
         ),
         const SizedBox(width: 12),
         Expanded(
@@ -779,7 +913,9 @@ class DetailDokterPage extends StatelessWidget {
                 title,
                 style: TextStyle(
                   fontSize: 11.5,
-                  color: isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B),
+                  color: isDark
+                      ? const Color(0xFF94A3B8)
+                      : const Color(0xFF64748B),
                 ),
               ),
               const SizedBox(height: 2),
@@ -805,8 +941,12 @@ class DetailDokterPage extends StatelessWidget {
     required bool active,
     VoidCallback? onTap,
   }) {
-    final activeColor = isDark ? const Color(0xFF38BDF8) : const Color(0xFF1479F5);
-    final inactiveColor = isDark ? const Color(0xFF64748B) : const Color(0xFF64748B);
+    final activeColor = isDark
+        ? const Color(0xFF38BDF8)
+        : const Color(0xFF1479F5);
+    final inactiveColor = isDark
+        ? const Color(0xFF64748B)
+        : const Color(0xFF64748B);
 
     return GestureDetector(
       onTap: onTap,
@@ -817,11 +957,7 @@ class DetailDokterPage extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.center,
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(
-              icon,
-              size: 23,
-              color: active ? activeColor : inactiveColor,
-            ),
+            Icon(icon, size: 23, color: active ? activeColor : inactiveColor),
             const SizedBox(height: 2),
             Text(
               label,

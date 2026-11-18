@@ -5,6 +5,7 @@ import 'package:heartcare/pages/riwayat_page.dart';
 import 'package:heartcare/pages/Skrining/screening_input_page.dart';
 import '../services/theme_service.dart';
 import '../services/user_profile_service.dart';
+import '../services/language_service.dart';
 
 class DataKesehatanPage extends StatefulWidget {
   const DataKesehatanPage({super.key});
@@ -109,7 +110,7 @@ class _DataKesehatanPageState extends State<DataKesehatanPage> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          "Ubah Data Kesehatan",
+                          tr("Ubah Data Kesehatan", "Edit Health Data"),
                           style: TextStyle(
                             fontSize: 16,
                             fontWeight: FontWeight.bold,
@@ -118,7 +119,7 @@ class _DataKesehatanPageState extends State<DataKesehatanPage> {
                         ),
                         const SizedBox(height: 2),
                         Text(
-                          "Perbarui informasi riwayat dan kondisi medis Anda",
+                          tr("Perbarui informasi riwayat dan kondisi medis Anda", "Update your medical history and health conditions"),
                           style: TextStyle(
                             fontSize: 11.5,
                             color: isDark
@@ -131,12 +132,12 @@ class _DataKesehatanPageState extends State<DataKesehatanPage> {
                   ],
                 ),
                 const SizedBox(height: 18),
-                _inputField("Golongan Darah", goldarCtrl, isDark: isDark),
-                _inputField("Tinggi Badan", tbCtrl, isDark: isDark),
-                _inputField("Berat Badan", bbCtrl, isDark: isDark),
-                _inputField("Alergi", alergiCtrl, isDark: isDark),
-                _inputField("Penyakit yang Diderita", penyakitCtrl, isDark: isDark),
-                _inputField("Riwayat Operasi", operasiCtrl, isDark: isDark),
+                _inputField(tr("Golongan Darah", "Blood Type"), goldarCtrl, isDark: isDark),
+                _inputField(tr("Tinggi Badan", "Height"), tbCtrl, isDark: isDark),
+                _inputField(tr("Berat Badan", "Weight"), bbCtrl, isDark: isDark),
+                _inputField(tr("Alergi", "Allergies"), alergiCtrl, isDark: isDark),
+                _inputField(tr("Penyakit yang Diderita", "Medical Conditions"), penyakitCtrl, isDark: isDark),
+                _inputField(tr("Riwayat Operasi", "Surgical History"), operasiCtrl, isDark: isDark),
                 const SizedBox(height: 18),
                 Container(
                   width: double.infinity,
@@ -169,9 +170,9 @@ class _DataKesehatanPageState extends State<DataKesehatanPage> {
                       if (context.mounted) {
                         Navigator.pop(context);
                         ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                            content: Text("Data kesehatan berhasil diperbarui"),
-                            backgroundColor: Color(0xFF0098B9),
+                          SnackBar(
+                            content: Text(tr("Data kesehatan berhasil diperbarui", "Health data updated successfully")),
+                            backgroundColor: const Color(0xFF0098B9),
                             behavior: SnackBarBehavior.floating,
                           ),
                         );
@@ -185,9 +186,9 @@ class _DataKesehatanPageState extends State<DataKesehatanPage> {
                         borderRadius: BorderRadius.circular(14),
                       ),
                     ),
-                    child: const Text(
-                      "Simpan Perubahan",
-                      style: TextStyle(
+                    child: Text(
+                      tr("Simpan Perubahan", "Save Changes"),
+                      style: const TextStyle(
                         fontSize: 14.5,
                         fontWeight: FontWeight.bold,
                       ),
@@ -264,281 +265,286 @@ class _DataKesehatanPageState extends State<DataKesehatanPage> {
 
   @override
   Widget build(BuildContext context) {
-    return ValueListenableBuilder<ThemeMode>(
-      valueListenable: ThemeService.themeModeNotifier,
-      builder: (context, themeMode, _) {
-        final isDark = themeMode == ThemeMode.dark;
+    return ValueListenableBuilder<String>(
+      valueListenable: LanguageService.languageNotifier,
+      builder: (context, currentLang, _) {
+        return ValueListenableBuilder<ThemeMode>(
+          valueListenable: ThemeService.themeModeNotifier,
+          builder: (context, themeMode, _) {
+            final isDark = themeMode == ThemeMode.dark;
 
-        return Scaffold(
-          backgroundColor:
-              isDark ? const Color(0xFF0F172A) : const Color(0xFFF8FAFC),
-          appBar: AppBar(
-            backgroundColor: Colors.transparent,
-            elevation: 0,
-            leading: Padding(
-              padding: const EdgeInsets.all(8.0),
-              child: Container(
-                decoration: BoxDecoration(
-                  color: isDark ? const Color(0xFF1E293B) : Colors.white,
-                  shape: BoxShape.circle,
-                  border: Border.all(
-                    color: isDark
-                        ? const Color(0xFF334155)
-                        : const Color(0xFFE2E8F0),
-                    width: 1,
-                  ),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withValues(alpha: isDark ? 0.2 : 0.04),
-                      blurRadius: 4,
-                      offset: const Offset(0, 1),
-                    ),
-                  ],
-                ),
-                child: IconButton(
-                  padding: EdgeInsets.zero,
-                  icon: Icon(
-                    Icons.chevron_left_rounded,
-                    color: isDark ? Colors.white : const Color(0xFF0F172A),
-                    size: 28,
-                  ),
-                  onPressed: () => Navigator.pop(context),
-                ),
-              ),
-            ),
-            centerTitle: true,
-            title: Text(
-              "Data Kesehatan",
-              style: TextStyle(
-                fontSize: 17,
-                fontWeight: FontWeight.bold,
-                color: isDark ? Colors.white : const Color(0xFF0F172A),
-              ),
-            ),
-          ),
-          body: Container(
-            decoration: BoxDecoration(
-              color: isDark ? const Color(0xFF0F172A) : const Color(0xFFF8FAFC),
-              gradient: LinearGradient(
-                begin: Alignment.topCenter,
-                end: Alignment.bottomCenter,
-                stops: const [0.0, 0.22, 0.6],
-                colors: isDark
-                    ? const [
-                        Color(0xFF1E293B),
-                        Color(0xFF131D2E),
-                        Color(0xFF0F172A),
-                      ]
-                    : const [
-                        Color(0xFFE8F6FA),
-                        Color(0xFFF4FAFC),
-                        Color(0xFFF8FAFC),
+            return Scaffold(
+              backgroundColor:
+                  isDark ? const Color(0xFF0F172A) : const Color(0xFFF8FAFC),
+              appBar: AppBar(
+                backgroundColor: Colors.transparent,
+                elevation: 0,
+                leading: Padding(
+                  padding: const EdgeInsets.all(8.0),
+                  child: Container(
+                    decoration: BoxDecoration(
+                      color: isDark ? const Color(0xFF1E293B) : Colors.white,
+                      shape: BoxShape.circle,
+                      border: Border.all(
+                        color: isDark
+                            ? const Color(0xFF334155)
+                            : const Color(0xFFE2E8F0),
+                        width: 1,
+                      ),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withValues(alpha: isDark ? 0.2 : 0.04),
+                          blurRadius: 4,
+                          offset: const Offset(0, 1),
+                        ),
                       ],
-              ),
-            ),
-            child: SafeArea(
-              child: SingleChildScrollView(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    // KARTU HEADER RINGKASAN DENGAN GRADASI BIRU MUDA
-                    Container(
-                      margin: const EdgeInsets.only(bottom: 20),
-                      padding: const EdgeInsets.all(16),
-                      decoration: BoxDecoration(
-                        gradient: LinearGradient(
-                          begin: Alignment.topLeft,
-                          end: Alignment.bottomRight,
-                          colors: isDark
-                              ? const [
-                                  Color(0xFF1E293B),
-                                  Color(0xFF0E2536),
-                                ]
-                              : const [
-                                  Color(0xFFE2F7FB),
-                                  Color(0xFFC7EBF4),
-                                ],
-                        ),
-                        borderRadius: BorderRadius.circular(16),
-                        border: Border.all(
-                          color: isDark
-                              ? const Color(0xFF1E3A5F)
-                              : const Color(0xFFBCE6F1),
-                          width: 1.2,
-                        ),
-                        boxShadow: [
-                          BoxShadow(
-                            color: (isDark ? Colors.black : const Color(0xFF0098B9))
-                                .withValues(alpha: isDark ? 0.25 : 0.08),
-                            blurRadius: 8,
-                            offset: const Offset(0, 3),
-                          ),
-                        ],
-                      ),
-                      child: Row(
-                        children: [
-                          Container(
-                            width: 48,
-                            height: 48,
-                            decoration: BoxDecoration(
-                              color: isDark ? const Color(0xFF0F172A) : Colors.white,
-                              shape: BoxShape.circle,
-                              boxShadow: [
-                                BoxShadow(
-                                  color: (isDark
-                                          ? Colors.black
-                                          : const Color(0xFF0098B9))
-                                      .withValues(alpha: 0.15),
-                                  blurRadius: 6,
-                                  offset: const Offset(0, 2),
-                                ),
-                              ],
-                            ),
-                            child: const Icon(
-                              Icons.favorite_rounded,
-                              color: Color(0xFF0098B9),
-                              size: 26,
-                            ),
-                          ),
-                          const SizedBox(width: 14),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  "Profil Medis Personal",
-                                  style: TextStyle(
-                                    fontSize: 15,
-                                    fontWeight: FontWeight.bold,
-                                    color: isDark
-                                        ? Colors.white
-                                        : const Color(0xFF0F172A),
-                                  ),
-                                ),
-                                const SizedBox(height: 3),
-                                Text(
-                                  "Digunakan untuk analisis risiko kesehatan jantung",
-                                  style: TextStyle(
-                                    fontSize: 11.5,
-                                    color: isDark
-                                        ? const Color(0xFF94A3B8)
-                                        : const Color(0xFF0284C7),
-                                    fontWeight: FontWeight.w600,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ],
-                      ),
                     ),
-
-                    Text(
-                      "Informasi Kesehatan",
-                      style: TextStyle(
-                        fontSize: 15,
-                        fontWeight: FontWeight.bold,
+                    child: IconButton(
+                      padding: EdgeInsets.zero,
+                      icon: Icon(
+                        Icons.chevron_left_rounded,
                         color: isDark ? Colors.white : const Color(0xFF0F172A),
+                        size: 28,
                       ),
+                      onPressed: () => Navigator.pop(context),
                     ),
-                    const SizedBox(height: 12),
-
-                    // CARD DATA KESEHATAN
-                    Container(
-                      decoration: BoxDecoration(
-                        color: isDark ? const Color(0xFF1E293B) : Colors.white,
-                        borderRadius: BorderRadius.circular(16),
-                        border: Border.all(
-                          color: isDark
-                              ? const Color(0xFF334155)
-                              : const Color(0xFFBCE6F1),
-                          width: 1.2,
-                        ),
-                        boxShadow: [
-                          BoxShadow(
-                            color: (isDark ? Colors.black : const Color(0xFF0098B9))
-                                .withValues(alpha: isDark ? 0.2 : 0.05),
-                            blurRadius: 8,
-                            offset: const Offset(0, 2),
+                  ),
+                ),
+                centerTitle: true,
+                title: Text(
+                  tr("Data Kesehatan", "Health Data"),
+                  style: TextStyle(
+                    fontSize: 17,
+                    fontWeight: FontWeight.bold,
+                    color: isDark ? Colors.white : const Color(0xFF0F172A),
+                  ),
+                ),
+              ),
+              body: Container(
+                decoration: BoxDecoration(
+                  color: isDark ? const Color(0xFF0F172A) : const Color(0xFFF8FAFC),
+                  gradient: LinearGradient(
+                    begin: Alignment.topCenter,
+                    end: Alignment.bottomCenter,
+                    stops: const [0.0, 0.22, 0.6],
+                    colors: isDark
+                        ? const [
+                            Color(0xFF1E293B),
+                            Color(0xFF131D2E),
+                            Color(0xFF0F172A),
+                          ]
+                        : const [
+                            Color(0xFFE8F6FA),
+                            Color(0xFFF4FAFC),
+                            Color(0xFFF8FAFC),
+                          ],
+                  ),
+                ),
+                child: SafeArea(
+                  child: SingleChildScrollView(
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        // KARTU HEADER RINGKASAN DENGAN GRADASI BIRU MUDA
+                        Container(
+                          margin: const EdgeInsets.only(bottom: 20),
+                          padding: const EdgeInsets.all(16),
+                          decoration: BoxDecoration(
+                            gradient: LinearGradient(
+                              begin: Alignment.topLeft,
+                              end: Alignment.bottomRight,
+                              colors: isDark
+                                  ? const [
+                                      Color(0xFF1E293B),
+                                      Color(0xFF0E2536),
+                                    ]
+                                  : const [
+                                      Color(0xFFE2F7FB),
+                                      Color(0xFFC7EBF4),
+                                    ],
+                            ),
+                            borderRadius: BorderRadius.circular(16),
+                            border: Border.all(
+                              color: isDark
+                                  ? const Color(0xFF1E3A5F)
+                                  : const Color(0xFFBCE6F1),
+                              width: 1.2,
+                            ),
+                            boxShadow: [
+                              BoxShadow(
+                                color: (isDark ? Colors.black : const Color(0xFF0098B9))
+                                    .withValues(alpha: isDark ? 0.25 : 0.08),
+                                blurRadius: 8,
+                                offset: const Offset(0, 3),
+                              ),
+                            ],
                           ),
-                        ],
-                      ),
-                      child: Column(
-                        children: [
-                          _dataRow("Golongan Darah", _profile.golonganDarah,
-                              isFirst: true, isDark: isDark),
-                          _divider(isDark),
-                          _dataRow("Tinggi Badan", _profile.tinggiBadan, isDark: isDark),
-                          _divider(isDark),
-                          _dataRow("Berat Badan", _profile.beratBadan, isDark: isDark),
-                          _divider(isDark),
-                          _dataRow("Alergi", _profile.alergi, isDark: isDark),
-                          _divider(isDark),
-                          _dataRow("Penyakit yang diderita", _profile.penyakitDiderita,
-                              isDark: isDark),
-                          _divider(isDark),
-                          _dataRow("Riwayat Operasi", _profile.riwayatOperasi,
-                              isLast: true, isDark: isDark),
-                        ],
-                      ),
-                    ),
-
-                    const SizedBox(height: 24),
-
-                    // TOMBOL UBAH DATA
-                    Container(
-                      width: double.infinity,
-                      height: 48,
-                      decoration: BoxDecoration(
-                        gradient: const LinearGradient(
-                          begin: Alignment.topLeft,
-                          end: Alignment.bottomRight,
-                          colors: [Color(0xFF0098B9), Color(0xFF0284C7)],
-                        ),
-                        borderRadius: BorderRadius.circular(14),
-                        boxShadow: [
-                          BoxShadow(
-                            color: const Color(0xFF0098B9).withValues(alpha: 0.35),
-                            blurRadius: 8,
-                            offset: const Offset(0, 3),
+                          child: Row(
+                            children: [
+                              Container(
+                                width: 48,
+                                height: 48,
+                                decoration: BoxDecoration(
+                                  color: isDark ? const Color(0xFF0F172A) : Colors.white,
+                                  shape: BoxShape.circle,
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: (isDark
+                                              ? Colors.black
+                                              : const Color(0xFF0098B9))
+                                          .withValues(alpha: 0.15),
+                                      blurRadius: 6,
+                                      offset: const Offset(0, 2),
+                                    ),
+                                  ],
+                                ),
+                                child: const Icon(
+                                  Icons.favorite_rounded,
+                                  color: Color(0xFF0098B9),
+                                  size: 26,
+                                ),
+                              ),
+                              const SizedBox(width: 14),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      tr("Profil Medis Personal", "Personal Medical Profile"),
+                                      style: TextStyle(
+                                        fontSize: 15,
+                                        fontWeight: FontWeight.bold,
+                                        color: isDark
+                                            ? Colors.white
+                                            : const Color(0xFF0F172A),
+                                      ),
+                                    ),
+                                    const SizedBox(height: 3),
+                                    Text(
+                                      tr("Digunakan untuk analisis risiko kesehatan jantung", "Used for heart health risk analysis"),
+                                      style: TextStyle(
+                                        fontSize: 11.5,
+                                        color: isDark
+                                            ? const Color(0xFF94A3B8)
+                                            : const Color(0xFF0284C7),
+                                        fontWeight: FontWeight.w600,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ],
                           ),
-                        ],
-                      ),
-                      child: ElevatedButton(
-                        onPressed: _showEditSheet,
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.transparent,
-                          foregroundColor: Colors.white,
-                          shadowColor: Colors.transparent,
-                          shape: RoundedRectangleBorder(
+                        ),
+
+                        Text(
+                          tr("Informasi Kesehatan", "Health Information"),
+                          style: TextStyle(
+                            fontSize: 15,
+                            fontWeight: FontWeight.bold,
+                            color: isDark ? Colors.white : const Color(0xFF0F172A),
+                          ),
+                        ),
+                        const SizedBox(height: 12),
+
+                        // CARD DATA KESEHATAN
+                        Container(
+                          decoration: BoxDecoration(
+                            color: isDark ? const Color(0xFF1E293B) : Colors.white,
+                            borderRadius: BorderRadius.circular(16),
+                            border: Border.all(
+                              color: isDark
+                                  ? const Color(0xFF334155)
+                                  : const Color(0xFFBCE6F1),
+                              width: 1.2,
+                            ),
+                            boxShadow: [
+                              BoxShadow(
+                                color: (isDark ? Colors.black : const Color(0xFF0098B9))
+                                    .withValues(alpha: isDark ? 0.2 : 0.05),
+                                blurRadius: 8,
+                                offset: const Offset(0, 2),
+                              ),
+                            ],
+                          ),
+                          child: Column(
+                            children: [
+                              _dataRow(tr("Golongan Darah", "Blood Type"), _profile.golonganDarah,
+                                  isFirst: true, isDark: isDark),
+                              _divider(isDark),
+                              _dataRow(tr("Tinggi Badan", "Height"), _profile.tinggiBadan, isDark: isDark),
+                              _divider(isDark),
+                              _dataRow(tr("Berat Badan", "Weight"), _profile.beratBadan, isDark: isDark),
+                              _divider(isDark),
+                              _dataRow(tr("Alergi", "Allergies"), _profile.alergi, isDark: isDark),
+                              _divider(isDark),
+                              _dataRow(tr("Penyakit yang diderita", "Medical Conditions"), _profile.penyakitDiderita,
+                                  isDark: isDark),
+                              _divider(isDark),
+                              _dataRow(tr("Riwayat Operasi", "Surgical History"), _profile.riwayatOperasi,
+                                  isLast: true, isDark: isDark),
+                            ],
+                          ),
+                        ),
+
+                        const SizedBox(height: 24),
+
+                        // TOMBOL UBAH DATA
+                        Container(
+                          width: double.infinity,
+                          height: 48,
+                          decoration: BoxDecoration(
+                            gradient: const LinearGradient(
+                              begin: Alignment.topLeft,
+                              end: Alignment.bottomRight,
+                              colors: [Color(0xFF0098B9), Color(0xFF0284C7)],
+                            ),
                             borderRadius: BorderRadius.circular(14),
+                            boxShadow: [
+                              BoxShadow(
+                                color: const Color(0xFF0098B9).withValues(alpha: 0.35),
+                                blurRadius: 8,
+                                offset: const Offset(0, 3),
+                              ),
+                            ],
                           ),
-                        ),
-                        child: const Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Icon(Icons.edit_rounded, size: 18),
-                            SizedBox(width: 8),
-                            Text(
-                              "Ubah Data Kesehatan",
-                              style: TextStyle(
-                                fontSize: 14.5,
-                                fontWeight: FontWeight.bold,
+                          child: ElevatedButton(
+                            onPressed: _showEditSheet,
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.transparent,
+                              foregroundColor: Colors.white,
+                              shadowColor: Colors.transparent,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(14),
                               ),
                             ),
-                          ],
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                const Icon(Icons.edit_rounded, size: 18),
+                                const SizedBox(width: 8),
+                                Text(
+                                  tr("Ubah Data Kesehatan", "Edit Health Data"),
+                                  style: const TextStyle(
+                                    fontSize: 14.5,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
                         ),
-                      ),
+                        const SizedBox(height: 20),
+                      ],
                     ),
-                    const SizedBox(height: 20),
-                  ],
+                  ),
                 ),
               ),
-            ),
-          ),
-          bottomNavigationBar: _buildBottomNav(context, isDark: isDark),
+              bottomNavigationBar: _buildBottomNav(context, isDark: isDark),
+            );
+          },
         );
       },
     );
@@ -558,54 +564,42 @@ class _DataKesehatanPageState extends State<DataKesehatanPage> {
     bool isLast = false,
     bool isDark = false,
   }) {
-    return InkWell(
-      onTap: _showEditSheet,
-      borderRadius: BorderRadius.vertical(
-        top: isFirst ? const Radius.circular(16) : Radius.zero,
-        bottom: isLast ? const Radius.circular(16) : Radius.zero,
-      ),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-        child: Row(
-          children: [
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    label,
-                    style: TextStyle(
-                      fontSize: 12,
-                      fontWeight: FontWeight.bold,
-                      color: isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B),
-                    ),
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+      child: Row(
+        children: [
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  label,
+                  style: TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.bold,
+                    color: isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B),
                   ),
-                  const SizedBox(height: 3),
-                  Text(
-                    value.trim().isNotEmpty ? value : "Belum diisi",
-                    style: TextStyle(
-                      fontSize: 13,
-                      fontWeight: FontWeight.w600,
-                      color: value.trim().isNotEmpty
-                          ? (isDark ? Colors.white : const Color(0xFF0F172A))
-                          : (isDark
-                              ? const Color(0xFF64748B)
-                              : const Color(0xFF94A3B8)),
-                      fontStyle: value.trim().isNotEmpty
-                          ? FontStyle.normal
-                          : FontStyle.italic,
-                    ),
+                ),
+                const SizedBox(height: 3),
+                Text(
+                  value.trim().isNotEmpty ? value : tr("Belum diisi", "Not set"),
+                  style: TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w600,
+                    color: value.trim().isNotEmpty
+                        ? (isDark ? Colors.white : const Color(0xFF0F172A))
+                        : (isDark
+                            ? const Color(0xFF64748B)
+                            : const Color(0xFF94A3B8)),
+                    fontStyle: value.trim().isNotEmpty
+                        ? FontStyle.normal
+                        : FontStyle.italic,
                   ),
-                ],
-              ),
+                ),
+              ],
             ),
-            Icon(
-              Icons.chevron_right_rounded,
-              size: 20,
-              color: isDark ? const Color(0xFF64748B) : const Color(0xFF94A3B8),
-            ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
@@ -624,13 +618,13 @@ class _DataKesehatanPageState extends State<DataKesehatanPage> {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceAround,
         children: [
-          _navItem(context, Icons.home_outlined, "Home", 0, isDark: isDark),
-          _navItem(context, Icons.favorite_border, "Skrining", 1,
+          _navItem(context, Icons.home_outlined, tr("Home", "Home"), 0, isDark: isDark),
+          _navItem(context, Icons.favorite_border, tr("Skrining", "Screening"), 1,
               isDark: isDark),
-          _navItem(context, Icons.person_outline, "Dokter", 2, isDark: isDark),
-          _navItem(context, Icons.description_outlined, "Riwayat", 3,
+          _navItem(context, Icons.person_outline, tr("Dokter", "Doctors"), 2, isDark: isDark),
+          _navItem(context, Icons.description_outlined, tr("Riwayat", "History"), 3,
               isDark: isDark),
-          _navItem(context, Icons.person_rounded, "Profil", 4,
+          _navItem(context, Icons.person_rounded, tr("Profil", "Profile"), 4,
               active: true, isDark: isDark),
         ],
       ),

@@ -24,87 +24,108 @@ class HeartCareAuthBackground extends StatelessWidget {
         final size = MediaQuery.of(context).size;
 
         return Scaffold(
-          backgroundColor: isDark ? const Color(0xFF0B132B) : const Color(0xFFF8FAFC),
+          backgroundColor: isDark ? const Color(0xFF0F172A) : const Color(0xFFF8FAFC),
           body: Stack(
             children: [
-              // 1. Base Gradient Background
+              // 1. Base Gradient Background (Matches Home Page with Illuminated Bottom)
               Container(
                 width: double.infinity,
                 height: double.infinity,
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
+                    begin: Alignment.topCenter,
+                    end: Alignment.bottomCenter,
+                    stops: const [0.0, 0.35, 0.70, 1.0],
                     colors: isDark
                         ? const [
-                            Color(0xFF0B132B),
-                            Color(0xFF111D3E),
-                            Color(0xFF1E1B38),
+                            Color(0xFF1E293B),
+                            Color(0xFF162032),
+                            Color(0xFF111927),
+                            Color(0xFF0E2536),
                           ]
                         : const [
-                            Color(0xFFF0F9FF), // Pale sky cyan
-                            Color(0xFFF8FAFC), // Pure clean slate
-                            Color(0xFFFFF1F2), // Soft heart rose tint
+                            Color(0xFFE0F2FE),
+                            Color(0xFFF4F9FD),
+                            Color(0xFFE0F2FE),
+                            Color(0xFFBAE6FD),
                           ],
-                    stops: const [0.0, 0.55, 1.0],
                   ),
                 ),
               ),
 
-              // 2. Ambient Glowing Orb - Top Right (Medical Cyan)
+              // 2. Ambient Glowing Orb - Top Right (Medical Sky Blue)
               Positioned(
-                top: -80,
-                right: -80,
+                top: -60,
+                right: -50,
                 child: Container(
-                  width: 320,
-                  height: 320,
+                  width: 280,
+                  height: 280,
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
                     gradient: RadialGradient(
                       colors: [
-                        (isDark ? const Color(0xFF0284C7) : const Color(0xFF38BDF8))
-                            .withValues(alpha: isDark ? 0.28 : 0.25),
-                        (isDark ? const Color(0xFF0284C7) : const Color(0xFF38BDF8))
-                            .withValues(alpha: 0.0),
+                        (isDark ? const Color(0xFF38BDF8) : const Color(0xFF38BDF8))
+                            .withValues(alpha: isDark ? 0.12 : 0.22),
+                        const Color(0xFF38BDF8).withValues(alpha: 0.0),
                       ],
                     ),
                   ),
                 ),
               ),
 
-              // 3. Ambient Glowing Orb - Bottom Left (Heart Rose / Coral)
+              // 3. Ambient Glowing Orb - Middle Left (Soft Cyan Glow)
               Positioned(
-                bottom: -100,
-                left: -80,
+                top: size.height * 0.35,
+                left: -70,
                 child: Container(
-                  width: 340,
-                  height: 340,
+                  width: 240,
+                  height: 240,
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
                     gradient: RadialGradient(
                       colors: [
-                        (isDark ? const Color(0xFFE11D48) : const Color(0xFFFB7185))
-                            .withValues(alpha: isDark ? 0.22 : 0.18),
-                        (isDark ? const Color(0xFFE11D48) : const Color(0xFFFB7185))
-                            .withValues(alpha: 0.0),
+                        (isDark ? const Color(0xFF0EA5E9) : const Color(0xFF0EA5E9))
+                            .withValues(alpha: isDark ? 0.10 : 0.16),
+                        const Color(0xFF0EA5E9).withValues(alpha: 0.0),
                       ],
                     ),
                   ),
                 ),
               ),
 
-              // 4. Ambient Glowing Orb - Center Right (Subtle Warm Glow)
+              // 4. Ambient Glowing Orb - Bottom Left (Illuminated Cyan Glow)
               Positioned(
-                top: size.height * 0.42,
-                right: -70,
+                bottom: -80,
+                left: -40,
                 child: Container(
-                  width: 200,
-                  height: 200,
+                  width: 300,
+                  height: 300,
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
                     gradient: RadialGradient(
                       colors: [
-                        const Color(0xFF0EA5E9).withValues(alpha: isDark ? 0.15 : 0.12),
+                        (isDark ? const Color(0xFF0284C7) : const Color(0xFF38BDF8))
+                            .withValues(alpha: isDark ? 0.14 : 0.26),
+                        const Color(0xFF38BDF8).withValues(alpha: 0.0),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+
+              // 5. Ambient Glowing Orb - Bottom Right (Deep Sky Blue)
+              Positioned(
+                bottom: -60,
+                right: -60,
+                child: Container(
+                  width: 270,
+                  height: 270,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    gradient: RadialGradient(
+                      colors: [
+                        (isDark ? const Color(0xFF0EA5E9) : const Color(0xFF0EA5E9))
+                            .withValues(alpha: isDark ? 0.12 : 0.20),
                         const Color(0xFF0EA5E9).withValues(alpha: 0.0),
                       ],
                     ),
@@ -120,7 +141,8 @@ class HeartCareAuthBackground extends StatelessWidget {
                       painter: _EkgHeartbeatPainter(
                         waveColor: (isDark ? const Color(0xFF38BDF8) : const Color(0xFF0284C7))
                             .withValues(alpha: isDark ? 0.15 : 0.10),
-                        pulseColor: const Color(0xFFE11D48).withValues(alpha: isDark ? 0.25 : 0.18),
+                        pulseColor: (isDark ? const Color(0xFF38BDF8) : const Color(0xFF0EA5E9))
+                            .withValues(alpha: isDark ? 0.22 : 0.18),
                       ),
                     ),
                   ),
@@ -286,9 +308,9 @@ class _HeartPulseBadgeState extends State<HeartPulseBadge>
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
                 colors: [
+                  const Color(0xFF38BDF8),
                   effectiveGlow,
-                  effectiveGlow.withValues(alpha: 0.85),
-                  const Color(0xFFE11D48),
+                  const Color(0xFF0369A1),
                 ],
               ),
               boxShadow: [
@@ -299,7 +321,7 @@ class _HeartPulseBadgeState extends State<HeartPulseBadge>
                   offset: const Offset(0, 6),
                 ),
                 BoxShadow(
-                  color: const Color(0xFFE11D48).withValues(alpha: 0.25),
+                  color: const Color(0xFF0EA5E9).withValues(alpha: 0.25),
                   blurRadius: 14,
                   offset: const Offset(0, 4),
                 ),

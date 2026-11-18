@@ -44,6 +44,7 @@ dependencies:
   web: ^1.1.1
   agora_rtc_engine: ^6.6.4
   permission_handler: ^13.0.2
+  flutter_local_notifications: ^23.0.0
 
 
 dev_dependencies:

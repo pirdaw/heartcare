@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:typed_data';
+
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -10,6 +11,8 @@ import 'package:heartcare/pages/Skrining/screening_model.dart';
 import 'package:heartcare/pages/riwayat_model.dart';
 import 'package:heartcare/pages/profil_page.dart';
 import 'package:heartcare/services/theme_service.dart';
+import 'package:heartcare/services/language_service.dart';
+
 import '../services/profile_service.dart';
 import '../services/user_profile_service.dart';
 import '../services/chat_service.dart';
@@ -17,6 +20,8 @@ import '../services/doctor_service.dart';
 import '../services/notification_service.dart';
 import '../services/call_service.dart';
 import 'video_call_page.dart';
+import '../services/chat_notification_service.dart';
+import '../widgets/chat_notification_sheet.dart';
 
 class ChatItem {
   final String message;
@@ -63,16 +68,12 @@ class KonsultasiDokterPage extends StatefulWidget {
   });
 
   @override
-  State<KonsultasiDokterPage> createState() =>
-      _KonsultasiDokterPageState();
+  State<KonsultasiDokterPage> createState() => _KonsultasiDokterPageState();
 }
 
-class _KonsultasiDokterPageState
-    extends State<KonsultasiDokterPage> {
-  final TextEditingController messageController =
-      TextEditingController();
-  final ScrollController _scrollController =
-      ScrollController();
+class _KonsultasiDokterPageState extends State<KonsultasiDokterPage> {
+  final TextEditingController messageController = TextEditingController();
+  final ScrollController _scrollController = ScrollController();
 
   String? _activeChatId;
   String? _patientPhoto;
@@ -89,7 +90,12 @@ class _KonsultasiDokterPageState
   @override
   void initState() {
     super.initState();
-    ChatService.instance.setActiveRole(widget.isDoctorView ? 'doctor' : 'patient');
+    ChatService.instance.setActiveRole(
+      widget.isDoctorView ? 'doctor' : 'patient',
+    );
+    ChatNotificationService.instance.currentActiveDoctorRoom =
+        widget.doctorName;
+    ChatNotificationService.instance.markAsRead(widget.doctorName);
     _patientPhoto = widget.patientPhoto;
     _patientName = widget.patientName;
 
@@ -113,7 +119,6 @@ class _KonsultasiDokterPageState
         ProfileService.fetchPatientPhotoFromFirestore(widget.patientId!);
       }
     }
-
     _listenDoctorOnlineStatus();
     // Pre-komputasi activeChatId secara instan pada frame pertama
     if (widget.chatId != null && widget.chatId!.isNotEmpty) {
@@ -127,12 +132,13 @@ class _KonsultasiDokterPageState
       try {
         currentUid = FirebaseAuth.instance.currentUser?.uid;
       } catch (_) {}
-      final patientId = widget.patientId ??
+      final patientId =
+          widget.patientId ??
           currentUid ??
           ((profile != null && profile.nama.isNotEmpty)
               ? profile.nama
-                  .replaceAll(RegExp(r'[^a-zA-Z0-9]'), '_')
-                  .toLowerCase()
+                    .replaceAll(RegExp(r'[^a-zA-Z0-9]'), '_')
+                    .toLowerCase()
               : 'patient_user');
       final doctorId = widget.doctorId ?? widget.doctorName;
       _activeChatId = ChatService.instance.computeChatId(
@@ -171,9 +177,11 @@ class _KonsultasiDokterPageState
               doctorSpecialty: widget.doctorSpecialty,
               doctorId: widget.doctorId,
               patientId: widget.patientId,
-              patientName: widget.patientName ??
+              patientName:
+                  widget.patientName ??
                   (profile.nama.isNotEmpty ? profile.nama : 'Pasien HeartCare'),
-              patientPhoto: _patientPhoto ??
+              patientPhoto:
+                  _patientPhoto ??
                   widget.patientPhoto ??
                   (profile.fotoProfil.isNotEmpty
                       ? profile.fotoProfil
@@ -216,20 +224,21 @@ class _KonsultasiDokterPageState
           .doc(docId)
           .snapshots()
           .listen((snap) {
-        if (snap.exists && snap.data() != null) {
-          final isOnline = snap.data()!['isOnline'] as bool? ?? true;
-          if (mounted && _isDoctorOnline != isOnline) {
-            setState(() {
-              _isDoctorOnline = isOnline;
-            });
-          }
-        }
-      }, onError: (_) {});
+            if (snap.exists && snap.data() != null) {
+              final isOnline = snap.data()!['isOnline'] as bool? ?? true;
+              if (mounted && _isDoctorOnline != isOnline) {
+                setState(() {
+                  _isDoctorOnline = isOnline;
+                });
+              }
+            }
+          }, onError: (_) {});
     }
   }
 
   @override
   void dispose() {
+    ChatNotificationService.instance.currentActiveDoctorRoom = null;
     _doctorStatusSub?.cancel();
     messageController.dispose();
     _scrollController.dispose();
@@ -279,12 +288,40 @@ class _KonsultasiDokterPageState
     }
     if (_activeChatId == null) return;
 
-    final profile = UserProfileService.instance.currentProfile;
-    final senderRole = widget.isDoctorView ? 'doctor' : 'patient';
-    final senderName = widget.isDoctorView
+    String resolvedPatientName = widget.patientName ?? 'Pasien';
+    UserProfileData? profile;
+    try {
+      profile = UserProfileService.instance.currentProfile;
+      if (profile.nama.isNotEmpty && widget.patientName == null) {
+        resolvedPatientName = profile.nama;
+      }
+    } catch (_) {}
+    final isSendingDoctor = widget.isDoctorView;
+    final senderRole = isSendingDoctor ? 'doctor' : 'patient';
+    final senderName = isSendingDoctor
         ? widget.doctorName
-        : (widget.patientName ??
-            (profile.nama.isNotEmpty ? profile.nama : 'Pasien'));
+        : resolvedPatientName;
+
+    // Periksa apakah ini adalah pesan pertama pasien kepada dokter tersebut
+    bool isFirstChatWithDoctor = false;
+    if (!isSendingDoctor) {
+      final alreadyReplied = await ChatService.instance.hasInitialBotReplied(
+        chatId: _activeChatId!,
+        patientId: widget.patientId,
+        doctorId: widget.doctorId,
+        doctorName: widget.doctorName,
+      );
+      if (!alreadyReplied) {
+        isFirstChatWithDoctor = true;
+        // Tandai langsung agar pesan balasan berikutnya tidak memicu balasan bot lagi
+        await ChatService.instance.markInitialBotReplied(
+          chatId: _activeChatId!,
+          patientId: widget.patientId,
+          doctorId: widget.doctorId,
+          doctorName: widget.doctorName,
+        );
+      }
+    }
 
     final now = DateTime.now();
     final timeStr =
@@ -292,7 +329,7 @@ class _KonsultasiDokterPageState
 
     final optMsg = ChatMessage(
       id: 'opt_${now.millisecondsSinceEpoch}',
-      senderId: widget.isDoctorView ? 'doctor' : 'patient',
+      senderId: isSendingDoctor ? 'doctor' : 'patient',
       senderRole: senderRole,
       senderName: senderName,
       message: text,
@@ -312,15 +349,42 @@ class _KonsultasiDokterPageState
       senderRole: senderRole,
       senderName: senderName,
       patientId: widget.patientId,
-      patientName: _patientName ?? widget.patientName ?? profile.nama,
-      patientPhoto: _patientPhoto ??
+      patientName:
+          _patientName ??
+          widget.patientName ??
+          ((profile != null && profile.nama.isNotEmpty)
+              ? profile.nama
+              : resolvedPatientName),
+      patientPhoto:
+          _patientPhoto ??
           widget.patientPhoto ??
-          (profile.fotoProfil.isNotEmpty
+          ((profile != null && profile.fotoProfil.isNotEmpty)
               ? profile.fotoProfil
               : ProfileService.instance.currentImagePath),
       doctorId: widget.doctorId,
       doctorName: widget.doctorName,
     );
+
+    // Pesan bot sambutan otomatis HANYA terkirim jika pasien pertama kali chat dokter tersebut.
+    // Balasan beruntun berikutnya tidak akan memicu pesan bot berulang.
+    if (!isSendingDoctor && isFirstChatWithDoctor) {
+      Future.delayed(const Duration(milliseconds: 2500), () async {
+        if (_activeChatId == null) return;
+        final replyText = ChatNotificationService.instance.getClinicalReply(
+          text,
+        );
+        await ChatService.instance.sendMessage(
+          chatId: _activeChatId!,
+          message: replyText,
+          senderRole: 'doctor',
+          senderName: widget.doctorName,
+          patientId: widget.patientId,
+          patientName: resolvedPatientName,
+          doctorId: widget.doctorId,
+          doctorName: widget.doctorName,
+        );
+      });
+    }
 
     if (!success && mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -345,10 +409,14 @@ class _KonsultasiDokterPageState
       profile = UserProfileService.instance.currentProfile;
     } catch (_) {}
 
-    final resolvedPatientName = _patientName ??
+    final resolvedPatientName =
+        _patientName ??
         widget.patientName ??
-        (profile != null && profile.nama.isNotEmpty ? profile.nama : "Pasien HeartCare");
-    final resolvedPatientPhoto = _patientPhoto ??
+        (profile != null && profile.nama.isNotEmpty
+            ? profile.nama
+            : "Pasien HeartCare");
+    final resolvedPatientPhoto =
+        _patientPhoto ??
         widget.patientPhoto ??
         (profile != null && profile.fotoProfil.isNotEmpty
             ? profile.fotoProfil
@@ -399,15 +467,10 @@ class _KonsultasiDokterPageState
       backgroundColor: Colors.transparent,
       builder: (context) {
         return Container(
-          padding: const EdgeInsets.symmetric(
-            horizontal: 20,
-            vertical: 16,
-          ),
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
           decoration: BoxDecoration(
             color: isDark ? const Color(0xFF1E293B) : Colors.white,
-            borderRadius: const BorderRadius.vertical(
-              top: Radius.circular(24),
-            ),
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
           ),
           child: SafeArea(
             child: Column(
@@ -419,7 +482,9 @@ class _KonsultasiDokterPageState
                     width: 40,
                     height: 4,
                     decoration: BoxDecoration(
-                      color: isDark ? const Color(0xFF475569) : const Color(0xFFCBD5E1),
+                      color: isDark
+                          ? const Color(0xFF475569)
+                          : const Color(0xFFCBD5E1),
                       borderRadius: BorderRadius.circular(4),
                     ),
                   ),
@@ -448,14 +513,18 @@ class _KonsultasiDokterPageState
                           style: TextStyle(
                             fontSize: 14.5,
                             fontWeight: FontWeight.w700,
-                            color: isDark ? Colors.white : const Color(0xFF0F172A),
+                            color: isDark
+                                ? Colors.white
+                                : const Color(0xFF0F172A),
                           ),
                         ),
                         Text(
                           "Bagikan hasil lab, resep, atau catatan dokter",
                           style: TextStyle(
                             fontSize: 11,
-                            color: isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B),
+                            color: isDark
+                                ? const Color(0xFF94A3B8)
+                                : const Color(0xFF64748B),
                           ),
                         ),
                       ],
@@ -468,7 +537,8 @@ class _KonsultasiDokterPageState
                   iconColor: const Color(0xFF0284C7),
                   bgColor: const Color(0xFF0284C7).withValues(alpha: 0.12),
                   title: "Pilih dari Galeri (Hasil Lab / EKG)",
-                  subtitle: "Kirim foto hasil lab darah, EKG, rontgen, atau resep",
+                  subtitle:
+                      "Kirim foto hasil lab darah, EKG, rontgen, atau resep",
                   isDark: isDark,
                   onTap: () {
                     Navigator.pop(context);
@@ -493,7 +563,8 @@ class _KonsultasiDokterPageState
                     iconColor: const Color(0xFF6366F1),
                     bgColor: const Color(0xFF6366F1).withValues(alpha: 0.12),
                     title: "Hasil Skrining Jantung HeartCare",
-                    subtitle: "Kirim ringkasan skrining risiko jantung AI terakhir",
+                    subtitle:
+                        "Kirim ringkasan skrining risiko jantung AI terakhir",
                     isDark: isDark,
                     onTap: () {
                       Navigator.pop(context);
@@ -528,10 +599,7 @@ class _KonsultasiDokterPageState
             Container(
               width: 42,
               height: 42,
-              decoration: BoxDecoration(
-                color: bgColor,
-                shape: BoxShape.circle,
-              ),
+              decoration: BoxDecoration(color: bgColor, shape: BoxShape.circle),
               child: Icon(icon, size: 22, color: iconColor),
             ),
             const SizedBox(width: 12),
@@ -552,7 +620,9 @@ class _KonsultasiDokterPageState
                     subtitle,
                     style: TextStyle(
                       fontSize: 11,
-                      color: isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B),
+                      color: isDark
+                          ? const Color(0xFF94A3B8)
+                          : const Color(0xFF64748B),
                     ),
                   ),
                 ],
@@ -570,8 +640,10 @@ class _KonsultasiDokterPageState
   }
 
   void _promptShareScreening() {
-    final screeningData = widget.initialScreeningData ?? RiwayatService().latestScreeningData;
-    final riskResult = widget.initialRiskResult ?? RiwayatService().latestRiskResult;
+    final screeningData =
+        widget.initialScreeningData ?? RiwayatService().latestScreeningData;
+    final riskResult =
+        widget.initialRiskResult ?? RiwayatService().latestRiskResult;
     final isDark = ThemeService.isDarkMode;
 
     if (screeningData == null) {
@@ -591,7 +663,9 @@ class _KonsultasiDokterPageState
                 width: 40,
                 height: 4,
                 decoration: BoxDecoration(
-                  color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0),
+                  color: isDark
+                      ? const Color(0xFF334155)
+                      : const Color(0xFFE2E8F0),
                   borderRadius: BorderRadius.circular(2),
                 ),
               ),
@@ -603,7 +677,11 @@ class _KonsultasiDokterPageState
                   color: const Color(0xFF0284C7).withValues(alpha: 0.12),
                   shape: BoxShape.circle,
                 ),
-                child: const Icon(Icons.monitor_heart_outlined, color: Color(0xFF0284C7), size: 32),
+                child: const Icon(
+                  Icons.monitor_heart_outlined,
+                  color: Color(0xFF0284C7),
+                  size: 32,
+                ),
               ),
               const SizedBox(height: 14),
               Text(
@@ -620,7 +698,9 @@ class _KonsultasiDokterPageState
                 textAlign: TextAlign.center,
                 style: TextStyle(
                   fontSize: 13,
-                  color: isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B),
+                  color: isDark
+                      ? const Color(0xFF94A3B8)
+                      : const Color(0xFF64748B),
                 ),
               ),
               const SizedBox(height: 20),
@@ -632,15 +712,22 @@ class _KonsultasiDokterPageState
                     Navigator.pop(ctx);
                     Navigator.push(
                       context,
-                      MaterialPageRoute(builder: (_) => const ScreeningInputPage()),
+                      MaterialPageRoute(
+                        builder: (_) => const ScreeningInputPage(),
+                      ),
                     );
                   },
                   icon: const Icon(Icons.favorite_rounded, size: 18),
-                  label: const Text("Mulai Skrining Sekarang", style: TextStyle(fontWeight: FontWeight.bold)),
+                  label: const Text(
+                    "Mulai Skrining Sekarang",
+                    style: TextStyle(fontWeight: FontWeight.bold),
+                  ),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: const Color(0xFF0284C7),
                     foregroundColor: Colors.white,
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
                   ),
                 ),
               ),
@@ -651,7 +738,8 @@ class _KonsultasiDokterPageState
       return;
     }
 
-    final activeResult = riskResult ??
+    final activeResult =
+        riskResult ??
         HeartRiskResult(
           level: RiskLevel.low,
           title: 'RISIKO RENDAH',
@@ -681,7 +769,9 @@ class _KonsultasiDokterPageState
                 width: 40,
                 height: 4,
                 decoration: BoxDecoration(
-                  color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0),
+                  color: isDark
+                      ? const Color(0xFF334155)
+                      : const Color(0xFFE2E8F0),
                   borderRadius: BorderRadius.circular(2),
                 ),
               ),
@@ -696,7 +786,11 @@ class _KonsultasiDokterPageState
                     color: const Color(0xFF6366F1).withValues(alpha: 0.15),
                     borderRadius: BorderRadius.circular(12),
                   ),
-                  child: const Icon(Icons.monitor_heart_rounded, color: Color(0xFF6366F1), size: 24),
+                  child: const Icon(
+                    Icons.monitor_heart_rounded,
+                    color: Color(0xFF6366F1),
+                    size: 24,
+                  ),
                 ),
                 const SizedBox(width: 12),
                 Expanded(
@@ -708,14 +802,18 @@ class _KonsultasiDokterPageState
                         style: TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.bold,
-                          color: isDark ? Colors.white : const Color(0xFF0F172A),
+                          color: isDark
+                              ? Colors.white
+                              : const Color(0xFF0F172A),
                         ),
                       ),
                       Text(
                         "Kepada ${widget.doctorName}",
                         style: TextStyle(
                           fontSize: 12,
-                          color: isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B),
+                          color: isDark
+                              ? const Color(0xFF94A3B8)
+                              : const Color(0xFF64748B),
                         ),
                       ),
                     ],
@@ -727,9 +825,13 @@ class _KonsultasiDokterPageState
             Container(
               padding: const EdgeInsets.all(14),
               decoration: BoxDecoration(
-                color: isDark ? const Color(0xFF0F172A) : activeResult.backgroundColor.withValues(alpha: 0.6),
+                color: isDark
+                    ? const Color(0xFF0F172A)
+                    : activeResult.backgroundColor.withValues(alpha: 0.6),
                 borderRadius: BorderRadius.circular(14),
-                border: Border.all(color: activeResult.statusColor.withValues(alpha: 0.5)),
+                border: Border.all(
+                  color: activeResult.statusColor.withValues(alpha: 0.5),
+                ),
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -747,9 +849,14 @@ class _KonsultasiDokterPageState
                       ),
                       if (activeResult.probability != null)
                         Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 8,
+                            vertical: 3,
+                          ),
                           decoration: BoxDecoration(
-                            color: activeResult.statusColor.withValues(alpha: 0.15),
+                            color: activeResult.statusColor.withValues(
+                              alpha: 0.15,
+                            ),
                             borderRadius: BorderRadius.circular(8),
                           ),
                           child: Text(
@@ -768,20 +875,34 @@ class _KonsultasiDokterPageState
                     activeResult.subtitle,
                     style: TextStyle(
                       fontSize: 12,
-                      color: isDark ? const Color(0xFFE2E8F0) : const Color(0xFF1E293B),
+                      color: isDark
+                          ? const Color(0xFFE2E8F0)
+                          : const Color(0xFF1E293B),
                     ),
                   ),
                   const Divider(height: 16),
                   Row(
                     children: [
                       Expanded(
-                        child: _miniCardInfo("Tekanan Darah", screeningData.displayBloodPressure, isDark),
+                        child: _miniCardInfo(
+                          "Tekanan Darah",
+                          screeningData.displayBloodPressure,
+                          isDark,
+                        ),
                       ),
                       Expanded(
-                        child: _miniCardInfo("Kolesterol", screeningData.displayCholesterol, isDark),
+                        child: _miniCardInfo(
+                          "Kolesterol",
+                          screeningData.displayCholesterol,
+                          isDark,
+                        ),
                       ),
                       Expanded(
-                        child: _miniCardInfo("Detak Maks", screeningData.displayMaxHeartRate, isDark),
+                        child: _miniCardInfo(
+                          "Detak Maks",
+                          screeningData.displayMaxHeartRate,
+                          isDark,
+                        ),
                       ),
                     ],
                   ),
@@ -789,10 +910,18 @@ class _KonsultasiDokterPageState
                   Row(
                     children: [
                       Expanded(
-                        child: _miniCardInfo("Nyeri Dada", screeningData.displayChestPainType, isDark),
+                        child: _miniCardInfo(
+                          "Nyeri Dada",
+                          screeningData.displayChestPainType,
+                          isDark,
+                        ),
                       ),
                       Expanded(
-                        child: _miniCardInfo("EKG Istirahat", screeningData.displayEcg, isDark),
+                        child: _miniCardInfo(
+                          "EKG Istirahat",
+                          screeningData.displayEcg,
+                          isDark,
+                        ),
                       ),
                     ],
                   ),
@@ -807,7 +936,9 @@ class _KonsultasiDokterPageState
                     onPressed: () => Navigator.pop(ctx),
                     style: OutlinedButton.styleFrom(
                       padding: const EdgeInsets.symmetric(vertical: 12),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
                     ),
                     child: const Text("Batal"),
                   ),
@@ -821,12 +952,17 @@ class _KonsultasiDokterPageState
                       _sendScreeningData(screeningData, activeResult);
                     },
                     icon: const Icon(Icons.send_rounded, size: 18),
-                    label: const Text("Kirim ke Dokter", style: TextStyle(fontWeight: FontWeight.bold)),
+                    label: const Text(
+                      "Kirim ke Dokter",
+                      style: TextStyle(fontWeight: FontWeight.bold),
+                    ),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: const Color(0xFF0284C7),
                       foregroundColor: Colors.white,
                       padding: const EdgeInsets.symmetric(vertical: 12),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
                     ),
                   ),
                 ),
@@ -866,7 +1002,10 @@ class _KonsultasiDokterPageState
     );
   }
 
-  Future<void> _sendScreeningData(ScreeningData data, HeartRiskResult result) async {
+  Future<void> _sendScreeningData(
+    ScreeningData data,
+    HeartRiskResult result,
+  ) async {
     if (_activeChatId == null) {
       await _initChat();
     }
@@ -877,7 +1016,7 @@ class _KonsultasiDokterPageState
     final senderName = widget.isDoctorView
         ? widget.doctorName
         : (widget.patientName ??
-            (profile.nama.isNotEmpty ? profile.nama : 'Pasien'));
+              (profile.nama.isNotEmpty ? profile.nama : 'Pasien'));
 
     final reportText = data.toDoctorReport(
       patientName: senderName,
@@ -914,8 +1053,12 @@ class _KonsultasiDokterPageState
       attachmentType: 'screening',
       imagePath: 'assets/images/screening_jantung.png',
       patientId: widget.patientId,
-      patientName: _patientName ?? widget.patientName ?? profile.nama,
-      patientPhoto: _patientPhoto ??
+      patientName:
+          _patientName ??
+          widget.patientName ??
+          (profile.nama.isNotEmpty ? profile.nama : 'Pasien'),
+      patientPhoto:
+          _patientPhoto ??
           widget.patientPhoto ??
           (profile.fotoProfil.isNotEmpty
               ? profile.fotoProfil
@@ -965,11 +1108,17 @@ class _KonsultasiDokterPageState
 
     for (final line in text.split('\n')) {
       if (line.contains('Tekanan Darah')) {
-        bp = line.replaceAll('• Tekanan Darah Istirahat:', '').replaceAll('• Tekanan Darah:', '').trim();
+        bp = line
+            .replaceAll('• Tekanan Darah Istirahat:', '')
+            .replaceAll('• Tekanan Darah:', '')
+            .trim();
       } else if (line.contains('Kolesterol Total')) {
         chol = line.replaceAll('• Kolesterol Total:', '').trim();
       } else if (line.contains('Detak Jantung')) {
-        hr = line.replaceAll('• Detak Jantung Maksimum:', '').replaceAll('• Detak Jantung Maks:', '').trim();
+        hr = line
+            .replaceAll('• Detak Jantung Maksimum:', '')
+            .replaceAll('• Detak Jantung Maks:', '')
+            .trim();
       } else if (line.contains('Tipe Nyeri Dada')) {
         cp = line.replaceAll('• Tipe Nyeri Dada:', '').trim();
       }
@@ -1010,8 +1159,12 @@ class _KonsultasiDokterPageState
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
               decoration: BoxDecoration(
-                color: isDark ? const Color(0xFF0F172A) : const Color(0xFFF8FAFC),
-                borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
+                color: isDark
+                    ? const Color(0xFF0F172A)
+                    : const Color(0xFFF8FAFC),
+                borderRadius: const BorderRadius.vertical(
+                  top: Radius.circular(16),
+                ),
               ),
               child: Row(
                 children: [
@@ -1022,7 +1175,11 @@ class _KonsultasiDokterPageState
                       color: statusColor.withValues(alpha: 0.15),
                       shape: BoxShape.circle,
                     ),
-                    child: Icon(Icons.monitor_heart_rounded, size: 18, color: statusColor),
+                    child: Icon(
+                      Icons.monitor_heart_rounded,
+                      size: 18,
+                      color: statusColor,
+                    ),
                   ),
                   const SizedBox(width: 8),
                   Expanded(
@@ -1043,18 +1200,25 @@ class _KonsultasiDokterPageState
                               : "Catatan Skrining",
                           style: TextStyle(
                             fontSize: 10,
-                            color: isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B),
+                            color: isDark
+                                ? const Color(0xFF94A3B8)
+                                : const Color(0xFF64748B),
                           ),
                         ),
                       ],
                     ),
                   ),
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 3,
+                    ),
                     decoration: BoxDecoration(
                       color: badgeBg,
                       borderRadius: BorderRadius.circular(8),
-                      border: Border.all(color: statusColor.withValues(alpha: 0.4)),
+                      border: Border.all(
+                        color: statusColor.withValues(alpha: 0.4),
+                      ),
                     ),
                     child: Text(
                       statusText,
@@ -1076,7 +1240,9 @@ class _KonsultasiDokterPageState
                   Container(
                     padding: const EdgeInsets.all(10),
                     decoration: BoxDecoration(
-                      color: isDark ? const Color(0xFF0F172A) : const Color(0xFFF1F5F9),
+                      color: isDark
+                          ? const Color(0xFF0F172A)
+                          : const Color(0xFFF1F5F9),
                       borderRadius: BorderRadius.circular(10),
                     ),
                     child: Row(
@@ -1084,12 +1250,20 @@ class _KonsultasiDokterPageState
                         Expanded(
                           child: _miniCardInfo("Tekanan Darah", bp, isDark),
                         ),
-                        Container(width: 1, height: 26, color: isDark ? Colors.white12 : Colors.black12),
+                        Container(
+                          width: 1,
+                          height: 26,
+                          color: isDark ? Colors.white12 : Colors.black12,
+                        ),
                         const SizedBox(width: 8),
                         Expanded(
                           child: _miniCardInfo("Kolesterol", chol, isDark),
                         ),
-                        Container(width: 1, height: 26, color: isDark ? Colors.white12 : Colors.black12),
+                        Container(
+                          width: 1,
+                          height: 26,
+                          color: isDark ? Colors.white12 : Colors.black12,
+                        ),
                         const SizedBox(width: 8),
                         Expanded(
                           child: _miniCardInfo("Detak Maks", hr, isDark),
@@ -1103,7 +1277,9 @@ class _KonsultasiDokterPageState
                       "• Nyeri Dada: $cp",
                       style: TextStyle(
                         fontSize: 11,
-                        color: isDark ? const Color(0xFFCBD5E1) : const Color(0xFF334155),
+                        color: isDark
+                            ? const Color(0xFFCBD5E1)
+                            : const Color(0xFF334155),
                       ),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
@@ -1118,17 +1294,26 @@ class _KonsultasiDokterPageState
                 width: double.infinity,
                 height: 38,
                 child: ElevatedButton.icon(
-                  onPressed: () => _showFullScreeningDetailModal(context, msg.message, isDark),
+                  onPressed: () => _showFullScreeningDetailModal(
+                    context,
+                    msg.message,
+                    isDark,
+                  ),
                   icon: const Icon(Icons.assignment_outlined, size: 15),
                   label: const Text(
                     "Lihat Detail Skrining Lengkap",
-                    style: TextStyle(fontSize: 11.5, fontWeight: FontWeight.bold),
+                    style: TextStyle(
+                      fontSize: 11.5,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: const Color(0xFF0284C7),
                     foregroundColor: Colors.white,
                     elevation: 0,
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10),
+                    ),
                   ),
                 ),
               ),
@@ -1141,7 +1326,9 @@ class _KonsultasiDokterPageState
                   msg.timeFormatted,
                   style: TextStyle(
                     fontSize: 9.5,
-                    color: isDark ? const Color(0xFF64748B) : const Color(0xFF94A3B8),
+                    color: isDark
+                        ? const Color(0xFF64748B)
+                        : const Color(0xFF94A3B8),
                   ),
                 ),
               ),
@@ -1152,7 +1339,11 @@ class _KonsultasiDokterPageState
     );
   }
 
-  void _showFullScreeningDetailModal(BuildContext context, String fullReport, bool isDark) {
+  void _showFullScreeningDetailModal(
+    BuildContext context,
+    String fullReport,
+    bool isDark,
+  ) {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -1167,11 +1358,22 @@ class _KonsultasiDokterPageState
           child: Column(
             children: [
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 18,
+                  vertical: 14,
+                ),
                 decoration: BoxDecoration(
                   color: isDark ? const Color(0xFF1E293B) : Colors.white,
-                  borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
-                  border: Border(bottom: BorderSide(color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0))),
+                  borderRadius: const BorderRadius.vertical(
+                    top: Radius.circular(24),
+                  ),
+                  border: Border(
+                    bottom: BorderSide(
+                      color: isDark
+                          ? const Color(0xFF334155)
+                          : const Color(0xFFE2E8F0),
+                    ),
+                  ),
                 ),
                 child: Row(
                   children: [
@@ -1182,7 +1384,11 @@ class _KonsultasiDokterPageState
                         color: Color(0xFFE0F2FE),
                         shape: BoxShape.circle,
                       ),
-                      child: const Icon(Icons.monitor_heart_rounded, color: Color(0xFF0284C7), size: 20),
+                      child: const Icon(
+                        Icons.monitor_heart_rounded,
+                        color: Color(0xFF0284C7),
+                        size: 20,
+                      ),
                     ),
                     const SizedBox(width: 10),
                     Expanded(
@@ -1194,14 +1400,18 @@ class _KonsultasiDokterPageState
                             style: TextStyle(
                               fontSize: 15,
                               fontWeight: FontWeight.bold,
-                              color: isDark ? Colors.white : const Color(0xFF0F172A),
+                              color: isDark
+                                  ? Colors.white
+                                  : const Color(0xFF0F172A),
                             ),
                           ),
                           Text(
                             "Data 11 Parameter Klinis Pasien",
                             style: TextStyle(
                               fontSize: 11,
-                              color: isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B),
+                              color: isDark
+                                  ? const Color(0xFF94A3B8)
+                                  : const Color(0xFF64748B),
                             ),
                           ),
                         ],
@@ -1225,14 +1435,20 @@ class _KonsultasiDokterPageState
                         width: double.infinity,
                         padding: const EdgeInsets.all(16),
                         decoration: BoxDecoration(
-                          color: isDark ? const Color(0xFF1E293B) : Colors.white,
+                          color: isDark
+                              ? const Color(0xFF1E293B)
+                              : Colors.white,
                           borderRadius: BorderRadius.circular(16),
                           border: Border.all(
-                            color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0),
+                            color: isDark
+                                ? const Color(0xFF334155)
+                                : const Color(0xFFE2E8F0),
                           ),
                           boxShadow: [
                             BoxShadow(
-                              color: Colors.black.withValues(alpha: isDark ? 0.2 : 0.04),
+                              color: Colors.black.withValues(
+                                alpha: isDark ? 0.2 : 0.04,
+                              ),
                               blurRadius: 8,
                               offset: const Offset(0, 2),
                             ),
@@ -1243,7 +1459,9 @@ class _KonsultasiDokterPageState
                           style: TextStyle(
                             fontSize: 13,
                             height: 1.55,
-                            color: isDark ? const Color(0xFFE2E8F0) : const Color(0xFF1E293B),
+                            color: isDark
+                                ? const Color(0xFFE2E8F0)
+                                : const Color(0xFF1E293B),
                             fontFamily: 'monospace',
                           ),
                         ),
@@ -1257,9 +1475,14 @@ class _KonsultasiDokterPageState
                           style: ElevatedButton.styleFrom(
                             backgroundColor: const Color(0xFF0284C7),
                             foregroundColor: Colors.white,
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
                           ),
-                          child: const Text("Tutup", style: TextStyle(fontWeight: FontWeight.bold)),
+                          child: const Text(
+                            "Tutup",
+                            style: TextStyle(fontWeight: FontWeight.bold),
+                          ),
                         ),
                       ),
                     ],
@@ -1305,7 +1528,9 @@ class _KonsultasiDokterPageState
                   "Bagikan data 11 parameter ke dokter agar evaluasi klinis dapat dilakukan.",
                   style: TextStyle(
                     fontSize: 11,
-                    color: isDark ? const Color(0xFF94A3B8) : const Color(0xFF475569),
+                    color: isDark
+                        ? const Color(0xFF94A3B8)
+                        : const Color(0xFF475569),
                   ),
                 ),
               ],
@@ -1329,9 +1554,14 @@ class _KonsultasiDokterPageState
               foregroundColor: Colors.white,
               padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
               minimumSize: const Size(0, 32),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8),
+              ),
             ),
-            child: const Text("Kirim", style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold)),
+            child: const Text(
+              "Kirim",
+              style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold),
+            ),
           ),
           IconButton(
             padding: EdgeInsets.zero,
@@ -1398,7 +1628,9 @@ class _KonsultasiDokterPageState
               ),
               decoration: BoxDecoration(
                 color: isDark ? const Color(0xFF1E293B) : Colors.white,
-                borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+                borderRadius: const BorderRadius.vertical(
+                  top: Radius.circular(24),
+                ),
               ),
               child: SingleChildScrollView(
                 child: Column(
@@ -1410,7 +1642,9 @@ class _KonsultasiDokterPageState
                         width: 40,
                         height: 4,
                         decoration: BoxDecoration(
-                          color: isDark ? const Color(0xFF475569) : const Color(0xFFCBD5E1),
+                          color: isDark
+                              ? const Color(0xFF475569)
+                              : const Color(0xFFCBD5E1),
                           borderRadius: BorderRadius.circular(4),
                         ),
                       ),
@@ -1421,7 +1655,8 @@ class _KonsultasiDokterPageState
                         Container(
                           padding: const EdgeInsets.all(8),
                           decoration: BoxDecoration(
-                            color: const Color(0xFF0284C7).withValues(alpha: 0.15),
+                            color: const Color(0xFF0284C7)
+                                .withValues(alpha: 0.15),
                             borderRadius: BorderRadius.circular(10),
                           ),
                           child: const Icon(
@@ -1440,7 +1675,9 @@ class _KonsultasiDokterPageState
                                 style: TextStyle(
                                   fontSize: 15,
                                   fontWeight: FontWeight.bold,
-                                  color: isDark ? Colors.white : const Color(0xFF0F172A),
+                                  color: isDark
+                                      ? Colors.white
+                                      : const Color(0xFF0F172A),
                                 ),
                               ),
                               Text(
@@ -1449,7 +1686,9 @@ class _KonsultasiDokterPageState
                                     : "Kirim ke dokter: ${widget.doctorName}",
                                 style: TextStyle(
                                   fontSize: 11.5,
-                                  color: isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B),
+                                  color: isDark
+                                      ? const Color(0xFF94A3B8)
+                                      : const Color(0xFF64748B),
                                 ),
                               ),
                             ],
@@ -1467,15 +1706,16 @@ class _KonsultasiDokterPageState
                           constraints: const BoxConstraints(maxHeight: 220),
                           width: double.infinity,
                           decoration: BoxDecoration(
-                            color: isDark ? const Color(0xFF0F172A) : const Color(0xFFF1F5F9),
+                            color: isDark
+                                ? const Color(0xFF0F172A)
+                                : const Color(0xFFF1F5F9),
                             border: Border.all(
-                              color: isDark ? const Color(0xFF334155) : const Color(0xFFCBD5E1),
+                              color: isDark
+                                  ? const Color(0xFF334155)
+                                  : const Color(0xFFCBD5E1),
                             ),
                           ),
-                          child: Image.memory(
-                            bytes,
-                            fit: BoxFit.contain,
-                          ),
+                          child: Image.memory(bytes, fit: BoxFit.contain),
                         ),
                       ),
                     ),
@@ -1487,7 +1727,9 @@ class _KonsultasiDokterPageState
                       style: TextStyle(
                         fontSize: 12,
                         fontWeight: FontWeight.bold,
-                        color: isDark ? const Color(0xFFE2E8F0) : const Color(0xFF334155),
+                        color: isDark
+                            ? const Color(0xFFE2E8F0)
+                            : const Color(0xFF334155),
                       ),
                     ),
                     const SizedBox(height: 8),
@@ -1500,28 +1742,36 @@ class _KonsultasiDokterPageState
                           categoryValue: "Hasil Laboratorium",
                           selected: selectedCategory == "Hasil Laboratorium",
                           isDark: isDark,
-                          onTap: () => setModalState(() => selectedCategory = "Hasil Laboratorium"),
+                          onTap: () => setModalState(
+                            () => selectedCategory = "Hasil Laboratorium",
+                          ),
                         ),
                         _categoryChip(
                           label: "📈 EKG / Rontgen",
                           categoryValue: "Hasil EKG / Rontgen",
                           selected: selectedCategory == "Hasil EKG / Rontgen",
                           isDark: isDark,
-                          onTap: () => setModalState(() => selectedCategory = "Hasil EKG / Rontgen"),
+                          onTap: () => setModalState(
+                            () => selectedCategory = "Hasil EKG / Rontgen",
+                          ),
                         ),
                         _categoryChip(
                           label: "💊 Resep Obat",
                           categoryValue: "Resep Obat",
                           selected: selectedCategory == "Resep Obat",
                           isDark: isDark,
-                          onTap: () => setModalState(() => selectedCategory = "Resep Obat"),
+                          onTap: () => setModalState(
+                            () => selectedCategory = "Resep Obat",
+                          ),
                         ),
                         _categoryChip(
                           label: "📷 Keluhan Fisik",
                           categoryValue: "Foto Keluhan Fisik",
                           selected: selectedCategory == "Foto Keluhan Fisik",
                           isDark: isDark,
-                          onTap: () => setModalState(() => selectedCategory = "Foto Keluhan Fisik"),
+                          onTap: () => setModalState(
+                            () => selectedCategory = "Foto Keluhan Fisik",
+                          ),
                         ),
                       ],
                     ),
@@ -1530,10 +1780,14 @@ class _KonsultasiDokterPageState
                     // Input Catatan / Keterangan
                     Container(
                       decoration: BoxDecoration(
-                        color: isDark ? const Color(0xFF0F172A) : const Color(0xFFF8FAFC),
+                        color: isDark
+                            ? const Color(0xFF0F172A)
+                            : const Color(0xFFF8FAFC),
                         borderRadius: BorderRadius.circular(12),
                         border: Border.all(
-                          color: isDark ? const Color(0xFF334155) : const Color(0xFFCBD5E1),
+                          color: isDark
+                              ? const Color(0xFF334155)
+                              : const Color(0xFFCBD5E1),
                         ),
                       ),
                       child: TextField(
@@ -1541,13 +1795,17 @@ class _KonsultasiDokterPageState
                         maxLines: 2,
                         style: TextStyle(
                           fontSize: 13,
-                          color: isDark ? Colors.white : const Color(0xFF0F172A),
+                          color: isDark
+                              ? Colors.white
+                              : const Color(0xFF0F172A),
                         ),
                         decoration: InputDecoration(
                           hintText: "Tulis catatan atau keluhan foto ini (opsional)...",
                           hintStyle: TextStyle(
                             fontSize: 12.5,
-                            color: isDark ? const Color(0xFF64748B) : const Color(0xFF94A3B8),
+                            color: isDark
+                                ? const Color(0xFF64748B)
+                                : const Color(0xFF94A3B8),
                           ),
                           contentPadding: const EdgeInsets.symmetric(
                             horizontal: 14,
@@ -1569,7 +1827,9 @@ class _KonsultasiDokterPageState
                             style: OutlinedButton.styleFrom(
                               padding: const EdgeInsets.symmetric(vertical: 13),
                               side: BorderSide(
-                                color: isDark ? const Color(0xFF475569) : const Color(0xFFCBD5E1),
+                                color: isDark
+                                    ? const Color(0xFF475569)
+                                    : const Color(0xFFCBD5E1),
                               ),
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(12),
@@ -1578,7 +1838,9 @@ class _KonsultasiDokterPageState
                             child: Text(
                               "Batal",
                               style: TextStyle(
-                                color: isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B),
+                                color: isDark
+                                    ? const Color(0xFF94A3B8)
+                                    : const Color(0xFF64748B),
                                 fontWeight: FontWeight.bold,
                               ),
                             ),
@@ -1678,7 +1940,7 @@ class _KonsultasiDokterPageState
     final senderName = widget.isDoctorView
         ? widget.doctorName
         : (widget.patientName ??
-            (profile.nama.isNotEmpty ? profile.nama : 'Pasien HeartCare'));
+              (profile.nama.isNotEmpty ? profile.nama : 'Pasien HeartCare'));
 
     final now = DateTime.now();
     final timeStr =
@@ -1714,8 +1976,12 @@ class _KonsultasiDokterPageState
       attachmentType: category,
       imagePath: base64String,
       patientId: widget.patientId,
-      patientName: _patientName ?? widget.patientName ?? profile.nama,
-      patientPhoto: _patientPhoto ??
+      patientName:
+          _patientName ??
+          widget.patientName ??
+          (profile.nama.isNotEmpty ? profile.nama : 'Pasien HeartCare'),
+      patientPhoto:
+          _patientPhoto ??
           widget.patientPhoto ??
           (profile.fotoProfil.isNotEmpty
               ? profile.fotoProfil
@@ -1732,7 +1998,9 @@ class _KonsultasiDokterPageState
                 ? "Foto $category berhasil dikirim!"
                 : "Foto tersimpan lokal (menunggu sinkronisasi)",
           ),
-          backgroundColor: success ? const Color(0xFF10B981) : const Color(0xFFF59E0B),
+          backgroundColor: success
+              ? const Color(0xFF10B981)
+              : const Color(0xFFF59E0B),
           duration: const Duration(seconds: 2),
           behavior: SnackBarBehavior.floating,
         ),
@@ -1753,9 +2021,10 @@ class _KonsultasiDokterPageState
     final senderName = widget.isDoctorView
         ? widget.doctorName
         : (widget.patientName ??
-            (profile.nama.isNotEmpty ? profile.nama : 'Pasien'));
+              (profile.nama.isNotEmpty ? profile.nama : 'Pasien'));
 
-    final path = imagePath ??
+    final path =
+        imagePath ??
         (title.contains("Skrining") || title.contains("EKG")
             ? "assets/images/screening_jantung.png"
             : null);
@@ -1790,8 +2059,12 @@ class _KonsultasiDokterPageState
       attachmentType: title,
       imagePath: path,
       patientId: widget.patientId,
-      patientName: _patientName ?? widget.patientName ?? profile.nama,
-      patientPhoto: _patientPhoto ??
+      patientName:
+          _patientName ??
+          widget.patientName ??
+          (profile.nama.isNotEmpty ? profile.nama : 'Pasien'),
+      patientPhoto:
+          _patientPhoto ??
           widget.patientPhoto ??
           (profile.fotoProfil.isNotEmpty
               ? profile.fotoProfil
@@ -1822,26 +2095,27 @@ class _KonsultasiDokterPageState
             }
           },
           child: Scaffold(
-            backgroundColor: isDark ? const Color(0xFF0F172A) : const Color(0xFFF8FAFC),
+            backgroundColor: isDark
+                ? const Color(0xFF0F172A)
+                : const Color(0xFFF8FAFC),
 
             body: SafeArea(
               child: Column(
                 children: [
-
                   // ==================================================
                   // HEADER DOKTER
                   // ==================================================
 
                   Container(
                     height: 74,
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 14,
-                    ),
+                    padding: const EdgeInsets.symmetric(horizontal: 14),
                     decoration: BoxDecoration(
                       color: isDark ? const Color(0xFF1E293B) : Colors.white,
                       border: Border(
                         bottom: BorderSide(
-                          color: isDark ? const Color(0xFF334155) : const Color(0xFFE1E1E1),
+                          color: isDark
+                              ? const Color(0xFF334155)
+                              : const Color(0xFFE1E1E1),
                           width: 1,
                         ),
                       ),
@@ -1849,13 +2123,14 @@ class _KonsultasiDokterPageState
 
                     child: Row(
                       children: [
-
                         // TOMBOL KEMBALI KE BERANDA
                         Container(
                           width: 38,
                           height: 38,
                           decoration: BoxDecoration(
-                            color: isDark ? const Color(0xFF0F172A) : const Color(0xFFF1F5F9),
+                            color: isDark
+                                ? const Color(0xFF0F172A)
+                                : const Color(0xFFF1F5F9),
                             borderRadius: BorderRadius.circular(12),
                           ),
                           child: IconButton(
@@ -1864,7 +2139,9 @@ class _KonsultasiDokterPageState
                             icon: Icon(
                               Icons.arrow_back_ios_new_rounded,
                               size: 18,
-                              color: isDark ? Colors.white : const Color(0xFF0F172A),
+                              color: isDark
+                                  ? Colors.white
+                                  : const Color(0xFF0F172A),
                             ),
                           ),
                         ),
@@ -1898,22 +2175,16 @@ class _KonsultasiDokterPageState
                                   isDark: isDark,
                                 ),
                               )
-                            : _doctorImage(
-                                width: 44,
-                                height: 44,
-                              ),
+                            : _doctorImage(width: 44, height: 44),
 
                         const SizedBox(width: 10),
 
                         // NAMA
                         Expanded(
                           child: Column(
-                            mainAxisAlignment:
-                                MainAxisAlignment.center,
-                            crossAxisAlignment:
-                                CrossAxisAlignment.start,
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-
                               Text(
                                 widget.isDoctorView
                                     ? "Konsultasi Pasien"
@@ -1921,7 +2192,9 @@ class _KonsultasiDokterPageState
                                 style: TextStyle(
                                   fontSize: 11,
                                   fontWeight: FontWeight.w600,
-                                  color: isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B),
+                                  color: isDark
+                                      ? const Color(0xFF94A3B8)
+                                      : const Color(0xFF64748B),
                                 ),
                               ),
 
@@ -1929,12 +2202,16 @@ class _KonsultasiDokterPageState
 
                               Text(
                                 widget.isDoctorView
-                                    ? (_patientName ?? widget.patientName ?? "Pasien HeartCare")
+                                    ? (_patientName ??
+                                          widget.patientName ??
+                                          "Pasien HeartCare")
                                     : widget.doctorName,
                                 style: TextStyle(
                                   fontSize: 14.5,
                                   fontWeight: FontWeight.bold,
-                                  color: isDark ? Colors.white : const Color(0xFF0F172A),
+                                  color: isDark
+                                      ? Colors.white
+                                      : const Color(0xFF0F172A),
                                 ),
                                 maxLines: 1,
                                 overflow: TextOverflow.ellipsis,
@@ -1950,31 +2227,32 @@ class _KonsultasiDokterPageState
                                     color: _isDoctorTyping
                                         ? primaryBlue
                                         : (widget.isDoctorView
-                                            ? onlineGreen
-                                            : (_isDoctorOnline
-                                                ? onlineGreen
-                                                : const Color(0xFFF59E0B))),
+                                              ? onlineGreen
+                                              : (_isDoctorOnline
+                                                    ? onlineGreen
+                                                    : const Color(0xFFF59E0B))),
                                   ),
                                   const SizedBox(width: 4),
                                   Text(
                                     _isDoctorTyping
                                         ? "Sedang mengetik..."
                                         : (widget.isDoctorView
-                                            ? "Pasien Aktif"
-                                            : (_isDoctorOnline
-                                                ? "Online"
-                                                : "Offline")),
+                                              ? "Pasien Aktif"
+                                              : (_isDoctorOnline
+                                                    ? "Online"
+                                                    : "Offline")),
                                     style: TextStyle(
                                       fontSize: 10.5,
                                       color: _isDoctorTyping
                                           ? primaryBlue
                                           : (widget.isDoctorView
-                                              ? onlineGreen
-                                              : (_isDoctorOnline
-                                                  ? onlineGreen
-                                                  : const Color(0xFFF59E0B))),
-                                      fontWeight:
-                                          FontWeight.w600,
+                                                ? onlineGreen
+                                                : (_isDoctorOnline
+                                                      ? onlineGreen
+                                                      : const Color(
+                                                          0xFFF59E0B,
+                                                        ))),
+                                      fontWeight: FontWeight.w600,
                                     ),
                                   ),
                                 ],
@@ -1987,7 +2265,8 @@ class _KonsultasiDokterPageState
                         Container(
                           margin: const EdgeInsets.only(right: 4),
                           decoration: BoxDecoration(
-                            color: const Color(0xFF0284C7).withValues(alpha: isDark ? 0.22 : 0.10),
+                            color: const Color(0xFF0284C7)
+                                .withValues(alpha: isDark ? 0.22 : 0.10),
                             shape: BoxShape.circle,
                           ),
                           child: IconButton(
@@ -2001,14 +2280,108 @@ class _KonsultasiDokterPageState
                           ),
                         ),
 
+                        // TOMBOL PUSAT NOTIFIKASI CHAT
+                        AnimatedBuilder(
+                          animation: ChatNotificationService.instance,
+                          builder: (context, _) {
+                            final authUser = FirebaseAuth.instance.currentUser;
+                            final isDoctor = widget.isDoctorView;
+                            final String? docId =
+                                widget.doctorId ??
+                                (isDoctor ? authUser?.uid : null);
+                            final String docName = widget.doctorName;
+
+                            final profile =
+                                UserProfileService.instance.currentProfile;
+                            final String? patId =
+                                widget.patientId ??
+                                (isDoctor
+                                    ? null
+                                    : (authUser?.uid ??
+                                          authUser?.email ??
+                                          profile.nama));
+                            final String patName =
+                                widget.patientName ??
+                                (profile.nama.isNotEmpty
+                                    ? profile.nama
+                                    : (authUser?.displayName ?? 'Pasien'));
+
+                            final unread = isDoctor
+                                ? ChatNotificationService.instance
+                                      .getUnreadCountForDoctorAccount(
+                                        doctorId: docId,
+                                        doctorName: docName,
+                                      )
+                                : ChatNotificationService.instance
+                                      .getUnreadCountForPatientAccount(
+                                        patientId: patId,
+                                        patientName: patName,
+                                      );
+
+                            return Stack(
+                              alignment: Alignment.center,
+                              children: [
+                                IconButton(
+                                  onPressed: () => ChatNotificationSheet.show(
+                                    context,
+                                    viewerRole: isDoctor
+                                        ? ChatSenderRole.doctor
+                                        : ChatSenderRole.patient,
+                                    doctorId: isDoctor ? docId : null,
+                                    doctorName: isDoctor ? docName : null,
+                                    patientId: isDoctor ? null : patId,
+                                    patientName: isDoctor ? null : patName,
+                                  ),
+                                  tooltip: "Pusat Notifikasi Chat",
+                                  icon: Icon(
+                                    Icons.notifications_active_outlined,
+                                    size: 22,
+                                    color: isDark
+                                        ? const Color(0xFF94A3B8)
+                                        : const Color(0xFF475569),
+                                  ),
+                                ),
+                                if (unread > 0)
+                                  Positioned(
+                                    top: 8,
+                                    right: 8,
+                                    child: Container(
+                                      padding: const EdgeInsets.all(3),
+                                      decoration: const BoxDecoration(
+                                        color: Color(0xFFEF4444),
+                                        shape: BoxShape.circle,
+                                      ),
+                                      constraints: const BoxConstraints(
+                                        minWidth: 15,
+                                        minHeight: 15,
+                                      ),
+                                      child: Center(
+                                        child: Text(
+                                          '$unread',
+                                          style: const TextStyle(
+                                            color: Colors.white,
+                                            fontSize: 9,
+                                            fontWeight: FontWeight.bold,
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                              ],
+                            );
+                          },
+                        ),
+
                         // TOMBOL ATUR PENGINGAT (HEADER)
                         IconButton(
                           onPressed: showReminderSheet,
                           tooltip: "Atur Pengingat",
                           icon: Icon(
-                            Icons.notifications_none_rounded,
-                            size: 24,
-                            color: isDark ? const Color(0xFF94A3B8) : const Color(0xFF475569),
+                            Icons.alarm_rounded,
+                            size: 22,
+                            color: isDark
+                                ? const Color(0xFF94A3B8)
+                                : const Color(0xFF475569),
                           ),
                         ),
                       ],
@@ -2018,7 +2391,8 @@ class _KonsultasiDokterPageState
                   // ==================================================
                   // PENGINGAT JIKA DOKTER SEDANG OFFLINE (UNTUK PASIEN)
                   // ==================================================
-                  if (widget.initialScreeningData != null && !_hasSharedInitialScreening)
+                  if (widget.initialScreeningData != null &&
+                      !_hasSharedInitialScreening)
                     _buildInitialScreeningBanner(isDark),
                   if (!widget.isDoctorView && !_isDoctorOnline)
                     Container(
@@ -2098,20 +2472,20 @@ class _KonsultasiDokterPageState
                   // ==================================================
                   // AREA CHAT INTERAKTIF
                   // ==================================================
-
                   Expanded(
                     child: Column(
                       children: [
-
                         Expanded(
                           child: StreamBuilder<List<ChatMessage>>(
                             initialData: _activeChatId != null
-                                ? ChatService.instance
-                                    .getCachedMessages(_activeChatId!)
+                                ? ChatService.instance.getCachedMessages(
+                                    _activeChatId!,
+                                  )
                                 : [],
                             stream: _activeChatId != null
-                                ? ChatService.instance
-                                    .getMessagesStream(_activeChatId!)
+                                ? ChatService.instance.getMessagesStream(
+                                    _activeChatId!,
+                                  )
                                 : const Stream.empty(),
                             builder: (context, snapshot) {
                               if (_isLoadingChat &&
@@ -2119,7 +2493,8 @@ class _KonsultasiDokterPageState
                                   (!snapshot.hasData ||
                                       snapshot.data!.isEmpty)) {
                                 return const Center(
-                                    child: CircularProgressIndicator());
+                                  child: CircularProgressIndicator(),
+                                );
                               }
 
                               final streamMessages = snapshot.data ?? [];
@@ -2130,17 +2505,23 @@ class _KonsultasiDokterPageState
                               }
 
                               for (final m in streamMessages) {
-                                _optimisticMessages.removeWhere((opt) =>
-                                    opt.message == m.message &&
-                                    opt.senderRole == m.senderRole);
+                                _optimisticMessages.removeWhere(
+                                  (opt) =>
+                                      opt.message == m.message &&
+                                      opt.senderRole == m.senderRole,
+                                );
                                 map[m.id] = m;
                               }
 
                               final messages = map.values.toList();
-                              messages.sort((a, b) => a.timestamp.compareTo(b.timestamp));
+                              messages.sort(
+                                (a, b) => a.timestamp.compareTo(b.timestamp),
+                              );
 
                               if (messages.isNotEmpty) {
-                                WidgetsBinding.instance.addPostFrameCallback((_) {
+                                WidgetsBinding.instance.addPostFrameCallback((
+                                  _,
+                                ) {
                                   _scrollToBottom();
                                 });
                               }
@@ -2169,7 +2550,8 @@ class _KonsultasiDokterPageState
                                               color: isDark
                                                   ? const Color(0xFF1E293B)
                                                   : const Color(0xFFE0F2FE),
-                                              borderRadius: BorderRadius.circular(20),
+                                              borderRadius:
+                                                  BorderRadius.circular(20),
                                               border: Border.all(
                                                 color: isDark
                                                     ? const Color(0xFF334155)
@@ -2193,8 +2575,12 @@ class _KonsultasiDokterPageState
                                                   style: TextStyle(
                                                     fontSize: 10.5,
                                                     color: isDark
-                                                        ? const Color(0xFF38BDF8)
-                                                        : const Color(0xFF0284C7),
+                                                        ? const Color(
+                                                            0xFF38BDF8,
+                                                          )
+                                                        : const Color(
+                                                            0xFF0284C7,
+                                                          ),
                                                     fontWeight: FontWeight.bold,
                                                   ),
                                                 ),
@@ -2214,35 +2600,42 @@ class _KonsultasiDokterPageState
 
                                   return Padding(
                                     padding: const EdgeInsets.only(bottom: 16),
-                                    child: (msg.attachmentType == 'screening' ||
+                                    child:
+                                        (msg.attachmentType == 'screening' ||
                                             (msg.attachmentType != null &&
-                                                msg.attachmentType!.toLowerCase().contains('skrining')) ||
-                                            msg.message.contains('LAPORAN HASIL SKRINING JANTUNG') ||
-                                            msg.message.contains('LAPORAN SKRINING JANTUNG'))
+                                                msg.attachmentType!
+                                                    .toLowerCase()
+                                                    .contains('skrining')) ||
+                                            msg.message.contains(
+                                              'LAPORAN HASIL SKRINING JANTUNG',
+                                            ) ||
+                                            msg.message.contains(
+                                              'LAPORAN SKRINING JANTUNG',
+                                            ))
                                         ? _buildScreeningMessageBubble(
                                             msg: msg,
                                             isMyMessage: isMyMessage,
                                             isDark: isDark,
                                           )
                                         : msg.imagePath != null &&
-                                            msg.imagePath!.isNotEmpty
+                                              msg.imagePath!.isNotEmpty
                                         ? _buildImageMessageBubble(
                                             msg: msg,
                                             isMyMessage: isMyMessage,
                                             isDark: isDark,
                                           )
                                         : (isMyMessage
-                                            ? _userMessage(
-                                                msg.message,
-                                                msg.timeFormatted,
-                                                isDark,
-                                              )
-                                            : _doctorMessage(
-                                                msg.message,
-                                                msg.timeFormatted,
-                                                isDark,
-                                                senderName: msg.senderName,
-                                              )),
+                                              ? _userMessage(
+                                                  msg.message,
+                                                  msg.timeFormatted,
+                                                  isDark,
+                                                )
+                                              : _doctorMessage(
+                                                  msg.message,
+                                                  msg.timeFormatted,
+                                                  isDark,
+                                                  senderName: msg.senderName,
+                                                )),
                                   );
                                 },
                               );
@@ -2253,24 +2646,24 @@ class _KonsultasiDokterPageState
                         // ==================================================
                         // INPUT PESAN
                         // ==================================================
-
                         Container(
-                          padding: const EdgeInsets.fromLTRB(
-                            14,
-                            10,
-                            12,
-                            10,
-                          ),
+                          padding: const EdgeInsets.fromLTRB(14, 10, 12, 10),
                           decoration: BoxDecoration(
-                            color: isDark ? const Color(0xFF1E293B) : Colors.white,
+                            color: isDark
+                                ? const Color(0xFF1E293B)
+                                : Colors.white,
                             border: Border(
                               top: BorderSide(
-                                color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0),
+                                color: isDark
+                                    ? const Color(0xFF334155)
+                                    : const Color(0xFFE2E8F0),
                               ),
                             ),
                             boxShadow: [
                               BoxShadow(
-                                color: Colors.black.withValues(alpha: isDark ? 0.2 : 0.03),
+                                color: Colors.black.withValues(
+                                  alpha: isDark ? 0.2 : 0.03,
+                                ),
                                 blurRadius: 10,
                                 offset: const Offset(0, -3),
                               ),
@@ -2282,9 +2675,13 @@ class _KonsultasiDokterPageState
                                 child: Container(
                                   height: 44,
                                   decoration: BoxDecoration(
-                                    color: isDark ? const Color(0xFF0F172A) : const Color(0xFFF8FAFC),
+                                    color: isDark
+                                        ? const Color(0xFF0F172A)
+                                        : const Color(0xFFF8FAFC),
                                     border: Border.all(
-                                      color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0),
+                                      color: isDark
+                                          ? const Color(0xFF334155)
+                                          : const Color(0xFFE2E8F0),
                                     ),
                                     borderRadius: BorderRadius.circular(24),
                                   ),
@@ -2294,21 +2691,29 @@ class _KonsultasiDokterPageState
                                     onSubmitted: (_) => _sendMessage(),
                                     style: TextStyle(
                                       fontSize: 13.5,
-                                      color: isDark ? Colors.white : const Color(0xFF0F172A),
+                                      color: isDark
+                                          ? Colors.white
+                                          : const Color(0xFF0F172A),
                                     ),
                                     decoration: InputDecoration(
-                                      hintText: (!widget.isDoctorView && !_isDoctorOnline)
-                                          ? "Tinggalkan pesan untuk dokter..."
-                                          : "Ketik pesan....",
+                                      hintText: widget.isDoctorView
+                                          ? "Ketik balasan sebagai dokter..."
+                                          : ((!widget.isDoctorView &&
+                                                    !_isDoctorOnline)
+                                                ? "Tinggalkan pesan untuk dokter..."
+                                                : "Ketik pesan sebagai pasien..."),
                                       hintStyle: TextStyle(
                                         fontSize: 13.5,
-                                        color: isDark ? const Color(0xFF64748B) : const Color(0xFF94A3B8),
+                                        color: isDark
+                                            ? const Color(0xFF64748B)
+                                            : const Color(0xFF94A3B8),
                                       ),
                                       border: InputBorder.none,
-                                      contentPadding: const EdgeInsets.symmetric(
-                                        horizontal: 16,
-                                        vertical: 12,
-                                      ),
+                                      contentPadding:
+                                          const EdgeInsets.symmetric(
+                                            horizontal: 16,
+                                            vertical: 12,
+                                          ),
                                       prefixIcon: GestureDetector(
                                         onTap: _showAttachmentOptions,
                                         child: Tooltip(
@@ -2316,7 +2721,9 @@ class _KonsultasiDokterPageState
                                           child: Icon(
                                             Icons.add_circle_outline_rounded,
                                             size: 22,
-                                            color: isDark ? const Color(0xFF38BDF8) : const Color(0xFF0284C7),
+                                            color: isDark
+                                                ? const Color(0xFF38BDF8)
+                                                : const Color(0xFF0284C7),
                                           ),
                                         ),
                                       ),
@@ -2324,29 +2731,44 @@ class _KonsultasiDokterPageState
                                         mainAxisSize: MainAxisSize.min,
                                         children: [
                                           GestureDetector(
-                                            onTap: () => _pickAndSendImage(ImageSource.gallery),
+                                            onTap: () => _pickAndSendImage(
+                                              ImageSource.gallery,
+                                            ),
                                             child: Tooltip(
                                               message: "Kirim Foto dari Galeri (Hasil Lab / EKG)",
                                               child: Padding(
-                                                padding: const EdgeInsets.symmetric(horizontal: 5),
+                                                padding:
+                                                    const EdgeInsets.symmetric(
+                                                      horizontal: 5,
+                                                    ),
                                                 child: Icon(
                                                   Icons.photo_library_outlined,
                                                   size: 21,
-                                                  color: isDark ? const Color(0xFF94A3B8) : const Color(0xFF0284C7),
+                                                  color: isDark
+                                                      ? const Color(0xFF94A3B8)
+                                                      : const Color(0xFF0284C7),
                                                 ),
                                               ),
                                             ),
                                           ),
                                           GestureDetector(
-                                            onTap: () => _pickAndSendImage(ImageSource.camera),
+                                            onTap: () => _pickAndSendImage(
+                                              ImageSource.camera,
+                                            ),
                                             child: Tooltip(
-                                              message: "Ambil Foto dengan Kamera",
+                                              message:
+                                                  "Ambil Foto dengan Kamera",
                                               child: Padding(
-                                                padding: const EdgeInsets.only(left: 3, right: 12),
+                                                padding: const EdgeInsets.only(
+                                                  left: 3,
+                                                  right: 12,
+                                                ),
                                                 child: Icon(
                                                   Icons.camera_alt_outlined,
                                                   size: 21,
-                                                  color: isDark ? const Color(0xFF94A3B8) : const Color(0xFF0284C7),
+                                                  color: isDark
+                                                      ? const Color(0xFF94A3B8)
+                                                      : const Color(0xFF0284C7),
                                                 ),
                                               ),
                                             ),
@@ -2365,14 +2787,18 @@ class _KonsultasiDokterPageState
                                 height: 44,
                                 decoration: BoxDecoration(
                                   gradient: const LinearGradient(
-                                    colors: [Color(0xFF0EA5E9), Color(0xFF0284C7)],
+                                    colors: [
+                                      Color(0xFF0EA5E9),
+                                      Color(0xFF0284C7),
+                                    ],
                                     begin: Alignment.topLeft,
                                     end: Alignment.bottomRight,
                                   ),
                                   shape: BoxShape.circle,
                                   boxShadow: [
                                     BoxShadow(
-                                      color: const Color(0xFF0284C7).withValues(alpha: 0.35),
+                                      color: const Color(0xFF0284C7)
+                                          .withValues(alpha: 0.35),
                                       blurRadius: 8,
                                       offset: const Offset(0, 3),
                                     ),
@@ -2401,7 +2827,6 @@ class _KonsultasiDokterPageState
             // ========================================================
             // BOTTOM NAVIGATION
             // ========================================================
-
             bottomNavigationBar: _bottomNavigation(isDark),
           ),
         );
@@ -2447,10 +2872,7 @@ class _KonsultasiDokterPageState
                   isDark: isDark,
                 ),
               )
-            : _doctorImage(
-                width: 32,
-                height: 32,
-              ),
+            : _doctorImage(width: 32, height: 32),
         const SizedBox(width: 8),
         Flexible(
           child: Container(
@@ -2467,7 +2889,9 @@ class _KonsultasiDokterPageState
                 bottomRight: Radius.circular(18),
               ),
               border: Border.all(
-                color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0),
+                color: isDark
+                    ? const Color(0xFF334155)
+                    : const Color(0xFFE2E8F0),
                 width: 1,
               ),
               boxShadow: [
@@ -2496,7 +2920,9 @@ class _KonsultasiDokterPageState
                     time,
                     style: TextStyle(
                       fontSize: 10,
-                      color: isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B),
+                      color: isDark
+                          ? const Color(0xFF94A3B8)
+                          : const Color(0xFF64748B),
                       fontWeight: FontWeight.w500,
                     ),
                   ),
@@ -2513,11 +2939,7 @@ class _KonsultasiDokterPageState
   // PESAN USER
   // ==========================================================
 
-  Widget _userMessage(
-    String message,
-    String time,
-    bool isDark,
-  ) {
+  Widget _userMessage(String message, String time, bool isDark) {
     return Align(
       alignment: Alignment.centerRight,
       child: Container(
@@ -2601,23 +3023,27 @@ class _KonsultasiDokterPageState
   }) {
     final category = msg.attachmentType ?? "Hasil Laboratorium";
     final isLab = category.toLowerCase().contains("lab");
-    final isEkg = category.toLowerCase().contains("ekg") ||
+    final isEkg =
+        category.toLowerCase().contains("ekg") ||
         category.toLowerCase().contains("skrining") ||
         category.toLowerCase().contains("rontgen");
-    final isResep = category.toLowerCase().contains("resep") ||
+    final isResep =
+        category.toLowerCase().contains("resep") ||
         category.toLowerCase().contains("obat");
 
     final IconData badgeIcon = isLab
         ? Icons.science_rounded
         : (isEkg
-            ? Icons.monitor_heart_rounded
-            : (isResep ? Icons.medication_rounded : Icons.photo_library_rounded));
+              ? Icons.monitor_heart_rounded
+              : (isResep
+                    ? Icons.medication_rounded
+                    : Icons.photo_library_rounded));
 
     final Color badgeColor = isLab
         ? const Color(0xFF0284C7)
         : (isEkg
-            ? const Color(0xFF6366F1)
-            : (isResep ? const Color(0xFF10B981) : const Color(0xFF0EA5E9)));
+              ? const Color(0xFF6366F1)
+              : (isResep ? const Color(0xFF10B981) : const Color(0xFF0EA5E9)));
 
     final senderDisplay = msg.senderRole == 'doctor'
         ? (msg.senderName.isNotEmpty ? msg.senderName : 'Dokter')
@@ -2652,14 +3078,17 @@ class _KonsultasiDokterPageState
           ],
         ),
         child: Column(
-          crossAxisAlignment:
-              isMyMessage ? CrossAxisAlignment.end : CrossAxisAlignment.start,
+          crossAxisAlignment: isMyMessage
+              ? CrossAxisAlignment.end
+              : CrossAxisAlignment.start,
           children: [
             // Header: Pengirim dan Jenis Lampiran
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
               decoration: BoxDecoration(
-                color: isDark ? const Color(0xFF0F172A) : const Color(0xFFF8FAFC),
+                color: isDark
+                    ? const Color(0xFF0F172A)
+                    : const Color(0xFFF8FAFC),
                 borderRadius: const BorderRadius.only(
                   topLeft: Radius.circular(16),
                   topRight: Radius.circular(16),
@@ -2754,7 +3183,10 @@ class _KonsultasiDokterPageState
                 !msg.message.startsWith('📷') &&
                 !msg.message.startsWith('📎'))
               Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 6,
+                ),
                 child: Text(
                   msg.message,
                   style: TextStyle(
@@ -2871,7 +3303,11 @@ class _KonsultasiDokterPageState
             backgroundColor: Colors.black45,
             elevation: 0,
             leading: IconButton(
-              icon: const Icon(Icons.close_rounded, color: Colors.white, size: 24),
+              icon: const Icon(
+                Icons.close_rounded,
+                color: Colors.white,
+                size: 24,
+              ),
               onPressed: () => Navigator.pop(context),
             ),
             title: Column(
@@ -2900,10 +3336,7 @@ class _KonsultasiDokterPageState
                   boundaryMargin: const EdgeInsets.all(24),
                   minScale: 0.8,
                   maxScale: 4.5,
-                  child: _buildChatImage(
-                    imagePath,
-                    fit: BoxFit.contain,
-                  ),
+                  child: _buildChatImage(imagePath, fit: BoxFit.contain),
                 ),
               ),
               if (caption.isNotEmpty &&
@@ -2945,10 +3378,7 @@ class _KonsultasiDokterPageState
   // FOTO DOKTER
   // ==========================================================
 
-  Widget _doctorImage({
-    required double width,
-    required double height,
-  }) {
+  Widget _doctorImage({required double width, required double height}) {
     return Container(
       width: width,
       height: height,
@@ -2970,77 +3400,78 @@ class _KonsultasiDokterPageState
   // ==========================================================
 
   Widget _bottomNavigation(bool isDark) {
-    return Container(
-      height: 64,
-      decoration: BoxDecoration(
-        color: isDark ? const Color(0xFF0F172A) : Colors.white,
-        border: Border(
-          top: BorderSide(
-            color: isDark ? const Color(0xFF1E293B) : Colors.grey.shade300,
+    return ValueListenableBuilder<String>(
+      valueListenable: LanguageService.languageNotifier,
+      builder: (context, _, _) {
+        return Container(
+          height: 64,
+          decoration: BoxDecoration(
+            color: isDark ? const Color(0xFF0F172A) : Colors.white,
+            border: Border(
+              top: BorderSide(
+                color: isDark ? const Color(0xFF1E293B) : Colors.grey.shade300,
+              ),
+            ),
           ),
-        ),
-      ),
-      child: Row(
-        mainAxisAlignment:
-            MainAxisAlignment.spaceAround,
-        children: [
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceAround,
+            children: [
+              _navItem(
+                isDark,
+                Icons.home_outlined,
+                tr("Beranda", "Home"),
+                false,
+                onTap: _backToHome,
+              ),
 
-          _navItem(
-            isDark,
-            Icons.home_outlined,
-            "Home",
-            false,
-            onTap: _backToHome,
-          ),
+              _navItem(
+                isDark,
+                Icons.favorite_border,
+                tr("Skrining", "Screening"),
+                false,
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const ScreeningInputPage(),
+                    ),
+                  );
+                },
+              ),
 
-          _navItem(
-            isDark,
-            Icons.favorite_border,
-            "Skrining",
-            false,
-            onTap: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => const ScreeningInputPage(),
-                ),
-              );
-            },
-          ),
+              _navItem(
+                isDark,
+                Icons.person_outline,
+                tr("Dokter", "Doctors"),
+                true,
+                onTap: () {
+                  Navigator.pop(context);
+                },
+              ),
 
-          _navItem(
-            isDark,
-            Icons.person_outline,
-            "Dokter",
-            true,
-            onTap: () {
-              Navigator.pop(context);
-            },
-          ),
+              _navItem(
+                isDark,
+                Icons.description_outlined,
+                tr("Riwayat", "History"),
+                false,
+              ),
 
-          _navItem(
-            isDark,
-            Icons.description_outlined,
-            "Riwayat",
-            false,
+              _navItem(
+                isDark,
+                Icons.person_outline,
+                tr("Profil", "Profile"),
+                false,
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => const ProfilPage()),
+                  );
+                },
+              ),
+            ],
           ),
-
-          _navItem(
-            isDark,
-            Icons.person_outline,
-            "Profil",
-            false,
-            onTap: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => const ProfilPage(),
-                ),
-              );
-            },
-          ),
-        ],
-      ),
+        );
+      },
     );
   }
 
@@ -3051,7 +3482,9 @@ class _KonsultasiDokterPageState
     bool active, {
     VoidCallback? onTap,
   }) {
-    final activeColor = isDark ? const Color(0xFF38BDF8) : const Color(0xFF1479F5);
+    final activeColor = isDark
+        ? const Color(0xFF38BDF8)
+        : const Color(0xFF1479F5);
     final inactiveColor = isDark ? const Color(0xFF64748B) : Colors.black87;
 
     return GestureDetector(
@@ -3060,15 +3493,9 @@ class _KonsultasiDokterPageState
       child: SizedBox(
         width: 55,
         child: Column(
-          mainAxisAlignment:
-              MainAxisAlignment.center,
+          mainAxisAlignment: MainAxisAlignment.center,
           children: [
-
-            Icon(
-              icon,
-              size: 24,
-              color: active ? activeColor : inactiveColor,
-            ),
+            Icon(icon, size: 24, color: active ? activeColor : inactiveColor),
 
             const SizedBox(height: 2),
 
@@ -3077,9 +3504,7 @@ class _KonsultasiDokterPageState
               style: TextStyle(
                 fontSize: 9.5,
                 color: active ? activeColor : inactiveColor,
-                fontWeight: active
-                    ? FontWeight.w600
-                    : FontWeight.w400,
+                fontWeight: active ? FontWeight.w600 : FontWeight.w400,
               ),
             ),
           ],
@@ -3107,29 +3532,23 @@ class _KonsultasiDokterPageState
               ),
               decoration: const BoxDecoration(
                 color: Colors.white,
-                borderRadius: BorderRadius.vertical(
-                  top: Radius.circular(18),
-                ),
+                borderRadius: BorderRadius.vertical(top: Radius.circular(18)),
               ),
               child: SingleChildScrollView(
                 padding: const EdgeInsets.only(bottom: 16),
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment:
-                      CrossAxisAlignment.start,
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-
                     // HANDLE
                     Center(
                       child: Container(
-                        margin:
-                            const EdgeInsets.only(top: 8),
+                        margin: const EdgeInsets.only(top: 8),
                         width: 42,
                         height: 4,
                         decoration: BoxDecoration(
                           color: const Color(0xFFD1D1D1),
-                          borderRadius:
-                              BorderRadius.circular(5),
+                          borderRadius: BorderRadius.circular(5),
                         ),
                       ),
                     ),
@@ -3138,15 +3557,11 @@ class _KonsultasiDokterPageState
 
                     // ICON BULAT
                     Padding(
-                      padding:
-                          const EdgeInsets.symmetric(
-                        horizontal: 16,
-                      ),
+                      padding: const EdgeInsets.symmetric(horizontal: 16),
                       child: Container(
                         width: 34,
                         height: 34,
-                        decoration:
-                            const BoxDecoration(
+                        decoration: const BoxDecoration(
                           color: Color(0xFFD7F0F7),
                           shape: BoxShape.circle,
                         ),
@@ -3161,10 +3576,7 @@ class _KonsultasiDokterPageState
                     const SizedBox(height: 8),
 
                     const Padding(
-                      padding:
-                          EdgeInsets.symmetric(
-                        horizontal: 16,
-                      ),
+                      padding: EdgeInsets.symmetric(horizontal: 16),
                       child: Text(
                         "Atur Pengingat Konsultasi",
                         style: TextStyle(
@@ -3178,10 +3590,7 @@ class _KonsultasiDokterPageState
                     const SizedBox(height: 4),
 
                     const Padding(
-                      padding:
-                          EdgeInsets.symmetric(
-                        horizontal: 16,
-                      ),
+                      padding: EdgeInsets.symmetric(horizontal: 16),
                       child: Text(
                         "Pilih waktu pengingat sesuai dengan kebutuhan Anda. Kami akan mengirimkan notifikasi sebelum jadwal konsultasi dimulai.",
                         style: TextStyle(
@@ -3197,44 +3606,30 @@ class _KonsultasiDokterPageState
                     // ==================================================
                     // CARD DOKTER
                     // ==================================================
-
                     Padding(
-                      padding:
-                          const EdgeInsets.symmetric(
-                        horizontal: 16,
-                      ),
+                      padding: const EdgeInsets.symmetric(horizontal: 16),
                       child: Container(
-                        padding:
-                            const EdgeInsets.all(10),
+                        padding: const EdgeInsets.all(10),
                         decoration: BoxDecoration(
                           color: lightBlue,
-                          borderRadius:
-                              BorderRadius.circular(10),
+                          borderRadius: BorderRadius.circular(10),
                         ),
                         child: Row(
                           children: [
-
-                            _doctorImage(
-                              width: 48,
-                              height: 48,
-                            ),
+                            _doctorImage(width: 48, height: 48),
 
                             const SizedBox(width: 10),
 
                             Expanded(
                               child: Column(
-                                mainAxisAlignment:
-                                    MainAxisAlignment.center,
-                                crossAxisAlignment:
-                                    CrossAxisAlignment.start,
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-
                                   Text(
                                     widget.doctorName,
                                     style: const TextStyle(
                                       fontSize: 13,
-                                      fontWeight:
-                                          FontWeight.w700,
+                                      fontWeight: FontWeight.w700,
                                     ),
                                   ),
 
@@ -3253,15 +3648,12 @@ class _KonsultasiDokterPageState
                                       Icon(
                                         Icons.calendar_today,
                                         size: 11,
-                                        color:
-                                            Color(0xFF0284C7),
+                                        color: Color(0xFF0284C7),
                                       ),
                                       SizedBox(width: 4),
                                       Text(
                                         "Jumat, 18 September 2026",
-                                        style: TextStyle(
-                                          fontSize: 9.5,
-                                        ),
+                                        style: TextStyle(fontSize: 9.5),
                                       ),
                                     ],
                                   ),
@@ -3273,15 +3665,12 @@ class _KonsultasiDokterPageState
                                       Icon(
                                         Icons.access_time,
                                         size: 11,
-                                        color:
-                                            Color(0xFF0284C7),
+                                        color: Color(0xFF0284C7),
                                       ),
                                       SizedBox(width: 4),
                                       Text(
                                         "10:00 WIB",
-                                        style: TextStyle(
-                                          fontSize: 9.5,
-                                        ),
+                                        style: TextStyle(fontSize: 9.5),
                                       ),
                                     ],
                                   ),
@@ -3296,10 +3685,7 @@ class _KonsultasiDokterPageState
                     const SizedBox(height: 12),
 
                     const Padding(
-                      padding:
-                          EdgeInsets.symmetric(
-                        horizontal: 16,
-                      ),
+                      padding: EdgeInsets.symmetric(horizontal: 16),
                       child: Text(
                         "Pilih Waktu Pengingat",
                         style: TextStyle(
@@ -3314,35 +3700,19 @@ class _KonsultasiDokterPageState
                     // ==================================================
                     // PILIHAN WAKTU
                     // ==================================================
+                    _reminderOption("1 hari sebelumnya", setSheetState),
 
-                    _reminderOption(
-                      "1 hari sebelumnya",
-                      setSheetState,
-                    ),
+                    _reminderOption("3 jam sebelumnya", setSheetState),
 
-                    _reminderOption(
-                      "3 jam sebelumnya",
-                      setSheetState,
-                    ),
+                    _reminderOption("1 jam sebelumnya", setSheetState),
 
-                    _reminderOption(
-                      "1 jam sebelumnya",
-                      setSheetState,
-                    ),
-
-                    _reminderOption(
-                      "30 menit sebelumnya",
-                      setSheetState,
-                    ),
+                    _reminderOption("30 menit sebelumnya", setSheetState),
 
                     const SizedBox(height: 10),
 
                     // SIMPAN
                     Padding(
-                      padding:
-                          const EdgeInsets.symmetric(
-                        horizontal: 16,
-                      ),
+                      padding: const EdgeInsets.symmetric(horizontal: 16),
                       child: SizedBox(
                         width: double.infinity,
                         height: 38,
@@ -3353,19 +3723,17 @@ class _KonsultasiDokterPageState
                             try {
                               NotificationService.instance
                                   .showConsultationReminderNotification(
-                                doctorName: widget.doctorName,
-                                scheduledTime:
-                                    "Jumat, 18 September 2026 pukul 10:00 WIB ($selectedReminder)",
-                                doctorPhoto: widget.doctorPhoto,
-                                doctorSpecialty: widget.doctorSpecialty,
-                                chatId: _activeChatId,
-                              );
+                                    doctorName: widget.doctorName,
+                                    scheduledTime:
+                                        "Jumat, 18 September 2026 pukul 10:00 WIB ($selectedReminder)",
+                                    doctorPhoto: widget.doctorPhoto,
+                                    doctorSpecialty: widget.doctorSpecialty,
+                                    chatId: _activeChatId,
+                                  );
                             } catch (_) {}
 
                             Future.delayed(
-                              const Duration(
-                                milliseconds: 150,
-                              ),
+                              const Duration(milliseconds: 150),
                               () {
                                 if (mounted) {
                                   showReminderSuccess();
@@ -3373,15 +3741,11 @@ class _KonsultasiDokterPageState
                               },
                             );
                           },
-                          style:
-                              ElevatedButton.styleFrom(
-                            backgroundColor:
-                                primaryBlue,
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: primaryBlue,
                             elevation: 0,
-                            shape:
-                                RoundedRectangleBorder(
-                              borderRadius:
-                                  BorderRadius.circular(10),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(10),
                             ),
                           ),
                           child: const Text(
@@ -3389,8 +3753,7 @@ class _KonsultasiDokterPageState
                             style: TextStyle(
                               fontSize: 12.5,
                               color: Colors.white,
-                              fontWeight:
-                                  FontWeight.w700,
+                              fontWeight: FontWeight.w700,
                             ),
                           ),
                         ),
@@ -3410,14 +3773,13 @@ class _KonsultasiDokterPageState
                             Navigator.pop(context);
                             NotificationService.instance
                                 .showDoctorChatNotification(
-                              context: context,
-                              doctorName: widget.doctorName,
-                              message:
-                                  "Halo, saya sedang memeriksa data konsultasi Anda. Mohon minum obat secara teratur ya.",
-                              doctorPhoto: widget.doctorPhoto,
-                              doctorSpecialty: widget.doctorSpecialty,
-                              chatId: _activeChatId,
-                            );
+                                  context: context,
+                                  doctorName: widget.doctorName,
+                                  message: "Halo, saya sedang memeriksa data konsultasi Anda. Mohon minum obat secara teratur ya.",
+                                  doctorPhoto: widget.doctorPhoto,
+                                  doctorSpecialty: widget.doctorSpecialty,
+                                  chatId: _activeChatId,
+                                );
                           },
                           icon: const Icon(
                             Icons.notifications_active_rounded,
@@ -3484,10 +3846,7 @@ class _KonsultasiDokterPageState
 
                     // BATAL
                     Padding(
-                      padding:
-                          const EdgeInsets.symmetric(
-                        horizontal: 16,
-                      ),
+                      padding: const EdgeInsets.symmetric(horizontal: 16),
                       child: SizedBox(
                         width: double.infinity,
                         height: 38,
@@ -3495,15 +3854,10 @@ class _KonsultasiDokterPageState
                           onPressed: () {
                             Navigator.pop(context);
                           },
-                          style:
-                              OutlinedButton.styleFrom(
-                            side: const BorderSide(
-                              color: Color(0xFFCBD5E1),
-                            ),
-                            shape:
-                                RoundedRectangleBorder(
-                              borderRadius:
-                                  BorderRadius.circular(10),
+                          style: OutlinedButton.styleFrom(
+                            side: const BorderSide(color: Color(0xFFCBD5E1)),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(10),
                             ),
                           ),
                           child: const Text(
@@ -3511,8 +3865,7 @@ class _KonsultasiDokterPageState
                             style: TextStyle(
                               fontSize: 12.5,
                               color: Color(0xFF475569),
-                              fontWeight:
-                                  FontWeight.w600,
+                              fontWeight: FontWeight.w600,
                             ),
                           ),
                         ),
@@ -3532,12 +3885,8 @@ class _KonsultasiDokterPageState
   // PILIHAN REMINDER
   // ==========================================================
 
-  Widget _reminderOption(
-    String text,
-    StateSetter setSheetState,
-  ) {
-    final bool selected =
-        selectedReminder == text;
+  Widget _reminderOption(String text, StateSetter setSheetState) {
+    final bool selected = selectedReminder == text;
 
     return GestureDetector(
       onTap: () {
@@ -3547,21 +3896,14 @@ class _KonsultasiDokterPageState
       },
       child: Container(
         height: 28,
-        margin: const EdgeInsets.symmetric(
-          horizontal: 16,
-          vertical: 3,
-        ),
+        margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 3),
         padding: const EdgeInsets.symmetric(horizontal: 8),
         decoration: BoxDecoration(
-          color: selected
-              ? lightBlue
-              : Colors.white,
-          borderRadius:
-              BorderRadius.circular(8),
+          color: selected ? lightBlue : Colors.white,
+          borderRadius: BorderRadius.circular(8),
         ),
         child: Row(
           children: [
-
             Container(
               width: 14,
               height: 14,
@@ -3579,8 +3921,7 @@ class _KonsultasiDokterPageState
                       child: Container(
                         width: 7,
                         height: 7,
-                        decoration:
-                            const BoxDecoration(
+                        decoration: const BoxDecoration(
                           shape: BoxShape.circle,
                           color: Color(0xFF087EFF),
                         ),
@@ -3622,25 +3963,20 @@ class _KonsultasiDokterPageState
           ),
           decoration: const BoxDecoration(
             color: Colors.white,
-            borderRadius: BorderRadius.vertical(
-              top: Radius.circular(18),
-            ),
+            borderRadius: BorderRadius.vertical(top: Radius.circular(18)),
           ),
           child: SingleChildScrollView(
             padding: const EdgeInsets.only(bottom: 20),
             child: Column(
               children: [
-
                 // HANDLE
                 Container(
-                  margin:
-                      const EdgeInsets.only(top: 8),
+                  margin: const EdgeInsets.only(top: 8),
                   width: 42,
                   height: 4,
                   decoration: BoxDecoration(
                     color: const Color(0xFFD1D1D1),
-                    borderRadius:
-                        BorderRadius.circular(5),
+                    borderRadius: BorderRadius.circular(5),
                   ),
                 ),
 
@@ -3649,7 +3985,6 @@ class _KonsultasiDokterPageState
                 // ==================================================
                 // CHECK HIJAU
                 // ==================================================
-
                 Container(
                   width: 62,
                   height: 62,
@@ -3663,8 +3998,7 @@ class _KonsultasiDokterPageState
                   ),
                   child: Container(
                     margin: const EdgeInsets.all(4),
-                    decoration:
-                        const BoxDecoration(
+                    decoration: const BoxDecoration(
                       shape: BoxShape.circle,
                       color: Color(0xFF18B86A),
                     ),
@@ -3704,43 +4038,29 @@ class _KonsultasiDokterPageState
                 // ==================================================
                 // CARD JADWAL
                 // ==================================================
-
                 Padding(
-                  padding:
-                      const EdgeInsets.symmetric(
-                    horizontal: 16,
-                  ),
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
                   child: Container(
-                    padding:
-                        const EdgeInsets.all(10),
+                    padding: const EdgeInsets.all(10),
                     decoration: BoxDecoration(
                       color: lightBlue,
-                      borderRadius:
-                          BorderRadius.circular(10),
+                      borderRadius: BorderRadius.circular(10),
                     ),
                     child: Row(
                       children: [
-
-                        _doctorImage(
-                          width: 48,
-                          height: 48,
-                        ),
+                        _doctorImage(width: 48, height: 48),
 
                         const SizedBox(width: 10),
 
                         Column(
-                          mainAxisAlignment:
-                              MainAxisAlignment.center,
-                          crossAxisAlignment:
-                              CrossAxisAlignment.start,
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-
                             Text(
                               widget.doctorName,
                               style: const TextStyle(
                                 fontSize: 13,
-                                fontWeight:
-                                    FontWeight.w700,
+                                fontWeight: FontWeight.w700,
                               ),
                             ),
 
@@ -3759,15 +4079,12 @@ class _KonsultasiDokterPageState
                                 Icon(
                                   Icons.calendar_today,
                                   size: 11,
-                                  color:
-                                      Color(0xFF0284C7),
+                                  color: Color(0xFF0284C7),
                                 ),
                                 SizedBox(width: 4),
                                 Text(
                                   "Jumat, 18 September 2026",
-                                  style: TextStyle(
-                                    fontSize: 9.5,
-                                  ),
+                                  style: TextStyle(fontSize: 9.5),
                                 ),
                               ],
                             ),
@@ -3779,15 +4096,12 @@ class _KonsultasiDokterPageState
                                 Icon(
                                   Icons.access_time,
                                   size: 11,
-                                  color:
-                                      Color(0xFF0284C7),
+                                  color: Color(0xFF0284C7),
                                 ),
                                 SizedBox(width: 4),
                                 Text(
                                   "10:00 WIB",
-                                  style: TextStyle(
-                                    fontSize: 9.5,
-                                  ),
+                                  style: TextStyle(fontSize: 9.5),
                                 ),
                               ],
                             ),
@@ -3803,12 +4117,8 @@ class _KonsultasiDokterPageState
                 // ==================================================
                 // MENGERTI
                 // ==================================================
-
                 Padding(
-                  padding:
-                      const EdgeInsets.symmetric(
-                    horizontal: 16,
-                  ),
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
                   child: SizedBox(
                     width: double.infinity,
                     height: 40,
@@ -3816,15 +4126,11 @@ class _KonsultasiDokterPageState
                       onPressed: () {
                         Navigator.pop(context);
                       },
-                      style:
-                          ElevatedButton.styleFrom(
-                        backgroundColor:
-                            primaryBlue,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: primaryBlue,
                         elevation: 0,
-                        shape:
-                            RoundedRectangleBorder(
-                          borderRadius:
-                              BorderRadius.circular(10),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(10),
                         ),
                       ),
                       child: const Text(
@@ -3832,8 +4138,7 @@ class _KonsultasiDokterPageState
                         style: TextStyle(
                           fontSize: 13,
                           color: Colors.white,
-                          fontWeight:
-                              FontWeight.w700,
+                          fontWeight: FontWeight.w700,
                         ),
                       ),
                     ),

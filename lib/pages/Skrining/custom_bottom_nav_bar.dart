@@ -5,6 +5,7 @@ import '../dokter_page.dart';
 import '../riwayat_page.dart';
 import '../profil_page.dart';
 import '../../services/theme_service.dart';
+import '../../services/language_service.dart';
 
 /// Bottom Navigation Bar kustom pada menu skrining yang seragam dengan menu home
 class HeartCareBottomNavBar extends StatelessWidget {
@@ -63,64 +64,69 @@ class HeartCareBottomNavBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ValueListenableBuilder<ThemeMode>(
-      valueListenable: ThemeService.themeModeNotifier,
-      builder: (context, themeMode, _) {
-        final isDark = themeMode == ThemeMode.dark;
+    return ValueListenableBuilder<String>(
+      valueListenable: LanguageService.languageNotifier,
+      builder: (context, currentLang, _) {
+        return ValueListenableBuilder<ThemeMode>(
+          valueListenable: ThemeService.themeModeNotifier,
+          builder: (context, themeMode, _) {
+            final isDark = themeMode == ThemeMode.dark;
 
-        return Container(
-          decoration: BoxDecoration(
-            color: isDark ? const Color(0xFF0F172A) : Colors.white,
-            border: Border(
-              top: BorderSide(
-                color: isDark
-                    ? const Color(0xFF1E293B)
-                    : Colors.grey.withValues(alpha: 0.2),
-                width: 1,
+            return Container(
+              decoration: BoxDecoration(
+                color: isDark ? const Color(0xFF0F172A) : Colors.white,
+                border: Border(
+                  top: BorderSide(
+                    color: isDark
+                        ? const Color(0xFF1E293B)
+                        : Colors.grey.withValues(alpha: 0.2),
+                    width: 1,
+                  ),
+                ),
               ),
-            ),
-          ),
-          padding: const EdgeInsets.only(top: 8, bottom: 12),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceAround,
-            children: [
-              _buildNavItem(
-                context,
-                index: 0,
-                icon: Icons.home,
-                label: 'Home',
-                isDark: isDark,
+              padding: const EdgeInsets.only(top: 8, bottom: 12),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceAround,
+                children: [
+                  _buildNavItem(
+                    context,
+                    index: 0,
+                    icon: Icons.home,
+                    label: tr('Home', 'Home'),
+                    isDark: isDark,
+                  ),
+                  _buildNavItem(
+                    context,
+                    index: 1,
+                    icon: Icons.favorite_border,
+                    label: tr('Skrining', 'Screening'),
+                    isDark: isDark,
+                  ),
+                  _buildNavItem(
+                    context,
+                    index: 2,
+                    icon: Icons.medical_services_outlined,
+                    label: tr('Dokter', 'Doctors'),
+                    isDark: isDark,
+                  ),
+                  _buildNavItem(
+                    context,
+                    index: 3,
+                    icon: Icons.description_outlined,
+                    label: tr('Riwayat', 'History'),
+                    isDark: isDark,
+                  ),
+                  _buildNavItem(
+                    context,
+                    index: 4,
+                    icon: Icons.person_outline,
+                    label: tr('Profil', 'Profile'),
+                    isDark: isDark,
+                  ),
+                ],
               ),
-              _buildNavItem(
-                context,
-                index: 1,
-                icon: Icons.favorite_border,
-                label: 'Skrining',
-                isDark: isDark,
-              ),
-              _buildNavItem(
-                context,
-                index: 2,
-                icon: Icons.medical_services_outlined,
-                label: 'Dokter',
-                isDark: isDark,
-              ),
-              _buildNavItem(
-                context,
-                index: 3,
-                icon: Icons.description_outlined,
-                label: 'Riwayat',
-                isDark: isDark,
-              ),
-              _buildNavItem(
-                context,
-                index: 4,
-                icon: Icons.person_outline,
-                label: 'Profil',
-                isDark: isDark,
-              ),
-            ],
-          ),
+            );
+          },
         );
       },
     );

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../services/theme_service.dart';
+import '../services/language_service.dart';
 import 'article_detail_page.dart';
 
 class ArtikelKesehatanPage extends StatefulWidget {
@@ -18,16 +19,15 @@ class _ArtikelKesehatanPageState extends State<ArtikelKesehatanPage> {
 
   final List<Map<String, dynamic>> _articles = [
     {
-      'image':
-          'https://images.unsplash.com/photo-1530026405186-ed1f139313f8?w=800',
+      'image': 'assets/images/jantung_koroner_edukasi.jpg',
       'category': 'Penyakit Jantung',
-      'title': 'Mengenal Penyakit Jantung Koroner',
+      'title': 'Mengenal Penyakit Jantung Koroner: Gejala & Pencegahan Dini',
       'description':
-          'Penyakit jantung koroner merupakan salah satu penyakit yang perlu diwaspadai karena dapat memengaruhi fungsi jantung dalam memompa darah ke seluruh tubuh.',
-      'date': '08 September 2026',
-      'duration': '5 menit baca',
+          'Kajian komprehensif mengenai mekanisme aterosklerosis, gejala klinis angina pectoris, faktor risiko utama, dan protokol pencegahan dini berdasarkan bukti ilmiah.',
+      'date': '22 September 2026',
+      'duration': '6 menit baca',
       'content':
-          'Penyakit jantung koroner adalah kondisi ketika pembuluh darah yang berfungsi mengalirkan darah dan oksigen ke otot jantung mengalami penyempitan atau penyumbatan. Kondisi ini dapat menyebabkan aliran darah menuju jantung menjadi berkurang.\n\nPenyempitan pembuluh darah umumnya terjadi akibat penumpukan lemak atau plak pada dinding pembuluh darah.\n\nBeberapa faktor dapat meningkatkan risiko penyakit jantung, antara lain tekanan darah tinggi, kolesterol tinggi, kurang aktivitas fisik, dan pola makan kurang sehat.',
+          'Penyakit jantung koroner (PJK) adalah kondisi ketika pembuluh darah arteri koroner yang menyuplai darah dan oksigen ke otot jantung mengalami penyempitan atau penyumbatan akibat aterosklerosis.\n\nKondisi ini membatasi aliran darah ke miokardium dan berisiko memicu serangan jantung mendadak. Memahami gejala awal seperti angina pectoris serta melakukan pencegahan dini adalah langkah krusial menurunkan risiko.',
     },
     {
       'image':
@@ -47,11 +47,11 @@ class _ArtikelKesehatanPageState extends State<ArtikelKesehatanPage> {
       'category': 'Pola Hidup',
       'title': 'Olahraga yang Baik untuk Kesehatan Jantung',
       'description':
-          'Aktivitas fisik secara rutin dapat membantu menjaga kebugaran tubuh dan mendukung daya tahan jantung secara optimal.',
-      'date': '08 September 2026',
-      'duration': '4 menit baca',
+          'Kajian ilmiah mengenai kapasitas kerja pompa jantung, takaran latihan terukur (zona sasaran denyut nadi 70–85% DJM, durasi 20–45 menit, frekuensi 3–5 kali seminggu), uji kesiapan mandiri 5 menit, dan program latihan aerobik berbasis riset Dr. Eddy Purnomo.',
+      'date': '22 September 2026',
+      'duration': '7 menit baca',
       'content':
-          'Aktivitas fisik secara rutin dapat membantu menjaga kebugaran tubuh dan mendukung kesehatan jantung. Olahraga juga dapat menjadi bagian dari pola hidup sehat apabila dilakukan secara teratur.\n\nBeberapa aktivitas fisik yang dapat dilakukan antara lain berjalan kaki, bersepeda, dan aktivitas fisik lainnya sesuai dengan kemampuan tubuh.\n\nYang penting adalah melakukan aktivitas secara rutin dan menyesuaikannya dengan kondisi masing-masing.',
+          'Latihan olahraga yang teratur, terarah, dan terprogram merupakan salah satu sarana utama dalam meningkatkan kebugaran jasmani serta menghindarkan diri dari penyakit degeneratif, khususnya penyakit jantung dan pembuluh darah.\n\nDi era modern saat ini, kemajuan teknologi yang serba otomatis kerap mengakibatkan manusia menjadi malas bergerak (gaya hidup sedentari). Menurut data survei kesehatan dan catatan rumah sakit, penyakit jantung menduduki urutan ketiga penyebab kematian di Indonesia dan peringkat pertama untuk usia di atas 45 tahun (Sahabuddin, 1992). Faktor risiko lain meliputi diabetes melitus, hipertensi, obesitas, merokok, stres, dan inaktivitas fisik.\n\nJantung bekerja sebagai pompa darah yang berukuran kira-kira sebesar kepalan tangan. Dalam satu kali pompaan, jantung mengalirkan 70–80 cc darah. Dalam satu menit pada orang dewasa normal, jantung memompa sekitar 5 liter darah, 300 liter per jam, hingga 7.200 liter darah setiap harinya (Puruhito, 1992). Otot jantung merupakan jenis otot polos involunter yang berkontraksi secara refleks tanpa diperintah otak sadar (Hay, 1987).\n\nLatihan olahraga yang teratur merangsang kerja jantung dan paru-paru sehingga meningkatkan volume sekuncup (Stroke Volume). Olahraga yang melibatkan otot-otot besar pada tungkai kaki—seperti jalan cepat, lari/joging, dan bersepeda—sangat dianjurkan karena memerlukan konsumsi oksigen tinggi dan memberikan stimulasi sirkulasi darah yang lebih optimal dibandingkan gerakan lengan.\n\nMenurut dr. Sadoso Sumosardjuno (1993), latihan aerobik berkesinambungan selama 20–30 menit membuat otot jantung lebih padat, kuat, dan efisien. Pada saat istirahat, denyut nadi individu yang terlatih berdetak lebih lambat namun memompakan darah jauh lebih bertenaga.\n\nLatihan olahraga yang benar wajib mematuhi takaran terukur:\n1. Intensitas Latihan: Diukur melalui denyut nadi maksimal (DJM = 220 - Umur). Zona sasaran efektif dan aman adalah 70% sampai 85% dari DJM (idealnya 72%–85%). Sebagai contoh, individu berusia 50 tahun (DJM = 170 bpm) harus berlatih pada zona denyut nadi 119 hingga 144,5 denyut per menit.\n2. Lama Latihan: Mempertahankan denyut di zona sasaran selama 20 hingga 45 menit per sesi.\n3. Frekuensi Latihan: Minimal 3 kali per minggu, optimal 4 hingga 5 kali per minggu karena kebugaran tubuh mulai menurun setelah 48 jam tanpa aktivitas.\n4. Urutan Sesi: Pemanasan (±10 menit), Latihan Inti (20–45 menit), dan Pendinginan (±5 menit).\n\nSebelum memulai program, lakukan uji mandiri jalan cepat 5 menit (dalam kondisi masih dapat berbicara), lalu istirahat 10 menit. Jika denyut nadi setelah 10 menit telah kembali di bawah 100 bpm dan bernapas lancar, kondisi jantung dinyatakan fit dan layak berlatih. Namun jika denyut masih di atas 100 bpm atau terasa sesak napas, periksakan diri ke dokter spesialis sebelum berlatih.\n\nBentuk latihan aerobik terbaik mencakup jalan kaki cepat, lari santai/joging, bersepeda statis, berenang, dan senam aerobik yang disesuaikan dengan kapasitas fisik masing-masing secara teratur dan berkesinambungan.',
     },
   ];
 
@@ -79,12 +79,15 @@ class _ArtikelKesehatanPageState extends State<ArtikelKesehatanPage> {
   Widget build(BuildContext context) {
     final filtered = _filteredArticles;
 
-    return ValueListenableBuilder<ThemeMode>(
-      valueListenable: ThemeService.themeModeNotifier,
-      builder: (context, themeMode, _) {
-        final isDark = themeMode == ThemeMode.dark;
+    return ValueListenableBuilder<String>(
+      valueListenable: LanguageService.languageNotifier,
+      builder: (context, _, _) {
+        return ValueListenableBuilder<ThemeMode>(
+          valueListenable: ThemeService.themeModeNotifier,
+          builder: (context, themeMode, _) {
+            final isDark = themeMode == ThemeMode.dark;
 
-        return Scaffold(
+            return Scaffold(
           backgroundColor:
               isDark ? const Color(0xFF0F172A) : const Color(0xFFF8FAFC),
           body: Stack(
@@ -198,7 +201,7 @@ class _ArtikelKesehatanPageState extends State<ArtikelKesehatanPage> {
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 Text(
-                                  'Artikel Kesehatan',
+                                  tr('Artikel Kesehatan', 'Health Articles'),
                                   style: TextStyle(
                                     fontSize: 19.5,
                                     fontWeight: FontWeight.bold,
@@ -210,7 +213,7 @@ class _ArtikelKesehatanPageState extends State<ArtikelKesehatanPage> {
                                 ),
                                 const SizedBox(height: 2),
                                 Text(
-                                  'Kumpulan artikel & tips seputar kesehatan jantung',
+                                  tr('Kumpulan artikel & tips seputar kesehatan jantung', 'Collection of articles & tips on heart health'),
                                   style: TextStyle(
                                     fontSize: 12.5,
                                     color: isDark
@@ -271,7 +274,7 @@ class _ArtikelKesehatanPageState extends State<ArtikelKesehatanPage> {
                                       : const Color(0xFF0F172A),
                                 ),
                                 decoration: InputDecoration(
-                                  hintText: 'Cari artikel kesehatan...',
+                                  hintText: tr('Cari artikel kesehatan...', 'Search health articles...'),
                                   hintStyle: TextStyle(
                                     color: isDark
                                         ? const Color(0xFF64748B)
@@ -359,7 +362,7 @@ class _ArtikelKesehatanPageState extends State<ArtikelKesehatanPage> {
                                     ),
                                   ),
                                   child: Text(
-                                    '${filtered.length} Artikel',
+                                    tr('${filtered.length} Artikel', '${filtered.length} Articles'),
                                     style: TextStyle(
                                       fontSize: 11.5,
                                       fontWeight: FontWeight.bold,
@@ -404,6 +407,8 @@ class _ArtikelKesehatanPageState extends State<ArtikelKesehatanPage> {
         );
       },
     );
+  },
+);
   }
 
   // WIDGET CHIP FILTER KATEGORI (GAYA DOKTER PAGE)
@@ -583,23 +588,41 @@ class _ArtikelKesehatanPageState extends State<ArtikelKesehatanPage> {
                   ),
                   child: ClipRRect(
                     borderRadius: BorderRadius.circular(12.5),
-                    child: Image.network(
-                      item['image'],
-                      width: 90,
-                      height: 90,
-                      fit: BoxFit.cover,
-                      errorBuilder: (context, error, stackTrace) {
-                        return Center(
-                          child: Icon(
-                            Icons.article_outlined,
-                            size: 36,
-                            color: isDark
-                                ? const Color(0xFF38BDF8)
-                                : brandPrimary,
+                    child: (item['image'] as String).startsWith('http')
+                        ? Image.network(
+                            item['image'],
+                            width: 90,
+                            height: 90,
+                            fit: BoxFit.cover,
+                            errorBuilder: (context, error, stackTrace) {
+                              return Center(
+                                child: Icon(
+                                  Icons.article_outlined,
+                                  size: 36,
+                                  color: isDark
+                                      ? const Color(0xFF38BDF8)
+                                      : brandPrimary,
+                                ),
+                              );
+                            },
+                          )
+                        : Image.asset(
+                            item['image'],
+                            width: 90,
+                            height: 90,
+                            fit: BoxFit.cover,
+                            errorBuilder: (context, error, stackTrace) {
+                              return Center(
+                                child: Icon(
+                                  Icons.article_outlined,
+                                  size: 36,
+                                  color: isDark
+                                      ? const Color(0xFF38BDF8)
+                                      : brandPrimary,
+                                ),
+                              );
+                            },
                           ),
-                        );
-                      },
-                    ),
                   ),
                 ),
 
@@ -719,7 +742,7 @@ class _ArtikelKesehatanPageState extends State<ArtikelKesehatanPage> {
             ),
             const SizedBox(height: 12),
             Text(
-              'Artikel tidak ditemukan',
+              tr('Artikel tidak ditemukan', 'No articles found'),
               style: TextStyle(
                 fontSize: 15.5,
                 fontWeight: FontWeight.bold,
@@ -728,7 +751,7 @@ class _ArtikelKesehatanPageState extends State<ArtikelKesehatanPage> {
             ),
             const SizedBox(height: 4),
             Text(
-              'Coba gunakan kata kunci pencarian yang lain.',
+              tr('Coba gunakan kata kunci pencarian yang lain.', 'Try searching with different keywords.'),
               style: TextStyle(
                 fontSize: 12.5,
                 color:

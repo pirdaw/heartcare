@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:heartcare/services/theme_service.dart';
+import 'package:heartcare/services/language_service.dart';
 import 'dokter_page.dart';
 import '../services/notification_service.dart';
 
@@ -76,6 +77,51 @@ class EducationPage extends StatefulWidget {
     );
   }
 
+  /// Ornamen ambient glow lembut persis seperti Home Page
+  static List<Widget> buildAmbientGlow({required bool isDark}) {
+    return [
+      Positioned(
+        top: -40,
+        right: -30,
+        child: Container(
+          width: 220,
+          height: 220,
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            color: const Color(0xFF38BDF8)
+                .withValues(alpha: isDark ? 0.04 : 0.16),
+          ),
+        ),
+      ),
+      Positioned(
+        top: 280,
+        left: -60,
+        child: Container(
+          width: 200,
+          height: 200,
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            color: const Color(0xFF0EA5E9)
+                .withValues(alpha: isDark ? 0.03 : 0.08),
+          ),
+        ),
+      ),
+      Positioned(
+        bottom: 140,
+        right: -50,
+        child: Container(
+          width: 200,
+          height: 200,
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            color: const Color(0xFF0284C7)
+                .withValues(alpha: isDark ? 0.03 : 0.06),
+          ),
+        ),
+      ),
+    ];
+  }
+
   // Notifier bersama untuk melacak topik yang sudah dipelajari
   static final ValueNotifier<Set<String>> completedTopicsNotifier =
       ValueNotifier<Set<String>>({});
@@ -131,7 +177,7 @@ class _EducationPageState extends State<EducationPage> {
   ];
 
   final List<String> _dailyTips = const [
-    'Beri jeda minimal 2-3 jam antara makan malam dan waktu tidur agar lambung tidak tertekan dan kerja jantung tetap stabil.',
+    'Berikan jeda sekitar 2–3 jam antara makan malam dan waktu tidur untuk membantu mengurangi risiko refluks asam lambung dan meningkatkan kenyamanan saat beristirahat.',
     'Jalan santai 15-30 menit per hari secara rutin dapat melancarkan aliran darah dan menjaga elastisitas pembuluh darah.',
     'Batasi natrium/garam maksimal 1 sendok teh (2.000 mg) per hari demi menjaga kestabilan tekanan darah arteri Anda.',
     'Latihan pernapasan dalam (tarik 4 detik, hembus 6 detik) terbukti membantu meredakan ketegangan dan menstabilkan irama jantung.',
@@ -148,9 +194,9 @@ class _EducationPageState extends State<EducationPage> {
       bgColor: Color(0xFFFFE4E6),
     ),
     _StatFact(
-      value: '< 2.000 mg',
-      label: 'Batas Garam',
-      subtitle: 'Maks. 1 sdt natrium harian',
+      value: '< 2.000 mg/hari',
+      label: 'Batas Natrium',
+      subtitle: 'Setara dengan < 5 gram garam/hari.',
       icon: Icons.tune_rounded,
       color: Color(0xFFD97706),
       bgColor: Color(0xFFFEF3C7),
@@ -224,81 +270,91 @@ class _EducationPageState extends State<EducationPage> {
 
   @override
   Widget build(BuildContext context) {
-    return ValueListenableBuilder<ThemeMode>(
-      valueListenable: ThemeService.themeModeNotifier,
-      builder: (context, themeMode, _) {
-        final isDark = themeMode == ThemeMode.dark;
+    return ValueListenableBuilder<String>(
+      valueListenable: LanguageService.languageNotifier,
+      builder: (context, _, _) {
+        return ValueListenableBuilder<ThemeMode>(
+          valueListenable: ThemeService.themeModeNotifier,
+          builder: (context, themeMode, _) {
+            final isDark = themeMode == ThemeMode.dark;
 
-        return Scaffold(
-          backgroundColor:
-              isDark ? const Color(0xFF0F172A) : const Color(0xFFF8FAFC),
-          body: Container(
-            width: double.infinity,
-            height: double.infinity,
-            decoration: BoxDecoration(
-              gradient: EducationPage.pageGradient(isDark),
-            ),
-            child: SafeArea(
-              child: Column(
-                children: [
-                  // 1. TOP BAR DENGAN BADGE KLINIS & INFO
-                  _buildTopBar(context, isDark: isDark),
+            return Scaffold(
+              backgroundColor:
+                  isDark ? const Color(0xFF0F172A) : const Color(0xFFF8FAFC),
+              body: Container(
+                width: double.infinity,
+                height: double.infinity,
+                decoration: BoxDecoration(
+                  gradient: EducationPage.pageGradient(isDark),
+                ),
+                child: SafeArea(
+                  child: Stack(
+                    children: [
+                      ...EducationPage.buildAmbientGlow(isDark: isDark),
+                      Column(
+                        children: [
+                          // 1. TOP BAR DENGAN BADGE KLINIS & INFO
+                      _buildTopBar(context, isDark: isDark),
 
-                  // 2. SEARCH BAR MODERN
-                  _buildSearchBar(isDark: isDark),
+                      // 2. SEARCH BAR MODERN
+                      _buildSearchBar(isDark: isDark),
 
-                  // 3. HORIZONTAL CATEGORY FILTER PILLS
-                  _buildCategoryChips(isDark: isDark),
+                      // 3. HORIZONTAL CATEGORY FILTER PILLS
+                      _buildCategoryChips(isDark: isDark),
 
-                  const SizedBox(height: 8),
+                      const SizedBox(height: 8),
 
-                  // 4. KONTEN EDUKASI SCROLLABLE
-                  Expanded(
-                    child: SingleChildScrollView(
-                      physics: const BouncingScrollPhysics(),
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 18,
-                        vertical: 6,
-                      ),
-                      child: _searchQuery.isNotEmpty
-                          ? Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Row(
+                      // 4. KONTEN EDUKASI SCROLLABLE
+                      Expanded(
+                        child: SingleChildScrollView(
+                          physics: const BouncingScrollPhysics(),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 18,
+                            vertical: 6,
+                          ),
+                          child: _searchQuery.isNotEmpty
+                              ? Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
-                                    const Icon(
-                                      Icons.search_rounded,
-                                      size: 16,
-                                      color: Color(0xFF0284C7),
+                                    Row(
+                                      children: [
+                                        const Icon(
+                                          Icons.search_rounded,
+                                          size: 16,
+                                          color: Color(0xFF0284C7),
+                                        ),
+                                        const SizedBox(width: 6),
+                                        Text(
+                                          '${tr('Hasil pencarian', 'Search results')} "$_searchQuery"',
+                                          style: TextStyle(
+                                            fontSize: 13,
+                                            fontWeight: FontWeight.w700,
+                                            color: isDark
+                                                ? Colors.white
+                                                : EducationPage.darkSlate,
+                                          ),
+                                        ),
+                                      ],
                                     ),
-                                    const SizedBox(width: 6),
-                                    Text(
-                                      'Hasil pencarian "$_searchQuery"',
-                                      style: TextStyle(
-                                        fontSize: 13,
-                                        fontWeight: FontWeight.w700,
-                                        color: isDark
-                                            ? Colors.white
-                                            : EducationPage.darkSlate,
-                                      ),
+                                    const SizedBox(height: 12),
+                                    ..._buildFilteredTopicCards(
+                                      context,
+                                      isDark: isDark,
                                     ),
+                                    const SizedBox(height: 24),
                                   ],
-                                ),
-                                const SizedBox(height: 12),
-                                ..._buildFilteredTopicCards(
-                                  context,
-                                  isDark: isDark,
-                                ),
-                                const SizedBox(height: 24),
-                              ],
-                            )
-                          : _buildCategoryView(context, isDark: isDark),
-                    ),
+                                )
+                              : _buildCategoryView(context, isDark: isDark),
+                        ),
+                      ),
+                    ],
                   ),
                 ],
               ),
             ),
           ),
+        );
+          },
         );
       },
     );
@@ -313,9 +369,12 @@ class _EducationPageState extends State<EducationPage> {
           _buildFeaturedSpotlight(context, isDark: isDark),
           const SizedBox(height: 20),
           _buildSectionHeader(
-            title: 'Modul Nutrisi Jantung',
-            subtitle: 'Pedoman gizi klinis, pembatasan garam, dan pemilihan lemak baik',
-            countBadge: '1 Modul',
+            title: tr('Modul Nutrisi Jantung', 'Heart Nutrition Module'),
+            subtitle: tr(
+              'Pedoman gizi klinis, pembatasan garam, dan pemilihan lemak baik',
+              'Clinical nutrition guidelines, salt restriction, and healthy fats',
+            ),
+            countBadge: tr('1 Modul', '1 Module'),
             isDark: isDark,
           ),
           const SizedBox(height: 12),
@@ -331,9 +390,12 @@ class _EducationPageState extends State<EducationPage> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           _buildSectionHeader(
-            title: 'Modul Aktivitas Fisik',
-            subtitle: 'Panduan latihan aerobik aman dan mobilisasi bertahap',
-            countBadge: '1 Modul',
+            title: tr('Modul Aktivitas Fisik', 'Physical Activity Module'),
+            subtitle: tr(
+              'Panduan latihan aerobik aman dan mobilisasi bertahap',
+              'Safe aerobic exercise and gradual mobility guide',
+            ),
+            countBadge: tr('1 Modul', '1 Module'),
             isDark: isDark,
           ),
           const SizedBox(height: 12),
@@ -351,9 +413,12 @@ class _EducationPageState extends State<EducationPage> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           _buildSectionHeader(
-            title: 'Modul Gaya Hidup Sehat',
-            subtitle: 'Regenerasi tidur, manajemen stres, dan berhenti merokok',
-            countBadge: '1 Modul',
+            title: tr('Modul Gaya Hidup Sehat', 'Healthy Lifestyle Module'),
+            subtitle: tr(
+              'Regenerasi tidur, manajemen stres, dan berhenti merokok',
+              'Sleep recovery, stress management, and smoking cessation',
+            ),
+            countBadge: tr('1 Modul', '1 Module'),
             isDark: isDark,
           ),
           const SizedBox(height: 12),
@@ -371,9 +436,12 @@ class _EducationPageState extends State<EducationPage> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           _buildSectionHeader(
-            title: 'Mitos vs Fakta Jantung',
-            subtitle: 'Koreksi fakta medis seputar kesehatan kardiovaskular',
-            countBadge: 'Klinis',
+            title: tr('Mitos vs Fakta Jantung', 'Heart Myths vs Facts'),
+            subtitle: tr(
+              'Koreksi fakta medis seputar kesehatan kardiovaskular',
+              'Medical fact checks on cardiovascular health',
+            ),
+            countBadge: tr('Klinis', 'Clinical'),
             isDark: isDark,
           ),
           const SizedBox(height: 12),
@@ -405,9 +473,12 @@ class _EducationPageState extends State<EducationPage> {
 
         // Section: Main Modules
         _buildSectionHeader(
-          title: 'Modul Pembelajaran Mandiri',
-          subtitle: 'Kurikulum komprehensif panduan gaya hidup jantung',
-          countBadge: '3 Modul',
+          title: tr('Modul Pembelajaran Mandiri', 'Self-Learning Modules'),
+          subtitle: tr(
+            'Kurikulum komprehensif panduan gaya hidup jantung',
+            'Comprehensive heart lifestyle curriculum',
+          ),
+          countBadge: tr('3 Modul', '3 Modules'),
           isDark: isDark,
         ),
         const SizedBox(height: 12),
@@ -416,8 +487,11 @@ class _EducationPageState extends State<EducationPage> {
 
         // Section: Quick Facts & Targets
         _buildSectionHeader(
-          title: 'Sasaran Kardiovaskular Harian',
-          subtitle: 'Pedoman acuan batas aman klinis resmi',
+          title: tr('Sasaran Kardiovaskular Harian', 'Daily Cardiovascular Targets'),
+          subtitle: tr(
+            'Pedoman acuan batas aman klinis resmi',
+            'Official clinical safe limit guidelines',
+          ),
           countBadge: 'PERKI / AHA',
           isDark: isDark,
         ),
@@ -458,7 +532,7 @@ class _EducationPageState extends State<EducationPage> {
                 Row(
                   children: [
                     Text(
-                      'Pusat Edukasi Jantung',
+                      tr('Pusat Edukasi Jantung', 'Heart Education Center'),
                       style: TextStyle(
                         fontSize: 17.5,
                         fontWeight: FontWeight.w800,
@@ -480,18 +554,18 @@ class _EducationPageState extends State<EducationPage> {
                           width: 0.8,
                         ),
                       ),
-                      child: const Row(
+                      child: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          Icon(
+                          const Icon(
                             Icons.verified_rounded,
                             size: 11,
                             color: Color(0xFF16A34A),
                           ),
-                          SizedBox(width: 2),
+                          const SizedBox(width: 2),
                           Text(
-                            'KLINIS',
-                            style: TextStyle(
+                            tr('KLINIS', 'CLINICAL'),
+                            style: const TextStyle(
                               fontSize: 9,
                               fontWeight: FontWeight.w800,
                               color: Color(0xFF16A34A),
@@ -505,7 +579,7 @@ class _EducationPageState extends State<EducationPage> {
                 ),
                 const SizedBox(height: 2),
                 Text(
-                  'Ditinjau oleh Tim Kardiologi HeartCare',
+                  tr('Ditinjau oleh Tim Kardiologi HeartCare', 'Reviewed by HeartCare Cardiology Team'),
                   style: TextStyle(
                     fontSize: 11.5,
                     color: isDark
@@ -594,7 +668,10 @@ class _EducationPageState extends State<EducationPage> {
             color: isDark ? Colors.white : const Color(0xFF0F172A),
           ),
           decoration: InputDecoration(
-            hintText: 'Cari panduan nutrisi, garam, olahraga...',
+            hintText: tr(
+              'Cari panduan nutrisi, garam, olahraga...',
+              'Search nutrition, salt, exercise guides...',
+            ),
             hintStyle: TextStyle(
               fontSize: 12,
               color: isDark
@@ -623,6 +700,23 @@ class _EducationPageState extends State<EducationPage> {
         ),
       ),
     );
+  }
+
+  String _categoryLabel(String cat) {
+    switch (cat) {
+      case 'Semua':
+        return tr('Semua', 'All');
+      case 'Nutrisi':
+        return tr('Nutrisi', 'Nutrition');
+      case 'Aktivitas':
+        return tr('Aktivitas', 'Activity');
+      case 'Gaya Hidup':
+        return tr('Gaya Hidup', 'Lifestyle');
+      case 'Mitos & Fakta':
+        return tr('Mitos & Fakta', 'Myths & Facts');
+      default:
+        return cat;
+    }
   }
 
   Widget _buildCategoryChips({required bool isDark}) {
@@ -678,7 +772,7 @@ class _EducationPageState extends State<EducationPage> {
               ),
               child: Center(
                 child: Text(
-                  title,
+                  _categoryLabel(title),
                   style: TextStyle(
                     fontSize: 11.5,
                     fontWeight:
@@ -2592,9 +2686,12 @@ class PolaMakanSehatPage extends StatelessWidget {
               gradient: EducationPage.pageGradient(isDark),
             ),
             child: SafeArea(
-              child: Column(
+              child: Stack(
                 children: [
-                  // HEADER BAR
+                  ...EducationPage.buildAmbientGlow(isDark: isDark),
+                  Column(
+                    children: [
+                      // HEADER BAR
                   Padding(
                     padding:
                         const EdgeInsets.only(left: 16, right: 16, top: 12),
@@ -2799,12 +2896,14 @@ class PolaMakanSehatPage extends StatelessWidget {
                 ),
               ],
             ),
-          ),
+          ],
         ),
-      );
-      },
-    );
-  }
+      ),
+    ),
+  );
+  },
+);
+}
 }
 
 // ============================================================================
@@ -2830,9 +2929,12 @@ class AktivitasFisikPage extends StatelessWidget {
               gradient: EducationPage.pageGradient(isDark),
             ),
             child: SafeArea(
-              child: Column(
+              child: Stack(
                 children: [
-                  // HEADER BAR
+                  ...EducationPage.buildAmbientGlow(isDark: isDark),
+                  Column(
+                    children: [
+                      // HEADER BAR
                   Padding(
                     padding:
                         const EdgeInsets.only(left: 16, right: 16, top: 12),
@@ -3098,12 +3200,14 @@ class AktivitasFisikPage extends StatelessWidget {
                 ),
               ],
             ),
-          ),
+          ],
         ),
-      );
-      },
-    );
-  }
+      ),
+    ),
+  );
+  },
+);
+}
 }
 
 // ============================================================================
@@ -3129,9 +3233,12 @@ class KebiasaanSehatPage extends StatelessWidget {
               gradient: EducationPage.pageGradient(isDark),
             ),
             child: SafeArea(
-              child: Column(
+              child: Stack(
                 children: [
-                  // HEADER BAR
+                  ...EducationPage.buildAmbientGlow(isDark: isDark),
+                  Column(
+                    children: [
+                      // HEADER BAR
                   Padding(
                     padding:
                         const EdgeInsets.only(left: 16, right: 16, top: 12),
@@ -3336,12 +3443,14 @@ class KebiasaanSehatPage extends StatelessWidget {
                 ),
               ],
             ),
-          ),
+          ],
         ),
-      );
-      },
-    );
-  }
+      ),
+    ),
+  );
+  },
+);
+}
 }
 
 // ============================================================================
