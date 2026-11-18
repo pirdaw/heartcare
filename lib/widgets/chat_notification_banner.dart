@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import '../services/chat_notification_service.dart';
 import '../pages/konsultasi_dokter_page.dart';
 
@@ -30,10 +31,12 @@ class ChatNotificationBannerManager {
     required ChatNotificationItem notification,
     Duration duration = const Duration(seconds: 4),
   }) {
-    hide();
-    final overlayState = navigatorKey.currentState?.overlay;
-    if (overlayState == null) return;
-    _insertOverlay(overlayState, notification, duration, navigatorKey: navigatorKey);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      hide();
+      final overlayState = navigatorKey.currentState?.overlay;
+      if (overlayState == null) return;
+      _insertOverlay(overlayState, notification, duration, navigatorKey: navigatorKey);
+    });
   }
 
   static void _insertOverlay(
@@ -42,18 +45,37 @@ class ChatNotificationBannerManager {
     Duration duration, {
     GlobalKey<NavigatorState>? navigatorKey,
   }) {
+    try {
+      HapticFeedback.lightImpact();
+      SystemSound.play(SystemSoundType.alert);
+    } catch (_) {}
+
     final entry = OverlayEntry(
       builder: (context) => _InAppNotificationBannerWidget(
         notification: notification,
         onTap: () {
           hide();
+          ChatNotificationService.instance.markAsRead(
+            notification.conversationDoctorName,
+            viewerRole: notification.recipientRole,
+            patientId: notification.patientId,
+            patientName: notification.patientName,
+            doctorId: notification.doctorId,
+            chatId: notification.chatId,
+          );
           final nav = navigatorKey?.currentState ?? Navigator.of(context);
           nav.push(
             MaterialPageRoute(
               builder: (context) => KonsultasiDokterPage(
+                chatId: notification.chatId,
+                isDoctorView:
+                    notification.recipientRole == ChatSenderRole.doctor,
                 doctorName: notification.conversationDoctorName,
                 doctorPhoto: notification.doctorPhoto,
                 doctorSpecialty: notification.doctorSpecialty,
+                patientName: notification.patientName,
+                patientId: notification.patientId,
+                doctorId: notification.doctorId,
               ),
             ),
           );

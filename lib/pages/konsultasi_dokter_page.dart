@@ -86,8 +86,23 @@ class _KonsultasiDokterPageState
   @override
   void initState() {
     super.initState();
-    ChatNotificationService.instance.currentActiveDoctorRoom = widget.doctorName;
-    ChatNotificationService.instance.markAsRead(widget.doctorName);
+    ChatNotificationService.instance.setActiveChatRoom(
+      doctorName: widget.doctorName,
+      isDoctorView: widget.isDoctorView,
+      patientId: widget.patientId,
+      patientName: widget.patientName,
+      chatId: widget.chatId,
+    );
+    ChatNotificationService.instance.markAsRead(
+      widget.doctorName,
+      viewerRole: widget.isDoctorView
+          ? ChatSenderRole.doctor
+          : ChatSenderRole.patient,
+      patientId: widget.patientId,
+      patientName: widget.patientName,
+      doctorId: widget.doctorId,
+      chatId: widget.chatId,
+    );
     _listenDoctorOnlineStatus();
     // Pre-komputasi activeChatId secara instan pada frame pertama
     if (widget.chatId != null && widget.chatId!.isNotEmpty) {
@@ -187,7 +202,7 @@ class _KonsultasiDokterPageState
 
   @override
   void dispose() {
-    ChatNotificationService.instance.currentActiveDoctorRoom = null;
+    ChatNotificationService.instance.clearActiveChatRoom();
     _doctorStatusSub?.cancel();
     messageController.dispose();
     _scrollController.dispose();
@@ -289,12 +304,18 @@ class _KonsultasiDokterPageState
     });
     _scrollToBottom();
 
+    final effectivePatientId = widget.patientId ??
+        (!isSendingDoctor
+            ? (FirebaseAuth.instance.currentUser?.uid ??
+                UserProfileService.instance.currentProfile.nama)
+            : null);
+
     final success = await ChatService.instance.sendMessage(
       chatId: _activeChatId!,
       message: text,
       senderRole: senderRole,
       senderName: senderName,
-      patientId: widget.patientId,
+      patientId: effectivePatientId,
       patientName: resolvedPatientName,
       doctorId: widget.doctorId,
       doctorName: widget.doctorName,
@@ -369,45 +390,7 @@ class _KonsultasiDokterPageState
                     ),
                   ),
                 ),
-                const SizedBox(height: 14),
-                Row(
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.all(7),
-                      decoration: BoxDecoration(
-                        color: const Color(0xFF0284C7).withValues(alpha: 0.15),
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                      child: const Icon(
-                        Icons.attach_file_rounded,
-                        color: Color(0xFF0284C7),
-                        size: 20,
-                      ),
-                    ),
-                    const SizedBox(width: 10),
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          "Kirim Lampiran & Foto Medis",
-                          style: TextStyle(
-                            fontSize: 14.5,
-                            fontWeight: FontWeight.w700,
-                            color: isDark ? Colors.white : const Color(0xFF0F172A),
-                          ),
-                        ),
-                        Text(
-                          "Bagikan hasil lab, resep, atau catatan dokter",
-                          style: TextStyle(
-                            fontSize: 11,
-                            color: isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 14),
+                const SizedBox(height: 16),
                 _attachmentItem(
                   icon: Icons.photo_library_rounded,
                   iconColor: const Color(0xFF0284C7),
@@ -2180,12 +2163,6 @@ class _KonsultasiDokterPageState
                         // ==================================================
 
                         Container(
-                          padding: const EdgeInsets.fromLTRB(
-                            14,
-                            10,
-                            12,
-                            10,
-                          ),
                           decoration: BoxDecoration(
                             color: isDark ? const Color(0xFF1E293B) : Colors.white,
                             border: Border(
@@ -2201,7 +2178,16 @@ class _KonsultasiDokterPageState
                               ),
                             ],
                           ),
-                          child: Row(
+                          child: SafeArea(
+                            top: false,
+                            child: Padding(
+                              padding: const EdgeInsets.fromLTRB(
+                                14,
+                                10,
+                                12,
+                                10,
+                              ),
+                              child: Row(
                             children: [
                               Expanded(
                                 child: Container(
@@ -2318,18 +2304,21 @@ class _KonsultasiDokterPageState
                             ],
                           ),
                         ),
-                      ],
+                      ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
-            ),
+            ],
+          ),
+        ),
 
             // ========================================================
             // BOTTOM NAVIGATION
             // ========================================================
 
-            bottomNavigationBar: _bottomNavigation(isDark),
+            bottomNavigationBar:
+                widget.isDoctorView ? null : _bottomNavigation(isDark),
           ),
         );
       },

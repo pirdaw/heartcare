@@ -1,9 +1,12 @@
 import 'dart:async';
 import 'dart:convert';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'user_profile_service.dart';
+import 'auth_service.dart';
+import 'system_notification_service.dart';
 
 /// Peran pengirim pesan dalam konsultasi chat
 enum ChatSenderRole {
@@ -194,9 +197,111 @@ class ChatNotificationService extends ChangeNotifier {
 
   /// Ruang chat yang sedang aktif dilihat oleh user saat ini
   String? currentActiveDoctorRoom;
+  bool currentActiveIsDoctorView = false;
+  String? currentActivePatientId;
+  String? currentActivePatientName;
+  String? currentActiveChatId;
+
+  /// Peran portal aktif pengguna saat ini (dokter atau pasien)
+  ChatSenderRole? currentAppRole;
 
   static int _notifSeq = 0;
   bool _initialized = false;
+
+  StreamSubscription<QuerySnapshot<Map<String, dynamic>>>? _firestoreChatsSub;
+  final Set<String> _emittedNotifKeys = {};
+  DateTime _serviceStartTime = DateTime.now();
+
+  /// Mengatur ruang chat aktif yang sedang dibuka oleh user
+  void setActiveChatRoom({
+    required String? doctorName,
+    bool isDoctorView = false,
+    String? patientId,
+    String? patientName,
+    String? chatId,
+  }) {
+    currentActiveDoctorRoom = doctorName;
+    currentActiveIsDoctorView = isDoctorView;
+    currentActivePatientId = patientId;
+    currentActivePatientName = patientName;
+    currentActiveChatId = chatId;
+  }
+
+  /// Menghapus tanda ruang chat aktif saat keluar/ditutup
+  void clearActiveChatRoom() {
+    currentActiveDoctorRoom = null;
+    currentActiveIsDoctorView = false;
+    currentActivePatientId = null;
+    currentActivePatientName = null;
+    currentActiveChatId = null;
+  }
+
+  /// Helper untuk membersihkan format nama dokter
+  static String cleanDoctorName(String raw) {
+    return raw
+        .toLowerCase()
+        .replaceAll('dr.', '')
+        .replaceAll('dr ', '')
+        .replaceAll('sp.jp', '')
+        .replaceAll('sp.a', '')
+        .replaceAll('spesialis jantung', '')
+        .replaceAll(RegExp(r'[^a-zA-Z0-9]'), '')
+        .trim();
+  }
+
+  /// Memeriksa apakah pihak penerima sedang aktif melihat ruang percakapan tersebut.
+  /// Jika ya, notifikasi akan langsung dianggap sudah dibaca dan pop-up disupres.
+  bool isRecipientViewing({
+    required ChatSenderRole recipientRole,
+    required String doctorName,
+    String? patientId,
+    String? patientName,
+    String? chatId,
+  }) {
+    if (currentActiveDoctorRoom == null) return false;
+    final cleanActive = cleanDoctorName(currentActiveDoctorRoom!);
+    final cleanDoc = cleanDoctorName(doctorName);
+    if (!cleanActive.contains(cleanDoc) && !cleanDoc.contains(cleanActive)) {
+      return false;
+    }
+
+    if (recipientRole == ChatSenderRole.doctor) {
+      if (!currentActiveIsDoctorView) return false;
+      final bool hasActivePatientInfo = (currentActiveChatId != null &&
+              currentActiveChatId!.isNotEmpty) ||
+          (currentActivePatientId != null &&
+              currentActivePatientId!.isNotEmpty) ||
+          (currentActivePatientName != null &&
+              currentActivePatientName!.isNotEmpty);
+
+      if (hasActivePatientInfo) {
+        if (currentActiveChatId != null &&
+            chatId != null &&
+            chatId.isNotEmpty) {
+          return currentActiveChatId == chatId;
+        }
+        if (currentActivePatientId != null &&
+            patientId != null &&
+            patientId.isNotEmpty) {
+          return currentActivePatientId == patientId ||
+              currentActivePatientId!.contains(patientId) ||
+              patientId.contains(currentActivePatientId!);
+        }
+        if (currentActivePatientName != null &&
+            patientName != null &&
+            patientName.isNotEmpty) {
+          final c1 = currentActivePatientName!.toLowerCase().trim();
+          final c2 = patientName.toLowerCase().trim();
+          return c1 == c2 || c1.contains(c2) || c2.contains(c1);
+        }
+        return false;
+      }
+      return true;
+    } else {
+      // Penerima adalah pasien -> harus pasien yang sedang membuka chat room dokter ini
+      return !currentActiveIsDoctorView;
+    }
+  }
 
   /// Inisialisasi service dan muat data dari SharedPreferences
   Future<void> init() async {
@@ -244,7 +349,166 @@ class ChatNotificationService extends ChangeNotifier {
       _seedDefaultConversations();
     }
 
+    // Aktifkan sinkronisasi real-time Firestore untuk notifikasi otomatis
+    startFirestoreSync();
+
     notifyListeners();
+  }
+
+  /// Memulai sinkronisasi real-time notifikasi dari koleksi 'chats' di Firestore
+  void startFirestoreSync() {
+    _firestoreChatsSub?.cancel();
+    _serviceStartTime = DateTime.now();
+    try {
+      _firestoreChatsSub = FirebaseFirestore.instance
+          .collection('chats')
+          .snapshots()
+          .listen(
+        (snapshot) {
+          _handleFirestoreChatsSnapshot(snapshot);
+        },
+        onError: (e) {
+          debugPrint('[ChatNotificationService] Firestore sync error: $e');
+        },
+      );
+    } catch (e) {
+      debugPrint('[ChatNotificationService] Firestore sync tidak aktif (lingkungan offline/testing): $e');
+    }
+  }
+
+  /// Memproses snapshot dari Firestore untuk memperbarui daftar notifikasi dan memunculkan pop-up
+  void _handleFirestoreChatsSnapshot(QuerySnapshot<Map<String, dynamic>> snapshot) {
+    bool hasChanges = false;
+
+    for (final doc in snapshot.docs) {
+      try {
+        final data = doc.data();
+        final chatId = doc.id;
+        final lastMsg = (data['lastMessage'] as String? ?? '').trim();
+        if (lastMsg.isEmpty) continue;
+
+        final lastSenderRoleStr =
+            (data['lastSenderRole'] as String? ?? '').toLowerCase();
+        final isDoctorSender = lastSenderRoleStr == 'doctor';
+        final isPatientSender = lastSenderRoleStr == 'patient';
+        if (!isDoctorSender && !isPatientSender) continue;
+
+        final senderRole =
+            isDoctorSender ? ChatSenderRole.doctor : ChatSenderRole.patient;
+        final recipientRole =
+            isDoctorSender ? ChatSenderRole.patient : ChatSenderRole.doctor;
+
+        final doctorName =
+            (data['doctorName'] as String? ?? '').trim().isNotEmpty
+                ? (data['doctorName'] as String).trim()
+                : 'dr. Asya Catherine';
+        final doctorPhoto =
+            (data['doctorPhoto'] as String? ?? '').trim().isNotEmpty
+                ? (data['doctorPhoto'] as String).trim()
+                : _getDefaultDoctorPhoto(doctorName);
+        final doctorSpecialty =
+            (data['doctorSpecialty'] as String? ?? '').trim().isNotEmpty
+                ? (data['doctorSpecialty'] as String).trim()
+                : _getDefaultDoctorSpecialty(doctorName);
+        final patientName =
+            (data['patientName'] as String? ?? '').trim().isNotEmpty
+                ? (data['patientName'] as String).trim()
+                : 'Pasien HeartCare';
+        final patientId = data['patientId'] as String?;
+        final doctorId = data['doctorId'] as String?;
+
+        final senderName = isDoctorSender ? doctorName : patientName;
+
+        DateTime ts = DateTime.now();
+        final rawTs = data['lastMessageTime'];
+        final rawLocalTs = data['lastMessageLocalTime'];
+        if (rawTs is Timestamp) {
+          ts = rawTs.toDate();
+        } else if (rawLocalTs is num) {
+          ts = DateTime.fromMillisecondsSinceEpoch(rawLocalTs.toInt());
+        } else if (rawTs is num) {
+          ts = DateTime.fromMillisecondsSinceEpoch(rawTs.toInt());
+        }
+
+        final timeStr =
+            "${ts.hour.toString().padLeft(2, '0')}.${ts.minute.toString().padLeft(2, '0')}";
+
+        int unreadDoctor = (data['unreadCountDoctor'] as num? ?? 0).toInt();
+        int unreadPatient = (data['unreadCountPatient'] as num? ?? 0).toInt();
+        if (unreadDoctor <= 0 && isPatientSender) {
+          unreadDoctor = 1;
+        }
+        if (unreadPatient <= 0 && isDoctorSender) {
+          unreadPatient = 1;
+        }
+        final bool isRead = recipientRole == ChatSenderRole.doctor
+            ? (unreadDoctor == 0)
+            : (unreadPatient == 0);
+
+        final notifKey =
+            'fs_${chatId}_${data['lastMessageLocalTime'] ?? ts.millisecondsSinceEpoch}_${lastMsg.hashCode}';
+
+        final existingIndex =
+            _notifications.indexWhere((n) => n.chatId == chatId);
+        final notifItem = ChatNotificationItem(
+          id: existingIndex >= 0 ? _notifications[existingIndex].id : notifKey,
+          chatId: chatId,
+          patientId: patientId,
+          doctorId: doctorId,
+          conversationDoctorName: doctorName,
+          doctorPhoto: doctorPhoto,
+          doctorSpecialty: doctorSpecialty,
+          patientName: patientName,
+          senderRole: senderRole,
+          senderName: senderName,
+          recipientRole: recipientRole,
+          messageSnippet:
+              lastMsg.length > 70 ? '${lastMsg.substring(0, 67)}...' : lastMsg,
+          time: timeStr,
+          timestamp: ts,
+          isRead: isRead,
+        );
+
+        if (existingIndex >= 0) {
+          _notifications[existingIndex] = notifItem;
+          hasChanges = true;
+        } else {
+          _notifications.add(notifItem);
+          hasChanges = true;
+        }
+
+        final isViewing = isRecipientViewing(
+          recipientRole: recipientRole,
+          doctorName: doctorName,
+          patientId: patientId,
+          patientName: patientName,
+          chatId: chatId,
+        );
+
+        final isForCurrent = isNotificationForCurrentAccount(notifItem);
+
+        if (!isRead && !isViewing && isForCurrent) {
+          final isRecent = ts.isAfter(
+              _serviceStartTime.subtract(const Duration(seconds: 20)));
+          if (isRecent && !_emittedNotifKeys.contains(notifKey)) {
+            _emittedNotifKeys.add(notifKey);
+            _notificationStreamController.add(notifItem);
+            SystemNotificationService.instance.showNotification(notifItem);
+          }
+        }
+      } catch (e) {
+        debugPrint('[ChatNotificationService] Error parsing chat doc: $e');
+      }
+    }
+
+    if (hasChanges) {
+      _notifications.sort((a, b) => b.timestamp.compareTo(a.timestamp));
+      if (_notifications.length > 50) {
+        _notifications.removeRange(50, _notifications.length);
+      }
+      _saveToPrefs();
+      notifyListeners();
+    }
   }
 
   void _cleanMockDemoNotifications() {
@@ -279,22 +543,20 @@ class ChatNotificationService extends ChangeNotifier {
       {String? patientId, String? patientName}) {
     final cleanPId = (patientId ?? '').trim().toLowerCase();
     final cleanPName = (patientName ?? '').trim().toLowerCase();
+    final notifPid = (notif.patientId ?? '').trim().toLowerCase();
+    final notifPName = notif.patientName.trim().toLowerCase();
 
-    // 1. Cocokkan berdasarkan patientId jika ada
-    if (notif.patientId != null && notif.patientId!.isNotEmpty) {
-      final notifPid = notif.patientId!.trim().toLowerCase();
-      if (cleanPId.isNotEmpty) {
-        if (notifPid == cleanPId ||
-            notifPid.contains(cleanPId) ||
-            cleanPId.contains(notifPid)) {
-          return true;
-        }
+    // 1. Cocokkan berdasarkan ID jika keduanya ada
+    if (cleanPId.isNotEmpty && notifPid.isNotEmpty) {
+      if (notifPid == cleanPId ||
+          notifPid.contains(cleanPId) ||
+          cleanPId.contains(notifPid)) {
+        return true;
       }
     }
 
-    // 2. Cocokkan berdasarkan nama pasien
-    if (cleanPName.isNotEmpty && notif.patientName.isNotEmpty) {
-      final notifPName = notif.patientName.trim().toLowerCase();
+    // 2. Cocokkan berdasarkan nama jika keduanya ada
+    if (cleanPName.isNotEmpty && notifPName.isNotEmpty) {
       if (notifPName == cleanPName ||
           notifPName.contains(cleanPName) ||
           cleanPName.contains(notifPName)) {
@@ -302,7 +564,28 @@ class ChatNotificationService extends ChangeNotifier {
       }
     }
 
-    // 3. Fallback jika patientId & patientName kosong
+    // 3. Cross-match jika nama pasien dicocokkan dengan ID
+    if (cleanPName.isNotEmpty && notifPid.isNotEmpty) {
+      if (notifPid == cleanPName ||
+          notifPid.contains(cleanPName) ||
+          cleanPName.contains(notifPid)) {
+        return true;
+      }
+    }
+    if (cleanPId.isNotEmpty && notifPName.isNotEmpty) {
+      if (notifPName == cleanPId ||
+          notifPName.contains(cleanPId) ||
+          cleanPId.contains(notifPName)) {
+        return true;
+      }
+    }
+
+    // 4. Jika nama notifikasi adalah default generic 'Pasien' atau 'Pasien HeartCare'
+    if (notifPName == 'pasien' || notifPName == 'pasien heartcare') {
+      return true;
+    }
+
+    // 5. Fallback jika parameter pencarian pasien kosong
     if (cleanPId.isEmpty && cleanPName.isEmpty) {
       return true;
     }
@@ -402,16 +685,23 @@ class ChatNotificationService extends ChangeNotifier {
       final user = FirebaseAuth.instance.currentUser;
       final profile = UserProfileService.instance.currentProfile;
 
-      final isDoctor = (user?.email?.toLowerCase().contains('dokter') ?? false) ||
+      final bool isDoctor = currentAppRole == ChatSenderRole.doctor ||
+          (user?.email?.toLowerCase().contains('dokter') ?? false) ||
           (user?.displayName?.toLowerCase().startsWith('dr.') ?? false) ||
           (profile.nama.toLowerCase().startsWith('dr.'));
 
       if (isDoctor) {
         if (notif.recipientRole != ChatSenderRole.doctor) return false;
+        final fastDoctor = AuthService.instance.getFastDoctorProfile();
+        final docName = (user?.displayName?.isNotEmpty == true)
+            ? user!.displayName!
+            : (profile.nama.isNotEmpty
+                ? profile.nama
+                : (fastDoctor['nama'] as String? ?? 'Dokter'));
         return _matchesDoctor(
           notif,
-          doctorId: user?.uid,
-          doctorName: user?.displayName ?? profile.nama,
+          doctorId: user?.uid ?? (fastDoctor['uid'] as String?),
+          doctorName: docName,
         );
       } else {
         if (notif.recipientRole != ChatSenderRole.patient) return false;
@@ -518,10 +808,19 @@ class ChatNotificationService extends ChangeNotifier {
     final now = DateTime.now();
     final timeStr =
         '${now.hour.toString().padLeft(2, '0')}.${now.minute.toString().padLeft(2, '0')}';
-
     final msgId = 'msg_${now.millisecondsSinceEpoch}_${_conversations.length}';
 
-    final bool isRecipientViewingChat = (currentActiveDoctorRoom == doctorName);
+    final ChatSenderRole recipientRole = (senderRole == ChatSenderRole.doctor)
+        ? ChatSenderRole.patient
+        : ChatSenderRole.doctor;
+
+    final bool isViewing = isRecipientViewing(
+      recipientRole: recipientRole,
+      doctorName: doctorName,
+      patientId: patientId,
+      patientName: patientName,
+      chatId: chatId,
+    );
 
     final newMsg = ChatMessageItem(
       id: msgId,
@@ -534,7 +833,7 @@ class ChatNotificationService extends ChangeNotifier {
       message: message,
       time: timeStr,
       timestamp: now,
-      isRead: isRecipientViewingChat,
+      isRead: isViewing,
       attachmentType: attachmentType,
       imagePath: imagePath,
     );
@@ -543,10 +842,6 @@ class ChatNotificationService extends ChangeNotifier {
       _conversations[doctorName] = [];
     }
     _conversations[doctorName]!.add(newMsg);
-
-    final ChatSenderRole recipientRole = (senderRole == ChatSenderRole.doctor)
-        ? ChatSenderRole.patient
-        : ChatSenderRole.doctor;
 
     final notifId = 'notif_${now.millisecondsSinceEpoch}_${++_notifSeq}';
     final snippet = message.length > 60
@@ -568,10 +863,18 @@ class ChatNotificationService extends ChangeNotifier {
       messageSnippet: snippet,
       time: timeStr,
       timestamp: now,
-      isRead: isRecipientViewingChat,
+      isRead: isViewing,
     );
 
-    _notifications.insert(0, notif);
+    final existingIndex = (chatId != null && chatId.isNotEmpty)
+        ? _notifications.indexWhere((n) => n.chatId == chatId)
+        : -1;
+
+    if (existingIndex >= 0) {
+      _notifications[existingIndex] = notif;
+    } else {
+      _notifications.insert(0, notif);
+    }
 
     if (_notifications.length > 50) {
       _notifications.removeRange(50, _notifications.length);
@@ -580,8 +883,11 @@ class ChatNotificationService extends ChangeNotifier {
     await _saveToPrefs();
     notifyListeners();
 
-    if (emitNotification && !isRecipientViewingChat) {
+    if (emitNotification && !isViewing) {
       _notificationStreamController.add(notif);
+      if (isNotificationForCurrentAccount(notif)) {
+        SystemNotificationService.instance.showNotification(notif);
+      }
     }
 
     return newMsg;
@@ -592,7 +898,9 @@ class ChatNotificationService extends ChangeNotifier {
     String doctorName, {
     ChatSenderRole? viewerRole,
     String? patientId,
+    String? patientName,
     String? doctorId,
+    String? chatId,
   }) async {
     bool changed = false;
 
@@ -614,15 +922,28 @@ class ChatNotificationService extends ChangeNotifier {
           if (viewerRole == ChatSenderRole.patient &&
               patientId != null &&
               patientId.isNotEmpty) {
-            if (!_matchesPatient(notif, patientId: patientId)) {
+            if (!_matchesPatient(notif,
+                patientId: patientId, patientName: patientName)) {
               continue;
             }
-          } else if (viewerRole == ChatSenderRole.doctor &&
-              doctorId != null &&
-              doctorId.isNotEmpty) {
-            if (!_matchesDoctor(notif,
-                doctorId: doctorId, doctorName: doctorName)) {
-              continue;
+          } else if (viewerRole == ChatSenderRole.doctor) {
+            if (chatId != null && chatId.isNotEmpty && notif.chatId != null) {
+              if (notif.chatId != chatId) continue;
+            } else if (patientId != null && patientId.isNotEmpty) {
+              if (!_matchesPatient(notif,
+                  patientId: patientId, patientName: patientName)) {
+                continue;
+              }
+            } else if (patientName != null && patientName.isNotEmpty) {
+              if (!_matchesPatient(notif, patientName: patientName)) {
+                continue;
+              }
+            }
+            if (doctorId != null && doctorId.isNotEmpty) {
+              if (!_matchesDoctor(notif,
+                  doctorId: doctorId, doctorName: doctorName)) {
+                continue;
+              }
             }
           }
           notif.isRead = true;
@@ -710,9 +1031,15 @@ class ChatNotificationService extends ChangeNotifier {
 
   /// Reset state percakapan dan notifikasi untuk keperluan testing
   Future<void> resetForTesting({bool seed = false}) async {
+    _firestoreChatsSub?.cancel();
+    _firestoreChatsSub = null;
     _conversations.clear();
     _notifications.clear();
+    _emittedNotifKeys.clear();
     currentActiveDoctorRoom = null;
+    currentActiveIsDoctorView = false;
+    currentActivePatientId = null;
+    currentAppRole = null;
     if (seed) {
       _seedDefaultConversations();
     }
@@ -770,8 +1097,13 @@ class ChatNotificationService extends ChangeNotifier {
         ? '${message.substring(0, 67)}...'
         : message;
 
-    final bool isRecipientViewingChat =
-        (currentActiveDoctorRoom == conversationDoctorName);
+    final bool isViewing = isRecipientViewing(
+      recipientRole: recipientRole,
+      doctorName: conversationDoctorName,
+      patientId: patientId,
+      patientName: patientName,
+      chatId: chatId,
+    );
 
     final notif = ChatNotificationItem(
       id: notifId,
@@ -788,10 +1120,19 @@ class ChatNotificationService extends ChangeNotifier {
       messageSnippet: snippet,
       time: timeStr,
       timestamp: now,
-      isRead: isRead || isRecipientViewingChat,
+      isRead: isRead || isViewing,
     );
 
-    _notifications.insert(0, notif);
+    final existingIndex = (chatId != null && chatId.isNotEmpty)
+        ? _notifications.indexWhere((n) => n.chatId == chatId)
+        : -1;
+
+    if (existingIndex >= 0) {
+      _notifications[existingIndex] = notif;
+    } else {
+      _notifications.insert(0, notif);
+    }
+
     if (_notifications.length > 50) {
       _notifications.removeRange(50, _notifications.length);
     }
@@ -799,8 +1140,11 @@ class ChatNotificationService extends ChangeNotifier {
     _saveToPrefs();
     notifyListeners();
 
-    if (!isRecipientViewingChat && !isRead) {
+    if (!isViewing && !notif.isRead) {
       _notificationStreamController.add(notif);
+      if (isNotificationForCurrentAccount(notif)) {
+        SystemNotificationService.instance.showNotification(notif);
+      }
     }
   }
 
@@ -885,22 +1229,30 @@ class ChatNotificationService extends ChangeNotifier {
   }
 
   String _getDefaultDoctorPhoto(String doctorName) {
-    if (doctorName.contains('Andi')) {
+    final lower = doctorName.toLowerCase();
+    if (lower.contains('asya') || lower.contains('catherine')) {
+      return 'assets/images/dokter_asya.jpg';
+    } else if (lower.contains('valent') || lower.contains('kavalera')) {
+      return 'assets/images/dokter_kavalera_valent.png';
+    } else if (lower.contains('andi')) {
       return 'assets/images/dokter_andi.jpg';
-    } else if (doctorName.contains('Sinta')) {
+    } else if (lower.contains('sinta')) {
       return 'assets/images/dokter_sinta.jpg';
-    } else if (doctorName.contains('Rina')) {
+    } else if (lower.contains('rina')) {
       return 'assets/images/dokter_rina.jpg';
     }
     return 'assets/images/dokter_nurlitta.jpg';
   }
 
   String _getDefaultDoctorSpecialty(String doctorName) {
-    if (doctorName.contains('Andi')) {
+    final lower = doctorName.toLowerCase();
+    if (lower.contains('valent') || lower.contains('kavalera')) {
       return 'Spesialis Jantung & Pembuluh Darah';
-    } else if (doctorName.contains('Sinta')) {
+    } else if (lower.contains('asya') || lower.contains('catherine')) {
+      return 'Spesialis Jantung';
+    } else if (lower.contains('sinta')) {
       return 'Spesialis Jantung & Kardiovaskular';
-    } else if (doctorName.contains('Rina')) {
+    } else if (lower.contains('rina')) {
       return 'Spesialis Jantung & Prevensi Kardio';
     }
     return 'Spesialis Jantung & Konsultan Aritmia';

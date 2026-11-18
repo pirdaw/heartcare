@@ -920,7 +920,7 @@ class _DoctorEditProfilePageState extends State<DoctorEditProfilePage> {
           ),
           Switch.adaptive(
             value: _isOnline,
-            activeColor: const Color(0xFF10B981),
+            activeTrackColor: const Color(0xFF10B981),
             onChanged: (val) {
               setState(() {
                 _isOnline = val;
