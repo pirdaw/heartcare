@@ -247,6 +247,11 @@ class ChatService {
   final Map<String, List<ChatMessage>> _localMessages = {};
   final Map<String, ChatRoom> _localRooms = {};
 
+  ChatRoom? getRoomById(String? chatId) {
+    if (chatId == null || chatId.isEmpty) return null;
+    return _localRooms[chatId];
+  }
+
   static const String _prefPrefixMessages = 'chat_messages_v2_';
   static const String _prefKeyRooms = 'chat_rooms_cache_v2';
 

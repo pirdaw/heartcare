@@ -31,15 +31,22 @@ class HeartCareBottomNavBar extends StatelessWidget {
       return;
     }
 
+    if (index == 0) {
+      if (Navigator.canPop(context)) {
+        Navigator.popUntil(context, (route) => route.isFirst);
+      } else {
+        Navigator.pushAndRemoveUntil(
+          context,
+          MaterialPageRoute(builder: (_) => const HomePage()),
+          (route) => false,
+        );
+      }
+      return;
+    }
+
     if (index == currentIndex) return;
 
-    if (index == 0) {
-      Navigator.pushAndRemoveUntil(
-        context,
-        MaterialPageRoute(builder: (_) => const HomePage()),
-        (route) => false,
-      );
-    } else if (index == 1) {
+    if (index == 1) {
       Navigator.push(
         context,
         MaterialPageRoute(builder: (_) => const ScreeningIntroPage()),
@@ -84,9 +91,8 @@ class HeartCareBottomNavBar extends StatelessWidget {
                   ),
                 ),
               ),
-              padding: const EdgeInsets.only(top: 8, bottom: 12),
+              padding: const EdgeInsets.symmetric(vertical: 8),
               child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceAround,
                 children: [
                   _buildNavItem(
                     context,
@@ -146,33 +152,37 @@ class HeartCareBottomNavBar extends StatelessWidget {
         isDark ? inactiveColorDark : inactiveColorLight;
     final Color itemColor = isSelected ? selectedColor : unselectedColor;
 
-    return InkWell(
-      onTap: () => _onItemTapped(context, index),
-      splashColor: Colors.transparent,
-      highlightColor: Colors.transparent,
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          SizedBox(
-            height: 28,
-            child: Center(
-              child: Icon(
-                icon,
-                size: 25,
+    return Expanded(
+      child: GestureDetector(
+        behavior: HitTestBehavior.opaque,
+        onTap: () => _onItemTapped(context, index),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            SizedBox(
+              height: 28,
+              child: Center(
+                child: Icon(
+                  icon,
+                  size: 25,
+                  color: itemColor,
+                ),
+              ),
+            ),
+            const SizedBox(height: 2),
+            Text(
+              label,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(
+                fontSize: 11,
+                fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
                 color: itemColor,
               ),
             ),
-          ),
-          const SizedBox(height: 2),
-          Text(
-            label,
-            style: TextStyle(
-              fontSize: 11,
-              fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
-              color: itemColor,
-            ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

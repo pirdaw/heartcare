@@ -1268,32 +1268,34 @@ class _PilihDokterPageState extends State<PilihDokterPage> {
     final Color inactiveColor =
         isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B);
 
-    return GestureDetector(
-      onTap: onTap,
-      behavior: HitTestBehavior.opaque,
-      child: SizedBox(
-        width: 55,
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(
-              icon,
-              size: 23,
-              color: selected ? activeColor : inactiveColor,
-            ),
-            const SizedBox(height: 2),
-            Text(
-              label,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: TextStyle(
-                fontSize: 10.5,
-                fontWeight: selected ? FontWeight.bold : FontWeight.normal,
+    return Expanded(
+      child: GestureDetector(
+        onTap: onTap,
+        behavior: HitTestBehavior.opaque,
+        child: Container(
+          padding: const EdgeInsets.symmetric(vertical: 4),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(
+                icon,
+                size: 23,
                 color: selected ? activeColor : inactiveColor,
               ),
-            ),
-          ],
+              const SizedBox(height: 2),
+              Text(
+                label,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(
+                  fontSize: 10.5,
+                  fontWeight: selected ? FontWeight.bold : FontWeight.normal,
+                  color: selected ? activeColor : inactiveColor,
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
