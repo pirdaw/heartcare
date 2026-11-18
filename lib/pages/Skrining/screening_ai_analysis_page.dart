@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:heartcare/pages/Skrining/screening_model.dart';
 import 'screening_result_page.dart';
 import 'custom_bottom_nav_bar.dart';
+import 'screening_background.dart';
 import 'package:heartcare/pages/riwayat_model.dart';
 import 'package:heartcare/services/theme_service.dart';
 
@@ -21,7 +22,7 @@ class ScreeningAiAnalysisPage extends StatefulWidget {
 
 class _ScreeningAiAnalysisPageState extends State<ScreeningAiAnalysisPage>
     with SingleTickerProviderStateMixin {
-  static const Color primaryTeal = Color(0xFF079BC1);
+  static const Color primaryBlue = Color(0xFF0284C7);
 
   late AnimationController _pulseController;
   late Animation<double> _scaleAnimation;
@@ -97,222 +98,179 @@ class _ScreeningAiAnalysisPageState extends State<ScreeningAiAnalysisPage>
       builder: (context, themeMode, child) {
         final isDark = themeMode == ThemeMode.dark;
 
-        return Scaffold(
-          backgroundColor: isDark ? const Color(0xFF0F172A) : const Color(0xFFF8FAFC),
-          body: Container(
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topCenter,
-                end: Alignment.bottomCenter,
-                stops: const [0.0, 0.28, 0.65, 1.0],
-                colors: isDark
-                    ? const [
-                        Color(0xFF1E293B),
-                        Color(0xFF162032),
-                        Color(0xFF111927),
-                        Color(0xFF0F172A),
-                      ]
-                    : const [
-                        Color(0xFFE0F2FE),
-                        Color(0xFFEDF6FD),
-                        Color(0xFFF3F8FD),
-                        Color(0xFFF8FAFC),
-                      ],
-              ),
-            ),
-            child: SafeArea(
-              child: Stack(
-                children: [
-                  // Ornamen ambient glow lembut agar layar selaras dengan menu Home
-                  Positioned(
-                    top: -40,
-                    right: -30,
-                    child: IgnorePointer(
+        return ScreeningBackground(
+          showEkg: true,
+          child: Column(
+            children: [
+              // Top App Bar
+              Padding(
+                padding: const EdgeInsets.only(
+                  left: 16,
+                  right: 16,
+                  top: 12,
+                  bottom: 8,
+                ),
+                child: Stack(
+                  alignment: Alignment.center,
+                  children: [
+                    Align(
+                      alignment: Alignment.centerLeft,
                       child: Container(
-                        width: 220,
-                        height: 220,
+                        width: 42,
+                        height: 42,
                         decoration: BoxDecoration(
+                          color: isDark ? const Color(0xFF1E293B) : Colors.white,
                           shape: BoxShape.circle,
-                          color: const Color(0xFF38BDF8)
-                              .withValues(alpha: isDark ? 0.04 : 0.16),
-                        ),
-                      ),
-                    ),
-                  ),
-                  Positioned(
-                    top: 280,
-                    left: -60,
-                    child: IgnorePointer(
-                      child: Container(
-                        width: 200,
-                        height: 200,
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          color: const Color(0xFF0EA5E9)
-                              .withValues(alpha: isDark ? 0.03 : 0.08),
-                        ),
-                      ),
-                    ),
-                  ),
-                  Positioned(
-                    bottom: 140,
-                    right: -50,
-                    child: IgnorePointer(
-                      child: Container(
-                        width: 200,
-                        height: 200,
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          color: const Color(0xFF0284C7)
-                              .withValues(alpha: isDark ? 0.03 : 0.06),
-                        ),
-                      ),
-                    ),
-                  ),
-                  Column(
-              children: [
-                // Top App Bar
-                Padding(
-                  padding: const EdgeInsets.only(
-                    left: 16,
-                    right: 16,
-                    top: 12,
-                    bottom: 8,
-                  ),
-                  child: Stack(
-                    alignment: Alignment.center,
-                    children: [
-                      Align(
-                        alignment: Alignment.centerLeft,
-                        child: Container(
-                          width: 42,
-                          height: 42,
-                          decoration: BoxDecoration(
-                            color: isDark ? const Color(0xFF1E293B) : const Color(0xFFF1F3F6),
-                            shape: BoxShape.circle,
+                          border: Border.all(
+                            color: isDark
+                                ? const Color(0xFF334155)
+                                : const Color(0xFFE2E8F0),
+                            width: 1.2,
                           ),
-                          child: IconButton(
-                            icon: Icon(
-                              Icons.chevron_left,
-                              color: isDark ? Colors.white : const Color(0xFF1E293B),
-                              size: 26,
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withValues(
+                                  alpha: isDark ? 0.25 : 0.05),
+                              blurRadius: 6,
+                              offset: const Offset(0, 2),
                             ),
-                            onPressed: () => Navigator.pop(context),
+                          ],
+                        ),
+                        child: IconButton(
+                          icon: Icon(
+                            Icons.chevron_left,
+                            color:
+                                isDark ? Colors.white : const Color(0xFF1E293B),
+                            size: 26,
+                          ),
+                          onPressed: () => Navigator.pop(context),
+                        ),
+                      ),
+                    ),
+                    Center(
+                      child: Text(
+                        'Sedang Menganalisis',
+                        style: TextStyle(
+                          fontSize: 17,
+                          fontWeight: FontWeight.bold,
+                          color: isDark ? Colors.white : const Color(0xFF111827),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+
+              // Konten Tengah
+              Expanded(
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 32),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      // Lingkaran Animasi Denyut Jantung dengan Efek Glow
+                      ScaleTransition(
+                        scale: _scaleAnimation,
+                        child: Container(
+                          width: 130,
+                          height: 130,
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            color: isDark
+                                ? const Color(0xFF1E293B)
+                                : Colors.white,
+                            boxShadow: [
+                              BoxShadow(
+                                color: const Color(0xFF0284C7)
+                                    .withValues(alpha: isDark ? 0.45 : 0.25),
+                                blurRadius: 28,
+                                spreadRadius: 6,
+                              ),
+                            ],
+                          ),
+                          child: Center(
+                            child: Container(
+                              width: 84,
+                              height: 84,
+                              decoration: const BoxDecoration(
+                                shape: BoxShape.circle,
+                                gradient: LinearGradient(
+                                  begin: Alignment.topLeft,
+                                  end: Alignment.bottomRight,
+                                  colors: [
+                                    Color(0xFF38BDF8),
+                                    Color(0xFF0EA5E9),
+                                    Color(0xFF0284C7),
+                                  ],
+                                ),
+                              ),
+                              child: const Icon(
+                                Icons.favorite_rounded,
+                                color: Colors.white,
+                                size: 46,
+                              ),
+                            ),
                           ),
                         ),
                       ),
-                      Center(
-                        child: Text(
-                          'Sedang Menganalisis',
-                          style: TextStyle(
-                            fontSize: 17,
-                            fontWeight: FontWeight.bold,
-                            color: isDark ? Colors.white : const Color(0xFF111827),
+
+                      const SizedBox(height: 38),
+
+                      // Judul Proses
+                      Text(
+                        'Sedang Menganalisis Data Anda',
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                          color:
+                              isDark ? Colors.white : const Color(0xFF0F172A),
+                        ),
+                      ),
+
+                      const SizedBox(height: 10),
+
+                      // Deskripsi Status
+                      Text(
+                        _currentStepStatus,
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                          fontSize: 13.5,
+                          color: isDark
+                              ? const Color(0xFF94A3B8)
+                              : const Color(0xFF64748B),
+                          height: 1.4,
+                        ),
+                      ),
+
+                      const SizedBox(height: 30),
+
+                      // Progress Bar
+                      ClipRRect(
+                        borderRadius: BorderRadius.circular(8),
+                        child: SizedBox(
+                          height: 6,
+                          child: LinearProgressIndicator(
+                            value: _progressValue,
+                            backgroundColor: isDark
+                                ? const Color(0xFF334155)
+                                : const Color(0xFFE2E8F0),
+                            valueColor: const AlwaysStoppedAnimation<Color>(
+                              primaryBlue,
+                            ),
                           ),
                         ),
                       ),
                     ],
                   ),
                 ),
-
-                // Konten Tengah
-                Expanded(
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 32),
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        // Lingkaran Animasi Denyut Jantung
-                        ScaleTransition(
-                          scale: _scaleAnimation,
-                          child: Container(
-                            width: 120,
-                            height: 120,
-                            decoration: BoxDecoration(
-                              shape: BoxShape.circle,
-                              color: isDark ? const Color(0xFF1E293B) : const Color(0xFFE0F2FE),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: primaryTeal.withValues(alpha: isDark ? 0.4 : 0.25),
-                                  blurRadius: 24,
-                                  spreadRadius: 4,
-                                ),
-                              ],
-                            ),
-                            child: Center(
-                              child: Container(
-                                width: 80,
-                                height: 80,
-                                decoration: const BoxDecoration(
-                                  shape: BoxShape.circle,
-                                  color: primaryTeal,
-                                ),
-                                child: const Icon(
-                                  Icons.favorite_rounded,
-                                  color: Colors.white,
-                                  size: 44,
-                                ),
-                              ),
-                            ),
-                          ),
-                        ),
-
-                        const SizedBox(height: 38),
-
-                        // Judul Proses
-                        Text(
-                          'Sedang Menganalisis Data Anda',
-                          textAlign: TextAlign.center,
-                          style: TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.bold,
-                            color: isDark ? Colors.white : const Color(0xFF111827),
-                          ),
-                        ),
-
-                        const SizedBox(height: 10),
-
-                        // Deskripsi Status
-                        Text(
-                          _currentStepStatus,
-                          textAlign: TextAlign.center,
-                          style: TextStyle(
-                            fontSize: 13.5,
-                            color: isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B),
-                            height: 1.4,
-                          ),
-                        ),
-
-                        const SizedBox(height: 30),
-
-                        // Progress Bar
-                        ClipRRect(
-                          borderRadius: BorderRadius.circular(8),
-                          child: SizedBox(
-                            height: 6,
-                            child: LinearProgressIndicator(
-                              value: _progressValue,
-                              backgroundColor: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0),
-                              valueColor: const AlwaysStoppedAnimation<Color>(
-                                primaryTeal,
-                              ),
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-
-                // Bottom Navigation
-                const HeartCareBottomNavBar(currentIndex: 1),
-              ],
-            ),
-                ],
               ),
+
+              // Bottom Navigation
+              const HeartCareBottomNavBar(currentIndex: 1),
+            ],
           ),
-        ),
-      );
+        );
       },
     );
   }

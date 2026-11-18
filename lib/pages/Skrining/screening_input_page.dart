@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'custom_bottom_nav_bar.dart';
 import 'screening_model.dart';
 import 'screening_review_page.dart';
+import 'screening_background.dart';
 import '../../services/theme_service.dart';
 
 /// Halaman Skrining - Input Data dengan Stepper bertahap (1/5 s/d 5/5)
@@ -14,7 +15,7 @@ class ScreeningInputPage extends StatefulWidget {
 }
 
 class _ScreeningInputPageState extends State<ScreeningInputPage> {
-  static const Color primaryTeal = Color(0xFF079BC1);
+  static const Color primaryTeal = Color(0xFF0284C7);
 
   int _currentStep = 1;
   final int _totalSteps = 5;
@@ -258,197 +259,165 @@ class _ScreeningInputPageState extends State<ScreeningInputPage> {
       builder: (context, themeMode, child) {
         final isDark = themeMode == ThemeMode.dark;
 
-        return Scaffold(
-          backgroundColor: isDark ? const Color(0xFF0F172A) : const Color(0xFFF8FAFC),
-          body: Container(
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topCenter,
-                end: Alignment.bottomCenter,
-                stops: const [0.0, 0.28, 0.65, 1.0],
-                colors: isDark
-                    ? const [
-                        Color(0xFF1E293B),
-                        Color(0xFF162032),
-                        Color(0xFF111927),
-                        Color(0xFF0F172A),
-                      ]
-                    : const [
-                        Color(0xFFE0F2FE),
-                        Color(0xFFEDF6FD),
-                        Color(0xFFF3F8FD),
-                        Color(0xFFF8FAFC),
-                      ],
+        return ScreeningBackground(
+          showEkg: false,
+          child: Column(
+            children: [
+              // ----------------------------------------------------
+              // TOP APP BAR
+              // ----------------------------------------------------
+              Padding(
+                padding: const EdgeInsets.only(
+                  left: 16,
+                  right: 16,
+                  top: 12,
+                  bottom: 8,
+                ),
+                child: Stack(
+                  alignment: Alignment.center,
+                  children: [
+                    Align(
+                      alignment: Alignment.centerLeft,
+                      child: Container(
+                        width: 42,
+                        height: 42,
+                        decoration: BoxDecoration(
+                          color: isDark ? const Color(0xFF1E293B) : Colors.white,
+                          shape: BoxShape.circle,
+                          border: Border.all(
+                            color: isDark
+                                ? const Color(0xFF334155)
+                                : const Color(0xFFE2E8F0),
+                            width: 1.2,
+                          ),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withValues(
+                                  alpha: isDark ? 0.25 : 0.05),
+                              blurRadius: 6,
+                              offset: const Offset(0, 2),
+                            ),
+                          ],
+                        ),
+                        child: IconButton(
+                          icon: Icon(
+                            Icons.chevron_left,
+                            color: isDark
+                                ? Colors.white
+                                : const Color(0xFF1E293B),
+                            size: 26,
+                          ),
+                          onPressed: _onPreviousStep,
+                        ),
+                      ),
+                    ),
+                    Center(
+                      child: Text(
+                        'Skrining - Input Data ($_currentStep/$_totalSteps)',
+                        style: TextStyle(
+                          fontSize: 17,
+                          fontWeight: FontWeight.bold,
+                          color:
+                              isDark ? Colors.white : const Color(0xFF111827),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
               ),
-            ),
-            child: SafeArea(
-              child: Stack(
-                children: [
-                  // Ornamen ambient glow lembut agar layar selaras dengan menu Home
-                  Positioned(
-                    top: -40,
-                    right: -30,
-                    child: IgnorePointer(
-                      child: Container(
-                        width: 220,
-                        height: 220,
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          color: const Color(0xFF38BDF8)
-                              .withValues(alpha: isDark ? 0.04 : 0.16),
-                        ),
-                      ),
-                    ),
-                  ),
-                  Positioned(
-                    top: 280,
-                    left: -60,
-                    child: IgnorePointer(
-                      child: Container(
-                        width: 200,
-                        height: 200,
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          color: const Color(0xFF0EA5E9)
-                              .withValues(alpha: isDark ? 0.03 : 0.08),
-                        ),
-                      ),
-                    ),
-                  ),
-                  Positioned(
-                    bottom: 140,
-                    right: -50,
-                    child: IgnorePointer(
-                      child: Container(
-                        width: 200,
-                        height: 200,
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          color: const Color(0xFF0284C7)
-                              .withValues(alpha: isDark ? 0.03 : 0.06),
-                        ),
-                      ),
-                    ),
-                  ),
-                  Column(
-                children: [
-                  // ----------------------------------------------------
-                  // TOP APP BAR
-                  // ----------------------------------------------------
-                  Padding(
-                    padding: const EdgeInsets.only(
-                      left: 16,
-                      right: 16,
-                      top: 12,
-                      bottom: 8,
-                    ),
-                    child: Stack(
-                      alignment: Alignment.center,
-                      children: [
-                        Align(
-                          alignment: Alignment.centerLeft,
-                          child: Container(
-                            width: 42,
-                            height: 42,
-                            decoration: BoxDecoration(
-                              color: isDark ? const Color(0xFF1E293B) : Colors.white,
-                              shape: BoxShape.circle,
-                              boxShadow: [
-                                BoxShadow(
-                                  color: Colors.black.withValues(alpha: isDark ? 0.2 : 0.05),
-                                  blurRadius: 6,
-                                  offset: const Offset(0, 2),
-                                ),
-                              ],
-                            ),
-                            child: IconButton(
-                              icon: Icon(
-                                Icons.chevron_left,
-                                color: isDark ? Colors.white : const Color(0xFF1E293B),
-                                size: 26,
-                              ),
-                              onPressed: _onPreviousStep,
-                            ),
-                          ),
-                        ),
-                        Center(
-                          child: Text(
-                            'Skrining - Input Data ($_currentStep/$_totalSteps)',
-                            style: TextStyle(
-                              fontSize: 17,
-                              fontWeight: FontWeight.bold,
-                              color: isDark ? Colors.white : const Color(0xFF111827),
-                            ),
-                          ),
-                        ),
+
+              const SizedBox(height: 14),
+
+              // ----------------------------------------------------
+              // STEPPER (5 LANGKAH)
+              // ----------------------------------------------------
+              Center(
+                child: _buildStepper(isDark),
+              ),
+
+              const SizedBox(height: 20),
+
+              // ----------------------------------------------------
+              // FORM CONTENT
+              // ----------------------------------------------------
+              Expanded(
+                child: SingleChildScrollView(
+                  padding: const EdgeInsets.symmetric(horizontal: 24),
+                  child: _buildCurrentStepContent(isDark),
+                ),
+              ),
+
+              // ----------------------------------------------------
+              // BUTTON LANJUTKAN DENGAN GRADASI INDAH
+              // ----------------------------------------------------
+              Padding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 24,
+                  vertical: 14,
+                ),
+                child: Container(
+                  width: double.infinity,
+                  height: 52,
+                  decoration: BoxDecoration(
+                    gradient: const LinearGradient(
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                      colors: [
+                        Color(0xFF38BDF8),
+                        Color(0xFF0EA5E9),
+                        Color(0xFF0284C7),
                       ],
                     ),
+                    borderRadius: BorderRadius.circular(16),
+                    boxShadow: [
+                      BoxShadow(
+                        color:
+                            const Color(0xFF0284C7).withValues(alpha: 0.35),
+                        blurRadius: 14,
+                        offset: const Offset(0, 5),
+                      ),
+                    ],
                   ),
-
-                  const SizedBox(height: 14),
-
-                  // ----------------------------------------------------
-                  // STEPPER (5 LANGKAH)
-                  // ----------------------------------------------------
-                  Center(
-                    child: _buildStepper(isDark),
-                  ),
-
-                  const SizedBox(height: 24),
-
-                  // ----------------------------------------------------
-                  // FORM CONTENT
-                  // ----------------------------------------------------
-                  Expanded(
-                    child: SingleChildScrollView(
-                      padding: const EdgeInsets.symmetric(horizontal: 24),
-                      child: _buildCurrentStepContent(isDark),
+                  child: ElevatedButton(
+                    onPressed: _onNextStep,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.transparent,
+                      foregroundColor: Colors.white,
+                      shadowColor: Colors.transparent,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(16),
+                      ),
                     ),
-                  ),
-
-                  // ----------------------------------------------------
-                  // BUTTON LANJUTKAN
-                  // ----------------------------------------------------
-                  Padding(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 24,
-                      vertical: 14,
-                    ),
-                    child: SizedBox(
-                      width: double.infinity,
-                      height: 50,
-                      child: ElevatedButton(
-                        onPressed: _onNextStep,
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: primaryTeal,
-                          foregroundColor: Colors.white,
-                          elevation: 0,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                        ),
-                        child: const Text(
+                    child: const Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Text(
                           'Lanjutkan',
                           style: TextStyle(
                             fontSize: 16,
                             fontWeight: FontWeight.bold,
+                            letterSpacing: 0.3,
                           ),
                         ),
-                      ),
+                        SizedBox(width: 8),
+                        Icon(
+                          Icons.arrow_forward_rounded,
+                          size: 20,
+                          color: Colors.white,
+                        ),
+                      ],
                     ),
                   ),
+                ),
+              ),
 
-                  // ----------------------------------------------------
-                  // BOTTOM NAVIGATION
-                  // ----------------------------------------------------
-                  const HeartCareBottomNavBar(
-                    currentIndex: 1,
-                  ),
-                ],
+              // ----------------------------------------------------
+              // BOTTOM NAVIGATION
+              // ----------------------------------------------------
+              const HeartCareBottomNavBar(
+                currentIndex: 1,
               ),
-                ],
-              ),
-            ),
+            ],
           ),
         );
       },
@@ -472,10 +441,15 @@ class _ScreeningInputPageState extends State<ScreeningInputPage> {
 
               return Expanded(
                 child: Container(
-                  height: 1.8,
-                  color: isPassed
-                      ? primaryTeal
-                      : (isDark ? const Color(0xFF334155) : const Color(0xFFD1D5DB)),
+                  height: 2.2,
+                  decoration: BoxDecoration(
+                    color: isPassed
+                        ? primaryTeal
+                        : (isDark
+                            ? const Color(0xFF334155)
+                            : const Color(0xFFCBD5E1)),
+                    borderRadius: BorderRadius.circular(2),
+                  ),
                 ),
               );
             } else {
@@ -484,13 +458,32 @@ class _ScreeningInputPageState extends State<ScreeningInputPage> {
               final bool isCompleted = _currentStep > stepNumber;
 
               return Container(
-                width: 22,
-                height: 22,
+                width: 24,
+                height: 24,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
+                  gradient: (isActive || isCompleted)
+                      ? const LinearGradient(
+                          colors: [Color(0xFF38BDF8), Color(0xFF0284C7)],
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                        )
+                      : null,
                   color: (isActive || isCompleted)
-                      ? primaryTeal
-                      : (isDark ? const Color(0xFF1E293B) : const Color(0xFFE5E7EB)),
+                      ? null
+                      : (isDark
+                          ? const Color(0xFF1E293B)
+                          : const Color(0xFFE2E8F0)),
+                  boxShadow: (isActive || isCompleted)
+                      ? [
+                          BoxShadow(
+                            color: const Color(0xFF0284C7)
+                                .withValues(alpha: 0.35),
+                            blurRadius: 6,
+                            offset: const Offset(0, 2),
+                          ),
+                        ]
+                      : null,
                 ),
                 child: Center(
                   child: Text(
@@ -500,7 +493,9 @@ class _ScreeningInputPageState extends State<ScreeningInputPage> {
                       fontWeight: FontWeight.bold,
                       color: (isActive || isCompleted)
                           ? Colors.white
-                          : (isDark ? const Color(0xFF94A3B8) : const Color(0xFF6B7280)),
+                          : (isDark
+                              ? const Color(0xFF94A3B8)
+                              : const Color(0xFF6B7280)),
                     ),
                   ),
                 ),
@@ -536,82 +531,100 @@ class _ScreeningInputPageState extends State<ScreeningInputPage> {
   // STEP 1 - DATA DIRI
   // ============================================================
   Widget _buildStep1DataDiri(bool isDark) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          'Data Diri',
-          style: TextStyle(
-            fontSize: 16,
-            fontWeight: FontWeight.bold,
-            color: isDark ? Colors.white : const Color(0xFF111827),
-          ),
+    return Container(
+      decoration: BoxDecoration(
+        color: isDark ? const Color(0xFF1E293B) : Colors.white,
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(
+          color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0),
+          width: 1.2,
         ),
-
-        const SizedBox(height: 12),
-
-        Text(
-          'Usia',
-          style: TextStyle(
-            fontSize: 14,
-            fontWeight: FontWeight.w500,
-            color: isDark ? const Color(0xFFCBD5E1) : const Color(0xFF1E293B),
+        boxShadow: [
+          BoxShadow(
+            color: const Color(0xFF0284C7).withValues(alpha: isDark ? 0.2 : 0.05),
+            blurRadius: 10,
+            offset: const Offset(0, 3),
           ),
-        ),
-
-        const SizedBox(height: 8),
-
-        Container(
-          height: 48,
-          decoration: BoxDecoration(
-            color: isDark ? const Color(0xFF1E293B) : Colors.white,
-            borderRadius: BorderRadius.circular(10),
-            border: Border.all(
-              color: isDark ? const Color(0xFF334155) : const Color(0xFF8BB5CE),
-              width: 1.2,
-            ),
-          ),
-          padding: const EdgeInsets.symmetric(horizontal: 14),
-          child: TextField(
-            controller: _ageController,
-            keyboardType: TextInputType.number,
+        ],
+      ),
+      padding: const EdgeInsets.all(18),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Data Diri',
             style: TextStyle(
-              fontSize: 15,
+              fontSize: 16,
+              fontWeight: FontWeight.bold,
               color: isDark ? Colors.white : const Color(0xFF111827),
             ),
-            decoration: InputDecoration(
-              border: InputBorder.none,
-              isDense: true,
-              hintText: 'Contoh: 25',
-              hintStyle: TextStyle(
-                color: isDark ? const Color(0xFF64748B) : const Color(0xFF94A3B8),
-              ),
-              contentPadding: const EdgeInsets.symmetric(vertical: 14),
+          ),
+
+          const SizedBox(height: 14),
+
+          Text(
+            'Usia',
+            style: TextStyle(
+              fontSize: 14,
+              fontWeight: FontWeight.w600,
+              color: isDark ? const Color(0xFFCBD5E1) : const Color(0xFF1E293B),
             ),
           ),
-        ),
 
-        const SizedBox(height: 24),
+          const SizedBox(height: 8),
 
-        Text(
-          'Jenis Kelamin',
-          style: TextStyle(
-            fontSize: 14,
-            fontWeight: FontWeight.w500,
-            color: isDark ? const Color(0xFFCBD5E1) : const Color(0xFF1E293B),
+          Container(
+            height: 48,
+            decoration: BoxDecoration(
+              color: isDark ? const Color(0xFF0F172A) : const Color(0xFFF8FAFC),
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(
+                color: isDark ? const Color(0xFF334155) : const Color(0xFFBAE6FD),
+                width: 1.2,
+              ),
+            ),
+            padding: const EdgeInsets.symmetric(horizontal: 14),
+            child: TextField(
+              controller: _ageController,
+              keyboardType: TextInputType.number,
+              style: TextStyle(
+                fontSize: 15,
+                color: isDark ? Colors.white : const Color(0xFF111827),
+              ),
+              decoration: InputDecoration(
+                border: InputBorder.none,
+                isDense: true,
+                hintText: 'Contoh: 25',
+                hintStyle: TextStyle(
+                  color: isDark ? const Color(0xFF64748B) : const Color(0xFF94A3B8),
+                ),
+                contentPadding: const EdgeInsets.symmetric(vertical: 14),
+              ),
+            ),
           ),
-        ),
 
-        const SizedBox(height: 10),
+          const SizedBox(height: 20),
 
-        Row(
-          children: [
-            _buildRadioOption('Laki-laki', isDark),
-            const SizedBox(width: 50),
-            _buildRadioOption('Perempuan', isDark),
-          ],
-        ),
-      ],
+          Text(
+            'Jenis Kelamin',
+            style: TextStyle(
+              fontSize: 14,
+              fontWeight: FontWeight.w600,
+              color: isDark ? const Color(0xFFCBD5E1) : const Color(0xFF1E293B),
+            ),
+          ),
+
+          const SizedBox(height: 12),
+
+          Row(
+            children: [
+              _buildRadioOption('Laki-laki', isDark),
+              const SizedBox(width: 40),
+              _buildRadioOption('Perempuan', isDark),
+            ],
+          ),
+        ],
+      ),
     );
   }
 
