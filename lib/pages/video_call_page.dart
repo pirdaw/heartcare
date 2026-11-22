@@ -528,7 +528,10 @@ class _VideoCallPageState extends State<VideoCallPage>
   Future<void> _disposeAgora() async {
     try {
       if (_engine != null) {
-        await _engine!.leaveChannel();
+        if (_localUserJoined) {
+          await _engine!.leaveChannel();
+          _localUserJoined = false;
+        }
         await _engine!.release();
       }
     } catch (e) {
@@ -878,7 +881,10 @@ class _VideoCallPageState extends State<VideoCallPage>
     VideoCallAudioService.instance.playCallEndedTone();
     CallService.instance.endCall(_callId, chatId: widget.chatId);
     try {
-      await _engine?.leaveChannel();
+      if (_localUserJoined) {
+        await _engine?.leaveChannel();
+        _localUserJoined = false;
+      }
     } catch (_) {}
     _showCallSummaryDialog();
   }

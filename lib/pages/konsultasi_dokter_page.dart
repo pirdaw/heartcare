@@ -286,6 +286,7 @@ class _KonsultasiDokterPageState extends State<KonsultasiDokterPage> {
     if (_activeChatId == null) {
       await _initChat();
     }
+
     if (_activeChatId == null) return;
 
     String resolvedPatientName = widget.patientName ?? 'Pasien';
@@ -1002,13 +1003,17 @@ class _KonsultasiDokterPageState extends State<KonsultasiDokterPage> {
     );
   }
 
-  Future<void> _sendScreeningData(
-    ScreeningData data,
-    HeartRiskResult result,
-  ) async {
+  Future<void> _sendAttachment({
+    required String title,
+    String? message,
+    String? attachmentType,
+    String? imagePath,
+    String? successSnackBarMessage,
+  }) async {
     if (_activeChatId == null) {
       await _initChat();
     }
+
     if (_activeChatId == null) return;
 
     final profile = UserProfileService.instance.currentProfile;
@@ -1018,23 +1023,27 @@ class _KonsultasiDokterPageState extends State<KonsultasiDokterPage> {
         : (widget.patientName ??
               (profile.nama.isNotEmpty ? profile.nama : 'Pasien'));
 
-    final reportText = data.toDoctorReport(
-      patientName: senderName,
-      result: result,
-    );
+    final path =
+        imagePath ??
+        (title.contains("Skrining") || title.contains("EKG")
+            ? "assets/images/screening_jantung.png"
+            : null);
+
+    final displayMessage = message ?? "📎 Lampiran: $title";
+    final effectiveType = attachmentType ?? title;
 
     final now = DateTime.now();
     final timeStr =
         "${now.hour.toString().padLeft(2, '0')}.${now.minute.toString().padLeft(2, '0')}";
 
     final optMsg = ChatMessage(
-      id: 'opt_scr_${now.millisecondsSinceEpoch}',
+      id: 'opt_att_${now.millisecondsSinceEpoch}',
       senderId: widget.isDoctorView ? 'doctor' : 'patient',
       senderRole: senderRole,
       senderName: senderName,
-      message: reportText,
-      attachmentType: 'screening',
-      imagePath: 'assets/images/screening_jantung.png',
+      message: displayMessage,
+      attachmentType: effectiveType,
+      imagePath: path,
       timestamp: now,
       timeFormatted: timeStr,
       isRead: false,
@@ -1047,11 +1056,11 @@ class _KonsultasiDokterPageState extends State<KonsultasiDokterPage> {
 
     await ChatService.instance.sendMessage(
       chatId: _activeChatId!,
-      message: reportText,
+      message: displayMessage,
       senderRole: senderRole,
       senderName: senderName,
-      attachmentType: 'screening',
-      imagePath: 'assets/images/screening_jantung.png',
+      attachmentType: effectiveType,
+      imagePath: path,
       patientId: widget.patientId,
       patientName:
           _patientName ??
@@ -1069,15 +1078,40 @@ class _KonsultasiDokterPageState extends State<KonsultasiDokterPage> {
 
     _scrollToBottom();
 
-    if (mounted) {
+    if (mounted && successSnackBarMessage != null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text("Data skrining jantung berhasil dibagikan ke dokter!"),
-          backgroundColor: Color(0xFF10B981),
+        SnackBar(
+          content: Text(successSnackBarMessage),
+          backgroundColor: const Color(0xFF10B981),
           behavior: SnackBarBehavior.floating,
         ),
       );
     }
+  }
+
+  Future<void> _sendScreeningData(
+    ScreeningData data,
+    HeartRiskResult result,
+  ) async {
+    final profile = UserProfileService.instance.currentProfile;
+    final senderName = widget.isDoctorView
+        ? widget.doctorName
+        : (widget.patientName ??
+              (profile.nama.isNotEmpty ? profile.nama : 'Pasien'));
+
+    final reportText = data.toDoctorReport(
+      patientName: senderName,
+      result: result,
+    );
+
+    await _sendAttachment(
+      title: "Skrining Jantung",
+      message: reportText,
+      attachmentType: 'screening',
+      imagePath: 'assets/images/screening_jantung.png',
+      successSnackBarMessage:
+          "Data skrining jantung berhasil dibagikan ke dokter!",
+    );
   }
 
   Widget _buildScreeningMessageBubble({
@@ -1933,6 +1967,7 @@ class _KonsultasiDokterPageState extends State<KonsultasiDokterPage> {
     if (_activeChatId == null) {
       await _initChat();
     }
+
     if (_activeChatId == null) return;
 
     final profile = UserProfileService.instance.currentProfile;
@@ -2010,71 +2045,6 @@ class _KonsultasiDokterPageState extends State<KonsultasiDokterPage> {
     _scrollToBottom();
   }
 
-  Future<void> _sendAttachment(String title, {String? imagePath}) async {
-    if (_activeChatId == null) {
-      await _initChat();
-    }
-    if (_activeChatId == null) return;
-
-    final profile = UserProfileService.instance.currentProfile;
-    final senderRole = widget.isDoctorView ? 'doctor' : 'patient';
-    final senderName = widget.isDoctorView
-        ? widget.doctorName
-        : (widget.patientName ??
-              (profile.nama.isNotEmpty ? profile.nama : 'Pasien'));
-
-    final path =
-        imagePath ??
-        (title.contains("Skrining") || title.contains("EKG")
-            ? "assets/images/screening_jantung.png"
-            : null);
-
-    final now = DateTime.now();
-    final timeStr =
-        "${now.hour.toString().padLeft(2, '0')}.${now.minute.toString().padLeft(2, '0')}";
-
-    final optMsg = ChatMessage(
-      id: 'opt_att_${now.millisecondsSinceEpoch}',
-      senderId: widget.isDoctorView ? 'doctor' : 'patient',
-      senderRole: senderRole,
-      senderName: senderName,
-      message: "📎 Lampiran: $title",
-      attachmentType: title,
-      imagePath: path,
-      timestamp: now,
-      timeFormatted: timeStr,
-      isRead: false,
-    );
-
-    setState(() {
-      _optimisticMessages.add(optMsg);
-    });
-    _scrollToBottom();
-
-    await ChatService.instance.sendMessage(
-      chatId: _activeChatId!,
-      message: "📎 Lampiran: $title",
-      senderRole: senderRole,
-      senderName: senderName,
-      attachmentType: title,
-      imagePath: path,
-      patientId: widget.patientId,
-      patientName:
-          _patientName ??
-          widget.patientName ??
-          (profile.nama.isNotEmpty ? profile.nama : 'Pasien'),
-      patientPhoto:
-          _patientPhoto ??
-          widget.patientPhoto ??
-          (profile.fotoProfil.isNotEmpty
-              ? profile.fotoProfil
-              : ProfileService.instance.currentImagePath),
-      doctorId: widget.doctorId,
-      doctorName: widget.doctorName,
-    );
-
-    _scrollToBottom();
-  }
 
   // ==========================================================
   // HALAMAN UTAMA

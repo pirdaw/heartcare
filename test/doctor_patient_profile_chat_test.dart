@@ -1,12 +1,16 @@
-import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:heartcare/services/profile_service.dart';
 import 'package:heartcare/services/chat_service.dart';
 import 'package:heartcare/pages/konsultasi_dokter_page.dart';
+import 'helpers/mock_firebase.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
+
+  setUpAll(() async {
+    await setupMockFirebase();
+  });
 
   // 1x1 transparent PNG encoded in Base64
   const sampleBase64 =
@@ -41,6 +45,7 @@ void main() {
       await tester.pump();
 
       expect(find.byType(Image), findsOneWidget);
+      await tester.pump(const Duration(seconds: 5));
     });
 
     testWidgets('buildPatientImage renders fallback when photo is null',
@@ -60,6 +65,7 @@ void main() {
       await tester.pump();
 
       expect(find.byType(Image), findsOneWidget);
+      await tester.pump(const Duration(seconds: 5));
     });
   });
 
@@ -89,6 +95,7 @@ void main() {
 
       // Verify that Image widget is rendered in the header avatar
       expect(find.byType(Image), findsWidgets);
+      await tester.pump(const Duration(seconds: 3));
     });
 
     test('ChatService active role can be switched and session id is present', () {

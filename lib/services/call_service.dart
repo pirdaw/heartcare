@@ -24,6 +24,7 @@ class CallService extends ChangeNotifier {
   StreamSubscription<QuerySnapshot>? _callSubscription;
   bool _isShowingIncomingCall = false;
   String? _currentCallId;
+  String? get currentCallId => _currentCallId;
   final Map<String, String> _callIdToChatId = {};
 
   void setActiveRole(String role) {
@@ -59,6 +60,7 @@ class CallService extends ChangeNotifier {
       if (_isShowingIncomingCall) {
         VideoCallAudioService.instance.stopWhatsAppIncomingRingtone();
         _isShowingIncomingCall = false;
+        _currentCallId = null;
       }
       return;
     }
@@ -330,6 +332,9 @@ class CallService extends ChangeNotifier {
   Future<void> rejectCall(String callId, {String? chatId}) async {
     VideoCallAudioService.instance.stopAll();
     _isShowingIncomingCall = false;
+    if (_currentCallId == callId) {
+      _currentCallId = null;
+    }
     final targetChatId = chatId ?? _callIdToChatId[callId];
 
     try {
@@ -352,6 +357,9 @@ class CallService extends ChangeNotifier {
   Future<void> endCall(String callId, {String? chatId}) async {
     VideoCallAudioService.instance.stopAll();
     _isShowingIncomingCall = false;
+    if (_currentCallId == callId) {
+      _currentCallId = null;
+    }
     final targetChatId = chatId ?? _callIdToChatId[callId];
 
     try {
