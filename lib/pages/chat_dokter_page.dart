@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:heartcare/services/language_service.dart';
+import 'package:heartcare/services/reminder_notification_service.dart';
 
 class ChatDokterStaticPage extends StatefulWidget {
   const ChatDokterStaticPage({super.key});
@@ -913,6 +914,15 @@ class _ChatDokterStaticPageState
                       child: ElevatedButton(
                         onPressed: () {
                           Navigator.pop(context);
+
+                          ReminderNotificationService.instance.scheduleConsultationReminder(
+                            doctorName: 'dr. Nurlitta Dwi, Sp.JP',
+                            doctorSpecialty: 'Spesialis Jantung',
+                            timeSlot: '10:00 WIB',
+                            dateDisplay: 'Jumat, 18 September 2026',
+                            timingLabel: selectedReminder,
+                            notifyImmediately: true,
+                          );
 
                           Future.delayed(
                             const Duration(

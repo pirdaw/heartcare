@@ -16,6 +16,7 @@ import '../services/profile_service.dart';
 import '../services/chat_service.dart';
 import '../services/doctor_service.dart';
 import '../services/chat_notification_service.dart';
+import '../services/reminder_notification_service.dart';
 import '../widgets/chat_notification_sheet.dart';
 
 class ChatItem {
@@ -3280,6 +3281,19 @@ class _KonsultasiDokterPageState
                         child: ElevatedButton(
                           onPressed: () {
                             Navigator.pop(context);
+
+                            // Simpan & aktifkan notifikasi reminder ala Gojek
+                            ReminderNotificationService.instance.scheduleConsultationReminder(
+                              doctorName: widget.doctorName,
+                              doctorSpecialty: widget.doctorSpecialty,
+                              doctorPhoto: widget.doctorPhoto,
+                              doctorId: widget.doctorId,
+                              chatId: widget.chatId,
+                              timeSlot: '10:00 WIB',
+                              dateDisplay: 'Jumat, 18 September 2026',
+                              timingLabel: selectedReminder,
+                              notifyImmediately: true,
+                            );
 
                             Future.delayed(
                               const Duration(

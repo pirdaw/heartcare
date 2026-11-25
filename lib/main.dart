@@ -10,7 +10,9 @@ import 'services/language_service.dart';
 import 'services/doctor_service.dart';
 import 'services/chat_notification_service.dart';
 import 'services/system_notification_service.dart';
+import 'services/reminder_notification_service.dart';
 import 'widgets/chat_notification_banner.dart';
+import 'widgets/gojek_reminder_banner.dart';
 
 final GlobalKey<NavigatorState> rootNavigatorKey = GlobalKey<NavigatorState>();
 
@@ -40,6 +42,9 @@ Future<void> main() async {
   // Inisialisasi notifikasi sistem telepon native (status bar / heads-up OS notification)
   await SystemNotificationService.instance.init();
 
+  // Inisialisasi service pengingat notifikasi ala Gojek (di semua halaman & status bar)
+  await ReminderNotificationService.instance.init();
+
   runApp(const HeartCareApp());
 }
 
@@ -52,6 +57,7 @@ class HeartCareApp extends StatefulWidget {
 
 class _HeartCareAppState extends State<HeartCareApp> {
   StreamSubscription<ChatNotificationItem>? _notifSub;
+  StreamSubscription<HeartCareReminder>? _reminderSub;
 
   @override
   void initState() {
@@ -67,11 +73,21 @@ class _HeartCareAppState extends State<HeartCareApp> {
         notification: notif,
       );
     });
+
+    // Dengarkan event pengingat notifikasi ala Gojek di seluruh halaman aplikasi
+    _reminderSub = ReminderNotificationService.instance.onReminder.listen((reminder) {
+      if (!mounted) return;
+      GojekReminderBannerManager.showWithNavigatorKey(
+        navigatorKey: rootNavigatorKey,
+        reminder: reminder,
+      );
+    });
   }
 
   @override
   void dispose() {
     _notifSub?.cancel();
+    _reminderSub?.cancel();
     super.dispose();
   }
 

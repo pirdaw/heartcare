@@ -2,6 +2,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:heartcare/services/theme_service.dart';
 import 'package:heartcare/services/booking_service.dart';
+import 'package:heartcare/services/reminder_notification_service.dart';
 import 'home_page.dart';
 import 'konsultasi_dokter_page.dart';
 
@@ -82,6 +83,18 @@ class _KonfirmasiJadwalPageState extends State<KonfirmasiJadwalPage> {
       endMinutes: sEnd,
       durationMinutes: widget.durationMinutes,
       timeSlot: widget.selectedTime,
+    );
+
+    // Otomatis aktifkan notifikasi reminder ala Gojek
+    ReminderNotificationService.instance.scheduleConsultationReminder(
+      doctorName: widget.doctorName,
+      doctorSpecialty: widget.doctorSpecialty,
+      doctorPhoto: widget.doctorPhoto,
+      doctorId: widget.doctorId,
+      timeSlot: widget.selectedTime,
+      dateDisplay: widget.selectedDate,
+      timingLabel: 'Pengingat Jadwal Terdaftar',
+      notifyImmediately: true,
     );
 
     _isBookingRecorded = true;

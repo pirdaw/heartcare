@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:heartcare/services/theme_service.dart';
 import 'package:heartcare/services/language_service.dart';
 import '../services/alarm_service.dart';
+import '../services/reminder_notification_service.dart';
 
 // MODEL DATA OBAT & PENGINGAT
 class MedicineReminder {
@@ -182,6 +183,16 @@ class HealthReminderController extends ChangeNotifier {
           if (cleanTime == currentFormattedTime ||
               cleanTime == currentFormattedColon.replaceAll(':', '.')) {
             _lastTriggeredMinute = currentFormattedTime;
+
+            // Trigger notifikasi reminder ala Gojek (in-app banner di semua halaman + status bar HP)
+            ReminderNotificationService.instance.triggerMedicineReminder(
+              medicineName: med.name,
+              dosage: '${med.amount} ${med.unit}',
+              scheduleInfo: med.schedule,
+              time: timeStr.contains('WIB') ? timeStr : '$timeStr WIB',
+              note: med.note,
+            );
+
             if (onReminderTriggered != null) {
               onReminderTriggered!(med, timeStr);
             }
