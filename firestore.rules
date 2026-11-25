@@ -84,5 +84,14 @@ service cloud.firestore {
         allow delete: if false;
       }
     }
+
+    // =============================================
+    // VIDEO CALLS (WEBRTC SIGNALING SEPERTI WHATSAPP)
+    // Sinyal panggilan real-time antara dokter dan pasien
+    // =============================================
+    match /video_calls/{callId} {
+      // Baca dan buat/update sinyal panggilan (offer, answer, candidates, status)
+      allow read, write: if true;
+    }
   }
 }

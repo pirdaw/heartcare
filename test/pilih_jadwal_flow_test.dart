@@ -1,14 +1,19 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:heartcare/services/booking_service.dart';
 import 'package:heartcare/pages/home_page.dart';
 import 'package:heartcare/pages/konfirmasi_jadwal_page.dart';
 import 'package:heartcare/pages/konsultasi_dokter_page.dart';
 import 'package:heartcare/pages/pilih_jadwal_page.dart';
-import 'package:heartcare/services/booking_service.dart';
+import 'helpers/mock_firebase.dart';
 
 void main() {
-  setUp(() {
+  setUp(() async {
     WidgetsFlutterBinding.ensureInitialized();
+    await setupMockFirebase();
+    SharedPreferences.setMockInitialValues({});
+    await BookingService.instance.init();
   });
 
   testWidgets('PilihJadwalPage renders doctor info, duration options, status badges, and navigates to KonfirmasiJadwalPage', (WidgetTester tester) async {
@@ -62,12 +67,26 @@ void main() {
     await tester.tap(find.text('Rab'));
     await tester.pumpAndSettle();
 
+    // Pilih metode Chat Online agar membuka tombol 'Konsultasi Dokter Lewat Chat'
+    expect(find.text('Chat Online'), findsOneWidget);
+    await tester.ensureVisible(find.text('Chat Online'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Chat Online'));
+    await tester.pumpAndSettle();
+
     // Pilih slot 13.00–13.30
     expect(find.text('13.00–13.30'), findsOneWidget);
+    await tester.ensureVisible(find.text('13.00–13.30'));
+    await tester.pumpAndSettle();
     await tester.tap(find.text('13.00–13.30'));
     await tester.pumpAndSettle();
 
+    // Pastikan slot waktu benar-benar terpilih sebelum tombol konfirmasi ditekan
+    expect(find.text('Pilihan: Rab, 13.00–13.30 (30 Menit)'), findsOneWidget);
+
     // 7. Konfirmasi Jadwal
+    await tester.ensureVisible(find.text('Konfirmasi Jadwal'));
+    await tester.pumpAndSettle();
     await tester.tap(find.text('Konfirmasi Jadwal'));
     await tester.pumpAndSettle();
 
@@ -86,9 +105,12 @@ void main() {
     expect(find.text('Kembali ke Beranda'), findsOneWidget);
 
     // Aksi 1: Konsultasi Dokter Lewat Chat membuka KonsultasiDokterPage
+    await tester.ensureVisible(find.text('Konsultasi Dokter Lewat Chat'));
+    await tester.pumpAndSettle();
     await tester.tap(find.text('Konsultasi Dokter Lewat Chat'));
     await tester.pumpAndSettle();
     expect(find.byType(KonsultasiDokterPage), findsOneWidget);
+    await tester.pump(const Duration(seconds: 3));
   });
 
   testWidgets('Durasi 60 menit otomatis menyesuaikan slot waktu (08.00–09.00, 09.00–10.00)', (WidgetTester tester) async {
@@ -104,6 +126,8 @@ void main() {
     await tester.pumpAndSettle();
 
     // Tap durasi 60 Menit
+    await tester.ensureVisible(find.text('60'));
+    await tester.pumpAndSettle();
     await tester.tap(find.text('60'));
     await tester.pumpAndSettle();
 
@@ -134,6 +158,8 @@ void main() {
     expect(find.text('09.00–09.30'), findsOneWidget);
 
     // Tap slot yang sudah dibooking
+    await tester.ensureVisible(find.text('09.00–09.30'));
+    await tester.pumpAndSettle();
     await tester.tap(find.text('09.00–09.30'));
     await tester.pump();
 
@@ -159,7 +185,7 @@ void main() {
     expect(find.text('Kembali ke Beranda'), findsOneWidget);
 
     // Scroll jika perlu
-    await tester.drag(find.byType(SingleChildScrollView), const Offset(0, -200));
+    await tester.ensureVisible(find.text('Kembali ke Beranda'));
     await tester.pumpAndSettle();
 
     // Tap Kembali ke Beranda
@@ -169,5 +195,6 @@ void main() {
     // Verifikasi kembali ke HomePage
     expect(find.byType(HomePage), findsOneWidget);
     expect(find.byType(KonfirmasiJadwalPage), findsNothing);
+    await tester.pump(const Duration(seconds: 6));
   });
 }

@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+
 import '../services/auth_service.dart';
+import '../services/chat_service.dart';
 import '../widgets/heartcare_auth_widgets.dart';
 import 'doctor_dashboard_page.dart';
 import 'forgot_password_page.dart';
@@ -77,10 +79,7 @@ class _LoginPageState extends State<LoginPage> {
             email: email,
             password: password,
           )
-        : await AuthService.instance.signIn(
-            email: email,
-            password: password,
-          );
+        : await AuthService.instance.signIn(email: email, password: password);
 
     if (!mounted) return;
 
@@ -97,18 +96,16 @@ class _LoginPageState extends State<LoginPage> {
     if (!mounted) return;
 
     if (role == 'doctor' || _isDoctorMode) {
+      ChatService.instance.setActiveRole('doctor');
       Navigator.pushReplacement(
         context,
-        MaterialPageRoute(
-          builder: (context) => const DoctorDashboardPage(),
-        ),
+        MaterialPageRoute(builder: (context) => const DoctorDashboardPage()),
       );
     } else {
+      ChatService.instance.setActiveRole('patient');
       Navigator.pushReplacement(
         context,
-        MaterialPageRoute(
-          builder: (context) => const HomePage(),
-        ),
+        MaterialPageRoute(builder: (context) => const HomePage()),
       );
     }
   }
@@ -155,11 +152,12 @@ class _LoginPageState extends State<LoginPage> {
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  HeartCareBackButton(
-                    onPressed: () => Navigator.pop(context),
-                  ),
+                  HeartCareBackButton(onPressed: () => Navigator.pop(context)),
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 14,
+                      vertical: 6,
+                    ),
                     decoration: BoxDecoration(
                       color: isDark
                           ? const Color(0xFF1E293B).withValues(alpha: 0.8)
@@ -173,7 +171,8 @@ class _LoginPageState extends State<LoginPage> {
                       ),
                       boxShadow: [
                         BoxShadow(
-                          color: const Color(0xFF0284C7).withValues(alpha: 0.08),
+                          color: const Color(0xFF0284C7)
+                              .withValues(alpha: 0.08),
                           blurRadius: 10,
                           offset: const Offset(0, 2),
                         ),
@@ -222,7 +221,10 @@ class _LoginPageState extends State<LoginPage> {
             Expanded(
               child: SingleChildScrollView(
                 physics: const BouncingScrollPhysics(),
-                padding: const EdgeInsets.symmetric(horizontal: 26, vertical: 10),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 26,
+                  vertical: 10,
+                ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -236,7 +238,9 @@ class _LoginPageState extends State<LoginPage> {
                         padding: const EdgeInsets.all(12),
                         decoration: BoxDecoration(
                           shape: BoxShape.circle,
-                          color: isDark ? const Color(0xFF131D36) : Colors.white,
+                          color: isDark
+                              ? const Color(0xFF131D36)
+                              : Colors.white,
                           border: Border.all(
                             color: isDark
                                 ? const Color(0xFF1E3A5F)
@@ -245,12 +249,14 @@ class _LoginPageState extends State<LoginPage> {
                           ),
                           boxShadow: [
                             BoxShadow(
-                              color: const Color(0xFF0284C7).withValues(alpha: 0.16),
+                              color: const Color(0xFF0284C7)
+                                  .withValues(alpha: 0.16),
                               blurRadius: 20,
                               offset: const Offset(0, 6),
                             ),
                             BoxShadow(
-                              color: const Color(0xFF38BDF8).withValues(alpha: 0.10),
+                              color: const Color(0xFF38BDF8)
+                                  .withValues(alpha: 0.10),
                               blurRadius: 12,
                               offset: const Offset(0, 2),
                             ),
@@ -274,7 +280,9 @@ class _LoginPageState extends State<LoginPage> {
                           fontSize: 24,
                           fontWeight: FontWeight.w800,
                           letterSpacing: -0.3,
-                          color: isDark ? Colors.white : const Color(0xFF0F172A),
+                          color: isDark
+                              ? Colors.white
+                              : const Color(0xFF0F172A),
                         ),
                       ),
                     ),
@@ -316,7 +324,8 @@ class _LoginPageState extends State<LoginPage> {
                         ),
                         boxShadow: [
                           BoxShadow(
-                            color: const Color(0xFF0284C7).withValues(alpha: 0.06),
+                            color: const Color(0xFF0284C7)
+                                .withValues(alpha: 0.06),
                             blurRadius: 8,
                             offset: const Offset(0, 2),
                           ),
@@ -365,8 +374,8 @@ class _LoginPageState extends State<LoginPage> {
                                     color: !_isDoctorMode
                                         ? Colors.white
                                         : (isDark
-                                            ? const Color(0xFF94A3B8)
-                                            : const Color(0xFF64748B)),
+                                              ? const Color(0xFF94A3B8)
+                                              : const Color(0xFF64748B)),
                                   ),
                                 ),
                               ),
@@ -413,8 +422,8 @@ class _LoginPageState extends State<LoginPage> {
                                     color: _isDoctorMode
                                         ? Colors.white
                                         : (isDark
-                                            ? const Color(0xFF94A3B8)
-                                            : const Color(0xFF64748B)),
+                                              ? const Color(0xFF94A3B8)
+                                              : const Color(0xFF64748B)),
                                   ),
                                 ),
                               ),
@@ -434,7 +443,9 @@ class _LoginPageState extends State<LoginPage> {
                       style: TextStyle(
                         fontSize: 13.5,
                         fontWeight: FontWeight.w600,
-                        color: isDark ? const Color(0xFFE2E8F0) : const Color(0xFF0F172A),
+                        color: isDark
+                            ? const Color(0xFFE2E8F0)
+                            : const Color(0xFF0F172A),
                       ),
                     ),
                     const SizedBox(height: 8),
@@ -444,7 +455,8 @@ class _LoginPageState extends State<LoginPage> {
                         borderRadius: BorderRadius.circular(14),
                         boxShadow: [
                           BoxShadow(
-                            color: const Color(0xFF0284C7).withValues(alpha: 0.04),
+                            color: const Color(0xFF0284C7)
+                                .withValues(alpha: 0.04),
                             blurRadius: 8,
                             offset: const Offset(0, 2),
                           ),
@@ -457,7 +469,9 @@ class _LoginPageState extends State<LoginPage> {
                         style: TextStyle(
                           fontSize: 14,
                           fontWeight: FontWeight.w500,
-                          color: isDark ? Colors.white : const Color(0xFF0F172A),
+                          color: isDark
+                              ? Colors.white
+                              : const Color(0xFF0F172A),
                         ),
                         decoration: InputDecoration(
                           filled: true,
@@ -469,10 +483,14 @@ class _LoginPageState extends State<LoginPage> {
                               : 'Masukkan alamat email Anda',
                           hintStyle: TextStyle(
                             fontSize: 13.5,
-                            color: isDark ? const Color(0xFF64748B) : const Color(0xFF94A3B8),
+                            color: isDark
+                                ? const Color(0xFF64748B)
+                                : const Color(0xFF94A3B8),
                           ),
-                          contentPadding:
-                              const EdgeInsets.symmetric(horizontal: 16, vertical: 15),
+                          contentPadding: const EdgeInsets.symmetric(
+                            horizontal: 16,
+                            vertical: 15,
+                          ),
                           prefixIcon: Padding(
                             padding: const EdgeInsets.only(left: 12, right: 10),
                             child: Container(
@@ -493,8 +511,10 @@ class _LoginPageState extends State<LoginPage> {
                               ),
                             ),
                           ),
-                          prefixIconConstraints:
-                              const BoxConstraints(minWidth: 54, minHeight: 36),
+                          prefixIconConstraints: const BoxConstraints(
+                            minWidth: 54,
+                            minHeight: 36,
+                          ),
                           enabledBorder: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(14),
                             borderSide: BorderSide(
@@ -525,7 +545,9 @@ class _LoginPageState extends State<LoginPage> {
                       style: TextStyle(
                         fontSize: 13.5,
                         fontWeight: FontWeight.w600,
-                        color: isDark ? const Color(0xFFE2E8F0) : const Color(0xFF0F172A),
+                        color: isDark
+                            ? const Color(0xFFE2E8F0)
+                            : const Color(0xFF0F172A),
                       ),
                     ),
                     const SizedBox(height: 8),
@@ -535,7 +557,8 @@ class _LoginPageState extends State<LoginPage> {
                         borderRadius: BorderRadius.circular(14),
                         boxShadow: [
                           BoxShadow(
-                            color: const Color(0xFF0284C7).withValues(alpha: 0.04),
+                            color: const Color(0xFF0284C7)
+                                .withValues(alpha: 0.04),
                             blurRadius: 8,
                             offset: const Offset(0, 2),
                           ),
@@ -549,7 +572,9 @@ class _LoginPageState extends State<LoginPage> {
                         style: TextStyle(
                           fontSize: 14,
                           fontWeight: FontWeight.w500,
-                          color: isDark ? Colors.white : const Color(0xFF0F172A),
+                          color: isDark
+                              ? Colors.white
+                              : const Color(0xFF0F172A),
                         ),
                         decoration: InputDecoration(
                           filled: true,
@@ -559,10 +584,14 @@ class _LoginPageState extends State<LoginPage> {
                           hintText: 'Masukkan kata sandi',
                           hintStyle: TextStyle(
                             fontSize: 13.5,
-                            color: isDark ? const Color(0xFF64748B) : const Color(0xFF94A3B8),
+                            color: isDark
+                                ? const Color(0xFF64748B)
+                                : const Color(0xFF94A3B8),
                           ),
-                          contentPadding:
-                              const EdgeInsets.symmetric(horizontal: 16, vertical: 15),
+                          contentPadding: const EdgeInsets.symmetric(
+                            horizontal: 16,
+                            vertical: 15,
+                          ),
                           prefixIcon: Padding(
                             padding: const EdgeInsets.only(left: 12, right: 10),
                             child: Container(
@@ -583,8 +612,10 @@ class _LoginPageState extends State<LoginPage> {
                               ),
                             ),
                           ),
-                          prefixIconConstraints:
-                              const BoxConstraints(minWidth: 54, minHeight: 36),
+                          prefixIconConstraints: const BoxConstraints(
+                            minWidth: 54,
+                            minHeight: 36,
+                          ),
                           suffixIcon: IconButton(
                             icon: Icon(
                               _obscurePassword
@@ -640,7 +671,9 @@ class _LoginPageState extends State<LoginPage> {
                           style: TextStyle(
                             fontSize: 13,
                             fontWeight: FontWeight.w600,
-                            color: isDark ? const Color(0xFF38BDF8) : const Color(0xFF0284C7),
+                            color: isDark
+                                ? const Color(0xFF38BDF8)
+                                : const Color(0xFF0284C7),
                           ),
                         ),
                       ),
@@ -673,7 +706,9 @@ class _LoginPageState extends State<LoginPage> {
                         text: TextSpan(
                           style: TextStyle(
                             fontSize: 13.5,
-                            color: isDark ? const Color(0xFF94A3B8) : const Color(0xFF475569),
+                            color: isDark
+                                ? const Color(0xFF94A3B8)
+                                : const Color(0xFF475569),
                           ),
                           children: [
                             TextSpan(
@@ -689,8 +724,9 @@ class _LoginPageState extends State<LoginPage> {
                                     context,
                                     MaterialPageRoute(
                                       builder: (context) => SignupPage(
-                                        initialRole:
-                                            _isDoctorMode ? 'doctor' : 'patient',
+                                        initialRole: _isDoctorMode
+                                            ? 'doctor'
+                                            : 'patient',
                                       ),
                                     ),
                                   );

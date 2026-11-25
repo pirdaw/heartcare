@@ -41,6 +41,37 @@
     For more details:
     * https://docs.flutter.dev/platform-integration/web/initialization
   -->
+  <!-- Agora RTC Engine Web SDK untuk Video Call Telekonsultasi -->
+  <script src="https://download.agora.io/sdk/release/AgoraRTC_N.js"></script>
+  <!-- Penanganan Otomatis Kebijakan Autoplay Browser (Chrome, Edge, Safari) -->
+  <script>
+    (function() {
+      function unlockAllAudio() {
+        var audioElements = document.querySelectorAll('audio');
+        audioElements.forEach(function(el) {
+          el.muted = false;
+          if (el.paused) {
+            el.play().catch(function(err) {
+              console.log('[WebRTC/Agora Audio] play intent notice:', err);
+            });
+          }
+        });
+      }
+
+      window.addEventListener('click', unlockAllAudio);
+      window.addEventListener('touchstart', unlockAllAudio);
+      window.addEventListener('keydown', unlockAllAudio);
+
+      if (window.AgoraRTC) {
+        window.AgoraRTC.onAudioAutoplayFailed = function() {
+          console.warn('[Agora Web] Audio autoplay tertahan kebijakan browser, membuka kunci pada interaksi pertama.');
+          unlockAllAudio();
+        };
+      }
+    })();
+  </script>
+  <!-- WebRTC Telekonsultasi Suara & Video Langsung (WhatsApp Call) -->
+  <script src="webrtc_call.js"></script>
   <script src="flutter_bootstrap.js" async></script>
 </body>
 </html>

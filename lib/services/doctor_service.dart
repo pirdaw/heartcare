@@ -1,11 +1,13 @@
 import 'dart:async';
 import 'dart:convert';
-import 'dart:io';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+
+import 'platform_file_helper.dart';
 
 /// Layanan terpusat untuk registrasi, sinkronisasi, dan penemuan akun dokter autentik
 /// dengan sinkronisasi Firestore (users & doctors) + Cache Lokal (SharedPreferences).
@@ -30,7 +32,9 @@ class DoctorService {
     if (sip.isNotEmpty) return true;
 
     final nama = (data['nama'] as String? ?? '').trim().toLowerCase();
-    if (nama.startsWith('dr.') || nama.startsWith('dr ') || nama.contains('dokter')) {
+    if (nama.startsWith('dr.') ||
+        nama.startsWith('dr ') ||
+        nama.contains('dokter')) {
       return true;
     }
 
@@ -58,8 +62,8 @@ class DoctorService {
       return false;
     }
 
-    final rawName =
-        (data['nama'] as String? ?? data['name'] as String? ?? '').trim();
+    final rawName = (data['nama'] as String? ?? data['name'] as String? ?? '')
+        .trim();
     final nama = rawName.toLowerCase();
 
     // 1. Abaikan akun placeholder / default HeartCare
@@ -108,11 +112,12 @@ class DoctorService {
           final decoded = jsonDecode(item) as Map<String, dynamic>;
           final id = (decoded['id'] ?? decoded['uid'] ?? '').toString();
           if (isRealDoctorAccount(decoded, id)) {
-            final key = (decoded['id'] ??
-                    decoded['uid'] ??
-                    decoded['email'] ??
-                    decoded['nama'])
-                .toString();
+            final key =
+                (decoded['id'] ??
+                        decoded['uid'] ??
+                        decoded['email'] ??
+                        decoded['nama'])
+                    .toString();
             if (!seenKeys.contains(key)) {
               seenKeys.add(key);
               cleanList.add(decoded);
@@ -136,10 +141,12 @@ class DoctorService {
               try {
                 await doc.reference.delete();
                 debugPrint(
-                    '[DoctorService] Berhasil menghapus user dokter lama: ${doc.id} (${data['nama']})');
+                  '[DoctorService] Berhasil menghapus user dokter lama: ${doc.id} (${data['nama']})',
+                );
               } catch (e) {
                 debugPrint(
-                    '[DoctorService] Info delete user doc ${doc.id}: $e');
+                  '[DoctorService] Info delete user doc ${doc.id}: $e',
+                );
               }
             }
           }
@@ -156,10 +163,12 @@ class DoctorService {
             try {
               await doc.reference.delete();
               debugPrint(
-                  '[DoctorService] Berhasil menghapus doctor doc lama: ${doc.id} (${data['nama']})');
+                '[DoctorService] Berhasil menghapus doctor doc lama: ${doc.id} (${data['nama']})',
+              );
             } catch (e) {
               debugPrint(
-                  '[DoctorService] Info delete doctor doc ${doc.id}: $e');
+                '[DoctorService] Info delete doctor doc ${doc.id}: $e',
+              );
             }
           }
         }
@@ -180,7 +189,8 @@ class DoctorService {
     if (nama.isEmpty) {
       nama = (data['name'] as String? ?? 'dr. Dokter').trim();
     }
-    if (!nama.toLowerCase().startsWith('dr.') && !nama.toLowerCase().startsWith('dr ')) {
+    if (!nama.toLowerCase().startsWith('dr.') &&
+        !nama.toLowerCase().startsWith('dr ')) {
       nama = 'dr. $nama';
     }
 
@@ -202,7 +212,8 @@ class DoctorService {
 
     String sip = (data['sip'] as String? ?? '').trim();
     if (sip.isEmpty) {
-      sip = 'SIP-${id.length > 4 ? id.substring(0, 4).toUpperCase() : "2026"}/2026';
+      sip =
+          'SIP-${id.length > 4 ? id.substring(0, 4).toUpperCase() : "2026"}/2026';
     }
 
     String lokasi = (data['lokasi'] as String? ?? '').trim();
@@ -214,19 +225,20 @@ class DoctorService {
 
     String tentang = (data['tentang'] as String? ?? '').trim();
     if (tentang.isEmpty) {
-      tentang =
-          'Dokter spesialis jantung dan kardiovaskular bersertifikasi yang berdedikasi melayani konsultasi kesehatan jantung pasien secara komprehensif.';
+      tentang = 'Dokter spesialis jantung dan kardiovaskular bersertifikasi yang berdedikasi melayani konsultasi kesehatan jantung pasien secara komprehensif.';
     }
 
     final bool isOnline = data['isOnline'] as bool? ?? true;
     final String email = (data['email'] as String? ?? '').trim();
-    final String telepon = ((data['telepon'] ??
-            data['noWa'] ??
-            data['whatsapp'] ??
-            data['noTelepon'] ??
-            data['phone']) as String? ??
-            '')
-        .trim();
+    final String telepon =
+        ((data['telepon'] ??
+                        data['noWa'] ??
+                        data['whatsapp'] ??
+                        data['noTelepon'] ??
+                        data['phone'])
+                    as String? ??
+                '')
+            .trim();
 
     return {
       'id': id,
@@ -426,11 +438,7 @@ class DoctorService {
       // Update cache
       final cachedDoc = normalizeDoctorData(
         id: uid,
-        data: {
-          ...payload,
-          'uid': uid,
-          'email': currentUser?.email ?? '',
-        },
+        data: {...payload, 'uid': uid, 'email': currentUser?.email ?? ''},
       );
       await cacheDoctor(cachedDoc);
 
@@ -527,11 +535,14 @@ class DoctorService {
       } catch (_) {}
 
       final Map<String, dynamic> existingData =
-          (existingDoc != null && existingDoc.exists && existingDoc.data() != null)
-              ? existingDoc.data()!
-              : {};
+          (existingDoc != null &&
+              existingDoc.exists &&
+              existingDoc.data() != null)
+          ? existingDoc.data()!
+          : {};
 
-      String doctorName = displayName ?? existingData['nama'] ?? 'dr. Dokter HeartCare';
+      String doctorName =
+          displayName ?? existingData['nama'] ?? 'dr. Dokter HeartCare';
       if (!doctorName.toLowerCase().startsWith('dr.') &&
           !doctorName.toLowerCase().startsWith('dr ')) {
         doctorName = 'dr. $doctorName';
@@ -640,20 +651,14 @@ class DoctorService {
     }
 
     // 4. File lokal di perangkat (jika bukan Web)
-    if (!kIsWeb) {
-      try {
-        final file = File(trimmed);
-        if (file.existsSync()) {
-          return Image.file(
-            file,
-            width: width,
-            height: height,
-            fit: fit,
-            errorBuilder: (context, error, stackTrace) => buildPlaceholder(),
-          );
-        }
-      } catch (_) {}
-    }
+    final fileWidget = buildPlatformFileImageWidget(
+      trimmed,
+      width: width,
+      height: height,
+      fit: fit,
+      errorBuilder: (context, error, stackTrace) => buildPlaceholder(),
+    );
+    if (fileWidget != null) return fileWidget;
 
     return buildPlaceholder();
   }

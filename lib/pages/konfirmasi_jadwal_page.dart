@@ -1,9 +1,17 @@
 import 'dart:io';
+
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:heartcare/services/theme_service.dart';
 import 'package:heartcare/services/booking_service.dart';
+
+import '../services/user_profile_service.dart';
+import '../services/profile_service.dart';
 import 'home_page.dart';
 import 'konsultasi_dokter_page.dart';
+import 'video_call_page.dart';
+import '../services/call_service.dart';
+import '../services/chat_service.dart';
 
 class KonfirmasiJadwalPage extends StatefulWidget {
   final String? doctorId;
@@ -13,6 +21,10 @@ class KonfirmasiJadwalPage extends StatefulWidget {
   final bool isOnline;
   final String selectedDate;
   final String selectedTime;
+  final String consultationType; // 'video' atau 'chat'
+  final String? patientName;
+  final String? patientPhoto;
+  final String? patientId;
   final int durationMinutes;
   final int? startMinutes;
   final int? endMinutes;
@@ -27,6 +39,10 @@ class KonfirmasiJadwalPage extends StatefulWidget {
     this.isOnline = true,
     this.selectedDate = 'Sel, 2 September 2026',
     this.selectedTime = '08.00–08.30',
+    this.consultationType = 'video',
+    this.patientName,
+    this.patientPhoto,
+    this.patientId,
     this.durationMinutes = 30,
     this.startMinutes,
     this.endMinutes,
@@ -41,6 +57,15 @@ class KonfirmasiJadwalPage extends StatefulWidget {
 }
 
 class _KonfirmasiJadwalPageState extends State<KonfirmasiJadwalPage> {
+  String get consultationType => widget.consultationType;
+  String? get doctorId => widget.doctorId;
+  String get doctorName => widget.doctorName;
+  String get doctorPhoto => widget.doctorPhoto;
+  String get doctorSpecialty => widget.doctorSpecialty;
+  String? get patientName => widget.patientName;
+  String? get patientPhoto => widget.patientPhoto;
+  String? get patientId => widget.patientId;
+
   bool _isBookingRecorded = false;
 
   @override
@@ -58,7 +83,12 @@ class _KonfirmasiJadwalPageState extends State<KonfirmasiJadwalPage> {
 
     if (widget.startMinutes == null && widget.selectedTime.contains('.')) {
       try {
-        final firstPart = widget.selectedTime.split('–').first.split('-').first.trim();
+        final firstPart = widget.selectedTime
+            .split('–')
+            .first
+            .split('-')
+            .first
+            .trim();
         final parts = firstPart.split('.');
         if (parts.length >= 2) {
           final h = int.parse(parts[0]);
@@ -92,23 +122,37 @@ class _KonfirmasiJadwalPageState extends State<KonfirmasiJadwalPage> {
       return Image.network(
         photo,
         fit: BoxFit.cover,
-        errorBuilder: (_, __, ___) => const Icon(Icons.person, color: KonfirmasiJadwalPage.brandPrimary, size: 30),
+        errorBuilder: (_, __, ___) => const Icon(
+          Icons.person,
+          color: KonfirmasiJadwalPage.brandPrimary,
+          size: 30,
+        ),
       );
     }
-    if (photo.startsWith('/') || photo.contains(':\\') || photo.contains(':/')) {
+    if (photo.startsWith('/') ||
+        photo.contains(':\\') ||
+        photo.contains(':/')) {
       final file = File(photo);
       if (file.existsSync()) {
         return Image.file(
           file,
           fit: BoxFit.cover,
-          errorBuilder: (_, __, ___) => const Icon(Icons.person, color: KonfirmasiJadwalPage.brandPrimary, size: 30),
+          errorBuilder: (_, __, ___) => const Icon(
+            Icons.person,
+            color: KonfirmasiJadwalPage.brandPrimary,
+            size: 30,
+          ),
         );
       }
     }
     return Image.asset(
       photo,
       fit: BoxFit.cover,
-      errorBuilder: (_, __, ___) => const Icon(Icons.person, color: KonfirmasiJadwalPage.brandPrimary, size: 30),
+      errorBuilder: (_, __, ___) => const Icon(
+        Icons.person,
+        color: KonfirmasiJadwalPage.brandPrimary,
+        size: 30,
+      ),
     );
   }
 
@@ -119,15 +163,33 @@ class _KonfirmasiJadwalPageState extends State<KonfirmasiJadwalPage> {
       builder: (context, themeMode, _) {
         final isDark = themeMode == ThemeMode.dark;
 
+        final profile = UserProfileService.instance.currentProfile;
+        final resolvedPatientName =
+            widget.patientName ??
+            (profile.nama.isNotEmpty ? profile.nama : "Pasien HeartCare");
+        final resolvedPatientPhoto =
+            widget.patientPhoto ??
+            (profile.fotoProfil.isNotEmpty
+                ? profile.fotoProfil
+                : ProfileService.instance.currentImagePath);
+        String? currentUid;
+        try {
+          currentUid = FirebaseAuth.instance.currentUser?.uid;
+        } catch (_) {}
+        final resolvedPatientId =
+            (widget.patientId ?? currentUid ?? 'patient_user').trim();
+
         // Ambil label jam awal untuk backward compatibility test runner
         final String startTimeOnly = widget.selectedTime.contains('–')
             ? widget.selectedTime.split('–').first.trim()
             : widget.selectedTime.contains('-')
-                ? widget.selectedTime.split('-').first.trim()
-                : widget.selectedTime;
+            ? widget.selectedTime.split('-').first.trim()
+            : widget.selectedTime;
 
         return Scaffold(
-          backgroundColor: isDark ? const Color(0xFF0F172A) : const Color(0xFFF8FAFC),
+          backgroundColor: isDark
+              ? const Color(0xFF0F172A)
+              : const Color(0xFFF8FAFC),
           appBar: AppBar(
             backgroundColor: isDark ? const Color(0xFF1E293B) : Colors.white,
             elevation: 0,
@@ -136,7 +198,9 @@ class _KonfirmasiJadwalPageState extends State<KonfirmasiJadwalPage> {
             leading: Padding(
               padding: const EdgeInsets.all(8.0),
               child: Material(
-                color: isDark ? const Color(0xFF0F172A) : const Color(0xFFF1F5F9),
+                color: isDark
+                    ? const Color(0xFF0F172A)
+                    : const Color(0xFFF1F5F9),
                 borderRadius: BorderRadius.circular(12),
                 child: InkWell(
                   borderRadius: BorderRadius.circular(12),
@@ -175,15 +239,13 @@ class _KonfirmasiJadwalPageState extends State<KonfirmasiJadwalPage> {
                       gradient: const LinearGradient(
                         begin: Alignment.topLeft,
                         end: Alignment.bottomRight,
-                        colors: [
-                          Color(0xFF38BDF8),
-                          Color(0xFF0284C7),
-                        ],
+                        colors: [Color(0xFF38BDF8), Color(0xFF0284C7)],
                       ),
                       shape: BoxShape.circle,
                       boxShadow: [
                         BoxShadow(
-                          color: const Color(0xFF0284C7).withValues(alpha: 0.35),
+                          color: const Color(0xFF0284C7)
+                              .withValues(alpha: 0.35),
                           blurRadius: 18,
                           offset: const Offset(0, 6),
                         ),
@@ -216,7 +278,9 @@ class _KonfirmasiJadwalPageState extends State<KonfirmasiJadwalPage> {
                     textAlign: TextAlign.center,
                     style: TextStyle(
                       fontSize: 13,
-                      color: isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B),
+                      color: isDark
+                          ? const Color(0xFF94A3B8)
+                          : const Color(0xFF64748B),
                       height: 1.4,
                     ),
                   ),
@@ -239,8 +303,9 @@ class _KonfirmasiJadwalPageState extends State<KonfirmasiJadwalPage> {
                       ),
                       boxShadow: [
                         BoxShadow(
-                          color: (isDark ? Colors.black : const Color(0xFF0284C7))
-                              .withValues(alpha: isDark ? 0.2 : 0.04),
+                          color:
+                              (isDark ? Colors.black : const Color(0xFF0284C7))
+                                  .withValues(alpha: isDark ? 0.2 : 0.04),
                           blurRadius: 12,
                           offset: const Offset(0, 4),
                         ),
@@ -259,12 +324,15 @@ class _KonfirmasiJadwalPageState extends State<KonfirmasiJadwalPage> {
                                 border: Border.all(
                                   color: widget.isOnline
                                       ? const Color(0xFF10B981)
-                                      : const Color(0xFF0284C7).withValues(alpha: 0.35),
+                                      : const Color(0xFF0284C7)
+                                            .withValues(alpha: 0.35),
                                   width: 2,
                                 ),
                               ),
                               child: ClipOval(
-                                child: _buildDoctorAvatarImage(widget.doctorPhoto),
+                                child: _buildDoctorAvatarImage(
+                                  widget.doctorPhoto,
+                                ),
                               ),
                             ),
                             const SizedBox(width: 14),
@@ -277,7 +345,9 @@ class _KonfirmasiJadwalPageState extends State<KonfirmasiJadwalPage> {
                                     style: TextStyle(
                                       fontSize: 15,
                                       fontWeight: FontWeight.bold,
-                                      color: isDark ? Colors.white : const Color(0xFF0F172A),
+                                      color: isDark
+                                          ? Colors.white
+                                          : const Color(0xFF0F172A),
                                     ),
                                   ),
                                   const SizedBox(height: 2),
@@ -286,19 +356,27 @@ class _KonfirmasiJadwalPageState extends State<KonfirmasiJadwalPage> {
                                     style: TextStyle(
                                       fontSize: 12,
                                       fontWeight: FontWeight.w600,
-                                      color: isDark ? const Color(0xFF38BDF8) : KonfirmasiJadwalPage.brandPrimary,
+                                      color: isDark
+                                          ? const Color(0xFF38BDF8)
+                                          : KonfirmasiJadwalPage.brandPrimary,
                                     ),
                                   ),
                                   const SizedBox(height: 4),
                                   // Badge Status Aktif Dokter
                                   Container(
-                                    padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 7,
+                                      vertical: 2,
+                                    ),
                                     decoration: BoxDecoration(
                                       color: widget.isOnline
                                           ? (isDark
-                                              ? const Color(0xFF065F46).withValues(alpha: 0.4)
-                                              : const Color(0xFFDCFCE7))
-                                          : (isDark ? const Color(0xFF334155) : const Color(0xFFF1F5F9)),
+                                                ? const Color(0xFF065F46)
+                                                      .withValues(alpha: 0.4)
+                                                : const Color(0xFFDCFCE7))
+                                          : (isDark
+                                                ? const Color(0xFF334155)
+                                                : const Color(0xFFF1F5F9)),
                                       borderRadius: BorderRadius.circular(10),
                                     ),
                                     child: Row(
@@ -316,13 +394,21 @@ class _KonfirmasiJadwalPageState extends State<KonfirmasiJadwalPage> {
                                         ),
                                         const SizedBox(width: 4),
                                         Text(
-                                          widget.isOnline ? "Dokter Aktif" : "Dokter Offline",
+                                          widget.isOnline
+                                              ? "Dokter Aktif"
+                                              : "Dokter Offline",
                                           style: TextStyle(
                                             fontSize: 10,
                                             fontWeight: FontWeight.w600,
                                             color: widget.isOnline
-                                                ? (isDark ? const Color(0xFF6EE7B7) : const Color(0xFF15803D))
-                                                : (isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B)),
+                                                ? (isDark
+                                                      ? const Color(0xFF6EE7B7)
+                                                      : const Color(0xFF15803D))
+                                                : (isDark
+                                                      ? const Color(0xFF94A3B8)
+                                                      : const Color(
+                                                          0xFF64748B,
+                                                        )),
                                           ),
                                         ),
                                       ],
@@ -338,7 +424,9 @@ class _KonfirmasiJadwalPageState extends State<KonfirmasiJadwalPage> {
                           padding: const EdgeInsets.symmetric(vertical: 14),
                           child: Divider(
                             height: 1,
-                            color: isDark ? const Color(0xFF334155) : const Color(0xFFF1F5F9),
+                            color: isDark
+                                ? const Color(0xFF334155)
+                                : const Color(0xFFF1F5F9),
                           ),
                         ),
 
@@ -371,9 +459,16 @@ class _KonfirmasiJadwalPageState extends State<KonfirmasiJadwalPage> {
                         const SizedBox(height: 12),
                         _detailRow(
                           isDark: isDark,
-                          icon: Icons.chat_bubble_outline_rounded,
-                          label: 'Layanan',
-                          value: 'Konsultasi Online via Chat',
+                          icon: consultationType == 'video'
+                              ? Icons.videocam_rounded
+                              : Icons.chat_bubble_outline_rounded,
+                          label: 'Metode Konsultasi',
+                          value: consultationType == 'video'
+                              ? 'Video Call (Tatap Muka)'
+                              : 'Konsultasi Online via Chat',
+                          valueColor: consultationType == 'video'
+                              ? const Color(0xFF0284C7)
+                              : null,
                         ),
                         const SizedBox(height: 12),
                         _detailRow(
@@ -387,32 +482,108 @@ class _KonfirmasiJadwalPageState extends State<KonfirmasiJadwalPage> {
                     ),
                   ),
 
-                  const SizedBox(height: 30),
+                  const SizedBox(height: 28),
 
                   // ==========================================
-                  // TOMBOL 1: KONSULTASI DOKTER LEWAT CHAT
+                  // TOMBOL 1: MULAI VIDEO CALL LANGSUNG
                   // ==========================================
-                  SizedBox(
-                    width: double.infinity,
-                    height: 50,
-                    child: DecoratedBox(
-                      decoration: BoxDecoration(
-                        gradient: const LinearGradient(
-                          colors: [
-                            Color(0xFF0EA5E9),
-                            Color(0xFF0284C7),
+                  if (consultationType == 'video') ...[
+                    SizedBox(
+                      width: double.infinity,
+                      height: 50,
+                      child: DecoratedBox(
+                        decoration: BoxDecoration(
+                          gradient: const LinearGradient(
+                            colors: [Color(0xFF0EA5E9), Color(0xFF0284C7)],
+                          ),
+                          borderRadius: BorderRadius.circular(14),
+                          boxShadow: [
+                            BoxShadow(
+                              color: const Color(0xFF0284C7)
+                                  .withValues(alpha: 0.32),
+                              blurRadius: 10,
+                              offset: const Offset(0, 3),
+                            ),
                           ],
                         ),
-                        borderRadius: BorderRadius.circular(14),
-                        boxShadow: [
-                          BoxShadow(
-                            color: const Color(0xFF0284C7).withValues(alpha: 0.30),
-                            blurRadius: 10,
-                            offset: const Offset(0, 3),
+                        child: ElevatedButton(
+                          onPressed: () async {
+                            final resolvedDoctorId =
+                                (doctorId != null && doctorId!.isNotEmpty)
+                                ? doctorId!
+                                : doctorName;
+                            final chatId = ChatService.instance.computeChatId(
+                              patientId: resolvedPatientId,
+                              doctorId: resolvedDoctorId,
+                            );
+
+                            final callId = await CallService.instance
+                                .createCallSession(
+                                  callerName: resolvedPatientName,
+                                  callerPhoto: resolvedPatientPhoto,
+                                  callerRole: 'patient',
+                                  receiverRole: 'doctor',
+                                  doctorId: resolvedDoctorId,
+                                  doctorName: doctorName,
+                                  doctorPhoto: doctorPhoto,
+                                  doctorSpecialty: doctorSpecialty,
+                                  patientId: resolvedPatientId,
+                                  patientName: resolvedPatientName,
+                                  patientPhoto: resolvedPatientPhoto,
+                                  chatId: chatId,
+                                );
+                            if (context.mounted) {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) => VideoCallPage(
+                                    callId: callId,
+                                    isCaller: true,
+                                    doctorId: resolvedDoctorId,
+                                    doctorName: doctorName,
+                                    doctorPhoto: doctorPhoto,
+                                    doctorSpecialty: doctorSpecialty,
+                                    patientName: resolvedPatientName,
+                                    patientPhoto: resolvedPatientPhoto,
+                                    patientId: resolvedPatientId,
+                                    chatId: chatId,
+                                  ),
+                                ),
+                              );
+                            }
+                          },
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.transparent,
+                            shadowColor: Colors.transparent,
+                            foregroundColor: Colors.white,
+                            elevation: 0,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(14),
+                            ),
                           ),
-                        ],
+                          child: const Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(Icons.videocam_rounded, size: 21),
+                              SizedBox(width: 8),
+                              Text(
+                                'Mulai Video Call Langsung',
+                                style: TextStyle(
+                                  fontSize: 14.5,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
                       ),
-                      child: ElevatedButton(
+                    ),
+                    const SizedBox(height: 12),
+                    // Tombol Sekunder: Chat
+                    SizedBox(
+                      width: double.infinity,
+                      height: 48,
+                      child: OutlinedButton(
                         onPressed: () {
                           Navigator.push(
                             context,
@@ -422,14 +593,26 @@ class _KonfirmasiJadwalPageState extends State<KonfirmasiJadwalPage> {
                                 doctorName: widget.doctorName,
                                 doctorPhoto: widget.doctorPhoto,
                                 doctorSpecialty: widget.doctorSpecialty,
+                                patientName: resolvedPatientName,
+                                patientPhoto: resolvedPatientPhoto,
+                                patientId: resolvedPatientId,
                               ),
                             ),
                           );
                         },
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.transparent,
-                          shadowColor: Colors.transparent,
-                          foregroundColor: Colors.white,
+                        style: OutlinedButton.styleFrom(
+                          foregroundColor: isDark
+                              ? const Color(0xFF38BDF8)
+                              : const Color(0xFF0284C7),
+                          backgroundColor: isDark
+                              ? const Color(0xFF1E293B)
+                              : Colors.white,
+                          side: BorderSide(
+                            color: isDark
+                                ? const Color(0xFF334155)
+                                : const Color(0xFFBAE6FD),
+                            width: 1.2,
+                          ),
                           elevation: 0,
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(14),
@@ -438,15 +621,12 @@ class _KonfirmasiJadwalPageState extends State<KonfirmasiJadwalPage> {
                         child: const Row(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            Icon(
-                              Icons.chat_bubble_rounded,
-                              size: 19,
-                            ),
+                            Icon(Icons.chat_bubble_rounded, size: 18),
                             SizedBox(width: 8),
                             Text(
-                              'Konsultasi Dokter Lewat Chat',
+                              'Buka Chat Konsultasi',
                               style: TextStyle(
-                                fontSize: 14.5,
+                                fontSize: 13.5,
                                 fontWeight: FontWeight.bold,
                               ),
                             ),
@@ -454,7 +634,155 @@ class _KonfirmasiJadwalPageState extends State<KonfirmasiJadwalPage> {
                         ),
                       ),
                     ),
-                  ),
+                  ] else ...[
+                    // Jika tipe Chat dipilih sebagai utama
+                    SizedBox(
+                      width: double.infinity,
+                      height: 50,
+                      child: DecoratedBox(
+                        decoration: BoxDecoration(
+                          gradient: const LinearGradient(
+                            colors: [Color(0xFF0EA5E9), Color(0xFF0284C7)],
+                          ),
+                          borderRadius: BorderRadius.circular(14),
+                          boxShadow: [
+                            BoxShadow(
+                              color: const Color(0xFF0284C7)
+                                  .withValues(alpha: 0.30),
+                              blurRadius: 10,
+                              offset: const Offset(0, 3),
+                            ),
+                          ],
+                        ),
+                        child: ElevatedButton(
+                          onPressed: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => KonsultasiDokterPage(
+                                  doctorId: doctorId,
+                                  doctorName: doctorName,
+                                  doctorPhoto: doctorPhoto,
+                                  doctorSpecialty: doctorSpecialty,
+                                  patientName: resolvedPatientName,
+                                  patientPhoto: resolvedPatientPhoto,
+                                  patientId: resolvedPatientId,
+                                ),
+                              ),
+                            );
+                          },
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.transparent,
+                            shadowColor: Colors.transparent,
+                            foregroundColor: Colors.white,
+                            elevation: 0,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(14),
+                            ),
+                          ),
+                          child: const Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(Icons.chat_bubble_rounded, size: 19),
+                              SizedBox(width: 8),
+                              Text(
+                                'Konsultasi Dokter Lewat Chat',
+                                style: TextStyle(
+                                  fontSize: 14.5,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    // Tombol Sekunder: Video Call
+                    SizedBox(
+                      width: double.infinity,
+                      height: 48,
+                      child: OutlinedButton(
+                        onPressed: () async {
+                          final resolvedDoctorId =
+                              (doctorId != null && doctorId!.isNotEmpty)
+                              ? doctorId!
+                              : doctorName;
+                          final chatId = ChatService.instance.computeChatId(
+                            patientId: resolvedPatientId,
+                            doctorId: resolvedDoctorId,
+                          );
+
+                          final callId = await CallService.instance
+                              .createCallSession(
+                                callerName: resolvedPatientName,
+                                callerPhoto: resolvedPatientPhoto,
+                                callerRole: 'patient',
+                                receiverRole: 'doctor',
+                                doctorId: resolvedDoctorId,
+                                doctorName: doctorName,
+                                doctorPhoto: doctorPhoto,
+                                doctorSpecialty: doctorSpecialty,
+                                patientId: resolvedPatientId,
+                                patientName: resolvedPatientName,
+                                patientPhoto: resolvedPatientPhoto,
+                                chatId: chatId,
+                              );
+                          if (context.mounted) {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => VideoCallPage(
+                                  callId: callId,
+                                  isCaller: true,
+                                  doctorId: resolvedDoctorId,
+                                  doctorName: doctorName,
+                                  doctorPhoto: doctorPhoto,
+                                  doctorSpecialty: doctorSpecialty,
+                                  patientName: resolvedPatientName,
+                                  patientPhoto: resolvedPatientPhoto,
+                                  patientId: resolvedPatientId,
+                                  chatId: chatId,
+                                ),
+                              ),
+                            );
+                          }
+                        },
+                        style: OutlinedButton.styleFrom(
+                          foregroundColor: isDark
+                              ? const Color(0xFF38BDF8)
+                              : const Color(0xFF0284C7),
+                          backgroundColor: isDark
+                              ? const Color(0xFF1E293B)
+                              : Colors.white,
+                          side: BorderSide(
+                            color: isDark
+                                ? const Color(0xFF334155)
+                                : const Color(0xFFBAE6FD),
+                            width: 1.2,
+                          ),
+                          elevation: 0,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(14),
+                          ),
+                        ),
+                        child: const Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(Icons.videocam_rounded, size: 19),
+                            SizedBox(width: 8),
+                            Text(
+                              'Mulai Video Call Langsung',
+                              style: TextStyle(
+                                fontSize: 13.5,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ],
 
                   const SizedBox(height: 12),
 
@@ -468,15 +796,23 @@ class _KonfirmasiJadwalPageState extends State<KonfirmasiJadwalPage> {
                       onPressed: () {
                         Navigator.pushAndRemoveUntil(
                           context,
-                          MaterialPageRoute(builder: (context) => const HomePage()),
+                          MaterialPageRoute(
+                            builder: (context) => const HomePage(),
+                          ),
                           (route) => false,
                         );
                       },
                       style: OutlinedButton.styleFrom(
-                        foregroundColor: isDark ? Colors.white : const Color(0xFF334155),
-                        backgroundColor: isDark ? const Color(0xFF1E293B) : Colors.white,
+                        foregroundColor: isDark
+                            ? Colors.white
+                            : const Color(0xFF334155),
+                        backgroundColor: isDark
+                            ? const Color(0xFF1E293B)
+                            : Colors.white,
                         side: BorderSide(
-                          color: isDark ? const Color(0xFF334155) : const Color(0xFFBAE6FD),
+                          color: isDark
+                              ? const Color(0xFF334155)
+                              : const Color(0xFFBAE6FD),
                           width: 1.2,
                         ),
                         elevation: 0,
@@ -490,7 +826,9 @@ class _KonfirmasiJadwalPageState extends State<KonfirmasiJadwalPage> {
                           Icon(
                             Icons.home_rounded,
                             size: 20,
-                            color: isDark ? const Color(0xFF38BDF8) : const Color(0xFF0284C7),
+                            color: isDark
+                                ? const Color(0xFF38BDF8)
+                                : const Color(0xFF0284C7),
                           ),
                           const SizedBox(width: 8),
                           Text(
@@ -498,7 +836,9 @@ class _KonfirmasiJadwalPageState extends State<KonfirmasiJadwalPage> {
                             style: TextStyle(
                               fontSize: 14.5,
                               fontWeight: FontWeight.bold,
-                              color: isDark ? Colors.white : const Color(0xFF334155),
+                              color: isDark
+                                  ? Colors.white
+                                  : const Color(0xFF334155),
                             ),
                           ),
                         ],
@@ -523,7 +863,11 @@ class _KonfirmasiJadwalPageState extends State<KonfirmasiJadwalPage> {
   }) {
     return Row(
       children: [
-        Icon(icon, size: 18, color: isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B)),
+        Icon(
+          icon,
+          size: 18,
+          color: isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B),
+        ),
         const SizedBox(width: 10),
         Text(
           label,
@@ -540,7 +884,9 @@ class _KonfirmasiJadwalPageState extends State<KonfirmasiJadwalPage> {
             style: TextStyle(
               fontSize: 13,
               fontWeight: FontWeight.bold,
-              color: valueColor ?? (isDark ? Colors.white : const Color(0xFF1E293B)),
+              color:
+                  valueColor ??
+                  (isDark ? Colors.white : const Color(0xFF1E293B)),
             ),
           ),
         ),

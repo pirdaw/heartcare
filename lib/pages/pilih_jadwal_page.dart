@@ -1,8 +1,13 @@
 import 'dart:io';
+
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:heartcare/services/theme_service.dart';
 import 'package:heartcare/services/language_service.dart';
 import 'package:heartcare/services/booking_service.dart';
+
+import '../services/user_profile_service.dart';
+import '../services/profile_service.dart';
 import 'home_page.dart';
 import 'konfirmasi_jadwal_page.dart';
 import 'profil_page.dart';
@@ -31,6 +36,8 @@ class _PilihJadwalPageState extends State<PilihJadwalPage> {
   // Tanggal terpilih
   int selectedDay = 2;
   String selectedDayName = 'Sel';
+  String? selectedTime = '09.00';
+  String selectedConsultationType = 'video'; // 'video' atau 'chat'
   String selectedDateKey = '2026-09-02';
   String selectedDateFull = 'Sel, 2 September 2026';
 
@@ -42,13 +49,48 @@ class _PilihJadwalPageState extends State<PilihJadwalPage> {
 
   // Daftar tanggal yang tersedia untuk konsultasi
   final List<Map<String, dynamic>> dates = [
-    {"day": "Sen", "date": "1", "key": "2026-09-01", "full": "Sen, 1 September 2026"},
-    {"day": "Sel", "date": "2", "key": "2026-09-02", "full": "Sel, 2 September 2026"},
-    {"day": "Rab", "date": "3", "key": "2026-09-03", "full": "Rab, 3 September 2026"},
-    {"day": "Kam", "date": "4", "key": "2026-09-04", "full": "Kam, 4 September 2026"},
-    {"day": "Jum", "date": "5", "key": "2026-09-05", "full": "Jum, 5 September 2026"},
-    {"day": "Sab", "date": "6", "key": "2026-09-06", "full": "Sab, 6 September 2026"},
-    {"day": "Min", "date": "7", "key": "2026-09-07", "full": "Min, 7 September 2026"},
+    {
+      "day": "Sen",
+      "date": "1",
+      "key": "2026-09-01",
+      "full": "Sen, 1 September 2026",
+    },
+    {
+      "day": "Sel",
+      "date": "2",
+      "key": "2026-09-02",
+      "full": "Sel, 2 September 2026",
+    },
+    {
+      "day": "Rab",
+      "date": "3",
+      "key": "2026-09-03",
+      "full": "Rab, 3 September 2026",
+    },
+    {
+      "day": "Kam",
+      "date": "4",
+      "key": "2026-09-04",
+      "full": "Kam, 4 September 2026",
+    },
+    {
+      "day": "Jum",
+      "date": "5",
+      "key": "2026-09-05",
+      "full": "Jum, 5 September 2026",
+    },
+    {
+      "day": "Sab",
+      "date": "6",
+      "key": "2026-09-06",
+      "full": "Sab, 6 September 2026",
+    },
+    {
+      "day": "Min",
+      "date": "7",
+      "key": "2026-09-07",
+      "full": "Min, 7 September 2026",
+    },
   ];
 
   // Pilihan durasi per sesi
@@ -107,12 +149,20 @@ class _PilihJadwalPageState extends State<PilihJadwalPage> {
               dateKey: selectedDateKey,
             );
 
-            final morningSlots = allSlots.where((s) => s.period == 'Pagi').toList();
-            final afternoonSlots = allSlots.where((s) => s.period == 'Siang').toList();
-            final eveningSlots = allSlots.where((s) => s.period == 'Sore').toList();
+            final morningSlots = allSlots
+                .where((s) => s.period == 'Pagi')
+                .toList();
+            final afternoonSlots = allSlots
+                .where((s) => s.period == 'Siang')
+                .toList();
+            final eveningSlots = allSlots
+                .where((s) => s.period == 'Sore')
+                .toList();
 
             return Scaffold(
-              backgroundColor: isDark ? const Color(0xFF0F172A) : const Color(0xFFF8FAFC),
+              backgroundColor: isDark
+                  ? const Color(0xFF0F172A)
+                  : const Color(0xFFF8FAFC),
               body: SafeArea(
                 child: Column(
                   children: [
@@ -127,7 +177,9 @@ class _PilihJadwalPageState extends State<PilihJadwalPage> {
                             width: 40,
                             height: 40,
                             decoration: BoxDecoration(
-                              color: isDark ? const Color(0xFF1E293B) : const Color(0xFFF1F3F6),
+                              color: isDark
+                                  ? const Color(0xFF1E293B)
+                                  : const Color(0xFFF1F3F6),
                               shape: BoxShape.circle,
                             ),
                             child: IconButton(
@@ -135,7 +187,9 @@ class _PilihJadwalPageState extends State<PilihJadwalPage> {
                               icon: Icon(
                                 Icons.chevron_left,
                                 size: 28,
-                                color: isDark ? Colors.white : const Color(0xFF1E293B),
+                                color: isDark
+                                    ? Colors.white
+                                    : const Color(0xFF1E293B),
                               ),
                               onPressed: () => Navigator.pop(context),
                             ),
@@ -147,7 +201,9 @@ class _PilihJadwalPageState extends State<PilihJadwalPage> {
                                 style: TextStyle(
                                   fontSize: 20,
                                   fontWeight: FontWeight.bold,
-                                  color: isDark ? Colors.white : const Color(0xFF0F172A),
+                                  color: isDark
+                                      ? Colors.white
+                                      : const Color(0xFF0F172A),
                                 ),
                               ),
                             ),
@@ -180,7 +236,9 @@ class _PilihJadwalPageState extends State<PilihJadwalPage> {
                                     Icon(
                                       Icons.calendar_month_rounded,
                                       size: 18,
-                                      color: isDark ? const Color(0xFF38BDF8) : const Color(0xFF0284C7),
+                                      color: isDark
+                                          ? const Color(0xFF38BDF8)
+                                          : const Color(0xFF0284C7),
                                     ),
                                     const SizedBox(width: 8),
                                     Text(
@@ -188,16 +246,24 @@ class _PilihJadwalPageState extends State<PilihJadwalPage> {
                                       style: TextStyle(
                                         fontSize: 14,
                                         fontWeight: FontWeight.bold,
-                                        color: isDark ? Colors.white : const Color(0xFF0F172A),
+                                        color: isDark
+                                            ? Colors.white
+                                            : const Color(0xFF0F172A),
                                       ),
                                     ),
                                   ],
                                 ),
                                 Container(
-                                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 10,
+                                    vertical: 4,
+                                  ),
                                   decoration: BoxDecoration(
-                                    color: (isDark ? const Color(0xFF0284C7) : const Color(0xFFE0F2FE))
-                                        .withValues(alpha: 0.5),
+                                    color:
+                                        (isDark
+                                                ? const Color(0xFF0284C7)
+                                                : const Color(0xFFE0F2FE))
+                                            .withValues(alpha: 0.5),
                                     borderRadius: BorderRadius.circular(12),
                                   ),
                                   child: Text(
@@ -205,24 +271,37 @@ class _PilihJadwalPageState extends State<PilihJadwalPage> {
                                     style: TextStyle(
                                       fontSize: 11,
                                       fontWeight: FontWeight.w600,
-                                      color: isDark ? const Color(0xFFBAE6FD) : const Color(0xFF0369A1),
+                                      color: isDark
+                                          ? const Color(0xFFBAE6FD)
+                                          : const Color(0xFF0369A1),
                                     ),
                                   ),
                                 ),
                               ],
                             ),
 
-                            const SizedBox(height: 12),
+                            const SizedBox(height: 24),
+
+                            // ==========================================
+                            // METODE KONSULTASI: VIDEO CALL VS CHAT
+                            // ==========================================
+                            _buildConsultationTypeSelector(isDark),
+
+                            const SizedBox(height: 26),
 
                             // BARIS 7 KAPSUL HARI (Sen 1 - Min 7)
                             Row(
                               children: dates.map((item) {
-                                final int day = int.parse(item["date"].toString());
+                                final int day = int.parse(
+                                  item["date"].toString(),
+                                );
                                 final bool isSelected = selectedDay == day;
 
                                 return Expanded(
                                   child: Padding(
-                                    padding: const EdgeInsets.symmetric(horizontal: 2.5),
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 2.5,
+                                    ),
                                     child: Material(
                                       color: Colors.transparent,
                                       child: InkWell(
@@ -243,26 +322,42 @@ class _PilihJadwalPageState extends State<PilihJadwalPage> {
                                                 : null,
                                             color: isSelected
                                                 ? null
-                                                : (isDark ? const Color(0xFF1E293B) : Colors.white),
-                                            borderRadius: BorderRadius.circular(14),
+                                                : (isDark
+                                                      ? const Color(0xFF1E293B)
+                                                      : Colors.white),
+                                            borderRadius: BorderRadius.circular(
+                                              14,
+                                            ),
                                             border: Border.all(
                                               color: isSelected
                                                   ? const Color(0xFF0284C7)
-                                                  : (isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0)),
+                                                  : (isDark
+                                                        ? const Color(
+                                                            0xFF334155,
+                                                          )
+                                                        : const Color(
+                                                            0xFFE2E8F0,
+                                                          )),
                                               width: 1.2,
                                             ),
                                             boxShadow: isSelected
                                                 ? [
                                                     BoxShadow(
-                                                      color: const Color(0xFF0284C7).withValues(alpha: 0.30),
+                                                      color: const Color(
+                                                        0xFF0284C7,
+                                                      ).withValues(alpha: 0.30),
                                                       blurRadius: 8,
-                                                      offset: const Offset(0, 3),
+                                                      offset: const Offset(
+                                                        0,
+                                                        3,
+                                                      ),
                                                     ),
                                                   ]
                                                 : null,
                                           ),
                                           child: Column(
-                                            mainAxisAlignment: MainAxisAlignment.center,
+                                            mainAxisAlignment:
+                                                MainAxisAlignment.center,
                                             children: [
                                               Text(
                                                 item["day"].toString(),
@@ -271,7 +366,13 @@ class _PilihJadwalPageState extends State<PilihJadwalPage> {
                                                   fontWeight: FontWeight.w500,
                                                   color: isSelected
                                                       ? Colors.white
-                                                      : (isDark ? const Color(0xFF94A3B8) : const Color(0xFF475569)),
+                                                      : (isDark
+                                                            ? const Color(
+                                                                0xFF94A3B8,
+                                                              )
+                                                            : const Color(
+                                                                0xFF475569,
+                                                              )),
                                                 ),
                                               ),
                                               const SizedBox(height: 3),
@@ -282,7 +383,11 @@ class _PilihJadwalPageState extends State<PilihJadwalPage> {
                                                   fontWeight: FontWeight.bold,
                                                   color: isSelected
                                                       ? Colors.white
-                                                      : (isDark ? Colors.white : const Color(0xFF0F172A)),
+                                                      : (isDark
+                                                            ? Colors.white
+                                                            : const Color(
+                                                                0xFF0F172A,
+                                                              )),
                                                 ),
                                               ),
                                             ],
@@ -358,7 +463,9 @@ class _PilihJadwalPageState extends State<PilihJadwalPage> {
                     color: isDark ? const Color(0xFF0F172A) : Colors.white,
                     border: Border(
                       top: BorderSide(
-                        color: isDark ? const Color(0xFF1E293B) : const Color(0xFFE2E8F0),
+                        color: isDark
+                            ? const Color(0xFF1E293B)
+                            : const Color(0xFFE2E8F0),
                         width: 0.8,
                       ),
                     ),
@@ -374,7 +481,9 @@ class _PilihJadwalPageState extends State<PilihJadwalPage> {
                         onTap: () {
                           Navigator.pushAndRemoveUntil(
                             context,
-                            MaterialPageRoute(builder: (context) => const HomePage()),
+                            MaterialPageRoute(
+                              builder: (context) => const HomePage(),
+                            ),
                             (route) => false,
                           );
                         },
@@ -455,13 +564,13 @@ class _PilihJadwalPageState extends State<PilihJadwalPage> {
               border: Border.all(
                 color: widget.isOnline
                     ? const Color(0xFF10B981)
-                    : (isDark ? const Color(0xFF475569) : const Color(0xFFCBD5E1)),
+                    : (isDark
+                          ? const Color(0xFF475569)
+                          : const Color(0xFFCBD5E1)),
                 width: 2,
               ),
             ),
-            child: ClipOval(
-              child: _buildDoctorAvatarImage(widget.doctorPhoto),
-            ),
+            child: ClipOval(child: _buildDoctorAvatarImage(widget.doctorPhoto)),
           ),
           const SizedBox(width: 14),
           // Nama & Spesialisasi
@@ -487,26 +596,33 @@ class _PilihJadwalPageState extends State<PilihJadwalPage> {
                   style: TextStyle(
                     fontSize: 12,
                     fontWeight: FontWeight.w500,
-                    color: isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B),
+                    color: isDark
+                        ? const Color(0xFF94A3B8)
+                        : const Color(0xFF64748B),
                   ),
                 ),
                 const SizedBox(height: 6),
                 // Status Aktif Badge
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 3,
+                  ),
                   decoration: BoxDecoration(
                     color: widget.isOnline
                         ? (isDark
-                            ? const Color(0xFF065F46).withValues(alpha: 0.5)
-                            : const Color(0xFFDCFCE7))
+                              ? const Color(0xFF065F46).withValues(alpha: 0.5)
+                              : const Color(0xFFDCFCE7))
                         : (isDark
-                            ? const Color(0xFF334155)
-                            : const Color(0xFFF1F5F9)),
+                              ? const Color(0xFF334155)
+                              : const Color(0xFFF1F5F9)),
                     borderRadius: BorderRadius.circular(20),
                     border: Border.all(
                       color: widget.isOnline
                           ? const Color(0xFF86EFAC)
-                          : (isDark ? const Color(0xFF475569) : const Color(0xFFCBD5E1)),
+                          : (isDark
+                                ? const Color(0xFF475569)
+                                : const Color(0xFFCBD5E1)),
                       width: 0.8,
                     ),
                   ),
@@ -517,7 +633,9 @@ class _PilihJadwalPageState extends State<PilihJadwalPage> {
                         width: 7,
                         height: 7,
                         decoration: BoxDecoration(
-                          color: widget.isOnline ? const Color(0xFF10B981) : const Color(0xFF94A3B8),
+                          color: widget.isOnline
+                              ? const Color(0xFF10B981)
+                              : const Color(0xFF94A3B8),
                           shape: BoxShape.circle,
                         ),
                       ),
@@ -528,8 +646,12 @@ class _PilihJadwalPageState extends State<PilihJadwalPage> {
                           fontSize: 10.5,
                           fontWeight: FontWeight.w600,
                           color: widget.isOnline
-                              ? (isDark ? const Color(0xFF6EE7B7) : const Color(0xFF15803D))
-                              : (isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B)),
+                              ? (isDark
+                                    ? const Color(0xFF6EE7B7)
+                                    : const Color(0xFF15803D))
+                              : (isDark
+                                    ? const Color(0xFF94A3B8)
+                                    : const Color(0xFF64748B)),
                         ),
                       ),
                     ],
@@ -548,23 +670,28 @@ class _PilihJadwalPageState extends State<PilihJadwalPage> {
       return Image.network(
         photo,
         fit: BoxFit.cover,
-        errorBuilder: (_, __, ___) => const Icon(Icons.person, color: Color(0xFF0284C7), size: 30),
+        errorBuilder: (_, __, ___) =>
+            const Icon(Icons.person, color: Color(0xFF0284C7), size: 30),
       );
     }
-    if (photo.startsWith('/') || photo.contains(':\\') || photo.contains(':/')) {
+    if (photo.startsWith('/') ||
+        photo.contains(':\\') ||
+        photo.contains(':/')) {
       final file = File(photo);
       if (file.existsSync()) {
         return Image.file(
           file,
           fit: BoxFit.cover,
-          errorBuilder: (_, __, ___) => const Icon(Icons.person, color: Color(0xFF0284C7), size: 30),
+          errorBuilder: (_, __, ___) =>
+              const Icon(Icons.person, color: Color(0xFF0284C7), size: 30),
         );
       }
     }
     return Image.asset(
       photo,
       fit: BoxFit.cover,
-      errorBuilder: (_, __, ___) => const Icon(Icons.person, color: Color(0xFF0284C7), size: 30),
+      errorBuilder: (_, __, ___) =>
+          const Icon(Icons.person, color: Color(0xFF0284C7), size: 30),
     );
   }
 
@@ -583,7 +710,9 @@ class _PilihJadwalPageState extends State<PilihJadwalPage> {
                 Icon(
                   Icons.timer_outlined,
                   size: 18,
-                  color: isDark ? const Color(0xFF38BDF8) : const Color(0xFF0284C7),
+                  color: isDark
+                      ? const Color(0xFF38BDF8)
+                      : const Color(0xFF0284C7),
                 ),
                 const SizedBox(width: 8),
                 Text(
@@ -600,7 +729,9 @@ class _PilihJadwalPageState extends State<PilihJadwalPage> {
               "Slot otomatis menyesuaikan",
               style: TextStyle(
                 fontSize: 10.5,
-                color: isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B),
+                color: isDark
+                    ? const Color(0xFF94A3B8)
+                    : const Color(0xFF64748B),
               ),
             ),
           ],
@@ -621,10 +752,7 @@ class _PilihJadwalPageState extends State<PilihJadwalPage> {
                     decoration: BoxDecoration(
                       gradient: isSelected
                           ? const LinearGradient(
-                              colors: [
-                                Color(0xFF0EA5E9),
-                                Color(0xFF0284C7),
-                              ],
+                              colors: [Color(0xFF0EA5E9), Color(0xFF0284C7)],
                             )
                           : null,
                       color: isSelected
@@ -634,13 +762,16 @@ class _PilihJadwalPageState extends State<PilihJadwalPage> {
                       border: Border.all(
                         color: isSelected
                             ? const Color(0xFF0284C7)
-                            : (isDark ? const Color(0xFF334155) : const Color(0xFFCBD5E1)),
+                            : (isDark
+                                  ? const Color(0xFF334155)
+                                  : const Color(0xFFCBD5E1)),
                         width: 1.2,
                       ),
                       boxShadow: isSelected
                           ? [
                               BoxShadow(
-                                color: const Color(0xFF0284C7).withValues(alpha: 0.28),
+                                color: const Color(0xFF0284C7)
+                                    .withValues(alpha: 0.28),
                                 blurRadius: 6,
                                 offset: const Offset(0, 2),
                               ),
@@ -657,7 +788,9 @@ class _PilihJadwalPageState extends State<PilihJadwalPage> {
                             fontWeight: FontWeight.bold,
                             color: isSelected
                                 ? Colors.white
-                                : (isDark ? Colors.white : const Color(0xFF0F172A)),
+                                : (isDark
+                                      ? Colors.white
+                                      : const Color(0xFF0F172A)),
                           ),
                         ),
                         Text(
@@ -667,7 +800,9 @@ class _PilihJadwalPageState extends State<PilihJadwalPage> {
                             fontWeight: FontWeight.w500,
                             color: isSelected
                                 ? Colors.white.withValues(alpha: 0.9)
-                                : (isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B)),
+                                : (isDark
+                                      ? const Color(0xFF94A3B8)
+                                      : const Color(0xFF64748B)),
                           ),
                         ),
                       ],
@@ -689,7 +824,9 @@ class _PilihJadwalPageState extends State<PilihJadwalPage> {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       decoration: BoxDecoration(
-        color: isDark ? const Color(0xFF1E293B).withValues(alpha: 0.6) : const Color(0xFFF1F5F9),
+        color: isDark
+            ? const Color(0xFF1E293B).withValues(alpha: 0.6)
+            : const Color(0xFFF1F5F9),
         borderRadius: BorderRadius.circular(10),
       ),
       child: Row(
@@ -726,10 +863,7 @@ class _PilihJadwalPageState extends State<PilihJadwalPage> {
         Container(
           width: 8,
           height: 8,
-          decoration: BoxDecoration(
-            color: color,
-            shape: BoxShape.circle,
-          ),
+          decoration: BoxDecoration(color: color, shape: BoxShape.circle),
         ),
         const SizedBox(width: 5),
         Text(
@@ -779,7 +913,9 @@ class _PilihJadwalPageState extends State<PilihJadwalPage> {
               "(${slots.length} slot)",
               style: TextStyle(
                 fontSize: 11,
-                color: isDark ? const Color(0xFF64748B) : const Color(0xFF94A3B8),
+                color: isDark
+                    ? const Color(0xFF64748B)
+                    : const Color(0xFF94A3B8),
               ),
             ),
           ],
@@ -791,14 +927,16 @@ class _PilihJadwalPageState extends State<PilihJadwalPage> {
             final int crossAxisCount = selectedDuration == 15 ? 3 : 2;
             const double spacing = 8;
             final double itemWidth =
-                (constraints.maxWidth - (spacing * (crossAxisCount - 1))) / crossAxisCount;
+                (constraints.maxWidth - (spacing * (crossAxisCount - 1))) /
+                crossAxisCount;
 
             return Wrap(
               spacing: spacing,
               runSpacing: 8,
               children: slots.map((slot) {
                 final bool isBooked = slot.isBooked;
-                final bool isSelected = selectedSlot?.startMinutes == slot.startMinutes &&
+                final bool isSelected =
+                    selectedSlot?.startMinutes == slot.startMinutes &&
                     selectedSlot?.endMinutes == slot.endMinutes;
 
                 return SizedBox(
@@ -828,7 +966,10 @@ class _PilihJadwalPageState extends State<PilihJadwalPage> {
                       borderRadius: BorderRadius.circular(10),
                       child: AnimatedContainer(
                         duration: const Duration(milliseconds: 180),
-                        padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 6),
+                        padding: const EdgeInsets.symmetric(
+                          vertical: 8,
+                          horizontal: 6,
+                        ),
                         decoration: BoxDecoration(
                           gradient: isSelected
                               ? const LinearGradient(
@@ -841,23 +982,31 @@ class _PilihJadwalPageState extends State<PilihJadwalPage> {
                           color: isSelected
                               ? null
                               : isBooked
-                                  ? (isDark
-                                      ? const Color(0xFF1E293B).withValues(alpha: 0.4)
-                                      : const Color(0xFFF1F5F9))
-                                  : (isDark ? const Color(0xFF1E293B) : Colors.white),
+                              ? (isDark
+                                    ? const Color(0xFF1E293B)
+                                          .withValues(alpha: 0.4)
+                                    : const Color(0xFFF1F5F9))
+                              : (isDark
+                                    ? const Color(0xFF1E293B)
+                                    : Colors.white),
                           borderRadius: BorderRadius.circular(10),
                           border: Border.all(
                             color: isSelected
                                 ? const Color(0xFF0284C7)
                                 : isBooked
-                                    ? (isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0))
-                                    : (isDark ? const Color(0xFF334155) : const Color(0xFFCBD5E1)),
+                                ? (isDark
+                                      ? const Color(0xFF334155)
+                                      : const Color(0xFFE2E8F0))
+                                : (isDark
+                                      ? const Color(0xFF334155)
+                                      : const Color(0xFFCBD5E1)),
                             width: isSelected ? 1.4 : 1.0,
                           ),
                           boxShadow: isSelected
                               ? [
                                   BoxShadow(
-                                    color: const Color(0xFF0284C7).withValues(alpha: 0.25),
+                                    color: const Color(0xFF0284C7)
+                                        .withValues(alpha: 0.25),
                                     blurRadius: 6,
                                     offset: const Offset(0, 2),
                                   ),
@@ -875,25 +1024,33 @@ class _PilihJadwalPageState extends State<PilihJadwalPage> {
                                   Icon(
                                     Icons.lock_outline_rounded,
                                     size: 13,
-                                    color: isDark ? const Color(0xFF94A3B8) : const Color(0xFF94A3B8),
+                                    color: isDark
+                                        ? const Color(0xFF94A3B8)
+                                        : const Color(0xFF94A3B8),
                                   ),
                                   const SizedBox(width: 4),
                                 ],
                                 Text(
                                   slot.label,
                                   style: TextStyle(
-                                    fontSize: selectedDuration == 15 ? 11 : 12.5,
-                                    fontWeight: isSelected ? FontWeight.bold : FontWeight.w600,
-                                    decoration: isBooked ? TextDecoration.lineThrough : null,
+                                    fontSize: selectedDuration == 15
+                                        ? 11
+                                        : 12.5,
+                                    fontWeight: isSelected
+                                        ? FontWeight.bold
+                                        : FontWeight.w600,
+                                    decoration: isBooked
+                                        ? TextDecoration.lineThrough
+                                        : null,
                                     color: isSelected
                                         ? Colors.white
                                         : isBooked
-                                            ? (isDark
-                                                ? const Color(0xFF64748B)
-                                                : const Color(0xFF94A3B8))
-                                            : (isDark
-                                                ? const Color(0xFFF1F5F9)
-                                                : const Color(0xFF1E293B)),
+                                        ? (isDark
+                                              ? const Color(0xFF64748B)
+                                              : const Color(0xFF94A3B8))
+                                        : (isDark
+                                              ? const Color(0xFFF1F5F9)
+                                              : const Color(0xFF1E293B)),
                                   ),
                                 ),
                               ],
@@ -915,8 +1072,8 @@ class _PilihJadwalPageState extends State<PilihJadwalPage> {
                                 color: isSelected
                                     ? Colors.white.withValues(alpha: 0.95)
                                     : isBooked
-                                        ? const Color(0xFFEF4444)
-                                        : const Color(0xFF10B981),
+                                    ? const Color(0xFFEF4444)
+                                    : const Color(0xFF10B981),
                               ),
                             ),
                           ],
@@ -930,6 +1087,185 @@ class _PilihJadwalPageState extends State<PilihJadwalPage> {
           },
         ),
       ],
+    );
+  }
+
+  Widget _buildConsultationTypeSelector(bool isDark) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            Icon(
+              Icons.video_camera_front_rounded,
+              size: 18,
+              color: isDark ? const Color(0xFF38BDF8) : const Color(0xFF0284C7),
+            ),
+            const SizedBox(width: 8),
+            Text(
+              "Pilih Metode Konsultasi:",
+              style: TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.bold,
+                color: isDark ? Colors.white : const Color(0xFF0F172A),
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 10),
+        Row(
+          children: [
+            // Opsi 1: Video Call Langsung
+            Expanded(
+              child: _consultationTypeCard(
+                isDark: isDark,
+                type: 'video',
+                title: 'Video Call',
+                subtitle: 'Tatap muka & bicara langsung keluhan',
+                icon: Icons.videocam_rounded,
+                badge: 'Rekomendasi',
+                badgeColor: const Color(0xFF10B981),
+              ),
+            ),
+            const SizedBox(width: 10),
+            // Opsi 2: Chat Online
+            Expanded(
+              child: _consultationTypeCard(
+                isDark: isDark,
+                type: 'chat',
+                title: 'Chat Online',
+                subtitle: 'Konsultasi via chat teks & kirim foto',
+                icon: Icons.chat_bubble_rounded,
+              ),
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+
+  Widget _consultationTypeCard({
+    required bool isDark,
+    required String type,
+    required String title,
+    required String subtitle,
+    required IconData icon,
+    String? badge,
+    Color? badgeColor,
+  }) {
+    final bool isSelected = selectedConsultationType == type;
+
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: () {
+          setState(() {
+            selectedConsultationType = type;
+          });
+        },
+        borderRadius: BorderRadius.circular(14),
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+          decoration: BoxDecoration(
+            color: isSelected
+                ? (isDark
+                      ? const Color(0xFF0284C7).withValues(alpha: 0.18)
+                      : const Color(0xFFE0F2FE))
+                : (isDark ? const Color(0xFF1E293B) : Colors.white),
+            borderRadius: BorderRadius.circular(14),
+            border: Border.all(
+              color: isSelected
+                  ? const Color(0xFF0284C7)
+                  : (isDark
+                        ? const Color(0xFF334155)
+                        : const Color(0xFFE2E8F0)),
+              width: isSelected ? 2 : 1,
+            ),
+            boxShadow: isSelected
+                ? [
+                    BoxShadow(
+                      color: const Color(0xFF0284C7).withValues(alpha: 0.18),
+                      blurRadius: 8,
+                      offset: const Offset(0, 3),
+                    ),
+                  ]
+                : null,
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Container(
+                    width: 32,
+                    height: 32,
+                    decoration: BoxDecoration(
+                      color: isSelected
+                          ? const Color(0xFF0284C7)
+                          : (isDark
+                                ? const Color(0xFF334155)
+                                : const Color(0xFFF1F5F9)),
+                      shape: BoxShape.circle,
+                    ),
+                    child: Icon(
+                      icon,
+                      size: 17,
+                      color: isSelected
+                          ? Colors.white
+                          : (isDark
+                                ? const Color(0xFF94A3B8)
+                                : const Color(0xFF64748B)),
+                    ),
+                  ),
+                  const Spacer(),
+                  if (badge != null)
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 6,
+                        vertical: 2,
+                      ),
+                      decoration: BoxDecoration(
+                        color: (badgeColor ?? const Color(0xFF10B981))
+                            .withValues(alpha: 0.15),
+                        borderRadius: BorderRadius.circular(6),
+                      ),
+                      child: Text(
+                        badge,
+                        style: TextStyle(
+                          fontSize: 8.5,
+                          fontWeight: FontWeight.bold,
+                          color: badgeColor ?? const Color(0xFF10B981),
+                        ),
+                      ),
+                    ),
+                ],
+              ),
+              const SizedBox(height: 8),
+              Text(
+                title,
+                style: TextStyle(
+                  fontSize: 13,
+                  fontWeight: FontWeight.bold,
+                  color: isSelected
+                      ? const Color(0xFF0284C7)
+                      : (isDark ? Colors.white : const Color(0xFF0F172A)),
+                ),
+              ),
+              const SizedBox(height: 2),
+              Text(
+                subtitle,
+                style: TextStyle(
+                  fontSize: 10,
+                  height: 1.25,
+                  color: isDark
+                      ? const Color(0xFF94A3B8)
+                      : const Color(0xFF64748B),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
     );
   }
 
@@ -958,7 +1294,9 @@ class _PilihJadwalPageState extends State<PilihJadwalPage> {
                   style: TextStyle(
                     fontSize: 12,
                     fontWeight: FontWeight.w600,
-                    color: isDark ? const Color(0xFF38BDF8) : const Color(0xFF0284C7),
+                    color: isDark
+                        ? const Color(0xFF38BDF8)
+                        : const Color(0xFF0284C7),
                   ),
                 ),
               ],
@@ -972,10 +1310,7 @@ class _PilihJadwalPageState extends State<PilihJadwalPage> {
               gradient: !canConfirm
                   ? null
                   : const LinearGradient(
-                      colors: [
-                        Color(0xFF0EA5E9),
-                        Color(0xFF0284C7),
-                      ],
+                      colors: [Color(0xFF0EA5E9), Color(0xFF0284C7)],
                     ),
               color: !canConfirm
                   ? (isDark ? const Color(0xFF1E293B) : const Color(0xFFCBD5E1))
@@ -1005,10 +1340,7 @@ class _PilihJadwalPageState extends State<PilihJadwalPage> {
               ),
               child: const Text(
                 "Konfirmasi Jadwal",
-                style: TextStyle(
-                  fontSize: 15,
-                  fontWeight: FontWeight.bold,
-                ),
+                style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
               ),
             ),
           ),
@@ -1020,6 +1352,23 @@ class _PilihJadwalPageState extends State<PilihJadwalPage> {
   void _onConfirmSchedule() {
     if (selectedSlot == null || selectedSlot!.isBooked) return;
 
+    final formattedDate = selectedDateFull;
+    UserProfileData? profile;
+    try {
+      profile = UserProfileService.instance.currentProfile;
+    } catch (_) {}
+    final resolvedPatientName = profile != null && profile.nama.isNotEmpty
+        ? profile.nama
+        : 'Pasien HeartCare';
+    final resolvedPatientPhoto =
+        profile != null && profile.fotoProfil.isNotEmpty
+        ? profile.fotoProfil
+        : ProfileService.instance.currentImagePath;
+    String? currentUid;
+    try {
+      currentUid = FirebaseAuth.instance.currentUser?.uid;
+    } catch (_) {}
+
     Navigator.push(
       context,
       MaterialPageRoute(
@@ -1029,8 +1378,12 @@ class _PilihJadwalPageState extends State<PilihJadwalPage> {
           doctorSpecialty: widget.doctorSpecialty,
           doctorPhoto: widget.doctorPhoto,
           isOnline: widget.isOnline,
-          selectedDate: selectedDateFull,
+          selectedDate: formattedDate,
           selectedTime: selectedSlot!.label,
+          consultationType: selectedConsultationType,
+          patientName: resolvedPatientName,
+          patientPhoto: resolvedPatientPhoto,
+          patientId: currentUid,
           durationMinutes: selectedDuration,
           startMinutes: selectedSlot!.startMinutes,
           endMinutes: selectedSlot!.endMinutes,
@@ -1050,8 +1403,12 @@ class _PilihJadwalPageState extends State<PilihJadwalPage> {
     required bool active,
     VoidCallback? onTap,
   }) {
-    final activeColor = isDark ? const Color(0xFF38BDF8) : const Color(0xFF1479F5);
-    final inactiveColor = isDark ? const Color(0xFF64748B) : const Color(0xFF64748B);
+    final activeColor = isDark
+        ? const Color(0xFF38BDF8)
+        : const Color(0xFF1479F5);
+    final inactiveColor = isDark
+        ? const Color(0xFF64748B)
+        : const Color(0xFF64748B);
 
     return GestureDetector(
       onTap: onTap,
@@ -1062,11 +1419,7 @@ class _PilihJadwalPageState extends State<PilihJadwalPage> {
           mainAxisAlignment: MainAxisAlignment.center,
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(
-              icon,
-              size: 23,
-              color: active ? activeColor : inactiveColor,
-            ),
+            Icon(icon, size: 23, color: active ? activeColor : inactiveColor),
             const SizedBox(height: 2),
             Text(
               label,
