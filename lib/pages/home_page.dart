@@ -2530,27 +2530,17 @@ class _HomePageState extends State<HomePage> {
         ? const Color(0xFF94A3B8)
         : Colors.black87;
 
-    return GestureDetector(
-      onTap: () => _onItemTapped(index),
-      behavior: HitTestBehavior.opaque,
-      child: SizedBox(
-        width: 55,
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(icon, size: 23, color: active ? activeColor : inactiveColor),
-            const SizedBox(height: 2),
-            Text(
-              label,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: TextStyle(
-                fontSize: 11,
-                fontWeight: active ? FontWeight.bold : FontWeight.normal,
-
-                color: active ? activeColor : inactiveColor,
-              ),
+    return Expanded(
+      child: GestureDetector(
+        onTap: () => _onItemTapped(index),
+        behavior: HitTestBehavior.opaque,
+        child: Container(
+          padding: const EdgeInsets.symmetric(vertical: 4),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(icon, size: 23, color: active ? activeColor : inactiveColor),
               const SizedBox(height: 2),
               Text(
                 label,

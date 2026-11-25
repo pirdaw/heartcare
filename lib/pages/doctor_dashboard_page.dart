@@ -9,12 +9,8 @@ import '../services/chat_service.dart';
 import '../services/profile_service.dart';
 import '../services/theme_service.dart';
 import '../services/doctor_service.dart';
-<<<<<<< HEAD
-import '../services/profile_service.dart';
-=======
 import '../services/notification_service.dart';
 import '../services/call_service.dart';
->>>>>>> origin/valent
 import 'konsultasi_dokter_page.dart';
 import 'video_call_page.dart';
 import 'welcome_page.dart';
@@ -1246,92 +1242,6 @@ class _DoctorDashboardPageState extends State<DoctorDashboardPage> {
                             const SizedBox(height: 14),
 
                             // STATISTIK KILAT
-<<<<<<< HEAD
-                            _statCard(
-                              isDark: isDark,
-                              icon: Icons.forum_rounded,
-                              color: const Color(0xFF0284C7),
-                              label: 'Pesan Masuk',
-                              value: 'Real-Time',
-                            ),
-
-                    const SizedBox(height: 20),
-
-                    // JUDUL DAFTAR CHAT PASIEN
-                    Row(
-                      children: [
-                        Container(
-                          width: 4,
-                          height: 16,
-                          decoration: BoxDecoration(
-                            color: const Color(0xFF0284C7),
-                            borderRadius: BorderRadius.circular(2),
-                          ),
-                        ),
-                        const SizedBox(width: 8),
-                        Text(
-                          "Konsultasi Pasien",
-                          style: TextStyle(
-                            fontSize: 15,
-                            fontWeight: FontWeight.bold,
-                            color: isDark
-                                ? Colors.white
-                                : const Color(0xFF0F172A),
-                          ),
-                        ),
-                      ],
-                    ),
-
-                    const SizedBox(height: 10),
-
-                    // STREAM DAFTAR CHAT PASIEN REAL-TIME
-                    StreamBuilder<List<ChatRoom>>(
-                      stream: ChatService.instance.getDoctorChatsStream(
-                        doctorName,
-                        doctorId: doctorUid,
-                      ),
-                      builder: (context, snapshot) {
-                        if (snapshot.connectionState ==
-                                ConnectionState.waiting &&
-                            !snapshot.hasData) {
-                          return const Padding(
-                            padding: EdgeInsets.symmetric(vertical: 30),
-                            child: Center(
-                              child: CircularProgressIndicator(),
-                            ),
-                          );
-                        }
-
-                        final chatRooms = snapshot.data ?? [];
-
-                        if (chatRooms.isEmpty) {
-                          return Container(
-                            width: double.infinity,
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 20,
-                              vertical: 36,
-                            ),
-                            decoration: BoxDecoration(
-                              color: isDark
-                                  ? const Color(0xFF1E293B)
-                                  : Colors.white,
-                              borderRadius: BorderRadius.circular(16),
-                              border: Border.all(
-                                color: isDark
-                                    ? const Color(0xFF334155)
-                                    : const Color(0xFFE2E8F0),
-                              ),
-                            ),
-                            child: Column(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                Icon(
-                                  Icons.chat_bubble_outline_rounded,
-                                  size: 44,
-                                  color: isDark
-                                      ? const Color(0xFF475569)
-                                      : const Color(0xFF94A3B8),
-=======
                             Row(
                               children: [
                                 Expanded(
@@ -1342,7 +1252,6 @@ class _DoctorDashboardPageState extends State<DoctorDashboardPage> {
                                     label: 'Pesan Masuk',
                                     value: 'Real-Time',
                                   ),
->>>>>>> origin/valent
                                 ),
                                 const SizedBox(width: 10),
                                 Expanded(
@@ -1475,20 +1384,6 @@ class _DoctorDashboardPageState extends State<DoctorDashboardPage> {
                                 doctorName,
                                 doctorId: doctorUid,
                               ),
-<<<<<<< HEAD
-                              child: ListTile(
-                                contentPadding: const EdgeInsets.symmetric(
-                                  horizontal: 12,
-                                  vertical: 4,
-                                ),
-                                leading: Stack(
-                                  children: [
-                                    ProfileService.buildPatientAvatar(
-                                      photo: room.patientPhoto,
-                                      width: 44,
-                                      height: 44,
-                                      isDark: isDark,
-=======
                               builder: (context, snapshot) {
                                 if (snapshot.connectionState ==
                                         ConnectionState.waiting &&
@@ -1520,7 +1415,6 @@ class _DoctorDashboardPageState extends State<DoctorDashboardPage> {
                                             ? const Color(0xFF334155)
                                             : const Color(0xFFE2E8F0),
                                       ),
->>>>>>> origin/valent
                                     ),
                                     child: Column(
                                       mainAxisAlignment:
@@ -1558,35 +1452,6 @@ class _DoctorDashboardPageState extends State<DoctorDashboardPage> {
                                           ),
                                         ),
                                       ],
-<<<<<<< HEAD
-                                    ],
-                                  ),
-                                ),
-                                trailing: const Icon(
-                                  Icons.chevron_right_rounded,
-                                  color: Color(0xFF94A3B8),
-                                  size: 20,
-                                ),
-                                onTap: () {
-                                  Navigator.push(
-                                    context,
-                                    MaterialPageRoute(
-                                      builder: (context) =>
-                                          KonsultasiDokterPage(
-                                        chatId: room.id,
-                                        isDoctorView: true,
-                                        doctorName: room.doctorName,
-                                        doctorPhoto: room.doctorPhoto,
-                                        doctorSpecialty: room.doctorSpecialty,
-                                        patientName: room.patientName,
-                                        patientId: room.patientId,
-                                        patientPhoto: room.patientPhoto,
-                                        doctorId: room.doctorId.isNotEmpty
-                                            ? room.doctorId
-                                            : doctorUid,
-                                      ),
-=======
->>>>>>> origin/valent
                                     ),
                                   );
                                 }

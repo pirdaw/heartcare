@@ -226,10 +226,10 @@ class ProfileService {
     return null;
   }
 
-<<<<<<< HEAD
   /// Widget avatar pasien dengan fallback ke foto profil bawaan ('assets/images/profile_woman.png')
   static Widget buildPatientAvatar({
     String? photo,
+    String? patientId,
     double width = 44,
     double height = 44,
     bool isDark = false,
@@ -263,20 +263,30 @@ class ProfileService {
                 ),
               ),
             )
-          : Image.asset(
-              'assets/images/profile_woman.png',
-              width: width,
-              height: height,
-              fit: BoxFit.cover,
-              errorBuilder: (context, error, stackTrace) => Icon(
-                Icons.person_rounded,
-                color: isDark
-                    ? const Color(0xFF38BDF8)
-                    : const Color(0xFF0284C7),
-                size: width * 0.58,
-              ),
-            ),
-=======
+          : (patientId != null && patientId.trim().isNotEmpty
+                ? buildPatientImage(
+                    photo,
+                    patientId: patientId,
+                    width: width,
+                    height: height,
+                    isDark: isDark,
+                  )
+                : Image.asset(
+                    'assets/images/profile_woman.png',
+                    width: width,
+                    height: height,
+                    fit: BoxFit.cover,
+                    errorBuilder: (context, error, stackTrace) => Icon(
+                      Icons.person_rounded,
+                      color: isDark
+                          ? const Color(0xFF38BDF8)
+                          : const Color(0xFF0284C7),
+                      size: width * 0.58,
+                    ),
+                  )),
+    );
+  }
+
   /// Cache foto profil pasien berdasarkan patientId / UID
   static final ValueNotifier<Map<String, String>> patientPhotosNotifier =
       ValueNotifier<Map<String, String>>({});
@@ -486,7 +496,6 @@ class ProfileService {
           color: isDark ? const Color(0xFF38BDF8) : const Color(0xFF0284C7),
         ),
       ),
->>>>>>> origin/valent
     );
   }
 }

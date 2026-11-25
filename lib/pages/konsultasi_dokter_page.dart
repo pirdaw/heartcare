@@ -15,7 +15,6 @@ import 'package:heartcare/services/language_service.dart';
 
 import '../services/profile_service.dart';
 import '../services/user_profile_service.dart';
-import '../services/profile_service.dart';
 import '../services/chat_service.dart';
 import '../services/doctor_service.dart';
 import '../services/notification_service.dart';
@@ -92,32 +91,38 @@ class _KonsultasiDokterPageState extends State<KonsultasiDokterPage> {
   @override
   void initState() {
     super.initState();
-<<<<<<< HEAD
-    _resolvedPatientPhoto = widget.patientPhoto;
-    if (widget.isDoctorView && (_resolvedPatientPhoto == null || _resolvedPatientPhoto!.isEmpty)) {
-      _loadPatientPhotoIfAvailable();
-    }
-    ChatNotificationService.instance.setActiveChatRoom(
-      doctorName: widget.doctorName,
-      isDoctorView: widget.isDoctorView,
-      patientId: widget.patientId,
-      patientName: widget.patientName,
-      chatId: widget.chatId,
-    );
-    ChatNotificationService.instance.markAsRead(
-      widget.doctorName,
-      viewerRole: widget.isDoctorView
-          ? ChatSenderRole.doctor
-          : ChatSenderRole.patient,
-      patientId: widget.patientId,
-      patientName: widget.patientName,
-      doctorId: widget.doctorId,
-      chatId: widget.chatId,
-=======
-    ChatService.instance.setActiveRole(
-      widget.isDoctorView ? 'doctor' : 'patient',
->>>>>>> origin/valent
-    );
+_resolvedPatientPhoto = widget.patientPhoto;
+
+if (widget.isDoctorView &&
+    (_resolvedPatientPhoto == null || _resolvedPatientPhoto!.isEmpty)) {
+  _loadPatientPhotoIfAvailable();
+}
+
+// Mengatur role pengguna dari versi Valent
+ChatService.instance.setActiveRole(
+  widget.isDoctorView ? 'doctor' : 'patient',
+);
+
+// Mengatur ruang chat aktif dari versi HEAD
+ChatNotificationService.instance.setActiveChatRoom(
+  doctorName: widget.doctorName,
+  isDoctorView: widget.isDoctorView,
+  patientId: widget.patientId,
+  patientName: widget.patientName,
+  chatId: widget.chatId,
+);
+
+ChatNotificationService.instance.markAsRead(
+  widget.doctorName,
+  viewerRole: widget.isDoctorView
+      ? ChatSenderRole.doctor
+      : ChatSenderRole.patient,
+  patientId: widget.patientId,
+  patientName: widget.patientName,
+  doctorId: widget.doctorId,
+  chatId: widget.chatId,
+);
+
     ChatNotificationService.instance.currentActiveDoctorRoom =
         widget.doctorName;
     ChatNotificationService.instance.markAsRead(widget.doctorName);
@@ -2175,13 +2180,9 @@ class _KonsultasiDokterPageState extends State<KonsultasiDokterPage> {
                         // FOTO DOKTER
                         // FOTO / AVATAR HEADER
                         widget.isDoctorView
-                            ? ProfileService.buildPatientAvatar(
-                                photo: _resolvedPatientPhoto ?? widget.patientPhoto,
+                            ? Container(
                                 width: 44,
                                 height: 44,
-<<<<<<< HEAD
-                                isDark: isDark,
-=======
                                 decoration: BoxDecoration(
                                   color: isDark
                                       ? const Color(0xFF0F2B3E)
@@ -2196,13 +2197,14 @@ class _KonsultasiDokterPageState extends State<KonsultasiDokterPage> {
                                 ),
                                 clipBehavior: Clip.antiAlias,
                                 child: ProfileService.buildPatientImage(
-                                  _patientPhoto ?? widget.patientPhoto,
+                                  _resolvedPatientPhoto ??
+                                      _patientPhoto ??
+                                      widget.patientPhoto,
                                   patientId: widget.patientId,
                                   width: 44,
                                   height: 44,
                                   isDark: isDark,
                                 ),
->>>>>>> origin/valent
                               )
                             : _doctorImage(width: 44, height: 44),
 
@@ -2877,13 +2879,9 @@ class _KonsultasiDokterPageState extends State<KonsultasiDokterPage> {
       crossAxisAlignment: CrossAxisAlignment.end,
       children: [
         widget.isDoctorView
-            ? ProfileService.buildPatientAvatar(
-                photo: _resolvedPatientPhoto ?? widget.patientPhoto,
+            ? Container(
                 width: 32,
                 height: 32,
-<<<<<<< HEAD
-                isDark: isDark,
-=======
                 decoration: BoxDecoration(
                   color: isDark
                       ? const Color(0xFF0F2B3E)
@@ -2898,13 +2896,14 @@ class _KonsultasiDokterPageState extends State<KonsultasiDokterPage> {
                 ),
                 clipBehavior: Clip.antiAlias,
                 child: ProfileService.buildPatientImage(
-                  _patientPhoto ?? widget.patientPhoto,
+                  _resolvedPatientPhoto ??
+                      _patientPhoto ??
+                      widget.patientPhoto,
                   patientId: widget.patientId,
                   width: 32,
                   height: 32,
                   isDark: isDark,
                 ),
->>>>>>> origin/valent
               )
             : _doctorImage(width: 32, height: 32),
         const SizedBox(width: 8),
