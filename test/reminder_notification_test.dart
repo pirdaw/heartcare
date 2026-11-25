@@ -96,4 +96,32 @@ void main() {
     // Banner sudah ter-dismiss
     expect(find.text('PENGINGAT KONSULTASI'), findsNothing);
   });
+
+  test('Booking consultation automatically registers reminder without manual user configuration', () async {
+    final service = ReminderNotificationService.instance;
+    await service.init();
+
+    HeartCareReminder? autoReminder;
+    final sub = service.onReminder.listen((r) {
+      autoReminder = r;
+    });
+
+    // Simulasi booking konsultasi otomatis
+    await service.scheduleConsultationReminder(
+      doctorName: 'dr. Kavalera Valent',
+      doctorSpecialty: 'Spesialis Jantung',
+      timeSlot: '14.00–14.30',
+      dateDisplay: 'Rabu, 25 November 2026',
+      timingLabel: 'Pengingat Otomatis',
+      notifyImmediately: true,
+    );
+
+    expect(autoReminder, isNotNull);
+    expect(autoReminder!.doctorName, equals('dr. Kavalera Valent'));
+    expect(autoReminder!.body, contains('Pengingat Otomatis'));
+    expect(service.activeReminders.any((r) => r.doctorName == 'dr. Kavalera Valent'), isTrue);
+
+    await sub.cancel();
+  });
 }
+

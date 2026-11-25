@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'reminder_notification_service.dart';
 
 /// Model untuk menyimpan data booking jadwal konsultasi dokter
 class DoctorBooking {
@@ -338,6 +339,18 @@ class BookingService extends ChangeNotifier {
     _bookings.add(booking);
     await _persist();
     notifyListeners();
+
+    // Otomatis aktifkan pengingat notifikasi ala Gojek tanpa user harus mengaturnya sendiri
+    ReminderNotificationService.instance.scheduleConsultationReminder(
+      doctorName: doctorName,
+      doctorSpecialty: doctorSpecialty,
+      doctorPhoto: doctorPhoto,
+      doctorId: doctorId,
+      timeSlot: timeSlot,
+      dateDisplay: dateDisplay,
+      timingLabel: 'Otomatis Aktif',
+      notifyImmediately: true,
+    );
 
     // Simpan ke Firestore jika koneksi tersedia
     try {

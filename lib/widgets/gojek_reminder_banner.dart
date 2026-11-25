@@ -519,3 +519,4 @@ class _GojekBannerOverlayWidgetState extends State<_GojekBannerOverlayWidget>
     );
   }
 }
+

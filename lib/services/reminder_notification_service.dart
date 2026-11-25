@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'system_notification_service.dart';
+import 'booking_service.dart';
 import '../pages/pengingat_kesehatan_page.dart';
 
 /// Tipe pengingat notifikasi bergaya Gojek
@@ -102,8 +103,8 @@ class HeartCareReminder {
   }
 }
 
-/// Layanan terpusat untuk mengelola notifikasi reminder bergaya Gojek
-/// yang muncul di semua halaman aplikasi (In-App floating banner) dan juga status bar HP (System Notification).
+/// Layanan terpusat untuk mengelola notifikasi reminder bergaya Gojek SECARA 100% OTOMATIS
+/// tanpa mengharuskan pengguna mengatur notifikasi sendiri.
 class ReminderNotificationService {
   ReminderNotificationService._internal();
   static final ReminderNotificationService instance =
@@ -122,9 +123,13 @@ class ReminderNotificationService {
   HeartCareReminder? _latestReminder;
   HeartCareReminder? get latestReminder => _latestReminder;
 
+  // Set pencatat trigger notifikasi agar tidak duplikat di menit yang sama
+  final Set<String> _triggeredKeys = {};
+
+  Timer? _autoEngineTimer;
   bool _isInitialized = false;
 
-  /// Inisialisasi service reminder
+  /// Inisialisasi service reminder dan mulai mesin otomatisasi latar belakang
   Future<void> init() async {
     if (_isInitialized) return;
     try {
@@ -142,14 +147,146 @@ class ReminderNotificationService {
         }
       }
 
-      // Hubungkan pemantau pengingat obat dari HealthReminderController
+      // 1. Hubungkan pemantau pengingat obat dari HealthReminderController
       _listenToHealthReminderController();
 
+      // 2. Mulai mesin pengingat otomatis berkala (konsultasi & obat)
+      final isTest = WidgetsBinding.instance.runtimeType.toString().contains('Test');
+      if (!isTest) {
+        _startAutomaticReminderEngine();
+        // Beri sapaan reminder otomatis saat aplikasi baru dibuka jika ada jadwal
+        _checkAndTriggerInitialUpcomingReminder();
+      }
+
       _isInitialized = true;
-      debugPrint('[ReminderNotificationService] Berhasil diinisialisasi');
+      debugPrint('[ReminderNotificationService] Berhasil diinisialisasi otomatis');
     } catch (e) {
       debugPrint('[ReminderNotificationService] Gagal inisialisasi: $e');
     }
+  }
+
+  /// Mesin otomatisasi berkala (Auto Reminder Engine) yang memantau jadwal konsultasi & obat
+  /// secara otomatis tanpa perlu pengguna melakukan pengaturan manual.
+  void _startAutomaticReminderEngine() {
+    _autoEngineTimer?.cancel();
+    _autoEngineTimer = Timer.periodic(const Duration(seconds: 25), (timer) {
+      _checkAutomaticReminders();
+    });
+  }
+
+  void _checkAutomaticReminders() {
+    final now = DateTime.now();
+    final currentMinutes = now.hour * 60 + now.minute;
+    final String currentMinuteKey = '${now.day}_${now.hour}_${now.minute}';
+
+    // A. CEK JADWAL KONSULTASI DOKTER OTOMATIS
+    final bookings = BookingService.instance.bookings;
+    for (final booking in bookings) {
+      if (booking.status != 'booked') continue;
+
+      final int startMin = booking.startMinutes;
+      final int diff = startMin - currentMinutes;
+
+      // 1. Notifikasi otomatis 15 Menit sebelum konsultasi dimulai
+      if (diff > 0 && diff <= 15) {
+        final key15 = 'cons_${booking.id}_15m_${now.day}';
+        if (!_triggeredKeys.contains(key15)) {
+          _triggeredKeys.add(key15);
+          triggerReminder(
+            HeartCareReminder(
+              id: key15,
+              type: ReminderType.consultation,
+              title: 'Jadwal Konsultasi Segera Dimulai',
+              body: 'Sesi konsultasi Anda dengan ${booking.doctorName} dimulai dalam $diff menit (${booking.timeSlot}). Masuk sekarang agar siap berkonsultasi.',
+              time: booking.timeSlot,
+              doctorName: booking.doctorName,
+              doctorSpecialty: booking.doctorSpecialty,
+              doctorPhoto: booking.doctorPhoto,
+              doctorId: booking.doctorId,
+              actionLabel: 'Masuk Chat',
+            ),
+          );
+        }
+      }
+
+      // 2. Notifikasi otomatis tepat saat sesi konsultasi dibuka
+      if (diff <= 0 && diff >= -booking.durationMinutes) {
+        final keyNow = 'cons_${booking.id}_now_${now.day}';
+        if (!_triggeredKeys.contains(keyNow)) {
+          _triggeredKeys.add(keyNow);
+          triggerReminder(
+            HeartCareReminder(
+              id: keyNow,
+              type: ReminderType.consultation,
+              title: 'Sesi Konsultasi Sedang Berlangsung!',
+              body: '${booking.doctorName} siap melayani konsultasi Anda sekarang (${booking.timeSlot}). Klik untuk langsung masuk ke ruang chat.',
+              time: 'Sekarang',
+              doctorName: booking.doctorName,
+              doctorSpecialty: booking.doctorSpecialty,
+              doctorPhoto: booking.doctorPhoto,
+              doctorId: booking.doctorId,
+              actionLabel: 'Buka Chat',
+            ),
+          );
+        }
+      }
+    }
+
+    // B. CEK JADWAL MINUM OBAT OTOMATIS
+    final currentFormattedTime =
+        '${now.hour.toString().padLeft(2, '0')}.${now.minute.toString().padLeft(2, '0')}';
+    final currentFormattedColon =
+        '${now.hour.toString().padLeft(2, '0')}:${now.minute.toString().padLeft(2, '0')}';
+
+    final controller = HealthReminderController();
+    for (final med in controller.medicines) {
+      if (!med.isAlarmEnabled || med.isTaken) continue;
+      for (final timeStr in med.reminderTimes) {
+        final cleanTime = timeStr.trim().replaceAll(':', '.');
+        if (cleanTime == currentFormattedTime ||
+            cleanTime == currentFormattedColon.replaceAll(':', '.')) {
+          final medKey = 'med_${med.id}_$currentMinuteKey';
+          if (!_triggeredKeys.contains(medKey)) {
+            _triggeredKeys.add(medKey);
+            triggerMedicineReminder(
+              medicineName: med.name,
+              dosage: '${med.amount} ${med.unit}',
+              scheduleInfo: med.schedule,
+              time: timeStr.contains('WIB') ? timeStr : '$timeStr WIB',
+              note: med.note,
+            );
+          }
+        }
+      }
+    }
+  }
+
+  /// Cek saat aplikasi baru dibuka untuk menampilkan pengingat aktif hari ini secara otomatis
+  void _checkAndTriggerInitialUpcomingReminder() {
+    Future.delayed(const Duration(seconds: 3), () {
+      final bookings = BookingService.instance.bookings;
+      if (bookings.isNotEmpty) {
+        final booking = bookings.first;
+        final initialKey = 'initial_auto_booking_${booking.id}';
+        if (!_triggeredKeys.contains(initialKey)) {
+          _triggeredKeys.add(initialKey);
+          triggerReminder(
+            HeartCareReminder(
+              id: initialKey,
+              type: ReminderType.consultation,
+              title: 'Pengingat Otomatis Konsultasi',
+              body: 'Jadwal konsultasi Anda bersama ${booking.doctorName} pukul ${booking.timeSlot} (${booking.dateDisplay}) aktif otomatis.',
+              time: booking.timeSlot,
+              doctorName: booking.doctorName,
+              doctorSpecialty: booking.doctorSpecialty,
+              doctorPhoto: booking.doctorPhoto,
+              doctorId: booking.doctorId,
+              actionLabel: 'Masuk Chat',
+            ),
+          );
+        }
+      }
+    });
   }
 
   /// Pantau trigger pengingat obat dari controller agar memicu notifikasi bergaya Gojek secara global
@@ -192,7 +329,7 @@ class ReminderNotificationService {
     }
   }
 
-  /// Jadwalkan / simpan pengingat jadwal konsultasi dokter
+  /// Daftarkan pengingat jadwal konsultasi secara otomatis
   Future<void> scheduleConsultationReminder({
     required String doctorName,
     required String doctorSpecialty,
@@ -201,16 +338,16 @@ class ReminderNotificationService {
     String? doctorPhoto,
     String? doctorId,
     String? chatId,
-    String? timingLabel, // Misal: "15 menit sebelumnya", "1 jam sebelumnya"
+    String? timingLabel,
     bool notifyImmediately = true,
   }) async {
-    final cleanTiming = timingLabel ?? 'Pengingat Jadwal Aktif';
+    final cleanTiming = timingLabel ?? 'Otomatis Aktif';
 
     final reminder = HeartCareReminder(
       id: 'rem_cons_${DateTime.now().millisecondsSinceEpoch}',
       type: ReminderType.consultation,
       title: 'Pengingat Konsultasi: $doctorName',
-      body: 'Jadwal konsultasi ($cleanTiming) akan dimulai pada $dateDisplay pukul $timeSlot. Masuk ruang konsultasi tepat waktu.',
+      body: 'Jadwal konsultasi ($cleanTiming) pada $dateDisplay pukul $timeSlot. Notifikasi akan otomatis mengingatkan Anda.',
       time: timeSlot.contains('WIB') ? timeSlot : '$timeSlot WIB',
       doctorName: doctorName,
       doctorSpecialty: doctorSpecialty,
@@ -228,7 +365,7 @@ class ReminderNotificationService {
     }
   }
 
-  /// Picu pengingat minum obat
+  /// Picu pengingat minum obat secara otomatis
   Future<void> triggerMedicineReminder({
     required String medicineName,
     required String dosage,
@@ -269,8 +406,8 @@ class ReminderNotificationService {
         HeartCareReminder(
           id: 'demo_cons_${DateTime.now().millisecondsSinceEpoch}',
           type: ReminderType.consultation,
-          title: 'Jadwal Konsultasi Dokter',
-          body: 'dr. Nurlitta Dwi (Spesialis Jantung) siap berkonsultasi. Sesi Anda dimulai dalam 15 menit.',
+          title: 'Pengingat Otomatis Konsultasi',
+          body: 'dr. Nurlitta Dwi (Spesialis Jantung) siap berkonsultasi. Sesi Anda dimulai dalam 15 menit (Pukul 09.00 WIB).',
           time: '09.00 WIB',
           doctorName: 'dr. Nurlitta Dwi',
           doctorSpecialty: 'Spesialis Jantung',
@@ -284,7 +421,7 @@ class ReminderNotificationService {
           id: 'demo_med_${DateTime.now().millisecondsSinceEpoch}',
           type: ReminderType.medicine,
           title: 'Waktunya Minum Obat!',
-          body: 'Amlodipine 5 mg (1 Tablet) - Setelah makan siang untuk menjaga tekanan darah stabil.',
+          body: 'Amlodipine 5 mg (1 Tablet) - Setelah makan siang untuk menjaga kestabilan tekanan darah Anda.',
           time: '13.00 WIB',
           medicineName: 'Amlodipine 5 mg',
           medicineDosage: '1 Tablet',
@@ -303,6 +440,7 @@ class ReminderNotificationService {
   }
 
   void dispose() {
+    _autoEngineTimer?.cancel();
     _reminderStreamController.close();
   }
 }

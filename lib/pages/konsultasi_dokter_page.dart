@@ -3109,18 +3109,47 @@ class _KonsultasiDokterPageState
 
                     const SizedBox(height: 4),
 
-                    const Padding(
+                    Padding(
                       padding:
-                          EdgeInsets.symmetric(
+                          const EdgeInsets.symmetric(
                         horizontal: 16,
                       ),
-                      child: Text(
-                        "Pilih waktu pengingat sesuai dengan kebutuhan Anda. Kami akan mengirimkan notifikasi sebelum jadwal konsultasi dimulai.",
-                        style: TextStyle(
-                          fontSize: 11,
-                          height: 1.35,
-                          color: Color(0xFF475569),
-                        ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                            decoration: BoxDecoration(
+                              color: const Color(0xFF00AA13).withValues(alpha: 0.12),
+                              borderRadius: BorderRadius.circular(8),
+                              border: Border.all(color: const Color(0xFF00AA13), width: 0.8),
+                            ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: const [
+                                Icon(Icons.check_circle_rounded, size: 13, color: Color(0xFF00AA13)),
+                                SizedBox(width: 5),
+                                Text(
+                                  "Pengingat Otomatis Aktif ala Gojek",
+                                  style: TextStyle(
+                                    fontSize: 10.5,
+                                    fontWeight: FontWeight.bold,
+                                    color: Color(0xFF00AA13),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          const SizedBox(height: 6),
+                          const Text(
+                            "Pengingat telah aktif otomatis oleh sistem. Anda akan otomatis menerima notifikasi pengingat ala Gojek sebelum jadwal konsultasi dimulai tanpa perlu mengatur manual.",
+                            style: TextStyle(
+                              fontSize: 11,
+                              height: 1.35,
+                              color: Color(0xFF475569),
+                            ),
+                          ),
+                        ],
                       ),
                     ),
 
