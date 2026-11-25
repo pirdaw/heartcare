@@ -11,6 +11,7 @@ import 'services/doctor_service.dart';
 import 'services/chat_notification_service.dart';
 import 'services/system_notification_service.dart';
 import 'services/reminder_notification_service.dart';
+import 'services/health_reminder_scheduler_service.dart';
 import 'widgets/chat_notification_banner.dart';
 import 'widgets/gojek_reminder_banner.dart';
 
@@ -44,6 +45,9 @@ Future<void> main() async {
 
   // Inisialisasi service pengingat notifikasi ala Gojek (di semua halaman & status bar)
   await ReminderNotificationService.instance.init();
+
+  // Inisialisasi & aktifkan otomatis jadwal reminder lokal Android (air putih, olahraga, kiat jantung)
+  await HealthReminderSchedulerService.instance.init();
 
   runApp(const HeartCareApp());
 }

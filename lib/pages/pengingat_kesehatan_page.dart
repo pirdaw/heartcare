@@ -4,6 +4,7 @@ import 'package:heartcare/services/theme_service.dart';
 import 'package:heartcare/services/language_service.dart';
 import '../services/alarm_service.dart';
 import '../services/reminder_notification_service.dart';
+import 'pengaturan_reminder_page.dart';
 
 // MODEL DATA OBAT & PENGINGAT
 class MedicineReminder {
@@ -627,6 +628,24 @@ class _PengingatKesehatanPageState extends State<PengingatKesehatanPage> {
               ],
             ),
           ),
+          // Shortcut Pengaturan Reminder Otomatis
+          IconButton(
+            icon: Icon(
+              Icons.tune_rounded,
+              color: isDark ? const Color(0xFF38BDF8) : const Color(0xFF0284C7),
+              size: 22,
+            ),
+            tooltip: 'Pengaturan Reminder Otomatis',
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const PengaturanReminderPage(),
+                ),
+              );
+            },
+          ),
+          const SizedBox(width: 4),
           // Shortcut Tambah Obat Cepat
           InkWell(
             onTap: _navigateToTambahObat,

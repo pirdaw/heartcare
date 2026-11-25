@@ -3,6 +3,7 @@ import 'package:heartcare/pages/home_page.dart';
 import 'package:heartcare/pages/dokter_page.dart';
 import 'package:heartcare/pages/riwayat_page.dart';
 import 'package:heartcare/pages/Skrining/screening_input_page.dart';
+import 'pengaturan_reminder_page.dart';
 import '../services/theme_service.dart';
 import '../services/auth_service.dart';
 import '../services/language_service.dart';
@@ -600,6 +601,38 @@ class _PengaturanPageState extends State<PengaturanPage> {
                           title: tr("Ubah kata sandi", "Change password"),
                           subtitle: tr("Perbarui kata sandi akun Anda", "Update your account password"),
                           onTap: _showChangePasswordDialog,
+                          isDark: isDark,
+                        ),
+
+                        const SizedBox(height: 22),
+
+                        // ==========================================================
+                        // SECTION: PENGINGAT & NOTIFIKASI
+                        // ==========================================================
+                        Text(
+                          tr("Pengingat & Notifikasi", "Reminders & Notifications"),
+                          style: TextStyle(
+                            fontSize: 15,
+                            fontWeight: FontWeight.bold,
+                            color: isDark ? Colors.white : const Color(0xFF0F172A),
+                          ),
+                        ),
+                        const SizedBox(height: 12),
+
+                        // CARD PENGINGAT KESEHATAN OTOMATIS
+                        _pengaturanCard(
+                          icon: Icons.notifications_active_rounded,
+                          title: tr("Pengingat Kesehatan Otomatis", "Auto Health Reminders"),
+                          subtitle: tr("Jadwal rutin minum air, olahraga, dan kiat jantung",
+                              "Scheduled routines for hydration, workout & heart tips"),
+                          onTap: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => const PengaturanReminderPage(),
+                              ),
+                            );
+                          },
                           isDark: isDark,
                         ),
 
