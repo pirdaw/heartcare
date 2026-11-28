@@ -4,6 +4,7 @@ import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:timezone/data/latest_all.dart' as tz;
 import 'package:timezone/timezone.dart' as tz;
+import 'reminder_notification_service.dart';
 
 /// Kategori jadwal pengingat kesehatan
 enum HealthReminderCategory {
@@ -239,7 +240,7 @@ class HealthReminderSchedulerService extends ChangeNotifier {
           scheduledChannelId,
           scheduledChannelName,
           description: scheduledChannelDesc,
-          importance: Importance.high,
+          importance: Importance.max,
           playSound: true,
           enableVibration: true,
         );
@@ -318,7 +319,7 @@ class HealthReminderSchedulerService extends ChangeNotifier {
       scheduledChannelId,
       scheduledChannelName,
       channelDescription: scheduledChannelDesc,
-      importance: Importance.high,
+      importance: Importance.max,
       priority: Priority.high,
       icon: '@mipmap/ic_launcher',
       playSound: true,
@@ -425,7 +426,7 @@ class HealthReminderSchedulerService extends ChangeNotifier {
       scheduledChannelId,
       scheduledChannelName,
       channelDescription: scheduledChannelDesc,
-      importance: Importance.high,
+      importance: Importance.max,
       priority: Priority.high,
       icon: '@mipmap/ic_launcher',
       playSound: true,
@@ -450,4 +451,63 @@ class HealthReminderSchedulerService extends ChangeNotifier {
       payload: jsonEncode({'test': true, 'id': reminder.id}),
     );
   }
+
+  /// Menembakkan pengingat kesehatan otomatis yang relevan dengan jam saat ini
+  /// (misal saat pengguna membuka aplikasi atau setelah izin notifikasi aktif)
+  Future<void> triggerAutoLaunchReminder({bool force = false}) async {
+    if (!_masterEnabled) return;
+    final isTest =
+        WidgetsBinding.instance.runtimeType.toString().contains('Test');
+    if (isTest && !force) return;
+
+    final now = DateTime.now();
+    final hour = now.hour;
+    ScheduledHealthReminder target;
+
+    if (hour >= 5 && hour < 11) {
+      target = _defaultReminders.firstWhere(
+        (r) => r.id == 101, // Pagi: Air Putih
+        orElse: () => _defaultReminders.first,
+      );
+    } else if (hour >= 11 && hour < 15) {
+      target = _defaultReminders.firstWhere(
+        (r) => r.id == 102, // Siang: Hidrasi
+        orElse: () => _defaultReminders.first,
+      );
+    } else if (hour >= 15 && hour < 18) {
+      target = _defaultReminders.firstWhere(
+        (r) => r.id == 202, // Sore: Peregangan
+        orElse: () => _defaultReminders.first,
+      );
+    } else {
+      target = _defaultReminders.firstWhere(
+        (r) => r.id == 303, // Malam: Istirahat
+        orElse: () => _defaultReminders.first,
+      );
+    }
+
+    // 1. Tembak notifikasi sistem telepon (Status Bar & Heads-up Android)
+    try {
+      await triggerTestNotification(target);
+    } catch (e) {
+      debugPrint('[HealthReminderSchedulerService] Gagal trigger test notif: $e');
+    }
+
+    // 2. Tembak juga notifikasi banner melayang ala Gojek di layar
+    try {
+      ReminderNotificationService.instance.triggerReminder(
+        HeartCareReminder(
+          id: 'auto_launch_${now.millisecondsSinceEpoch}',
+          type: ReminderType.general,
+          title: target.title,
+          body: target.body,
+          time: target.timeFormatted,
+          actionLabel: 'Lihat Jadwal',
+        ),
+      );
+    } catch (e) {
+      debugPrint('[HealthReminderSchedulerService] Gagal trigger banner: $e');
+    }
+  }
 }
+

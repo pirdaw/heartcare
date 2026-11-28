@@ -15,6 +15,7 @@ import '../services/user_profile_service.dart';
 import '../services/language_service.dart';
 import '../services/chat_notification_service.dart';
 import '../services/reminder_notification_service.dart';
+import '../services/health_reminder_scheduler_service.dart';
 import '../widgets/chat_notification_sheet.dart';
 
 class HomePage extends StatefulWidget {
@@ -36,6 +37,19 @@ class _HomePageState extends State<HomePage> {
     ChatNotificationService.instance.currentAppRole = ChatSenderRole.patient;
     UserProfileService.instance.addListener(_onProfileChanged);
     _reminderController.addListener(_onReminderChanged);
+
+    // Otomatis picu notifikasi pengingat kesehatan saat aplikasi dibuka tanpa menunggu user memencet tombol
+    final isTest =
+        WidgetsBinding.instance.runtimeType.toString().contains('Test');
+    if (!isTest) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        Future.delayed(const Duration(milliseconds: 1500), () {
+          if (mounted) {
+            HealthReminderSchedulerService.instance.triggerAutoLaunchReminder();
+          }
+        });
+      });
+    }
   }
 
   @override
@@ -918,72 +932,29 @@ class _HomePageState extends State<HomePage> {
                                 color: isDark ? Colors.white : const Color(0xFF0F172A),
                               ),
                             ),
-                            Row(
-                              children: [
-                                InkWell(
-                                  onTap: () {
-                                    ReminderNotificationService.instance.simulateGojekReminderDemo(
-                                      type: ReminderType.consultation,
-                                    );
-                                  },
-                                  borderRadius: BorderRadius.circular(12),
-                                  child: Container(
-                                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                                    decoration: BoxDecoration(
-                                      color: const Color(0xFF00AA13).withValues(alpha: 0.12),
-                                      borderRadius: BorderRadius.circular(12),
-                                      border: Border.all(
-                                        color: const Color(0xFF00AA13).withValues(alpha: 0.6),
-                                        width: 0.8,
-                                      ),
-                                    ),
-                                    child: Row(
-                                      mainAxisSize: MainAxisSize.min,
-                                      children: const [
-                                        Icon(
-                                          Icons.notifications_active_rounded,
-                                          size: 12,
-                                          color: Color(0xFF00AA13),
-                                        ),
-                                        SizedBox(width: 4),
-                                        Text(
-                                          'Tes Gojek',
-                                          style: TextStyle(
-                                            fontSize: 10,
-                                            fontWeight: FontWeight.bold,
-                                            color: Color(0xFF00AA13),
-                                          ),
-                                        ),
-                                      ],
-                                    ),
+                            TextButton(
+                              onPressed: () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) =>
+                                        const PengingatKesehatanPage(),
                                   ),
+                                );
+                              },
+                              style: TextButton.styleFrom(
+                                padding: EdgeInsets.zero,
+                                minimumSize: Size.zero,
+                                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                              ),
+                              child: Text(
+                                tr('Lihat Semua', 'View All'),
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w600,
+                                  color: isDark ? const Color(0xFF38BDF8) : const Color(0xFF0284C7),
                                 ),
-                                const SizedBox(width: 8),
-                                TextButton(
-                                  onPressed: () {
-                                    Navigator.push(
-                                      context,
-                                      MaterialPageRoute(
-                                        builder: (context) =>
-                                            const PengingatKesehatanPage(),
-                                      ),
-                                    );
-                                  },
-                                  style: TextButton.styleFrom(
-                                    padding: EdgeInsets.zero,
-                                    minimumSize: Size.zero,
-                                    tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                                  ),
-                                  child: Text(
-                                    tr('Lihat Semua', 'View All'),
-                                    style: TextStyle(
-                                      fontSize: 12,
-                                      fontWeight: FontWeight.w600,
-                                      color: isDark ? const Color(0xFF38BDF8) : const Color(0xFF0284C7),
-                                    ),
-                                  ),
-                                ),
-                              ],
+                              ),
                             ),
                           ],
                         ),

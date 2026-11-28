@@ -82,7 +82,8 @@ class GojekReminderBannerManager {
   ) {
     final nav = navigatorKey?.currentState ?? Navigator.of(context);
 
-    if (reminder.type == ReminderType.medicine) {
+    if (reminder.type == ReminderType.medicine ||
+        reminder.type == ReminderType.general) {
       nav.push(
         MaterialPageRoute(
           builder: (context) => const PengingatKesehatanPage(),
@@ -190,6 +191,26 @@ class _GojekBannerOverlayWidgetState extends State<_GojekBannerOverlayWidget>
       );
     }
 
+    if (widget.reminder.type == ReminderType.general) {
+      return Container(
+        width: 44,
+        height: 44,
+        decoration: BoxDecoration(
+          color: const Color(0xFF0284C7).withValues(alpha: 0.15),
+          shape: BoxShape.circle,
+          border: Border.all(
+            color: const Color(0xFF0284C7),
+            width: 1.5,
+          ),
+        ),
+        child: const Icon(
+          Icons.health_and_safety_rounded,
+          color: Color(0xFF0284C7),
+          size: 24,
+        ),
+      );
+    }
+
     if (photo != null && photo.isNotEmpty) {
       if (photo.startsWith('http://') || photo.startsWith('https://')) {
         return ClipOval(
@@ -256,6 +277,7 @@ class _GojekBannerOverlayWidgetState extends State<_GojekBannerOverlayWidget>
     final topPadding = media.padding.top > 0 ? media.padding.top + 8 : 16.0;
 
     final isMedicine = widget.reminder.type == ReminderType.medicine;
+    final isGeneral = widget.reminder.type == ReminderType.general;
     final primaryColor = isMedicine ? const Color(0xFF00AA13) : const Color(0xFF0284C7);
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
@@ -485,7 +507,9 @@ class _GojekBannerOverlayWidgetState extends State<_GojekBannerOverlayWidget>
                                             widget.reminder.actionLabel ??
                                                 (isMedicine
                                                     ? 'Sudah Minum'
-                                                    : 'Masuk Chat'),
+                                                    : (isGeneral
+                                                        ? 'Lihat Jadwal'
+                                                        : 'Masuk Chat')),
                                             style: const TextStyle(
                                               fontSize: 11,
                                               fontWeight: FontWeight.bold,

@@ -378,7 +378,7 @@ class _PengaturanReminderPageState extends State<PengaturanReminderPage> {
           // Daftar Jadwal Waktu
           ListView.separated(
             shrinkWrap: true,
-            physics: const NeverScrollableScrollButtonPhysics(),
+            physics: const NeverScrollableScrollPhysics(),
             itemCount: reminders.length,
             separatorBuilder: (_, __) => Divider(
               height: 1,
